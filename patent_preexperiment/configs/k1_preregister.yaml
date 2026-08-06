@@ -89,24 +89,25 @@ pilot_active_min_a: 1.0            # pilot 高于最小工作阈值（冻结）
 
 # --- E1-Lite K1 最低工程停止线（V2.1 §6.7，讨论一次后冻结）---
 # 2026-08-06 冻结解释（依据 JPL pilot 质量审计）：
-#   min_pools=2 的"多池重复"由 主集(caltech, 独立推断) + 边界(jpl 2020-06/07, 只评估)
-#   共同承担：主集门全过且边界方向一致（不要求边界单独过门）→ Go；
+#   多池重复由 主集(caltech, 独立推断) + 边界(jpl 2020-06/07, 只评估) 共同承担：
+#   主集门全过且边界方向一致（不要求边界单独过门）→ Go；
 #   主集门过但边界方向不一致 → 条件 Go（需在 E0-Full 补充多池月份）；
 #   主集门不过 → 直接 No-Go。
+# 2026-08-07 K1.2 冻结：six_month_stable = 冻结 6 个 connection/周期月份逐月核心率>=5%。
 k1_stop_lines:
   e1:
-    min_pools: 2                  # 解释见上：main + external_boundary
-    min_normal_months: 6          # 主集正常月份数
+    min_pools: 2                  # 语义见上：main + external_boundary（K1-M/K1-X，不作等权双池）
+    min_normal_months: 6          # 主集正常月份数（冻结 6 个月逐月过线）
     min_sessions: 500             # 主集合格会话数
-    min_event_session_rate: 0.05        # ≥5% 合格会话出现 ≥5min 非尾段事件
+    min_event_session_rate: 0.05        # ≥5% 合格会话出现 ≥5min 非尾段事件（阶段切断后）
     min_event_minutes: 5
     min_median_gap_kw: 0.5              # 事件功率差中位数 ≥0.5kW
     min_median_gap_ratio: 0.10          # 或 ≥10% 当前工作功率
     max_single_station_share: 0.50      # 单一桩/月贡献 ≤50%
     require_negative_control_hold: true
   e3:
-    min_opportunity_cycle_rate: 0.01    # 无泄漏（shift(1)）强基线后 ≥1% 有效控制周期仍有机会（caltech 指标 A4 配对）
-    min_daily_energy_share: 0.005       # EVIDENCE_POOLS 两池各自日候选能量中位数 ≥当日 EV 能量 0.5%（池独立过线）
+    min_opportunity_cycle_rate: 0.01    # 主基线 A2（候选量最低可执行简单基线）日等权率日 cluster bootstrap CI 下界 >=1%（两证据池各自）
+    min_daily_energy_share: 0.005       # EVIDENCE_POOLS 两池各自日候选能量中位数 ≥当日 EV 能量 0.5%（池独立过线，主基线口径）
     max_baseline_elimination: 0.80      # A2/A3 不能消除 >80% 候选（caltech 主集口径；jpl current-only 不引用消除率）
     not_single_month_or_outlier: true
 
@@ -123,6 +124,16 @@ k1_1_corrections:
   e3_metric_split: "指标A=candidate_redistribution_window（预算差值，唯一门依据）；指标B=supported_ref_energy 仅参考上界，待 E1-Full pilot 阶跃验证"
   e3_pairing: "基线比较同 eligible mask 配对、分池报告、pool-month 等权、日 cluster bootstrap 95%CI；jpl 不跨池混合分母"
   gate_split: "K1-M=caltech 主集机制门；K1-X=jpl 边界仅方向一致弱证据，不作等权第二池"
+
+# --- K1.2 纠偏复审记录（2026-08-07，审查结论2，测试集冻结后追加，不改阈值）---
+k1_2_corrections:
+  e3_continuous_history: "每会话补齐连续 5min 网格；不预删非活跃周期；shift/rolling 在(session,run)组内；任何 5min 网格断档即冷启动（历史失效）；当前活跃仅作评价标签；pilot 决策时点=上一周期"
+  e1_phase_cutting: "事件在 core/mid/tail 边界强制切断，各段重新执行持续>=T_event；推断 done 对全会话分钟统一赋值"
+  e3_strongest_baseline: "主门基线=候选量最低的预注册可执行简单基线（两证据池均 A2_prev_actual，已冻结）；A4/A3 仅作研究对象"
+  e3_exact_pairing: "会话×周期层精确交集（eligible_mask）：所有代理在完全相同 site+garage+cycle+session_id 集合上评估"
+  e3_month_and_stats: "只保留冻结周期月份（排除跨月尾部伪月份）；周期加权率与日等权率分开报告；日 cluster bootstrap CI 与日等权点估计同口径；消除比例用比例 bootstrap CI"
+  e1_month_gate: "六个月稳定门=冻结 6 个周期月份逐月核心事件会话率>=5%（非'至少两月有事件'）；done 锚点覆盖率按会话数报告"
+  e1_permutation: "时间置换负对照输出 真实率-置换率、真实率/置换率、会话 cluster bootstrap 差值 95%CI、多种子"
 
 outputs:
   k0: ["patent_preexperiment/data_registry/design_baseline.json",

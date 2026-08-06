@@ -1,0 +1,214 @@
+{
+  "method": "P1 逻辑池并发候选修正窗口；先聚合5min周期→shift(1)，无当前周期泄漏；指标A=预算差值，无吸收假设；指标B参考上界待E1-Full pilot 阶跃验证",
+  "terminology": "仅'预算差值/并发候选修正窗口'，不称'可回收能力'",
+  "pair_report": {
+    "caltech": {
+      "pool": "caltech.California_Garage_01",
+      "n_cycles": 35086,
+      "n_pool_months": 8,
+      "rates": {
+        "A0_avg": 0.6188508236903608,
+        "A2_prev_actual": 0.23798666134640598,
+        "A3_rolling_quantile": 0.45539531437040415,
+        "A4_min_pilot_quantile": 0.347346519979479
+      },
+      "rate_ci95_by_proxy": {
+        "A0_avg": {
+          "n_days": 185,
+          "rate": 0.6050171802586114,
+          "ci95": [
+            0.5786548558784712,
+            0.6302182977030208
+          ]
+        },
+        "A2_prev_actual": {
+          "n_days": 185,
+          "rate": 0.23577563714087946,
+          "ci95": [
+            0.21760608653659474,
+            0.2524586794484955
+          ]
+        },
+        "A3_rolling_quantile": {
+          "n_days": 185,
+          "rate": 0.44911547799402296,
+          "ci95": [
+            0.4238097457873392,
+            0.4728783113965755
+          ]
+        },
+        "A4_min_pilot_quantile": {
+          "n_days": 185,
+          "rate": 0.34144240040002083,
+          "ci95": [
+            0.3195594324334545,
+            0.361371951427966
+          ]
+        }
+      },
+      "pool_month_equal_weight_rate": {
+        "A0_avg": 0.46352512756385783,
+        "A2_prev_actual": 0.22859466424361274,
+        "A3_rolling_quantile": 0.3920379221811784,
+        "A4_min_pilot_quantile": 0.2609074730593318
+      },
+      "elimination_vs_A0": {
+        "A2_prev_actual": 0.6154377561829318,
+        "A3_rolling_quantile": 0.26412748123244134,
+        "A4_min_pilot_quantile": 0.43872334546124436
+      },
+      "elimination_ci95_vs_A0": {
+        "A2_prev_actual": {
+          "n_days": 185,
+          "diff": 0.3692415431177319,
+          "ci95": [
+            0.3494652307730948,
+            0.3882278288116014
+          ]
+        },
+        "A3_rolling_quantile": {
+          "n_days": 185,
+          "diff": 0.15590170226458833,
+          "ci95": [
+            0.1377380833385984,
+            0.17377126637168935
+          ]
+        },
+        "A4_min_pilot_quantile": {
+          "n_days": 185,
+          "diff": 0.26357477985859057,
+          "ci95": [
+            0.24808757585991634,
+            0.28013339045253177
+          ]
+        }
+      }
+    },
+    "jpl_current_only": {
+      "pool": "jpl.Arroyo_Garage_01.current_only",
+      "n_cycles": 30401,
+      "n_pool_months": 9,
+      "rates": {
+        "A2_prev_actual": 0.4087694483734088,
+        "A3_rolling_quantile": 0.6275451465412322
+      },
+      "rate_ci95_by_proxy": {
+        "A2_prev_actual": {
+          "n_days": 185,
+          "rate": 0.3598004755061392,
+          "ci95": [
+            0.32752669689567776,
+            0.39126518485253636
+          ]
+        },
+        "A3_rolling_quantile": {
+          "n_days": 185,
+          "rate": 0.5586962779212673,
+          "ci95": [
+            0.5165122613767247,
+            0.6001383520358569
+          ]
+        }
+      },
+      "pool_month_equal_weight_rate": {
+        "A2_prev_actual": 0.3365303146183423,
+        "A3_rolling_quantile": 0.5659548089560233
+      },
+      "elimination_A3_vs_A2": -0.5352056007081354
+    },
+    "jpl_boundary": {
+      "pool": "jpl.Arroyo_Garage_01.boundary_2020",
+      "n_cycles": 4636,
+      "n_pool_months": 3,
+      "rates": {
+        "A0_avg": 0.7711389128559103,
+        "A2_prev_actual": 0.270060396893874,
+        "A3_rolling_quantile": 0.561044003451251,
+        "A4_min_pilot_quantile": 0.27480586712683347
+      },
+      "rate_ci95_by_proxy": {
+        "A0_avg": {
+          "n_days": 41,
+          "rate": 0.6318423561560405,
+          "ci95": [
+            0.5157252028774145,
+            0.7372523701764601
+          ]
+        },
+        "A2_prev_actual": {
+          "n_days": 41,
+          "rate": 0.21796350568125558,
+          "ci95": [
+            0.1717800330404482,
+            0.26570712332378704
+          ]
+        },
+        "A3_rolling_quantile": {
+          "n_days": 41,
+          "rate": 0.4575252285498008,
+          "ci95": [
+            0.3720115666080288,
+            0.5417769482533962
+          ]
+        },
+        "A4_min_pilot_quantile": {
+          "n_days": 41,
+          "rate": 0.22411228642540593,
+          "ci95": [
+            0.18104725876135686,
+            0.2670618726441161
+          ]
+        }
+      },
+      "pool_month_equal_weight_rate": {
+        "A0_avg": 0.5601345477869347,
+        "A2_prev_actual": 0.17952398086555543,
+        "A3_rolling_quantile": 0.39643584939528886,
+        "A4_min_pilot_quantile": 0.21604320181567535
+      }
+    }
+  },
+  "daily_candidate_share": {
+    "median_by_pool": {
+      "caltech.California_Garage_01": 0.05519770260952375,
+      "jpl.Arroyo_Garage_01.boundary_2020": 0.018775684580284932,
+      "jpl.Arroyo_Garage_01.current_only": 0.17174487381126688
+    },
+    "caveat": "候选上限（无吸收假设），非可回收能量"
+  },
+  "concentration": {
+    "n_valid_cycles": 71245,
+    "n_months_with_opp": 9,
+    "top_month_share_of_opp_best_energy": 0.18642522646071655,
+    "top_day_share_of_opp_best_energy": 0.011598332275939727,
+    "top_pool_share_of_opp_best_energy": 0.8809480922588087
+  },
+  "gates": {
+    "caltech_candidate_rate_A4": 0.347346519979479,
+    "caltech_candidate_rate_ci95_A4": [
+      0.3195594324334545,
+      0.361371951427966
+    ],
+    "jpl_current_only_candidate_rate_A3": 0.6275451465412322,
+    "elimination_by_A2_vs_A0_caltech": 0.6154377561829318,
+    "elimination_by_A3_vs_A0_caltech": 0.26412748123244134,
+    "elimination_A3_vs_A2_jpl_current_only": -0.5352056007081354,
+    "daily_median_share_by_pool": {
+      "caltech.California_Garage_01": 0.05519770260952375,
+      "jpl.Arroyo_Garage_01.boundary_2020": 0.018775684580284932,
+      "jpl.Arroyo_Garage_01.current_only": 0.17174487381126688
+    },
+    "pools_meeting_daily_share": 2,
+    "n_months_with_opp": 9,
+    "pass_candidate_rate": true,
+    "pass_not_eliminated": true,
+    "pass_two_pools_share": true,
+    "pass_not_single_month": true,
+    "leak_selfcheck": "PASS"
+  },
+  "gates_interpretation": "K1.1-E3：无泄漏候选窗口率≥1%（caltech A4 配对）；最强简单基线不消除>80%候选；双池日占比≥0.5%；非单月。指标B（有支持域的重分配窗口）待E1-Full。",
+  "leak_selfcheck": {
+    "status": "PASS",
+    "note": "详见 tests/test_k11_regression.py 扰动不变性测试"
+  }
+}

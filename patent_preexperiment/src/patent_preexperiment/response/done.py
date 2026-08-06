@@ -80,18 +80,17 @@ def add_done_phases(
         out.loc[api, "post_done"] = (mtd.to_numpy() < 0)
         out.loc[api, "done_anchor_source"] = "api"
 
-    # done 缺失会话：离线推断（仅排伪）
+    # done 缺失会话：离线推断（仅排伪）——对全会话分钟统一赋值
     missing_ids = out.loc[~api, "session_id"].unique()
     for sid in missing_ids:
         sub = out[out["session_id"] == sid]
         d = infer_done(sub, p_on_kw, low_kw, sustain_min)
         if d is None:
             continue
-        m = sub["timestamp_utc"] >= d
-        idx = sub.index[m]
+        idx = sub.index
         mtd = (d - sub.loc[idx, "timestamp_utc"]).dt.total_seconds() / 60.0
-        out.loc[idx, "minutes_to_done"] = mtd
-        out.loc[idx, "post_done"] = sub.loc[idx, "timestamp_utc"] > d
+        out.loc[idx, "minutes_to_done"] = mtd.to_numpy()
+        out.loc[idx, "post_done"] = (mtd.to_numpy() < 0)
         out.loc[idx, "done_anchor_source"] = "inferred"
 
     mtd = out["minutes_to_done"]

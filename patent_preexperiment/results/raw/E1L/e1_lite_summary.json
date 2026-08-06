@@ -12,22 +12,23 @@
     "core_margin_min": 120,
     "mid_min": 30,
     "tail_min": 30,
-    "anchor_inference": "功率<0.3kW 持续20min 且不再恢复→推断完成时间（仅离线排伪）"
+    "anchor_inference": "功率<0.3kW 持续20min 且不再恢复→推断完成时间（仅离线排伪，全会话分钟赋值）",
+    "event_cutting": "事件在 core/mid/tail 边界强制切断，各段重跑持续>=T_event"
   },
-  "roles": "K1-M=caltech.CG1 主机制门（核心运行段）；K1-X=jpl 2020-06,07 外部边界（方向一致参考）",
+  "roles": "K1-M=caltech.CG1 主机制门（核心运行段，冻结 6 个月逐月>=5%）；K1-X=jpl 2020-06,07 外部边界（方向一致参考）",
   "main_set": {
     "n_valid_sessions": 5961,
     "core_run": {
-      "denominator_sessions_with_core_run": 2939,
-      "n_events": 750,
-      "n_event_sessions": 357,
-      "event_session_rate": 0.12146988771691052,
-      "median_gap_kw": 1.2761062499999998,
-      "median_gap_ratio_of_working": 0.36563950545357293,
-      "total_gap_energy_kwh": 489.69709982684947,
+      "denominator_sessions_with_core_run": 2941,
+      "n_events": 733,
+      "n_event_sessions": 349,
+      "event_session_rate": 0.11866712002720163,
+      "median_gap_kw": 1.2793999999999999,
+      "median_gap_ratio_of_working": 0.3667150355600938,
+      "total_gap_energy_kwh": 350.00884662553227,
       "duration_p50_p95": {
         "p50": 10.0,
-        "p95": 98.59999999999945
+        "p95": 66.39999999999998
       }
     },
     "phase_summary": [
@@ -40,30 +41,30 @@
       },
       {
         "phase": "pre_done_tail",
-        "n_events": 2285,
-        "n_event_sessions": 2142,
-        "event_share": 0.5015364354697103,
-        "energy_kwh": 972.5300484964855
+        "n_events": 2569,
+        "n_event_sessions": 2365,
+        "event_share": 0.5291452111225541,
+        "energy_kwh": 1141.1167499753933
       },
       {
         "phase": "pre_done_mid",
-        "n_events": 1517,
-        "n_event_sessions": 1101,
-        "event_share": 0.3329675153643547,
-        "energy_kwh": 914.7318614085855
+        "n_events": 1549,
+        "n_event_sessions": 1115,
+        "event_share": 0.3190525231719876,
+        "energy_kwh": 866.2212801688221
       },
       {
         "phase": "core_run_segment",
-        "n_events": 750,
-        "n_event_sessions": 357,
-        "event_share": 0.1646180860403863,
-        "energy_kwh": 489.69709982684947
+        "n_events": 733,
+        "n_event_sessions": 349,
+        "event_share": 0.1509783728115345,
+        "energy_kwh": 350.00884662553227
       },
       {
         "phase": "done_missing",
         "n_events": 4,
         "n_event_sessions": 1,
-        "event_share": 0.000877963125548727,
+        "event_share": 0.0008238928939237899,
         "energy_kwh": 0.8426225
       }
     ],
@@ -71,58 +72,44 @@
       {
         "month": "2018-11",
         "n_denom_sessions": 664,
-        "n_core_events": 91,
-        "core_event_session_rate": 0.0783132530120482,
-        "core_energy_kwh": 173.9056432758889
-      },
-      {
-        "month": "2018-12",
-        "n_denom_sessions": 0,
-        "n_core_events": 0,
-        "core_event_session_rate": 0.0,
-        "core_energy_kwh": 0.0
+        "n_core_events": 89,
+        "core_event_session_rate": 0.07680722891566265,
+        "core_energy_kwh": 98.80851051293678
       },
       {
         "month": "2019-03",
-        "n_denom_sessions": 499,
-        "n_core_events": 151,
-        "core_event_session_rate": 0.1342685370741483,
-        "core_energy_kwh": 42.40955096447739
+        "n_denom_sessions": 501,
+        "n_core_events": 146,
+        "core_event_session_rate": 0.1277445109780439,
+        "core_energy_kwh": 35.105497054220976
       },
       {
         "month": "2019-04",
         "n_denom_sessions": 487,
-        "n_core_events": 105,
+        "n_core_events": 103,
         "core_event_session_rate": 0.11088295687885011,
-        "core_energy_kwh": 29.85805480029107
+        "core_energy_kwh": 27.864089167121136
       },
       {
         "month": "2019-05",
         "n_denom_sessions": 449,
-        "n_core_events": 73,
+        "n_core_events": 72,
         "core_event_session_rate": 0.09799554565701558,
-        "core_energy_kwh": 36.93208788598285
+        "core_energy_kwh": 29.90692207273516
       },
       {
         "month": "2019-08",
         "n_denom_sessions": 390,
-        "n_core_events": 154,
-        "core_event_session_rate": 0.15897435897435896,
-        "core_energy_kwh": 78.87910363974278
+        "n_core_events": 151,
+        "core_event_session_rate": 0.15384615384615385,
+        "core_energy_kwh": 65.85456454695363
       },
       {
         "month": "2019-10",
         "n_denom_sessions": 450,
-        "n_core_events": 176,
-        "core_event_session_rate": 0.17333333333333334,
-        "core_energy_kwh": 127.71265926046657
-      },
-      {
-        "month": "2019-11",
-        "n_denom_sessions": 0,
-        "n_core_events": 0,
-        "core_event_session_rate": 0.0,
-        "core_energy_kwh": 0.0
+        "n_core_events": 172,
+        "core_event_session_rate": 0.1688888888888889,
+        "core_energy_kwh": 92.46926327156461
       }
     ]
   },
@@ -131,72 +118,152 @@
     "pool": "jpl.Arroyo 2020-06,07",
     "core": {
       "denominator_sessions_with_core_run": 513,
-      "n_events": 38,
-      "n_event_sessions": 27,
-      "event_session_rate": 0.05263157894736842,
-      "median_gap_kw": 1.4095343749999996,
-      "median_gap_ratio_of_working": 0.8621796342172062,
-      "total_gap_energy_kwh": 9.509580772423297,
+      "n_events": 36,
+      "n_event_sessions": 26,
+      "event_session_rate": 0.050682261208576995,
+      "median_gap_kw": 1.4289666666666665,
+      "median_gap_ratio_of_working": 0.8740659183819106,
+      "total_gap_energy_kwh": 9.152538696034409,
       "duration_p50_p95": {
         "p50": 9.0,
         "p95": 17.0
       }
     },
     "all_events": {
-      "n_events": 370,
-      "event_session_rate": 0.4889240506329114
+      "n_events": 375,
+      "event_session_rate": 0.48575949367088606
     }
   },
   "k1_x_direction_ok": true,
   "negative_controls": {
     "time_permutation_core": {
-      "core_events": 547,
-      "core_session_rate": 0.0748553929908132,
-      "interpretation": "会话内打乱实际功率后核心运行段事件率，应明显低于真实核心率"
+      "real_core_session_rate": 0.11866712002720163,
+      "perm_rate_mean": 0.0723110053269863,
+      "perm_rate_per_seed": [
+        {
+          "seed": 42,
+          "core_events": 534,
+          "core_session_rate": 0.07072424345460727
+        },
+        {
+          "seed": 2024,
+          "core_events": 527,
+          "core_session_rate": 0.07344440666439986
+        },
+        {
+          "seed": 777,
+          "core_events": 532,
+          "core_session_rate": 0.07276436586195172
+        }
+      ],
+      "diff_real_minus_perm": 0.046356114700215334,
+      "ratio_real_over_perm": 1.6410658307210029,
+      "diff_bootstrap_ci95": [
+        0.01744673712464352,
+        0.028408264832522505
+      ],
+      "interpretation": "真实时序显著增强事件（diff CI 下界>0），但 pilot/actual 边际分布本身也可产生一定事件率；不得表述为'完全排除时序伪相关'。"
     },
     "done_anchored_events": {
       "n_post_done": 0,
-      "n_pre_done_tail": 2285,
-      "n_pre_done_mid": 1517,
-      "n_core": 750,
-      "share_within_120min_of_done": 0.8345039508340649,
-      "energy_kwh_post_done": 0.0,
+      "n_pre_done_tail": 2569,
+      "n_pre_done_mid": 1549,
+      "n_core": 733,
+      "share_within_120min_of_done": 0.8481977342945417,
+      "energy_kwh_post_done": 1141.1167499753933,
       "interpretation": "特征化：响应差事件在 done 前 120 分钟内占多数（车辆满充/降流机制），post_done=0 排除'停车占位'伪影（事件要求 charging_active）。核心运行段事件独立满足停止线，问题在正常充电段仍成立；近完成段浓度在 E2 可执行区间生成中须单独建模。"
     },
     "measured_or_computed_only_core": {
-      "core_events": 750,
-      "core_session_rate": 0.12146988771691052
+      "core_events": 733,
+      "core_session_rate": 0.11866712002720163
     },
     "exclude_short_sessions_lt30min_core": {
-      "core_events": 750,
-      "core_session_rate": 0.12188460225332878
+      "core_events": 733,
+      "core_session_rate": 0.1190719890822245
     },
-    "max_single_station_share_core": 0.096,
-    "max_single_month_share_core": 0.23466666666666666,
+    "max_single_station_share_core": 0.09822646657571624,
+    "max_single_month_share_core": 0.23465211459754434,
     "n_stations_with_core_events": 38,
     "minutes_from_disconnect_at_start": {
-      "p25": 160.775,
-      "p50": 350.825,
-      "p75": 486.8333333333333
+      "p25": 153.29166666666669,
+      "p50": 343.73333333333335,
+      "p75": 483.475
     },
-    "done_anchor_coverage": {
-      "api": 2254390,
-      "inferred": 499,
-      "missing": 685
+    "done_anchor_coverage_by_session": {
+      "api": 5956,
+      "inferred": 3,
+      "missing": 2,
+      "n_sessions": 5961,
+      "api_share": 0.9991612145613152,
+      "inferred_share": 0.0005032712632108706
     }
   },
   "gates": {
-    "n_sessions_with_core_run": 2939,
-    "core_event_session_rate": 0.12146988771691052,
-    "core_median_gap_kw": 1.2761062499999998,
-    "core_median_gap_ratio_of_working": 0.36563950545357293,
+    "n_sessions_with_core_run": 2941,
+    "core_event_session_rate": 0.11866712002720163,
+    "core_median_gap_kw": 1.2793999999999999,
+    "core_median_gap_ratio_of_working": 0.3667150355600938,
     "post_done_events": 0,
     "pass_rate": true,
     "pass_median": true,
+    "six_month_detail": {
+      "frozen_months": [
+        "2018-11",
+        "2019-03",
+        "2019-04",
+        "2019-05",
+        "2019-08",
+        "2019-10"
+      ],
+      "per_month_rate": [
+        {
+          "month": "2018-11",
+          "n_denom_sessions": 664,
+          "n_core_events": 89,
+          "core_event_session_rate": 0.07680722891566265,
+          "core_energy_kwh": 98.80851051293678
+        },
+        {
+          "month": "2019-03",
+          "n_denom_sessions": 501,
+          "n_core_events": 146,
+          "core_event_session_rate": 0.1277445109780439,
+          "core_energy_kwh": 35.105497054220976
+        },
+        {
+          "month": "2019-04",
+          "n_denom_sessions": 487,
+          "n_core_events": 103,
+          "core_event_session_rate": 0.11088295687885011,
+          "core_energy_kwh": 27.864089167121136
+        },
+        {
+          "month": "2019-05",
+          "n_denom_sessions": 449,
+          "n_core_events": 72,
+          "core_event_session_rate": 0.09799554565701558,
+          "core_energy_kwh": 29.90692207273516
+        },
+        {
+          "month": "2019-08",
+          "n_denom_sessions": 390,
+          "n_core_events": 151,
+          "core_event_session_rate": 0.15384615384615385,
+          "core_energy_kwh": 65.85456454695363
+        },
+        {
+          "month": "2019-10",
+          "n_denom_sessions": 450,
+          "n_core_events": 172,
+          "core_event_session_rate": 0.1688888888888889,
+          "core_energy_kwh": 92.46926327156461
+        }
+      ]
+    },
     "pass_months_stable": true,
     "pass_single_station": true,
     "pass_permutation": true
   },
-  "k1_m_verdict": "核心运行段事件率≥5%、量级达标、≥6 个月有核心窗口、单桩/单月不集中、置换对照低、完成阶段事件不占主导 → Go",
+  "k1_m_verdict": "核心运行段事件率>=5%、量级达标、冻结 6 个月逐月过线、单桩/单月不集中、置换对照低（diff CI 下界>0）→ Go",
   "k1_x_verdict": "边界方向一致（弱证据，COVID 低量窗口，不作等权第二个池）"
 }

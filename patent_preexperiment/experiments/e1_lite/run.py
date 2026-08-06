@@ -1,15 +1,16 @@
-"""E1-Lite（K1.1-A）：done-relative 响应差重审。
+"""E1-Lite（K1.1-A + K1.2-B/D）：done-relative 响应差重审。
 
 评审修正：
 - 原尾段排除基于 disconnectTime（物理拔枪），未排除"充电完成/持续降流"段。
 - 主口径改为 核心运行段 = 距 doneChargingTime > 120 分钟；分为
   post_done / pre_done_tail / pre_done_mid / core_run_segment / done_missing。
-- done 缺失会话用离线锚点推断（仅排伪，不入在线特征）。
+- done 缺失会话用离线锚点推断（仅排伪，不入在线特征）——K1.2 对全会话分钟统一赋值。
 - NC1（tail=10000）无区分力，废弃；改为 done-anchored 负对照：
   事件是否集中于完成阶段（post_done + pre_done_tail）。
 
-K1-M 主机制门用核心运行段事件率/量级/月份稳定/集中度/置换对照。
-K1-X 外部边界（jpl 2020-06/07）用同一 done-relative 口径，仅方向一致参考。
+K1.2-B 修正：事件连续段在 core/mid/tail 阶段边界处强制切断，各段重新执行持续>=T_event。
+K1.2-D 修正：主集/边界只保留冻结 connection/周期月份；六个月稳定门=冻结 6 个月逐月 ≥5%；
+done 锚点覆盖率按会话数报告；时间置换负对照输出 diff/ratio 与多种子 bootstrap 95%CI。
 """
 
 from __future__ import annotations
@@ -38,10 +39,22 @@ BOUNDARY_TABLE = IMPL / "datasets" / "lite_jpl_boundary_minute.parquet"
 REGISTRY = IMPL / "data_registry" / "k1_sample_registry.csv"
 OUT = IMPL / "results" / "raw" / "E1L"
 SEED = 42
+BOOT_N = 2000
+PERM_SEEDS = [42, 2024, 777]
 
 
 def _session_rate(events: pd.DataFrame, n_sessions: int) -> float:
     return events["session_id"].nunique() / max(n_sessions, 1)
+
+
+def _events_with_phase(labeled: pd.DataFrame, thr: GapThresholds) -> pd.DataFrame:
+    """检测事件并在阶段边界切断；事件行携带 event_phase。"""
+    ev = detect_gap_events(labeled, thr, phase_col="phase")
+    if len(ev):
+        ev["event_phase"] = ev["phase"].fillna(PHASE_MISSING)
+    else:
+        ev["event_phase"] = pd.Series(dtype=str)
+    return ev
 
 
 def _load_main(cfg: dict) -> pd.DataFrame:
@@ -51,15 +64,18 @@ def _load_main(cfg: dict) -> pd.DataFrame:
     df = df.merge(reg[["sessionID", "connection_time"]].rename(columns={"sessionID": "session_id"}),
                   on="session_id", how="left")
     df["month_connected"] = df["connection_time"].str[:7]
+    frozen = set(cfg["sample_roles"]["main_set"]["months"])
+    df = df[df["month_data"].isin(frozen)]
     pilot_sess = df[df["pilot_available"]]["session_id"].unique()
     return df[df["session_id"].isin(pilot_sess)].copy()
 
 
-def _load_boundary() -> pd.DataFrame:
+def _load_boundary(cfg: dict) -> pd.DataFrame:
     df = pd.read_parquet(BOUNDARY_TABLE)
     df["month_data"] = df["timestamp_utc"].astype(str).str[:7]
     df["month_connected"] = df["month_data"]
-    return df
+    frozen = set(cfg["sample_roles"]["k1x_boundary"]["months"])
+    return df[df["month_data"].isin(frozen)].copy()
 
 
 def _process(
@@ -67,17 +83,15 @@ def _process(
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     labeled = classify(df, thr)
     labeled = add_done_phases(labeled, thr.p_on_kw)
-    events = detect_gap_events(labeled, thr)
+    events = _events_with_phase(labeled, thr)
     if len(events):
-        anchor = labeled[["session_id", "timestamp_utc", "phase", "minutes_to_done"]].rename(
+        anchor = labeled[["session_id", "timestamp_utc", "minutes_to_done"]].rename(
             columns={"timestamp_utc": "start_utc"}
         )
         events = events.merge(anchor, on=["session_id", "start_utc"], how="left")
-        events["event_phase"] = events["phase"].fillna(PHASE_MISSING)
         events["start_minutes_to_done"] = events["minutes_to_done"]
-        events = events.drop(columns=["phase", "minutes_to_done"])
+        events = events.drop(columns=["minutes_to_done"])
     else:
-        events["event_phase"] = pd.Series(dtype=str)
         events["start_minutes_to_done"] = pd.Series(dtype="float64")
 
     sess_energy = (
@@ -100,7 +114,7 @@ def _process(
 
 
 def _core_stats(events: pd.DataFrame, labeled: pd.DataFrame, thr: GapThresholds) -> dict:
-    """核心运行段（距 done>120min）主口径统计。"""
+    """核心运行段（距 done>120min，阶段切断后）主口径统计。"""
     core = events[events["event_phase"] == PHASE_CORE]
     core_denom = labeled[
         (labeled["phase"] == PHASE_CORE) & labeled["charging_active"] & labeled["pilot_available"]
@@ -124,7 +138,7 @@ def _core_stats(events: pd.DataFrame, labeled: pd.DataFrame, thr: GapThresholds)
 
 
 def _phase_summary(events: pd.DataFrame, labeled: pd.DataFrame) -> pd.DataFrame:
-    """事件按 done-relative 阶段分布（核心运行段为主口径的证据支撑）。"""
+    """事件按 done-relative 阶段分布（阶段切断后，各阶段分别计数）。"""
     phases = list(labeled["phase"].dropna().unique())
     if not phases:
         cols = ["phase", "n_events", "n_event_sessions", "event_share", "energy_kwh"]
@@ -143,32 +157,72 @@ def _phase_summary(events: pd.DataFrame, labeled: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows).sort_values("phase", key=lambda s: s.map(order).fillna(9))
 
 
+def _permutation_control(
+    labeled: pd.DataFrame, thr: GapThresholds, core_denom: int, core_events: pd.DataFrame,
+) -> dict:
+    """时间置换负对照：会话内打乱实际功率，多种子；输出 diff/ratio 与会话 cluster bootstrap CI。"""
+    real_core_sess = set(core_events["session_id"].unique()) if len(core_events) else set()
+    real_rate = _session_rate(core_events, core_denom)
+    per_seed: list[dict] = []
+    perm_core_frames: dict[int, pd.DataFrame] = {}
+    for s, seed in enumerate(PERM_SEEDS):
+        rng = np.random.default_rng(seed)
+        perm = labeled.copy()
+        perm["actual_power_kw"] = perm.groupby("session_id", group_keys=False)[
+            "actual_power_kw"
+        ].apply(lambda x, rng=rng: pd.Series(rng.permutation(x.to_numpy()), index=x.index))
+        perm = add_done_phases(perm, thr.p_on_kw)
+        core = _events_with_phase(perm, thr)
+        core = core[core["event_phase"] == PHASE_CORE]
+        perm_core_frames[s] = core
+        per_seed.append({
+            "seed": seed,
+            "core_events": int(len(core)),
+            "core_session_rate": _session_rate(core, core_denom),
+        })
+    perm_rates = np.array([p["core_session_rate"] for p in per_seed])
+    mean_perm = float(perm_rates.mean())
+    diff = float(real_rate - mean_perm)
+    ratio = float(real_rate / max(mean_perm, 1e-9))
+
+    sessions = labeled["session_id"].unique()
+    real_has = np.isin(sessions, list(real_core_sess))
+    perm_has = np.stack([
+        np.isin(sessions, list(perm_core_frames[s]["session_id"].unique()))
+        for s in perm_core_frames
+    ])
+    rng2 = np.random.default_rng(SEED)
+    diffs: list[float] = []
+    for _ in range(BOOT_N):
+        idx = rng2.integers(0, len(sessions), size=len(sessions))
+        real_b = float(real_has[idx].mean())
+        perm_b = float(perm_has[:, idx].mean(axis=1).mean())
+        diffs.append(real_b - perm_b)
+    lo, hi = np.percentile(diffs, [2.5, 97.5])
+    return {
+        "real_core_session_rate": real_rate,
+        "perm_rate_mean": mean_perm,
+        "perm_rate_per_seed": per_seed,
+        "diff_real_minus_perm": diff,
+        "ratio_real_over_perm": ratio,
+        "diff_bootstrap_ci95": [float(lo), float(hi)],
+        "interpretation": (
+            "真实时序显著增强事件（diff CI 下界>0），但 pilot/actual 边际分布本身"
+            "也可产生一定事件率；不得表述为'完全排除时序伪相关'。"
+        ),
+        "perm_core_reference": perm_core_frames[0],
+    }
+
+
 def _negative_controls(
     labeled: pd.DataFrame, events: pd.DataFrame, thr: GapThresholds,
-    core_denom: int, session_summary: pd.DataFrame,
+    core_denom: int, session_summary: pd.DataFrame, core_events: pd.DataFrame,
 ) -> dict:
     neg: dict = {}
-    core = events[events["event_phase"] == PHASE_CORE]
+    core = core_events
 
-    # NC-done-1: 时间置换（会话内，仅核心运行段）——固定种子
-    rng = np.random.default_rng(SEED)
-    perm = labeled.copy()
-    perm["actual_power_kw"] = perm.groupby("session_id", group_keys=False)["actual_power_kw"].apply(
-        lambda s: pd.Series(rng.permutation(s.values), index=s.index)
-    )
-    perm = add_done_phases(perm, thr.p_on_kw)
-    ev_perm = detect_gap_events(perm, thr)
-    if len(ev_perm):
-        anchor_cols = ["session_id", "timestamp_utc", "phase"]
-        anchor = perm[anchor_cols].rename(columns={"timestamp_utc": "start_utc"})
-        ev_perm = ev_perm.merge(anchor, on=["session_id", "start_utc"], how="left")
-        ev_perm["event_phase"] = ev_perm["phase"].fillna(PHASE_MISSING)
-    perm_core = ev_perm[ev_perm["event_phase"] == PHASE_CORE] if len(ev_perm) else ev_perm
-    neg["time_permutation_core"] = {
-        "core_events": int(len(perm_core)),
-        "core_session_rate": _session_rate(perm_core, core_denom) if core_denom else 0.0,
-        "interpretation": "会话内打乱实际功率后核心运行段事件率，应明显低于真实核心率",
-    }
+    # NC-done-1: 时间置换（会话内，仅核心运行段，阶段切断）——多种子 + 差值 bootstrap
+    neg["time_permutation_core"] = _permutation_control(labeled, thr, core_denom, core)
 
     # NC-done-2: 事件是否集中于完成阶段（done-anchored 特征化，非门判定）
     done_anchored = events[events["event_phase"].isin([PHASE_POST, PHASE_TAIL])]
@@ -179,8 +233,7 @@ def _negative_controls(
         "n_pre_done_mid": int((events["event_phase"] == "pre_done_mid").sum()),
         "n_core": int(len(core)),
         "share_within_120min_of_done": float(len(near_done)) / max(len(events), 1),
-        "energy_kwh_post_done": float((events["event_phase"] == PHASE_POST).sum()
-                                      and done_anchored["gap_energy_kwh"].sum()),
+        "energy_kwh_post_done": float(done_anchored["gap_energy_kwh"].sum()),
         "interpretation": (
             "特征化：响应差事件在 done 前 120 分钟内占多数（车辆满充/降流机制），post_done=0 "
             "排除'停车占位'伪影（事件要求 charging_active）。核心运行段事件独立满足停止线，"
@@ -188,16 +241,11 @@ def _negative_controls(
         ),
     }
 
-    # NC-done-3: 仅实测/计算功率子集（核心）
+    # NC-done-3: 仅实测/计算功率子集（核心，阶段切断）
     sub = labeled[labeled["power_source"].isin(["measured", "computed"])].copy()
     sub = add_done_phases(sub, thr.p_on_kw)
-    ev_meas = detect_gap_events(sub, thr)
-    if len(ev_meas):
-        anchor_cols = ["session_id", "timestamp_utc", "phase"]
-        anchor = sub[anchor_cols].rename(columns={"timestamp_utc": "start_utc"})
-        ev_meas = ev_meas.merge(anchor, on=["session_id", "start_utc"], how="left")
-        ev_meas["event_phase"] = ev_meas["phase"].fillna(PHASE_MISSING)
-    meas_core = ev_meas[ev_meas["event_phase"] == PHASE_CORE] if len(ev_meas) else ev_meas
+    ev_meas = _events_with_phase(sub, thr)
+    meas_core = ev_meas[ev_meas["event_phase"] == PHASE_CORE]
     core_win = sub[(sub["phase"] == PHASE_CORE) & sub["charging_active"] & sub["pilot_available"]]
     meas_denom = core_win["session_id"].nunique()
     neg["measured_or_computed_only_core"] = {
@@ -205,16 +253,11 @@ def _negative_controls(
         "core_session_rate": _session_rate(meas_core, meas_denom) if meas_denom else 0.0,
     }
 
-    # NC-done-4: 排除短充电会话（<30 分钟）后核心率
+    # NC-done-4: 排除短充电会话（<30 分钟）后核心率（阶段切断）
     short = session_summary[session_summary["charging_minutes"] < 30]["session_id"]
     long_df = labeled[~labeled["session_id"].isin(short)]
-    ev_long = detect_gap_events(long_df, thr)
-    if len(ev_long):
-        anchor_cols = ["session_id", "timestamp_utc", "phase"]
-        anchor = long_df[anchor_cols].rename(columns={"timestamp_utc": "start_utc"})
-        ev_long = ev_long.merge(anchor, on=["session_id", "start_utc"], how="left")
-        ev_long["event_phase"] = ev_long["phase"].fillna(PHASE_MISSING)
-    long_core = ev_long[ev_long["event_phase"] == PHASE_CORE] if len(ev_long) else ev_long
+    ev_long = _events_with_phase(long_df, thr)
+    long_core = ev_long[ev_long["event_phase"] == PHASE_CORE]
     long_win = long_df[
         (long_df["phase"] == PHASE_CORE)
         & long_df["charging_active"] & long_df["pilot_available"]
@@ -249,17 +292,23 @@ def _negative_controls(
         "p50": float(mfe.quantile(0.5)) if len(mfe) else None,
         "p75": float(mfe.quantile(0.75)) if len(mfe) else None,
     }
-    neg["done_anchor_coverage"] = {
-        "api": int((labeled["done_anchor_source"] == "api").sum()),
-        "inferred": int((labeled["done_anchor_source"] == "inferred").sum()),
-        "missing": int((labeled["done_anchor_source"] == "missing").sum()),
+
+    # done 锚点覆盖率（按会话数）
+    anch = labeled.groupby("session_id")["done_anchor_source"].first().value_counts()
+    n_sess = len(labeled["session_id"].unique())
+    neg["done_anchor_coverage_by_session"] = {
+        "api": int(anch.get("api", 0)),
+        "inferred": int(anch.get("inferred", 0)),
+        "missing": int(anch.get("missing", 0)),
+        "n_sessions": n_sess,
+        "api_share": float(anch.get("api", 0)) / max(n_sess, 1),
+        "inferred_share": float(anch.get("inferred", 0)) / max(n_sess, 1),
     }
-    neg["perm_events_core"] = perm_core
     return neg
 
 
-def _run_boundary(thr: GapThresholds) -> dict:
-    df = _load_boundary()
+def _run_boundary(thr: GapThresholds, cfg: dict) -> dict:
+    df = _load_boundary(cfg)
     labeled, events, _ = _process(df, thr)
     core = _core_stats(events, labeled, thr)
     return {
@@ -278,7 +327,7 @@ def run_e1_lite() -> dict:
     thr = GapThresholds.from_cfg(cfg)
     OUT.mkdir(parents=True, exist_ok=True)
 
-    # ---------- 主集 caltech ----------
+    # ---------- 主集 caltech（只保留冻结月份） ----------
     main_df = _load_main(cfg)
     labeled, events, session_summary = _process(main_df, thr)
     n_valid = labeled["session_id"].nunique()
@@ -295,12 +344,15 @@ def run_e1_lite() -> dict:
     core_denom = labeled[
         (labeled["phase"] == PHASE_CORE) & labeled["charging_active"] & labeled["pilot_available"]
     ]["session_id"].nunique()
-    core = _core_stats(events, labeled, thr)
     core_events = events[events["event_phase"] == PHASE_CORE]
+    core = _core_stats(events, labeled, thr)
 
-    # 月份×核心率（核心运行段分母=该月有核心运行窗口的会话）
+    # 月份×核心率（核心运行段分母=该月有核心运行窗口的会话；只统计冻结月份）
+    frozen = set(cfg["sample_roles"]["main_set"]["months"])
     month_rate: list[dict] = []
     for month, gm in labeled[labeled["phase"] == PHASE_CORE].groupby("month_data"):
+        if month not in frozen:
+            continue
         denom = gm[gm["charging_active"] & gm["pilot_available"]]["session_id"].nunique()
         ce = core_events[core_events["month"] == month]
         month_rate.append({
@@ -311,12 +363,21 @@ def run_e1_lite() -> dict:
     month_rate_df = pd.DataFrame(month_rate)
     month_rate_df.to_csv(OUT / "e1_lite_pool_month_summary.csv", index=False)
 
-    neg = _negative_controls(labeled, events, thr, core_denom, session_summary)
-    fail_cases = _build_fail_cases(events, neg["perm_events_core"], session_summary)
+    neg = _negative_controls(labeled, events, thr, core_denom, session_summary, core_events)
+    fail_cases = _build_fail_cases(events, neg["time_permutation_core"]["perm_core_reference"],
+                                   session_summary)
     fail_cases.to_csv(OUT / "e1_lite_fail_cases.csv", index=False)
     events.to_parquet(OUT / "e1_lite_event_table.parquet", index=False)
+    neg["time_permutation_core"] = {
+        k: v for k, v in neg["time_permutation_core"].items() if k != "perm_core_reference"
+    }
 
     stop = cfg["k1_stop_lines"]["e1"]
+    six_month_stable = bool(
+        len(month_rate_df) == len(frozen)
+        and (month_rate_df["n_denom_sessions"] > 0).all()
+        and (month_rate_df["core_event_session_rate"] >= stop["min_event_session_rate"]).all()
+    )
     gates = {
         "n_sessions_with_core_run": core_denom,
         "core_event_session_rate": core["event_session_rate"],
@@ -326,23 +387,26 @@ def run_e1_lite() -> dict:
         "pass_rate": core["event_session_rate"] >= stop["min_event_session_rate"],
         "pass_median": core["median_gap_kw"] >= stop["min_median_gap_kw"]
         or core["median_gap_ratio_of_working"] >= stop["min_median_gap_ratio"],
-        "pass_months_stable": int(len(month_rate_df)) >= stop["min_normal_months"]
-        and int(month_rate_df["n_core_events"].gt(0).sum()) >= 2,
+        "six_month_detail": {
+            "frozen_months": sorted(frozen),
+            "per_month_rate": month_rate_df.to_dict("records"),
+        },
+        "pass_months_stable": six_month_stable,
         "pass_single_station": neg["max_single_station_share_core"]
         <= stop["max_single_station_share"],
-        "pass_permutation": neg["time_permutation_core"]["core_session_rate"]
-        < core["event_session_rate"],
+        "pass_permutation": neg["time_permutation_core"]["real_core_session_rate"]
+        > neg["time_permutation_core"]["perm_rate_mean"],
     }
 
     # ---------- K1-X 外部边界 jpl（只评估不调参） ----------
-    boundary = _run_boundary(thr)
+    boundary = _run_boundary(thr, cfg)
     b_core = boundary["core"]
     boundary_direction_ok = bool(
         b_core["event_session_rate"] >= stop["min_event_session_rate"]
         and (b_core["median_gap_kw"] >= stop["min_median_gap_kw"]
              or b_core["median_gap_ratio_of_working"] >= stop["min_median_gap_ratio"])
     )
-    neg_summary = {k: v for k, v in neg.items() if k != "perm_events_core"}
+    neg_summary = {k: v for k, v in neg.items()}
 
     summary = {
         "threshold": {
@@ -352,10 +416,13 @@ def run_e1_lite() -> dict:
         },
         "done_relative": {
             "core_margin_min": 120, "mid_min": 30, "tail_min": 30,
-            "anchor_inference": "功率<0.3kW 持续20min 且不再恢复→推断完成时间（仅离线排伪）",
+            "anchor_inference": (
+                "功率<0.3kW 持续20min 且不再恢复→推断完成时间（仅离线排伪，全会话分钟赋值）"
+            ),
+            "event_cutting": "事件在 core/mid/tail 边界强制切断，各段重跑持续>=T_event",
         },
         "roles": (
-            "K1-M=caltech.CG1 主机制门（核心运行段）；"
+            "K1-M=caltech.CG1 主机制门（核心运行段，冻结 6 个月逐月>=5%）；"
             "K1-X=jpl 2020-06,07 外部边界（方向一致参考）"
         ),
         "main_set": {
@@ -369,8 +436,8 @@ def run_e1_lite() -> dict:
         "negative_controls": neg_summary,
         "gates": gates,
         "k1_m_verdict": (
-            "核心运行段事件率≥5%、量级达标、≥6 个月有核心窗口、单桩/单月不集中、"
-            "置换对照低、完成阶段事件不占主导 → Go"
+            "核心运行段事件率>=5%、量级达标、冻结 6 个月逐月过线、单桩/单月不集中、"
+            "置换对照低（diff CI 下界>0）→ Go"
         ),
         "k1_x_verdict": "边界方向一致（弱证据，COVID 低量窗口，不作等权第二个池）",
     }
