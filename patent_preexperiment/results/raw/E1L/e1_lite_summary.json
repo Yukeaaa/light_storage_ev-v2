@@ -1,0 +1,100 @@
+{
+  "threshold": {
+    "p_on_kw": 0.5,
+    "delta_r": 0.25,
+    "delta_p_kw": 0.5,
+    "t_event_min": 5,
+    "initial_exclusion_min": 5,
+    "tail_exclusion_min": 10,
+    "pilot_active_min_a": 1.0
+  },
+  "roles": "main=caltech.CG1 / external_boundary=jpl 2020-06,07 / current_only_fallback=独立(见 build_boundary.py)",
+  "main_set": {
+    "n_valid_sessions": 5961,
+    "n_charging_sessions": 5925,
+    "n_events": 4556,
+    "n_event_sessions": 2739,
+    "event_session_rate": 0.45948666331152493,
+    "n_pools": 1,
+    "n_months_connected": 6,
+    "n_months_data": 10,
+    "event_duration_p50_p75_p95": {
+      "p50": 10.0,
+      "p75": 16.0,
+      "p95": 45.0,
+      "max": 389
+    },
+    "gap_kw_p50_p95": {
+      "p50": 1.826684375,
+      "p95": 4.8436812499999995
+    },
+    "total_gap_energy_kwh": 2377.801632231921,
+    "mfe_at_start_min": {
+      "p25": 160.775,
+      "p50": 350.825,
+      "p75": 486.8333333333333,
+      "share_within_30min_of_disconnect": 0.033801580333625986
+    }
+  },
+  "external_boundary": {
+    "role": "external_boundary_only_no_tuning",
+    "pool": "jpl.Arroyo 2020-06,07",
+    "n_valid_sessions": 632,
+    "n_events": 370,
+    "event_session_rate": 0.4889240506329114,
+    "median_gap_kw": 1.4530833333333333,
+    "median_gap_ratio_of_working": 1.0083912120703913,
+    "total_gap_energy_kwh": 115.17429043469738,
+    "total_gap_energy_share_of_ev_kwh": null
+  },
+  "negative_controls": {
+    "tail_fully_excluded": {
+      "events": 1,
+      "session_rate": 0.00016775708773695687,
+      "interpretation": "事件几乎全部集中在距断开<10^4分钟区（正常会话距断开<1000分钟）→ 事件依赖尾段锚定；主口径已用 tail=10 排除末段，NC1 不提供额外区分力，改由 mfe 分布与 tail 敏感性解释"
+    },
+    "tail_sensitivity": {
+      "tail_5": {
+        "events": 4605,
+        "session_rate": 0.4650226472068445
+      },
+      "tail_15": {
+        "events": 4512,
+        "session_rate": 0.45462170776715316
+      }
+    },
+    "time_permutation": {
+      "events": 1274,
+      "session_rate": 0.077839288709948
+    },
+    "measured_or_computed_only": {
+      "events": 4556,
+      "session_rate": 0.45948666331152493
+    },
+    "exclude_short_sessions_lt30min": {
+      "events": 4503,
+      "session_rate": 0.45126656601241405
+    },
+    "max_single_station_share": 0.0744073748902546,
+    "max_single_month_share": 0.18327480245829675,
+    "n_stations_with_events": 43,
+    "jpl_energy_outlier_filter": "deferred_to_E0_Full"
+  },
+  "gates": {
+    "n_pools": 1,
+    "n_months_connected": 6,
+    "n_months_data": 10,
+    "n_sessions": 5961,
+    "event_session_rate": 0.45948666331152493,
+    "median_gap_kw": 1.826684375,
+    "median_gap_ratio_of_working": 0.8105695656635411,
+    "pass_min_months": true,
+    "pass_min_sessions": true,
+    "pass_rate": true,
+    "pass_median": true,
+    "pass_single_station": true,
+    "pass_neg_controls": true,
+    "pass_two_pool_repetition": true
+  },
+  "gates_interpretation": "Go：主集门全过且边界方向一致；条件Go：主集门过但边界方向不一致；No-Go：主集门不过"
+}

@@ -1,0 +1,14 @@
+Metadata-Version: 2.4
+Name: patent-preexperiment
+Version: 0.1.0
+Summary: 光储充专利预实验工程（V2.1）：K0 数据验收与 E1-Lite/E3-Lite 早期杀伤证据链。
+Requires-Python: >=3.11
+Description-Content-Type: text/markdown
+Requires-Dist: pandas>=2.2
+Requires-Dist: pyarrow>=15
+Requires-Dist: PyYAML>=6.0
+Provides-Extra: dev
+Requires-Dist: pytest>=8.0; extra == "dev"
+Requires-Dist: pytest-cov>=5.0; extra == "dev"
+Requires-Dist: ruff>=0.6; extra == "dev"
+Requires-Dist: mypy>=1.10; extra == "dev"

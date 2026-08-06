@@ -1,0 +1,38 @@
+{
+  "method": "P1 逻辑池反事实机会；A0–A4 预算代理；控制周期=5min；margin=0.5kW；调整不超历史观察支持域",
+  "terminology": "仅'预算差值/反事实机会'，不称'可回收能力'",
+  "n_valid_cycles": 47743,
+  "opp_rate_by_proxy": {
+    "A0_avg": 0.35561234107617873,
+    "A1_pilot": 0.30215947887648453,
+    "A2_prev_actual": 0.1066334331734495,
+    "A3_rolling_quantile": 0.31654902289340847,
+    "A4_min_pilot_quantile": 0.1770940242548646
+  },
+  "concentration": {
+    "n_valid_cycles": 47743,
+    "top_month_share_of_cycles": 0.1739312569381899,
+    "top_day_share_of_opp_best": 0.017898456039351546,
+    "top_pool_share_of_opp_best": 0.7004440910954023,
+    "n_months_with_opp": 9
+  },
+  "gates": {
+    "n_pools": 2,
+    "n_valid_cycles": 47743,
+    "opp_rate_A0_avg": 0.35561234107617873,
+    "opp_rate_A4_strongest": 0.1770940242548646,
+    "elimination_by_A2": 0.7001413594062905,
+    "elimination_by_A3": 0.10984803863823778,
+    "daily_median_share_by_pool": {
+      "caltech.California_Garage_01": 0.03618604661659976,
+      "jpl.Arroyo_Garage_01": 0.032077636550598476
+    },
+    "pools_meeting_daily_share": 2,
+    "n_months_with_opp": 9,
+    "pass_opp_rate": true,
+    "pass_not_eliminated": true,
+    "pass_two_pools_share": true,
+    "pass_not_single_month": true
+  },
+  "caveat": "jpl 无 pilot：A0/A1/A4 在 jpl 池缺失（NaN），该池只用 A2/A3 保守机会，日能量用 A3 口径"
+}

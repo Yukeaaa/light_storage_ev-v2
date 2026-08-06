@@ -1,0 +1,47 @@
+{
+  "acn_project_exists": true,
+  "manifests": {
+    "static_file_index.csv": {
+      "ok": true,
+      "rows": 85877,
+      "expected": 85877
+    },
+    "api_metadata_index.csv": {
+      "ok": true,
+      "rows": 51234,
+      "expected": 51234
+    },
+    "static_api_mapping.csv": {
+      "ok": true,
+      "rows": 96467,
+      "expected": 96467
+    }
+  },
+  "gold": {
+    "n_5min": 115,
+    "n_15min": 115,
+    "expected": 115,
+    "ok": true
+  },
+  "quality": {
+    "energy_consistency_rows": 40609,
+    "energy_consistency_rows_ok": true,
+    "static_scan_summary.json": true,
+    "coverage_report.csv": true,
+    "benchmark_summary.json": true
+  },
+  "passed": true,
+  "match_status": {
+    "actual": {
+      "static_only": 45233,
+      "matched": 40644,
+      "api_only": 10590
+    },
+    "expected": {
+      "matched": 40644,
+      "static_only": 45233,
+      "api_only": 10590
+    },
+    "ok": true
+  }
+}

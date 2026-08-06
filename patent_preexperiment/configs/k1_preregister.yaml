@@ -1,0 +1,126 @@
+# K1 预注册配置（V2.1 §4.1 / §5.2 / §6.4；阈值网格以 V2.0 §4.3 为权威）
+# 预注册：阈值与选择规则在读取 E1-Lite/E3-Lite 测试结果前冻结。
+# 注意：V2.1 §6.4 的 δ_r(0.10/0.20/0.30)、δ_p(0.3/0.5/1.0)、尾段(5/10/20) 与
+# V2.0 §4.3 不一致，此处以 V2.0 为准，冲突作为待协调项记录（详见 K1_gate 待办）。
+
+experiment_id: K1_preregister_v1
+protocol_version: V2.0
+landing_version: V2.1
+commit: auto
+
+# --- E0-Lite 最小样本选择规则（§5.2，读取测试结果前冻结）---
+# 冻结依据：results/raw/K0/audit_jpl_pilot_quality.json（纯输入数据质量审计，2026-08-06）
+# 关键数据边界：JPL pilot 值仅存在于 2020-06~2020-12；合格（匹配≥300 且 pilot 值覆盖≥0.8
+# 且非异常月份）仅 2020-06/2020-07。caltech pilot 密集期 2018–2019 与 JPL 无交集。
+# 结论：Caltech 独立作主集；JPL 2020-06/07 仅作外部边界验证（不调参）；JPL current-only 作保护型回退。
+sample:
+  sites: [caltech, jpl]
+  clusters_per_site: 2            # 每站选 pilot 覆盖较高且并发较多的前 2 个 garage
+  n_months: 6                     # 正常覆盖月份中选 6 个（按共享月份口径）
+  min_sessions: 500               # 合格会话数下限
+  primary_resolution: "1min"
+  secondary_resolution: "5min"
+  office001_role: external_only   # 不参与阈值选择
+  selection_criteria:             # 按此排序并冻结
+    - has_pilot_coverage_ratio
+    - has_power_coverage_ratio
+    - matched_ratio
+    - concurrent_period_count
+    - measured_or_computed_power_ratio
+    - normal_coverage_month       # 排除 2019-12/2020-02/2020-04/2020-12/2021 全年
+  exclude_months: [2019-12, 2020-02, 2020-04, 2020-12]
+  min_rows_per_file: 10
+  require_gzip_ok: true
+  require_read_ok: true
+
+# --- 样本角色（K1 冻结，2026-08-06，依据 JPL pilot 质量审计）---
+sample_roles:
+  main_set:
+    pool: caltech.CG1
+    months: [2018-11, 2019-03, 2019-04, 2019-05, 2019-08, 2019-10]
+    require: [matched, has_pilot, has_power_or_voltage]
+    role: 主集——独立进行训练/验证/测试，承载 E1-Lite 主结论
+    split_rule: 站点时间顺序 60/20/20（Lite 阶段仅整体统计，E0-Full 才硬切分）
+  external_boundary:
+    pool: jpl.Arroyo_Garage_01
+    months: [2020-06, 2020-07]
+    require: [matched, has_pilot, has_power_or_voltage]
+    role: 外部边界验证——只评估不调参，禁止用其结果改阈值/样本
+    eligibility_audit: "results/raw/K0/audit_jpl_pilot_quality.json"
+    eligibility_rule: "matched_sessions>=300 and sampled_pilot_value_ratio>=0.8 and not abnormal_month"
+    caveat: "JPL pilot 窗口为 COVID 低量期（2020-06/07 各 371/485 会话），跨期泛化证据弱，结论仅作方向一致参考"
+  current_only_fallback:
+    pool: jpl.all
+    months: all
+    require: [has_current, no_pilot]
+    role: 保护型回退验证——统计无 pilot 条件下的功率衰减状态频率，验证 current-only 回退可行性
+    metric: "current_only_low_power_state_frequency"
+
+# --- 额定电压（acn_project README 口径）---
+rated_voltage:
+  jpl: 192.7
+  caltech: 240.0
+  office001: 240.0
+
+# --- E1-Lite 阈值网格（V2.0 §4.3）---
+threshold_grid:
+  P_on_kw: [0.3, 0.5, 1.0]
+  delta_r: [0.15, 0.25, 0.35]
+  delta_p_kw: [0.5, 1.0, 2.0]
+  T_event_min: [3, 5, 10]
+  initial_exclusion_min: [2, 5, 10]
+  tail_exclusion_min: [5, 10, 15]
+
+primary_threshold:
+  P_on_kw: 0.5
+  delta_r: 0.25
+  delta_p_kw: 0.5
+  T_event_min: 5
+  initial_exclusion_min: 5
+  tail_exclusion_min: 10
+
+pilot_active_min_a: 1.0            # pilot 高于最小工作阈值（冻结）
+
+# --- E1-Lite K1 最低工程停止线（V2.1 §6.7，讨论一次后冻结）---
+# 2026-08-06 冻结解释（依据 JPL pilot 质量审计）：
+#   min_pools=2 的"多池重复"由 主集(caltech, 独立推断) + 边界(jpl 2020-06/07, 只评估)
+#   共同承担：主集门全过且边界方向一致（不要求边界单独过门）→ Go；
+#   主集门过但边界方向不一致 → 条件 Go（需在 E0-Full 补充多池月份）；
+#   主集门不过 → 直接 No-Go。
+k1_stop_lines:
+  e1:
+    min_pools: 2                  # 解释见上：main + external_boundary
+    min_normal_months: 6          # 主集正常月份数
+    min_sessions: 500             # 主集合格会话数
+    min_event_session_rate: 0.05        # ≥5% 合格会话出现 ≥5min 非尾段事件
+    min_event_minutes: 5
+    min_median_gap_kw: 0.5              # 事件功率差中位数 ≥0.5kW
+    min_median_gap_ratio: 0.10          # 或 ≥10% 当前工作功率
+    max_single_station_share: 0.50      # 单一桩/月贡献 ≤50%
+    require_negative_control_hold: true
+  e3:
+    min_opportunity_cycle_rate: 0.01    # 强基线后 ≥1% 有效控制周期仍有机会
+    min_daily_energy_share: 0.005       # 两池日修正能量中位数 ≥当日 EV 能量 0.5%
+    max_baseline_elimination: 0.80      # A2/A3 不能消除 >80% 机会
+    not_single_month_or_outlier: true
+
+# --- E3-Lite 预算代理（V2.1 §7.3）---
+budget_proxies: [A0_avg, A1_pilot, A2_prev_actual, A3_rolling_quantile, A4_min_pilot_quantile]
+control_cycle_min: 5
+rolling_quantile: 0.90
+pool_evidence_level: P1              # 同 site/cluster 逻辑池；报告称"反事实机会"
+
+outputs:
+  k0: ["patent_preexperiment/data_registry/design_baseline.json",
+       "patent_preexperiment/data_registry/k0_data_check.json"]
+  e1_lite: ["patent_preexperiment/results/raw/E1L/e1_lite_event_table.parquet",
+            "patent_preexperiment/results/raw/E1L/e1_lite_session_summary.csv",
+            "patent_preexperiment/results/raw/E1L/e1_lite_pool_month_summary.csv",
+            "patent_preexperiment/results/raw/E1L/e1_lite_negative_controls.csv",
+            "patent_preexperiment/results/raw/E1L/e1_lite_fail_cases.csv",
+            "patent_preexperiment/reports/E1_Lite_gate.md"]
+  e3_lite: ["patent_preexperiment/results/raw/E3L/e3_lite_pool_opportunity.parquet",
+            "patent_preexperiment/results/raw/E3L/e3_lite_baseline_comparison.csv",
+            "patent_preexperiment/results/raw/E3L/e3_lite_concentration.csv",
+            "patent_preexperiment/results/raw/E3L/e3_lite_fail_cases.csv",
+            "patent_preexperiment/reports/E3_Lite_gate.md"]

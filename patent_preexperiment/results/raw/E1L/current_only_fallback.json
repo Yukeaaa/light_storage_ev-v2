@@ -1,0 +1,9 @@
+{
+  "role": "current_only_fallback",
+  "sessions_sampled": 400,
+  "valid_minutes": 158195,
+  "low_power_minutes": 75140,
+  "low_power_state_frequency": 0.474983,
+  "idle_sessions_share": 0.7725,
+  "note": "current-only 无 pilot：低功率状态频率为保护型回退可行性指标，不构成 E1 响应差证据"
+}

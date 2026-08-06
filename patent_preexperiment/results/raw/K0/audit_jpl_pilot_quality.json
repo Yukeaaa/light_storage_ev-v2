@@ -1,0 +1,149 @@
+{
+  "audit_scope": "input_quality_only_no_response_metrics",
+  "seed": 7,
+  "by_month": {
+    "2020-01": {
+      "static_files": 1474,
+      "pilot_col_files": 0,
+      "sampled": 0,
+      "sampled_pilot_value_files": 0,
+      "sampled_pilot_value_ratio": 0.0,
+      "sampled_pilot_row_coverage": 0.0,
+      "sampled_power_row_coverage": 0.0,
+      "matched_sessions": 1474,
+      "sampled_median_duration_min": -1.0
+    },
+    "2020-02": {
+      "static_files": 1408,
+      "pilot_col_files": 0,
+      "sampled": 0,
+      "sampled_pilot_value_files": 0,
+      "sampled_pilot_value_ratio": 0.0,
+      "sampled_pilot_row_coverage": 0.0,
+      "sampled_power_row_coverage": 0.0,
+      "matched_sessions": 1408,
+      "sampled_median_duration_min": -1.0
+    },
+    "2020-03": {
+      "static_files": 835,
+      "pilot_col_files": 0,
+      "sampled": 0,
+      "sampled_pilot_value_files": 0,
+      "sampled_pilot_value_ratio": 0.0,
+      "sampled_pilot_row_coverage": 0.0,
+      "sampled_power_row_coverage": 0.0,
+      "matched_sessions": 835,
+      "sampled_median_duration_min": -1.0
+    },
+    "2020-04": {
+      "static_files": 41,
+      "pilot_col_files": 0,
+      "sampled": 0,
+      "sampled_pilot_value_files": 0,
+      "sampled_pilot_value_ratio": 0.0,
+      "sampled_pilot_row_coverage": 0.0,
+      "sampled_power_row_coverage": 0.0,
+      "matched_sessions": 41,
+      "sampled_median_duration_min": -1.0
+    },
+    "2020-05": {
+      "static_files": 251,
+      "pilot_col_files": 0,
+      "sampled": 0,
+      "sampled_pilot_value_files": 0,
+      "sampled_pilot_value_ratio": 0.0,
+      "sampled_pilot_row_coverage": 0.0,
+      "sampled_power_row_coverage": 0.0,
+      "matched_sessions": 251,
+      "sampled_median_duration_min": -1.0
+    },
+    "2020-06": {
+      "static_files": 372,
+      "pilot_col_files": 148,
+      "sampled": 30,
+      "sampled_pilot_value_files": 30,
+      "sampled_pilot_value_ratio": 1.0,
+      "sampled_pilot_row_coverage": 1.0,
+      "sampled_power_row_coverage": 1.0,
+      "matched_sessions": 371,
+      "sampled_median_duration_min": 303.4
+    },
+    "2020-07": {
+      "static_files": 500,
+      "pilot_col_files": 500,
+      "sampled": 30,
+      "sampled_pilot_value_files": 30,
+      "sampled_pilot_value_ratio": 1.0,
+      "sampled_pilot_row_coverage": 1.0,
+      "sampled_power_row_coverage": 1.0,
+      "matched_sessions": 485,
+      "sampled_median_duration_min": 385.2
+    },
+    "2020-08": {
+      "static_files": 559,
+      "pilot_col_files": 559,
+      "sampled": 30,
+      "sampled_pilot_value_files": 30,
+      "sampled_pilot_value_ratio": 1.0,
+      "sampled_pilot_row_coverage": 1.0,
+      "sampled_power_row_coverage": 1.0,
+      "matched_sessions": 26,
+      "sampled_median_duration_min": 506.3
+    },
+    "2020-09": {
+      "static_files": 449,
+      "pilot_col_files": 449,
+      "sampled": 30,
+      "sampled_pilot_value_files": 30,
+      "sampled_pilot_value_ratio": 1.0,
+      "sampled_pilot_row_coverage": 1.0,
+      "sampled_power_row_coverage": 1.0,
+      "matched_sessions": 0,
+      "sampled_median_duration_min": 343.0
+    },
+    "2020-10": {
+      "static_files": 663,
+      "pilot_col_files": 663,
+      "sampled": 30,
+      "sampled_pilot_value_files": 30,
+      "sampled_pilot_value_ratio": 1.0,
+      "sampled_pilot_row_coverage": 1.0,
+      "sampled_power_row_coverage": 1.0,
+      "matched_sessions": 0,
+      "sampled_median_duration_min": 327.2
+    },
+    "2020-11": {
+      "static_files": 470,
+      "pilot_col_files": 470,
+      "sampled": 30,
+      "sampled_pilot_value_files": 30,
+      "sampled_pilot_value_ratio": 1.0,
+      "sampled_pilot_row_coverage": 1.0,
+      "sampled_power_row_coverage": 1.0,
+      "matched_sessions": 137,
+      "sampled_median_duration_min": 291.1
+    },
+    "2020-12": {
+      "static_files": 44,
+      "pilot_col_files": 44,
+      "sampled": 30,
+      "sampled_pilot_value_files": 30,
+      "sampled_pilot_value_ratio": 1.0,
+      "sampled_pilot_row_coverage": 1.0,
+      "sampled_power_row_coverage": 1.0,
+      "matched_sessions": 42,
+      "sampled_median_duration_min": 341.0
+    }
+  },
+  "abnormal_months": [
+    "2019-12",
+    "2020-02",
+    "2020-04",
+    "2020-12"
+  ],
+  "eligible_months": [
+    "2020-06",
+    "2020-07"
+  ],
+  "eligibility_rule": "matched_sessions>=300 and sampled_pilot_value_ratio>=0.8 and not abnormal"
+}

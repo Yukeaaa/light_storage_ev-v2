@@ -1,0 +1,23 @@
+# 禁止特征清单（V2.1 §0.2 / §1.3；V2.0 §4.2）
+# 这些变量只允许作为离线标签或评价，禁止进入任何在线输入特征列。
+# leakguard.assert_no_forbidden() 会在模型输入 schema 上强制校验。
+forbidden_features:
+  - future_disconnect_time
+  - disconnect_time
+  - future_done_charging_time
+  - done_charging_time
+  - final_kwh_delivered
+  - kwh_delivered
+  - true_soc
+  - soc
+  - real_remaining_demand
+  - remaining_demand_kwh
+  - accurate_future_departure
+  - requested_departure
+  - bms_power_limit
+  - pcs_rejection_reason
+
+# 允许作为"可选、带可信度"的信息源（不能等同真实需求/离场）
+optional_weak_sources:
+  - kwh_requested
+  - user_inputs

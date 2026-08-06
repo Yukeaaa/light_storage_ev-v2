@@ -1,0 +1,37 @@
+{
+  "selected_clusters": [
+    [
+      "caltech",
+      "California_Garage_01"
+    ],
+    [
+      "jpl",
+      "Arroyo_Garage_01"
+    ]
+  ],
+  "selected_months": [
+    "2018-11",
+    "2019-03",
+    "2019-04",
+    "2019-05",
+    "2019-08",
+    "2019-10"
+  ],
+  "n_matched_sessions": 15083,
+  "n_pilot_rich_sessions": 5961,
+  "n_stations": 106,
+  "sessions_per_cluster_month": {
+    "caltech/California_Garage_01/2018-11": 1334,
+    "caltech/California_Garage_01/2019-03": 958,
+    "caltech/California_Garage_01/2019-04": 1017,
+    "caltech/California_Garage_01/2019-05": 969,
+    "caltech/California_Garage_01/2019-08": 854,
+    "caltech/California_Garage_01/2019-10": 928,
+    "jpl/Arroyo_Garage_01/2018-11": 1279,
+    "jpl/Arroyo_Garage_01/2019-03": 1399,
+    "jpl/Arroyo_Garage_01/2019-04": 1518,
+    "jpl/Arroyo_Garage_01/2019-05": 1645,
+    "jpl/Arroyo_Garage_01/2019-08": 1511,
+    "jpl/Arroyo_Garage_01/2019-10": 1671
+  }
+}

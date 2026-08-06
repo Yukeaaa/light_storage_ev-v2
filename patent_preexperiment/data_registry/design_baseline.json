@@ -1,0 +1,27 @@
+{
+  "created_at_utc": "2026-08-06T14:13:25.849932+00:00",
+  "protocol_version": "V2.0",
+  "landing_version": "V2.1",
+  "engineering_version": "V1.1",
+  "commit": "41dd1dd038ebce13b28a76c3254f08e61569dabe",
+  "data_version": "9329c86718c7f571",
+  "data_roots": {
+    "acn_project": "D:\\Users\\Micko\\Documents\\工作\\华润集控\\光储充\\数据\\ACN-data\\acn_project",
+    "static_root": "D:\\Users\\Micko\\Documents\\工作\\华润集控\\光储充\\数据\\ACN-data\\ACN-Data-Static\\time series data"
+  },
+  "output_root": "patent_preexperiment/results",
+  "manifest_hashes": {
+    "static_file_index.csv": {
+      "sha256": "eff813e2a723749c2529a0174d21e19255c63b216cb18796c4c253037a96ac2e",
+      "exists": true
+    },
+    "api_metadata_index.csv": {
+      "sha256": "99fea65a130ccfa7cca178a68b89bd2d4249c992ba15e485c0fc1bf2d2075692",
+      "exists": true
+    },
+    "static_api_mapping.csv": {
+      "sha256": "9329c86718c7f5715e321a8057606b2c5c17facc9d35d8b297b2540e9325b620",
+      "exists": true
+    }
+  }
+}

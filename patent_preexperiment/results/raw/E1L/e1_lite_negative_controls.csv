@@ -1,0 +1,10 @@
+control,value
+tail_fully_excluded,"{""events"": 1, ""session_rate"": 0.00016775708773695687, ""interpretation"": ""事件几乎全部集中在距断开<10^4分钟区（正常会话距断开<1000分钟）→ 事件依赖尾段锚定；主口径已用 tail=10 排除末段，NC1 不提供额外区分力，改由 mfe 分布与 tail 敏感性解释""}"
+tail_sensitivity,"{""tail_5"": {""events"": 4605, ""session_rate"": 0.4650226472068445}, ""tail_15"": {""events"": 4512, ""session_rate"": 0.45462170776715316}}"
+time_permutation,"{""events"": 1274, ""session_rate"": 0.077839288709948}"
+measured_or_computed_only,"{""events"": 4556, ""session_rate"": 0.45948666331152493}"
+exclude_short_sessions_lt30min,"{""events"": 4503, ""session_rate"": 0.45126656601241405}"
+max_single_station_share,0.0744073748902546
+max_single_month_share,0.18327480245829675
+n_stations_with_events,43
+jpl_energy_outlier_filter,"""deferred_to_E0_Full"""

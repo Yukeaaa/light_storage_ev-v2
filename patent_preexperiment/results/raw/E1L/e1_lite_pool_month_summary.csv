@@ -1,0 +1,7 @@
+site,garage,month,n_events,n_event_sessions,total_gap_energy_kwh,median_duration_min
+caltech,California_Garage_01,2018-11,702,480,586.5788210775006,9.5
+caltech,California_Garage_01,2019-03,835,478,330.3716957298279,9.0
+caltech,California_Garage_01,2019-04,744,467,306.82888541148424,9.0
+caltech,California_Garage_01,2019-05,711,493,349.674508410425,10.0
+caltech,California_Garage_01,2019-08,828,426,395.9581821810155,11.0
+caltech,California_Garage_01,2019-10,736,395,408.3895394216671,12.0
