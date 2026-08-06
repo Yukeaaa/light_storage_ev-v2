@@ -33,28 +33,34 @@ sample:
   require_gzip_ok: true
   require_read_ok: true
 
-# --- 样本角色（K1 冻结，2026-08-06，依据 JPL pilot 质量审计）---
+# --- 样本角色（K1 冻结，2026-08-06，依据 JPL pilot 质量审计；K1.1 复审 2026-08-06 拆分 K1-M/K1-X）---
 sample_roles:
-  main_set:
-    pool: caltech.CG1
+  main_set:                    # K1-M：主机制门（caltech 主集，独立推断）
+    pool: caltech.California_Garage_01
     months: [2018-11, 2019-03, 2019-04, 2019-05, 2019-08, 2019-10]
     require: [matched, has_pilot, has_power_or_voltage]
-    role: 主集——独立进行训练/验证/测试，承载 E1-Lite 主结论
+    role: 主集——独立进行训练/验证/测试，承载 E1-Lite 主结论（K1-M）
     split_rule: 站点时间顺序 60/20/20（Lite 阶段仅整体统计，E0-Full 才硬切分）
-  external_boundary:
-    pool: jpl.Arroyo_Garage_01
+  k1x_boundary:                # K1-X：边界弱证据（只评估不调参）
+    pool: jpl.Arroyo_Garage_01.boundary_2020
     months: [2020-06, 2020-07]
     require: [matched, has_pilot, has_power_or_voltage]
-    role: 外部边界验证——只评估不调参，禁止用其结果改阈值/样本
+    role: 外部边界验证——只评估不调参，禁止用其结果改阈值/样本；方向一致仅作弱证据
     eligibility_audit: "results/raw/K0/audit_jpl_pilot_quality.json"
     eligibility_rule: "matched_sessions>=300 and sampled_pilot_value_ratio>=0.8 and not abnormal_month"
     caveat: "JPL pilot 窗口为 COVID 低量期（2020-06/07 各 371/485 会话），跨期泛化证据弱，结论仅作方向一致参考"
-  current_only_fallback:
-    pool: jpl.all
-    months: all
+  current_only_fallback:       # 回退池：E3 第二证据池（无 pilot）
+    pool: jpl.Arroyo_Garage_01.current_only
+    months: [2018-11, 2019-03, 2019-04, 2019-05, 2019-08, 2019-10]
     require: [has_current, no_pilot]
     role: 保护型回退验证——统计无 pilot 条件下的功率衰减状态频率，验证 current-only 回退可行性
     metric: "current_only_low_power_state_frequency"
+
+# --- K1.1-E3 证据池（E3 门两池独立过日占比线）---
+evidence_pools:
+  - caltech.California_Garage_01          # 主集（pilot，指标 A4）
+  - jpl.Arroyo_Garage_01.current_only      # 回退池（无 pilot，指标 A3）
+  # jpl.Arroyo_Garage_01.boundary_2020 仅方向一致参考，不作等权第二池（K1-X 语义）
 
 # --- 额定电压（acn_project README 口径）---
 rated_voltage:
@@ -99,9 +105,9 @@ k1_stop_lines:
     max_single_station_share: 0.50      # 单一桩/月贡献 ≤50%
     require_negative_control_hold: true
   e3:
-    min_opportunity_cycle_rate: 0.01    # 强基线后 ≥1% 有效控制周期仍有机会
-    min_daily_energy_share: 0.005       # 两池日修正能量中位数 ≥当日 EV 能量 0.5%
-    max_baseline_elimination: 0.80      # A2/A3 不能消除 >80% 机会
+    min_opportunity_cycle_rate: 0.01    # 无泄漏（shift(1)）强基线后 ≥1% 有效控制周期仍有机会（caltech 指标 A4 配对）
+    min_daily_energy_share: 0.005       # EVIDENCE_POOLS 两池各自日候选能量中位数 ≥当日 EV 能量 0.5%（池独立过线）
+    max_baseline_elimination: 0.80      # A2/A3 不能消除 >80% 候选（caltech 主集口径；jpl current-only 不引用消除率）
     not_single_month_or_outlier: true
 
 # --- E3-Lite 预算代理（V2.1 §7.3）---
@@ -109,6 +115,14 @@ budget_proxies: [A0_avg, A1_pilot, A2_prev_actual, A3_rolling_quantile, A4_min_p
 control_cycle_min: 5
 rolling_quantile: 0.90
 pool_evidence_level: P1              # 同 site/cluster 逻辑池；报告称"反事实机会"
+
+# --- K1.1 纠偏复审记录（2026-08-06，测试集冻结后追加，不改阈值）---
+k1_1_corrections:
+  e1_done_relative: "E1 主口径改为 doneChargingTime 相对阶段：核心运行段=距完成>120min 且充电中；pre_done_mid/tail 与 post_done 单独统计，不作主证据"
+  e3_no_leak: "E3 全部历史统计先聚合 5min 周期再 shift(1)，决策时刻只见已结束周期；扰动硬测试见 tests/test_k11_regression.py"
+  e3_metric_split: "指标A=candidate_redistribution_window（预算差值，唯一门依据）；指标B=supported_ref_energy 仅参考上界，待 E1-Full pilot 阶跃验证"
+  e3_pairing: "基线比较同 eligible mask 配对、分池报告、pool-month 等权、日 cluster bootstrap 95%CI；jpl 不跨池混合分母"
+  gate_split: "K1-M=caltech 主集机制门；K1-X=jpl 边界仅方向一致弱证据，不作等权第二池"
 
 outputs:
   k0: ["patent_preexperiment/data_registry/design_baseline.json",

@@ -1,2 +1,2 @@
-n_valid_cycles,top_month_share_of_cycles,top_day_share_of_opp_best,top_pool_share_of_opp_best,n_months_with_opp
-47743,0.1739312569381899,0.017898456039351546,0.7004440910954023,9
+n_valid_cycles,n_months_with_opp,top_month_share_of_opp_best_energy,top_day_share_of_opp_best_energy,top_pool_share_of_opp_best_energy
+71245,9,0.18642522646071655,0.011598332275939727,0.8809480922588087

@@ -28,20 +28,27 @@ FALLBACK_SAMPLE = 400
 
 
 def select_boundary(cfg: dict) -> pd.DataFrame:
-    s = cfg["sample_roles"]["external_boundary"]
+    _ = cfg["sample_roles"]["k1x_boundary"]
     acn = acn_project_dir()
-    idx = pd.read_csv(acn / "manifests" / "static_file_index.csv", dtype={"stationID": str, "file": str})
-    mapf = pd.read_csv(acn / "manifests" / "static_api_mapping.csv", dtype={"stationID": str, "static_file": str})
+    idx = pd.read_csv(
+        acn / "manifests" / "static_file_index.csv", dtype={"stationID": str, "file": str}
+    )
+    mapf = pd.read_csv(
+        acn / "manifests" / "static_api_mapping.csv",
+        dtype={"stationID": str, "static_file": str},
+    )
     m = mapf[mapf["match_status"] == "matched"].copy()
     m["month"] = m["connection_time"].str[:7]
     m = m[(m["site_static"] == "jpl") & (m["month"].isin(BOUNDARY_MONTHS))].copy()
     m = m.drop(columns=["garage", "rows", "stationID"], errors="ignore")
-    idx2 = idx[["file", "site", "garage", "stationID", "rows", "has_pilot", "has_power", "has_voltage"]]
+    cols = ["file", "site", "garage", "stationID", "rows", "has_pilot", "has_power", "has_voltage"]
+    idx2 = idx[cols]
     m = m.merge(idx2, left_on="static_file", right_on="file", how="inner")
     pilot_ok = m["has_pilot"] & (m["has_power"] | m["has_voltage"])
     m = m[pilot_ok].copy()
     api = pd.read_csv(acn / "manifests" / "api_metadata_index.csv", dtype={"stationID": str})
-    m = m.merge(api[["sessionID", "disconnectTime", "doneChargingTime", "kWhDelivered"]], on="sessionID", how="left")
+    api_cols = ["sessionID", "disconnectTime", "doneChargingTime", "kWhDelivered"]
+    m = m.merge(api[api_cols], on="sessionID", how="left")
     return m
 
 
@@ -73,19 +80,27 @@ def build_boundary_minutes() -> pd.DataFrame:
 def current_only_fallback_metric() -> dict:
     """JPL current-only 会话的功率衰减状态频率（保护型回退，无 pilot 要求）。"""
     cfg = load_yaml(CONFIG)
-    s = cfg["sample_roles"]["current_only_fallback"]
+    _ = cfg["sample_roles"]["current_only_fallback"]
     acn = acn_project_dir()
-    idx = pd.read_csv(acn / "manifests" / "static_file_index.csv", dtype={"stationID": str, "file": str})
-    mapf = pd.read_csv(acn / "manifests" / "static_api_mapping.csv", dtype={"stationID": str, "static_file": str})
+    idx = pd.read_csv(
+        acn / "manifests" / "static_file_index.csv", dtype={"stationID": str, "file": str}
+    )
+    mapf = pd.read_csv(
+        acn / "manifests" / "static_api_mapping.csv",
+        dtype={"stationID": str, "static_file": str},
+    )
     api = pd.read_csv(acn / "manifests" / "api_metadata_index.csv", dtype={"stationID": str})
     m = mapf[mapf["match_status"] == "matched"].copy()
     m["month"] = m["connection_time"].str[:7]
-    jpl = idx[(idx["site"] == "jpl") & (idx["has_pilot"] == False) & (idx["has_current"] == True)]  # noqa: E712
-    m = m[(m["site_static"] == "jpl") & (m["static_file"].isin(set(jpl["file"])))].sample(
-        min(FALLBACK_SAMPLE, len(m[(m["site_static"] == "jpl") & (m["static_file"].isin(set(jpl["file"])))])),
+    no_pilot = (idx["site"] == "jpl") & (idx["has_pilot"] == False)  # noqa: E712
+    jpl = idx[no_pilot & (idx["has_current"] == True)]  # noqa: E712
+    jpl_pool = m[(m["site_static"] == "jpl") & (m["static_file"].isin(set(jpl["file"])))]
+    m = jpl_pool.sample(
+        min(FALLBACK_SAMPLE, len(jpl_pool)),
         random_state=7,
     )
-    m = m.merge(api[["sessionID", "disconnectTime", "doneChargingTime"]], on="sessionID", how="left")
+    api_cols = ["sessionID", "disconnectTime", "doneChargingTime"]
+    m = m.merge(api[api_cols], on="sessionID", how="left")
     rated_v = cfg["rated_voltage"]["jpl"]
     low_power_minutes = 0
     valid_minutes = 0
