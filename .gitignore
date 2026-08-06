@@ -1,1 +1,9 @@
 venv/**
+
+# Python bytecode
+__pycache__/
+**/__pycache__/
+*.py[cod]
+
+# 派生中间数据集（可从仓库外原始数据重建，不入库）
+patent_preexperiment/datasets/**
