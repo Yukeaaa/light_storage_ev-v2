@@ -422,6 +422,10 @@ def test_permutation_control_excludes_out_of_population_sessions() -> None:
     real_has = res["_real_has"]
     perm_has = res["_perm_has"]
 
+    # schema 统一：正常路径与不可评估路径均含 evaluable/reason
+    assert res["evaluable"] is True
+    assert res["reason"] is None
+
     # 1) bootstrap 母体 == core_denom
     assert res["bootstrap_n_sessions"] == len(sessions)
     # 2) 点估计/每种子置换率/diff 均来自同一布尔矩阵

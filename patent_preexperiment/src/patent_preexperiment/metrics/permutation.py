@@ -139,6 +139,8 @@ def permutation_negative_control(
     lo, hi = bootstrap_session_diff_ci(real_has, perm_has, seed=bootstrap_seed, n_boot=n_boot)
 
     return {
+        "evaluable": True,
+        "reason": None,
         "real_core_session_rate": real_rate,
         "perm_rate_mean": mean_perm,
         "perm_rate_per_seed": per_seed,
