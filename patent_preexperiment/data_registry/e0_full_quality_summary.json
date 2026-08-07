@@ -99,6 +99,21 @@
     "rule": "matched：API connectionTime 可解析且不矛盾 → api_metadata；缺失/无法解析 → first_observation_fallback；可解析但与首条观测矛盾 → 仅登记 anomaly，禁止自动替换"
   },
   "connection_time_anomalies": [],
+  "site_mapping_audit": {
+    "raw_sites": {
+      "caltech": 56680,
+      "jpl": 27723,
+      "office_01": 1474
+    },
+    "canonical_sites": {
+      "caltech": 56680,
+      "jpl": 27723,
+      "office001": 1474
+    },
+    "unmapped_raw": [],
+    "mapping_ok": true,
+    "rule": "site_canonical 经 site_mapping.raw_to_canonical 生成；registry 保留 site_raw 与 site_canonical 两列"
+  },
   "stop_lines": {
     "passed": false,
     "checks": {
@@ -115,7 +130,8 @@
       "dup_ts_within_file": {
         "ok": false,
         "actual": 10684,
-        "rule": "文件内重复时间戳 == 0"
+        "rule": "文件内重复时间戳 == 0",
+        "note": "对 stop_lines 冻结条件'同一会话存在无法解释的重叠记录'的实现解释"
       },
       "severe_gap_rate": {
         "ok": true,
@@ -136,8 +152,840 @@
   "dup_ts_classification": {
     "dup_ts_files": 10684,
     "identical_dup_rows": 663,
+    "identical_zero_idle_rows": 661,
+    "identical_nonzero_rows": 2,
     "identical_dup_files": 234,
-    "same_second_distinct_samples": 30226,
-    "classification_rule": "逐字节相同行 → 可疑重叠；同秒不同值 → 亚秒采样（可解释）"
+    "same_timestamp_distinct_rows": 30226,
+    "files_failed": 0,
+    "by_site": {
+      "caltech": {
+        "files": 10008,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 28279
+      },
+      "jpl": {
+        "files": 664,
+        "identical_dup_rows": 663,
+        "identical_zero_idle_rows": 661,
+        "identical_nonzero_rows": 2,
+        "same_timestamp_distinct_rows": 1920
+      },
+      "office001": {
+        "files": 12,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 27
+      }
+    },
+    "by_role": {
+      "caltech_main_frozen": {
+        "files": 805,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 2098
+      },
+      "caltech_other": {
+        "files": 9203,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 26181
+      },
+      "jpl_boundary_2020": {
+        "files": 3,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 3
+      },
+      "jpl_current_only": {
+        "files": 159,
+        "identical_dup_rows": 109,
+        "identical_zero_idle_rows": 109,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 312
+      },
+      "jpl_other": {
+        "files": 502,
+        "identical_dup_rows": 554,
+        "identical_zero_idle_rows": 552,
+        "identical_nonzero_rows": 2,
+        "same_timestamp_distinct_rows": 1605
+      },
+      "office_external": {
+        "files": 12,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 27
+      }
+    },
+    "by_role_month": {
+      "caltech_main_frozen": {
+        "2018-11": {
+          "files": 151,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 455
+        },
+        "2019-03": {
+          "files": 130,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 353
+        },
+        "2019-04": {
+          "files": 142,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 356
+        },
+        "2019-05": {
+          "files": 135,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 319
+        },
+        "2019-08": {
+          "files": 119,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 337
+        },
+        "2019-10": {
+          "files": 128,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 278
+        }
+      },
+      "caltech_other": {
+        "2018-05": {
+          "files": 308,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 645
+        },
+        "2018-06": {
+          "files": 217,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 660
+        },
+        "2018-07": {
+          "files": 191,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 243
+        },
+        "2018-08": {
+          "files": 184,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 269
+        },
+        "2018-09": {
+          "files": 177,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 452
+        },
+        "2018-10": {
+          "files": 195,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 264
+        },
+        "2018-11": {
+          "files": 39,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 499
+        },
+        "2018-12": {
+          "files": 295,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 624
+        },
+        "2019-01": {
+          "files": 438,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1382
+        },
+        "2019-02": {
+          "files": 398,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1171
+        },
+        "2019-03": {
+          "files": 229,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 613
+        },
+        "2019-04": {
+          "files": 36,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 49
+        },
+        "2019-05": {
+          "files": 74,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 88
+        },
+        "2019-06": {
+          "files": 202,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 447
+        },
+        "2019-07": {
+          "files": 158,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 456
+        },
+        "2019-08": {
+          "files": 481,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1177
+        },
+        "2019-09": {
+          "files": 618,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1694
+        },
+        "2019-10": {
+          "files": 572,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1706
+        },
+        "2019-11": {
+          "files": 656,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1801
+        },
+        "2019-12": {
+          "files": 448,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1166
+        },
+        "2020-01": {
+          "files": 488,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1139
+        },
+        "2020-02": {
+          "files": 364,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 775
+        },
+        "2020-03": {
+          "files": 433,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1802
+        },
+        "2020-04": {
+          "files": 141,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 377
+        },
+        "2020-05": {
+          "files": 142,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 504
+        },
+        "2020-06": {
+          "files": 193,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 766
+        },
+        "2020-07": {
+          "files": 274,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1147
+        },
+        "2020-08": {
+          "files": 234,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1040
+        },
+        "2020-09": {
+          "files": 372,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1570
+        },
+        "2020-10": {
+          "files": 311,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 962
+        },
+        "2020-11": {
+          "files": 303,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 646
+        },
+        "2020-12": {
+          "files": 32,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 47
+        }
+      },
+      "jpl_boundary_2020": {
+        "2020-06": {
+          "files": 2,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 2
+        },
+        "2020-07": {
+          "files": 1,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1
+        }
+      },
+      "jpl_current_only": {
+        "2018-11": {
+          "files": 35,
+          "identical_dup_rows": 13,
+          "identical_zero_idle_rows": 13,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 57
+        },
+        "2019-03": {
+          "files": 9,
+          "identical_dup_rows": 1,
+          "identical_zero_idle_rows": 1,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 10
+        },
+        "2019-04": {
+          "files": 9,
+          "identical_dup_rows": 8,
+          "identical_zero_idle_rows": 8,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 17
+        },
+        "2019-05": {
+          "files": 14,
+          "identical_dup_rows": 17,
+          "identical_zero_idle_rows": 17,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 27
+        },
+        "2019-08": {
+          "files": 45,
+          "identical_dup_rows": 21,
+          "identical_zero_idle_rows": 21,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 78
+        },
+        "2019-10": {
+          "files": 47,
+          "identical_dup_rows": 49,
+          "identical_zero_idle_rows": 49,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 123
+        }
+      },
+      "jpl_other": {
+        "2018-10": {
+          "files": 74,
+          "identical_dup_rows": 47,
+          "identical_zero_idle_rows": 46,
+          "identical_nonzero_rows": 1,
+          "same_timestamp_distinct_rows": 271
+        },
+        "2018-12": {
+          "files": 14,
+          "identical_dup_rows": 2,
+          "identical_zero_idle_rows": 2,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 13
+        },
+        "2019-01": {
+          "files": 7,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 8
+        },
+        "2019-02": {
+          "files": 18,
+          "identical_dup_rows": 1,
+          "identical_zero_idle_rows": 1,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 22
+        },
+        "2019-06": {
+          "files": 9,
+          "identical_dup_rows": 4,
+          "identical_zero_idle_rows": 4,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 10
+        },
+        "2019-07": {
+          "files": 53,
+          "identical_dup_rows": 28,
+          "identical_zero_idle_rows": 28,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 85
+        },
+        "2019-09": {
+          "files": 54,
+          "identical_dup_rows": 70,
+          "identical_zero_idle_rows": 70,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 166
+        },
+        "2019-11": {
+          "files": 70,
+          "identical_dup_rows": 59,
+          "identical_zero_idle_rows": 59,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 185
+        },
+        "2019-12": {
+          "files": 40,
+          "identical_dup_rows": 43,
+          "identical_zero_idle_rows": 43,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 141
+        },
+        "2020-01": {
+          "files": 6,
+          "identical_dup_rows": 2,
+          "identical_zero_idle_rows": 1,
+          "identical_nonzero_rows": 1,
+          "same_timestamp_distinct_rows": 4
+        },
+        "2020-02": {
+          "files": 5,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 6
+        },
+        "2020-03": {
+          "files": 148,
+          "identical_dup_rows": 298,
+          "identical_zero_idle_rows": 298,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 690
+        },
+        "2020-08": {
+          "files": 3,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 3
+        },
+        "2020-10": {
+          "files": 1,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1
+        }
+      },
+      "office_external": {
+        "2019-11": {
+          "files": 1,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 1
+        },
+        "2019-12": {
+          "files": 2,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 2
+        },
+        "2020-03": {
+          "files": 9,
+          "identical_dup_rows": 0,
+          "identical_zero_idle_rows": 0,
+          "identical_nonzero_rows": 0,
+          "same_timestamp_distinct_rows": 24
+        }
+      }
+    },
+    "by_month": {
+      "2018-05": {
+        "files": 308,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 645
+      },
+      "2018-06": {
+        "files": 217,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 660
+      },
+      "2018-07": {
+        "files": 191,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 243
+      },
+      "2018-08": {
+        "files": 184,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 269
+      },
+      "2018-09": {
+        "files": 177,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 452
+      },
+      "2018-10": {
+        "files": 269,
+        "identical_dup_rows": 47,
+        "identical_zero_idle_rows": 46,
+        "identical_nonzero_rows": 1,
+        "same_timestamp_distinct_rows": 535
+      },
+      "2018-11": {
+        "files": 225,
+        "identical_dup_rows": 13,
+        "identical_zero_idle_rows": 13,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 1011
+      },
+      "2018-12": {
+        "files": 309,
+        "identical_dup_rows": 2,
+        "identical_zero_idle_rows": 2,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 637
+      },
+      "2019-01": {
+        "files": 445,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 1390
+      },
+      "2019-02": {
+        "files": 416,
+        "identical_dup_rows": 1,
+        "identical_zero_idle_rows": 1,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 1193
+      },
+      "2019-03": {
+        "files": 368,
+        "identical_dup_rows": 1,
+        "identical_zero_idle_rows": 1,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 976
+      },
+      "2019-04": {
+        "files": 187,
+        "identical_dup_rows": 8,
+        "identical_zero_idle_rows": 8,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 422
+      },
+      "2019-05": {
+        "files": 223,
+        "identical_dup_rows": 17,
+        "identical_zero_idle_rows": 17,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 434
+      },
+      "2019-06": {
+        "files": 211,
+        "identical_dup_rows": 4,
+        "identical_zero_idle_rows": 4,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 457
+      },
+      "2019-07": {
+        "files": 211,
+        "identical_dup_rows": 28,
+        "identical_zero_idle_rows": 28,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 541
+      },
+      "2019-08": {
+        "files": 645,
+        "identical_dup_rows": 21,
+        "identical_zero_idle_rows": 21,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 1592
+      },
+      "2019-09": {
+        "files": 672,
+        "identical_dup_rows": 70,
+        "identical_zero_idle_rows": 70,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 1860
+      },
+      "2019-10": {
+        "files": 747,
+        "identical_dup_rows": 49,
+        "identical_zero_idle_rows": 49,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 2107
+      },
+      "2019-11": {
+        "files": 727,
+        "identical_dup_rows": 59,
+        "identical_zero_idle_rows": 59,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 1987
+      },
+      "2019-12": {
+        "files": 490,
+        "identical_dup_rows": 43,
+        "identical_zero_idle_rows": 43,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 1309
+      },
+      "2020-01": {
+        "files": 494,
+        "identical_dup_rows": 2,
+        "identical_zero_idle_rows": 1,
+        "identical_nonzero_rows": 1,
+        "same_timestamp_distinct_rows": 1143
+      },
+      "2020-02": {
+        "files": 369,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 781
+      },
+      "2020-03": {
+        "files": 590,
+        "identical_dup_rows": 298,
+        "identical_zero_idle_rows": 298,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 2516
+      },
+      "2020-04": {
+        "files": 141,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 377
+      },
+      "2020-05": {
+        "files": 142,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 504
+      },
+      "2020-06": {
+        "files": 195,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 768
+      },
+      "2020-07": {
+        "files": 275,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 1148
+      },
+      "2020-08": {
+        "files": 237,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 1043
+      },
+      "2020-09": {
+        "files": 372,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 1570
+      },
+      "2020-10": {
+        "files": 312,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 963
+      },
+      "2020-11": {
+        "files": 303,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 646
+      },
+      "2020-12": {
+        "files": 32,
+        "identical_dup_rows": 0,
+        "identical_zero_idle_rows": 0,
+        "identical_nonzero_rows": 0,
+        "same_timestamp_distinct_rows": 47
+      }
+    },
+    "classification_rule": "逐字节相同行 → 可疑重叠（保留不删，派生层按冻结规则 collapse）；同一记录时间戳不同观测值 → 保留进入确定性分钟聚合；采样机制未被当前数据证明"
+  },
+  "dup_collapse_impact": {
+    "scope": "只扫描 identical_dup_rows>0 的文件；派生层 1-min 聚合：current/power/pilot 取均值、energy 取分钟末值",
+    "input_untouched": true,
+    "files_scanned": 234,
+    "by_role": {
+      "jpl_other": {
+        "files": 180,
+        "affected_files_any_field": 127,
+        "fields": {
+          "current": {
+            "affected_minutes": 340,
+            "max_abs_diff": 1.752222222,
+            "mean_abs_diff": 0.000685019
+          },
+          "power": {
+            "affected_minutes": 0,
+            "max_abs_diff": 0.0,
+            "mean_abs_diff": 0.0
+          },
+          "pilot": {
+            "affected_minutes": 0,
+            "max_abs_diff": 0.0,
+            "mean_abs_diff": 0.0
+          },
+          "energy": {
+            "affected_minutes": 0,
+            "max_abs_diff": 0.0,
+            "mean_abs_diff": 0.0
+          }
+        }
+      },
+      "jpl_current_only": {
+        "files": 54,
+        "affected_files_any_field": 39,
+        "fields": {
+          "current": {
+            "affected_minutes": 71,
+            "max_abs_diff": 2.466666667,
+            "mean_abs_diff": 0.000616207
+          },
+          "power": {
+            "affected_minutes": 0,
+            "max_abs_diff": 0.0,
+            "mean_abs_diff": 0.0
+          },
+          "pilot": {
+            "affected_minutes": 0,
+            "max_abs_diff": 0.0,
+            "mean_abs_diff": 0.0
+          },
+          "energy": {
+            "affected_minutes": 0,
+            "max_abs_diff": 0.0,
+            "mean_abs_diff": 0.0
+          }
+        }
+      }
+    },
+    "overall_fields": {
+      "current": {
+        "affected_minutes": 411,
+        "max_abs_diff": 2.466666667,
+        "mean_abs_diff": 0.000669139
+      },
+      "power": {
+        "affected_minutes": 0,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0
+      },
+      "pilot": {
+        "affected_minutes": 0,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0
+      },
+      "energy": {
+        "affected_minutes": 0,
+        "max_abs_diff": 0.0,
+        "mean_abs_diff": 0.0
+      }
+    }
   }
 }

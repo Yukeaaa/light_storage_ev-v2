@@ -1,0 +1,81 @@
+{
+  "scope": "只扫描 identical_dup_rows>0 的文件；派生层 1-min 聚合：current/power/pilot 取均值、energy 取分钟末值",
+  "input_untouched": true,
+  "files_scanned": 234,
+  "by_role": {
+    "jpl_other": {
+      "files": 180,
+      "affected_files_any_field": 127,
+      "fields": {
+        "current": {
+          "affected_minutes": 340,
+          "max_abs_diff": 1.752222222,
+          "mean_abs_diff": 0.000685019
+        },
+        "power": {
+          "affected_minutes": 0,
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0
+        },
+        "pilot": {
+          "affected_minutes": 0,
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0
+        },
+        "energy": {
+          "affected_minutes": 0,
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0
+        }
+      }
+    },
+    "jpl_current_only": {
+      "files": 54,
+      "affected_files_any_field": 39,
+      "fields": {
+        "current": {
+          "affected_minutes": 71,
+          "max_abs_diff": 2.466666667,
+          "mean_abs_diff": 0.000616207
+        },
+        "power": {
+          "affected_minutes": 0,
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0
+        },
+        "pilot": {
+          "affected_minutes": 0,
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0
+        },
+        "energy": {
+          "affected_minutes": 0,
+          "max_abs_diff": 0.0,
+          "mean_abs_diff": 0.0
+        }
+      }
+    }
+  },
+  "overall_fields": {
+    "current": {
+      "affected_minutes": 411,
+      "max_abs_diff": 2.466666667,
+      "mean_abs_diff": 0.000669139
+    },
+    "power": {
+      "affected_minutes": 0,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0
+    },
+    "pilot": {
+      "affected_minutes": 0,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0
+    },
+    "energy": {
+      "affected_minutes": 0,
+      "max_abs_diff": 0.0,
+      "mean_abs_diff": 0.0
+    }
+  }
+}
