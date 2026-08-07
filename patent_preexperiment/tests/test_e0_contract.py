@@ -75,6 +75,22 @@ def test_e0_split_rule_frozen() -> None:
     assert split["field_mode_separate"] is True
 
 
+def test_e0_connection_time_source_frozen() -> None:
+    # 审查结论8 P1-4：时间切分唯一依据必须冻结为 canonical connection_time
+    cfg = _load_config()
+    ct = cfg["session_join"]["connection_time"]
+    assert ct["canonical"]
+    assert "API" in ct["canonical"] and "connectionTime" in ct["canonical"]
+    assert "first_observation_fallback" in ct["matched_fallback"]
+    assert "first_observation_fallback" in ct["static_only"]
+    assert ct["source_values"] == ["api_metadata", "first_observation_fallback"]
+    schema = json.loads(
+        (DATA_REGISTRY / "e0_full_split_registry.schema.json").read_text(encoding="utf-8")
+    )
+    assert "connection_time_source" in schema["columns"]
+    assert schema["column_definitions"]["connection_time_source"]["dtype"] == "string"
+
+
 def test_e0_anomaly_months_match_k1() -> None:
     cfg, k1 = _load_config(), _load_k1_config()
     assert cfg["anomaly_months"] == k1["sample"]["exclude_months"]
@@ -131,9 +147,13 @@ def test_split_schema_required_fields() -> None:
     assert schema["$table"] == "e0_full_split_registry"
     assert schema["rule_version"] == "e0_full_split_v1"
     required_cols = {"session_id", "site", "garage", "station", "connection_time",
-                     "disconnect_time", "split", "split_rule_version", "field_mode",
-                     "stress", "external", "source_file"}
+                     "connection_time_source", "disconnect_time", "split",
+                     "split_rule_version", "field_mode", "stress", "external",
+                     "source_file"}
     assert required_cols.issubset(schema["columns"])
+    assert schema["constraints"]["split_values"] == [
+        "train", "validation", "test", "external", "stress"
+    ]
     assert schema["constraints"]["session_single_split"] is True
     assert schema["constraints"]["external_not_in_train"] is True
     assert schema["constraints"]["stress_not_in_main"] is True
@@ -156,8 +176,8 @@ def test_baseline_schema_required_fields() -> None:
 def test_claim_registry_columns_levels_and_uniqueness() -> None:
     df = pd.read_csv(DATA_REGISTRY / "claim_evidence_registry.csv", dtype=str)
     assert list(df.columns) == [
-        "claim_id", "claim", "evidence_level", "source", "scope",
-        "limitation", "allowed_wording", "forbidden_wording", "next_gate",
+        "claim_id", "claim", "evidence_level", "source", "source_ref",
+        "scope", "limitation", "allowed_wording", "forbidden_wording", "next_gate",
     ]
     assert df["claim_id"].is_unique
     assert (df["claim"].str.len() > 0).all()
@@ -171,6 +191,28 @@ def test_claim_registry_columns_levels_and_uniqueness() -> None:
             f"{level} 级必须给出 forbidden_wording"
         )
     assert (df[df["evidence_level"] == "D"]["next_gate"].str.len() > 0).all()
+
+
+def test_claim_source_refs_traceable() -> None:
+    # 审查结论8 P1-5：source_ref 必须可回查（空以——占位；非占位值必须在 sources.md 登记）
+    df = pd.read_csv(DATA_REGISTRY / "claim_evidence_registry.csv", dtype=str)
+    doc = (REPO / "docs" / "evidence" / "sources.md").read_text(encoding="utf-8")
+    refs: set[str] = set()
+    for val in df["source_ref"].fillna(""):
+        refs.update(token for token in val.split(",") if token.strip() and token.strip() != "—")
+    assert refs, "至少一个 claim 应登记可回查 source_ref"
+    for ref in sorted(refs):
+        assert ref in doc, f"sources.md 未登记 {ref}"
+        assert not any(tok in ref for tok in ("http", "D:\\", " ")), (
+            f"source_ref 必须用 S-xxx 编号，而非内联描述：{ref}"
+        )
+
+
+def test_claim_c004_next_gate_includes_e1_full() -> None:
+    # 审查结论8 §七：可吸收能力必须同时由 E1-Full 阶跃验证 + E2 区间有效性解锁
+    df = pd.read_csv(DATA_REGISTRY / "claim_evidence_registry.csv", dtype=str)
+    row = df[df["claim_id"] == "C-004"].iloc[0]
+    assert "E1-Full" in row["next_gate"] and "E2" in row["next_gate"]
 
 
 def test_claim_evidence_doc_matches_csv() -> None:

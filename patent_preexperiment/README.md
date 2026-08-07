@@ -7,9 +7,9 @@
 
 工商业园区光储充系统中，充电桩向车辆下发 **pilot（导引/允许电流）**，但车辆实际执行功率
 存在持续的、系统性的响应差异：同一时段内，桩侧可提供功率与车辆实际吸收功率不一致。
-当差异方向为"桩侧允许 > 车辆实际"时，存在一批时刻/会话，其分配功率未被车辆吸收
-（预算差值），理论上可被池内其他车辆重新利用——但**这不等于"可回收能力"，更不等于
-储能/光伏/闭环收益**，后者必须逐级证明。
+当差异方向为"桩侧允许 > 车辆实际"持续出现时，可形成**预算修正候选窗口**。该差值是否
+能够被其他车辆实际吸收，目前**尚未证明**，需通过自然 pilot 正阶跃响应与可执行功率区间
+实验进一步验证——这**不等于"可回收能力"，更不等于储能/光伏/闭环收益**，后者必须逐级证明。
 
 主候选方向（D1-R）：**充电响应状态识别 → 短时可执行功率区间 → 支持域内有界修正 →
 支持域外保护回退**。只有 E1 问题强度与 E3 重分配机会在冻结数据上成立，才允许升级到
@@ -62,15 +62,18 @@ K1 指标复现。
 
 ## 5. 数据位置与环境配置
 
-- 数据在仓库外：`D:\Users\Micko\Documents\工作\华润集控\光储充\数据`（含中文与空格，
-  脚本必须加引号），物理路径只在 `configs/paths.yaml` 登记，代码经 `io/paths.py` 读取，
-  禁止硬编码。
+- 数据在仓库外，`data_root` 由 `configs/paths.yaml` 配置；仓库不保存原始数据，也不提交
+  机器相关绝对路径。本机真实路径只保留在 `configs/paths.yaml`（该文件不入库，模板见
+  `configs/paths.example.yaml`）。代码统一经 `io/paths.py` 读取，禁止硬编码。
 - 主数据集 `ACN-data/acn_project/` 已构建：静态索引 85,877 / API 索引 51,234 / 映射 96,467
   （matched 40,644 / static_only 45,233 / api_only 10,590）；gold 基准 115 桩；
   原始时序 `ACN-data/ACN-Data-Static/`；API 会话元数据 `acn_full/`。
-- 运行时环境：仓库根 `venv/`（Python 3.12.7）。验证命令：
-  `& "D:\JobWorkspaces\light_storage_ev-v2\venv\Scripts\python.exe" -m pytest`
-  （在 `patent_preexperiment/` 下执行）；ruff：`...\ruff.exe check`。
+- 运行时环境：仓库根 `venv/`（Python 3.12.7）。验证命令（在 `patent_preexperiment/`
+  下执行）：
+  ```text
+  ..\venv\Scripts\python.exe -m pytest
+  ..\venv\Scripts\ruff.exe check
+  ```
 - 依赖：`pyproject.toml`（pandas/pyarrow/PyYAML；dev 含 pytest/ruff/mypy）。
 
 ## 6. E0-Full 运行入口

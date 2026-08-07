@@ -1,9 +1,0 @@
-# 数据路径集中配置（V2.1 §10.1：绝对路径集中在配置文件，不散落在算法代码）
-# 路径含中文与空格，统一在此登记；脚本一律通过 io/paths.py 读取，禁止硬编码。
-data_root: "D:\\Users\\Micko\\Documents\\工作\\华润集控\\光储充\\数据"
-
-acn_project: "${data_root}\\ACN-data\\acn_project"
-static_root: "${data_root}\\ACN-data\\ACN-Data-Static\\time series data"
-acn_full: "${data_root}\\ACN-data\\acn_full"
-
-output_root: "D:\\JobWorkspaces\\light_storage_ev-v2\\patent_preexperiment\\results"

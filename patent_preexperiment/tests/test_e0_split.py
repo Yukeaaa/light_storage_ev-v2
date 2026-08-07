@@ -1,7 +1,9 @@
-"""E0-Full 时间切分参考实现与测试（审查结论7 §6.1/§6.3；V2.1 §10.3）。
+"""E0-Full 时间切分参考实现与测试（审查结论7 §6.1/§6.3；审查结论8 P1-3；V2.1 §10.3）。
 
 本文件内的 `assign_split` 是切分规则的参考实现（金标准），E0F-02 生产实现必须与之对齐：
-- 站点内按 session connection_time 排序，前 60% train / 中 20% validation / 后 20% test；
+- 站点内按 session 排序后前 60% train / 中 20% validation / 后 20% test；
+- 排序键为 [connection_time, session_id]（mergesort 稳定排序），相同 connection_time
+  用 session_id 做确定性 tie-break，保证 split 与输入顺序无关；
 - 整条会话属于唯一 split，绝不按分钟切分；
 - external / stress 会话单独标记，不进入主 train/validation/test；
 - 无随机性，同输入必得同输出。
@@ -39,7 +41,7 @@ def assign_split(
 
     eligible = out[~(ext | stress)].copy()
     for _site, g in eligible.groupby("site", sort=False):
-        g = g.sort_values("connection_time")
+        g = g.sort_values(["connection_time", "session_id"], kind="mergesort")
         n = len(g)
         n_train = int(round(n * train_ratio))
         n_val = int(round(n * val_ratio))
@@ -125,6 +127,25 @@ def test_split_ignores_insertion_order() -> None:
     a = assign_split(df).set_index("session_id")["split"]
     b = assign_split(shuffled).set_index("session_id")["split"]
     pd.testing.assert_series_equal(a.sort_index(), b.sort_index())
+
+
+def test_split_tie_connection_time_deterministic() -> None:
+    # 多个 session 的 connection_time 完全相同：split 不得依赖原始输入顺序
+    t = pd.Timestamp("2019-03-01 10:00:00")
+    n = 80
+    df = pd.DataFrame({
+        "session_id": [f"s{i:04d}" for i in range(n)],
+        "site": ["caltech"] * n,
+        "connection_time": [t] * n,
+        "is_external": False,
+        "is_stress": False,
+    })
+    for seed in (3, 11, 19):
+        shuffled = df.sample(frac=1.0, random_state=seed).reset_index(drop=True)
+        a = assign_split(df).set_index("session_id")["split"]
+        b = assign_split(shuffled).set_index("session_id")["split"]
+        pd.testing.assert_series_equal(a.sort_index(), b.sort_index())
+        assert set(b) == {"train", "validation", "test"}
 
 
 def test_split_is_session_level_not_minute_level() -> None:

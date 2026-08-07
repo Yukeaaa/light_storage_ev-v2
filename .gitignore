@@ -7,3 +7,7 @@ __pycache__/
 
 # 派生中间数据集（可从仓库外原始数据重建，不入库）
 patent_preexperiment/datasets/**
+
+# 本机路径配置（含机器绝对路径，不入库；模板见 configs/paths.example.yaml）
+patent_preexperiment/configs/paths.yaml
+
