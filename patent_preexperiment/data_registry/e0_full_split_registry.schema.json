@@ -1,0 +1,30 @@
+{
+  "$table": "e0_full_split_registry",
+  "rule_version": "e0_full_split_v1",
+  "columns": [
+    "session_id", "site", "garage", "station", "connection_time",
+    "disconnect_time", "split", "split_rule_version", "field_mode",
+    "stress", "external", "source_file"
+  ],
+  "unique_columns": ["session_id"],
+  "constraints": {
+    "split_values": ["train", "validation", "test"],
+    "session_single_split": true,
+    "external_not_in_train": true,
+    "stress_not_in_main": true
+  },
+  "column_definitions": {
+    "session_id": { "dtype": "string", "description": "会话唯一标识（同一会话绝不跨 split）" },
+    "site": { "dtype": "string", "description": "站点（caltech/jpl/office001）" },
+    "garage": { "dtype": "string", "description": "车库/桩群" },
+    "station": { "dtype": "string", "description": "桩点" },
+    "connection_time": { "dtype": "datetime", "description": "接入时刻（按此排序做站点内 60/20/20 切分）" },
+    "disconnect_time": { "dtype": "datetime", "description": "离场时刻" },
+    "split": { "dtype": "string", "description": "train/validation/test/external/stress" },
+    "split_rule_version": { "dtype": "string", "description": "e0_full_split_v1" },
+    "field_mode": { "dtype": "string", "description": "measured_pilot/computed_pilot/current_only 等冻结五类" },
+    "stress": { "dtype": "bool", "description": "异常月份/2021 是否标记为 stress" },
+    "external": { "dtype": "bool", "description": "office001 外部验证会话" },
+    "source_file": { "dtype": "string", "description": "来源 manifest 文件名" }
+  }
+}

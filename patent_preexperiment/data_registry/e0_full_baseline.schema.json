@@ -1,0 +1,78 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://patent-preexperiment.local/schema/e0_full_baseline.schema.json",
+  "title": "e0_full_baseline",
+  "description": "E0-Full 基线冻结产物 schema（审查结论7 §4.4）。由 E0F-01 生成并校验，保证输入可追溯。",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "created_at_utc",
+    "protocol_version",
+    "landing_version",
+    "experiment_id",
+    "rule_version",
+    "parent_baseline",
+    "code_sha",
+    "e0_full_yaml_sha256",
+    "manifest_hashes",
+    "runtime_versions",
+    "input_logical_id",
+    "data_roots_resolved",
+    "split_rule_version",
+    "output_manifest"
+  ],
+  "properties": {
+    "created_at_utc": { "type": "string", "format": "date-time" },
+    "protocol_version": { "type": "string", "enum": ["V2.0"] },
+    "landing_version": { "type": "string", "enum": ["V2.1"] },
+    "experiment_id": { "type": "string", "enum": ["E0_full_preregister_v1"] },
+    "rule_version": { "type": "string", "enum": ["e0_full_split_v1"] },
+    "parent_baseline": {
+      "description": "K0 历史基线文件相对路径与提交，保留不覆盖",
+      "type": "object",
+      "required": ["path", "commit"],
+      "properties": {
+        "path": { "type": "string" },
+        "commit": { "type": "string" }
+      }
+    },
+    "code_sha": { "type": "string", "minLength": 40, "maxLength": 40 },
+    "e0_full_yaml_sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+    "manifest_hashes": {
+      "description": "原始 manifest 哈希（static_file_index / api_metadata_index / static_api_mapping）",
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "required": ["sha256", "rows", "exists"],
+        "properties": {
+          "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" },
+          "rows": { "type": "integer", "minimum": 0 },
+          "exists": { "type": "boolean" }
+        }
+      },
+      "minProperties": 3
+    },
+    "runtime_versions": {
+      "type": "object",
+      "required": ["python", "pandas", "pyarrow"],
+      "properties": {
+        "python": { "type": "string" },
+        "pandas": { "type": "string" },
+        "pyarrow": { "type": "string" }
+      }
+    },
+    "input_logical_id": { "type": "string", "description": "输入数据逻辑 ID（如 acn_project_v1）" },
+    "data_roots_resolved": {
+      "description": "数据根目录解析结果（来自 configs/paths.yaml，物理路径只在此登记）",
+      "type": "object",
+      "required": ["data_root", "acn_project", "static_root", "acn_full"],
+      "additionalProperties": { "type": "string" }
+    },
+    "split_rule_version": { "type": "string", "enum": ["e0_full_split_v1"] },
+    "output_manifest": {
+      "description": "输出产物位置（E0F-01..04 生成物相对路径）",
+      "type": "array",
+      "items": { "type": "string" }
+    }
+  }
+}

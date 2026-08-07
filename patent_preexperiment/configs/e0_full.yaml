@@ -1,0 +1,168 @@
+# E0-Full 预注册配置（审查结论7 S0：阶段启动冻结；V2.1 §10 E0-Full 数据冻结与工程底座）
+# 冻结规则：输入版本、切分规则、验收阈值、停止线在读取全量数据结果前冻结。
+# 物理绝对路径不进入本文件；逻辑名在此登记，物理路径统一经 configs/paths.yaml + io/paths.py 解析。
+# 配套测试：tests/test_e0_contract.py（配置结构/冻结值）、test_e0_split.py（切分规则）、
+# test_e0_evaluable_aggregation.py（不可评估聚合规则）。
+
+experiment_id: E0_full_preregister_v1
+protocol_version: V2.0
+landing_version: V2.1
+rule_version: e0_full_split_v1
+output_version: e0_full_v1
+commit: auto
+
+# --- 输入与证据注册（E0F-01；审查结论7 §5）---
+inputs:
+  logical_roots:
+    data_root: "${data_root}"        # 物理路径只在 configs/paths.yaml；本文件只登记逻辑名
+    acn_project: "${acn_project}"
+    static_root: "${static_root}"
+    acn_full: "${acn_full}"
+  manifests:                          # acn_project 构建结果版本锚点（K0 冻结值，只读不原地清洗）
+    static_file_index_rows: 85877
+    api_metadata_index_rows: 51234
+    static_api_mapping_rows: 96467
+    match_status: {matched: 40644, static_only: 45233, api_only: 10590}
+    gold_benchmark_stations: 115
+  read_only: true
+
+# --- 功率来源优先级（AGENTS.md 口径，冻结）---
+power:
+  priority: [measured, computed, estimated]
+  measured: "power_kw 实测"
+  computed: "voltage_v * current_a / 1000；标记 power_source=computed"
+  estimated: "额定电压 * current_a / 1000；标记 power_source=estimated（必须标记）"
+  rated_voltage:
+    jpl: 192.7      # 按 kWhDelivered 校准，240V 假设高估 17.7%
+    caltech: 240.0
+    office001: 240.0
+
+# --- 时间与时区（契约：UTC 主键，本地时间只允许派生）---
+time:
+  primary_key: timestamp_utc
+  local_time_rule: "本地时间只能由 site 时区偏移派生；禁止以本地时间作主键或直接入表"
+
+# --- 会话拼接与重复（契约）---
+session_join:
+  session_id: "static×api matched 关联；static_only 仅用于响应机制扩展，不进入严格会话验证"
+  connection_time: "会话首条记录 timestamp_utc（时间切分唯一依据）"
+  disconnect_time: "离线标签，禁止进入在线特征"
+  done_charging_time: "离线标签，禁止进入在线特征"
+
+duplicates:
+  key: [session_id, timestamp_utc]
+  rule: "唯一；任何非法重复必须登记，禁止静默丢弃"
+
+# --- 缺口与短文件（契约）---
+gaps:
+  minute_sample_threshold: 10        # 1 分钟采样 < 10 点 → gap 标记（session.py gap_flag 口径）
+  severe_gap_min: 20                 # 连续缺失 >= 20 min → 严重缺口，事件检测不得跨越
+  no_fill_policy: "禁止跨缺口填充虚假连续轨迹；任何插值/补齐必须带质量标记"
+
+short_files:
+  min_rows_per_file: 10              # 与 K0/K1 冻结一致；低于下限标记为短文件，仅登记不删除
+
+# --- 异常月份（低覆盖/异常，仅 stress，不进主切分）---
+anomaly_months: [2019-12, 2020-02, 2020-04, 2020-12]
+anomaly_year_2021: true              # 2021 全年仅 stress/敏感性
+
+# --- field_mode（与时间 split 分开注册；V2.1 §10.3，审查结论7 §6.2）---
+field_modes:
+  categories: [measured_pilot, measured_no_pilot, computed_pilot, computed_no_pilot, current_only]
+  per_file_rule: "按 power 可用性 / voltage 可用性 / pilot 可用性逐文件判定；无法判定一律标记，不猜测"
+
+# --- 时间切分（E0F-02；V2.1 §10.3，审查结论7 §6.1，冻结）---
+split:
+  rule: "站点内按 session connection_time 排序：前 60% train / 中 20% validation / 后 20% test"
+  unit: session                       # 整条会话属于唯一 split，不得按分钟切分
+  rule_version: e0_full_split_v1
+  forbidden:
+    - minutes_level_split
+    - event_month_selection
+    - event_rate_boundary_adjust
+  external_only: [office001]          # 仅外部验证，不参与阈值选择
+  stress_roles: [anomaly_months, anomaly_year_2021]
+  field_mode_separate: true
+
+# --- 数据角色（沿用 K1 冻结语义）---
+roles:
+  main: caltech                       # 主集：独立训练/验证/测试，承载 K1 复现主结论
+  boundary: jpl.Arroyo_Garage_01      # 仅外部边界（2020-06/07 pilot 窗口），不调参
+  current_only_fallback: jpl.current_only
+  external_only: [office001]
+
+# --- D0 数据工程验收门（审查结论7 §9.1；V2.1 §10.4，逐项转测试）---
+acceptance:
+  input_traceability: true
+  output_traceability: true
+  uniqueness: "会话分钟主键无非法重复"
+  completeness: "站点/月份/字段覆盖报告完整"
+  energy_consistency:
+    tolerance_ratio: 0.01            # 1 分钟积分与原始/会话能量中位偏差 <1%（caltech/office001 口径）
+    jpl_rule: "会话级离群过滤 + 敏感性；聚合可用，会话级必须离群过滤"
+  gold_consistency: true              # 池级聚合与 115 个 Gold 桩基准一致
+  split_safety: true
+  leak_safety: true                   # 禁止特征不进入在线 schema（leakguard）
+  determinism: true                   # 同配置重复运行产物一致
+  evaluable_aggregation: true         # 不可评估池/月不得当作零效果计入
+
+# --- R1 K1 硬切分复现停止线（审查结论7 §10.1；沿用 K1 冻结值，不改）---
+k1_replication_stop_lines:
+  e1:
+    min_event_session_rate: 0.05      # 核心运行段事件会话率 >=5%
+    min_median_gap_kw: 0.5            # 或 >=10% 工作功率
+    min_median_gap_ratio: 0.10
+    negative_control_ci_lower_positive: true   # 时间置换差值 CI 下界 >0
+    not_single_station_or_month: true
+    done_cutting_holds: true          # done 阶段切断后结论仍成立
+  e3:
+    caltech_a2_daily_ci_lower_rate: 0.01       # 日等权候选率 CI 下界 >=1%
+    daily_energy_share_each_pool: 0.005        # 两证据池各自日候选能量中位数 >=0.5%
+    max_baseline_elimination: 0.80             # A2/A3 消除 >80% 候选则停止复杂区间模型
+    not_single_month_or_outlier: true
+
+# --- 随机种子（冻结）---
+seeds:
+  bootstrap: 42
+  n_boot: 2000
+  permutation: [7, 11, 13]
+  split: "connection_time 分位数确定性切分（无随机性）"
+
+# --- evaluable 汇总层集成规则（审查结论7 §9.2，冻结）---
+evaluable:
+  exclude_not_evaluable_from_mean: true   # evaluable=False 的记录不得进入均值
+  zero_not_real_zero: true                # evaluable=False 的 0.0 不理解为真实事件率为零
+  reasons: [no_core_sessions, insufficient_core_sessions]  # 样本不足统一用后者，不临时决定是否保留
+  report_non_evaluable_separately: true   # 单独报告不可评估池/月
+  report_evaluable_coverage: true         # 报告可评估会话覆盖率
+
+# --- 输出目录与版本（E0F-03/04；V2.1 §10.1 分区结构）---
+outputs:
+  session_minute_1min: "datasets/session_response_1min"      # site=xxx/year=YYYY/month=MM 分区
+  pool_state_1min: "datasets/pool_state_1min"
+  pool_state_5min: "datasets/pool_state_5min"
+  source_manifest: "data_registry/e0_full_source_manifest.parquet"
+  quality_summary: "data_registry/e0_full_quality_summary.json"
+  split_registry: "data_registry/e0_full_split_registry.parquet"
+  field_mode_registry: "data_registry/e0_full_field_mode_registry.parquet"
+  input_audit_report: "reports/E0_Full_input_audit.md"
+  split_audit_report: "reports/E0_Full_split_audit.md"
+  baseline: "data_registry/e0_full_baseline.json"
+
+# --- 数据工程停止线（审查结论7 §5.3，冻结）---
+stop_lines:
+  conditions:
+    - "manifest 数量或哈希发生无法解释的变化"
+    - "大规模文件读取失败"
+    - "时区规则无法唯一确定"
+    - "同一会话存在无法解释的重叠记录"
+    - "功率单位或电压假设无法统一"
+    - "能量积分偏差出现系统性漂移"
+    - "数据缺失集中在关键站点或关键月份"
+  action: "只解决数据问题，不得通过删除不利月份继续"
+
+# --- 禁止散落在代码中的项（审查结论7 §4.3）---
+forbidden_in_code:
+  - absolute_paths
+  - month_selection
+  - statistical_thresholds
