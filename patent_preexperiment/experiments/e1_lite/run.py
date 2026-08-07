@@ -12,6 +12,9 @@ K1.2-B 修正：事件连续段在 core/mid/tail 阶段边界处强制切断，�
 K1.2-D 修正：主集/边界只保留冻结 cycle_month（分钟/控制周期所在月份）；六个月稳定门=
 冻结 6 个月逐月 ≥5%；done 锚点覆盖率按会话数报告；时间置换负对照输出 diff/ratio
 与多种子 bootstrap 95%CI。
+
+K1.2.2 修正：置换事件分子强制限制在 core_sessions 母体（同 core_denom），
+点估计/每种子置换率/CI 均由同一布尔矩阵计算，并输出母体过滤诊断（审查结论4）。
 """
 
 from __future__ import annotations
@@ -20,11 +23,10 @@ import json
 import sys
 from pathlib import Path
 
-import numpy as np
 import pandas as pd
 
 from patent_preexperiment.config.yamlutil import load_yaml
-from patent_preexperiment.metrics.bootstrap import bootstrap_session_diff_ci, core_run_session_ids
+from patent_preexperiment.metrics.permutation import permutation_negative_control
 from patent_preexperiment.response.done import (
     PHASE_CORE,
     PHASE_MISSING,
@@ -154,69 +156,18 @@ def _phase_summary(events: pd.DataFrame, labeled: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows).sort_values("phase", key=lambda s: s.map(order).fillna(9))
 
 
-def _permutation_control(
-    labeled: pd.DataFrame, thr: GapThresholds, core_denom: int, core_events: pd.DataFrame,
-) -> dict:
-    """时间置换负对照：会话内打乱实际功率，多种子；输出 diff/ratio 与会话 cluster bootstrap CI。"""
-    real_core_sess = set(core_events["session_id"].unique()) if len(core_events) else set()
-    real_rate = _session_rate(core_events, core_denom)
-    per_seed: list[dict] = []
-    perm_core_frames: dict[int, pd.DataFrame] = {}
-    for s, seed in enumerate(PERM_SEEDS):
-        rng = np.random.default_rng(seed)
-        perm = labeled.copy()
-        perm["actual_power_kw"] = perm.groupby("session_id", group_keys=False)[
-            "actual_power_kw"
-        ].apply(lambda x, rng=rng: pd.Series(rng.permutation(x.to_numpy()), index=x.index))
-        perm = add_done_phases(perm, thr.p_on_kw)
-        core = _events_with_phase(perm, thr)
-        core = core[core["event_phase"] == PHASE_CORE]
-        perm_core_frames[s] = core
-        per_seed.append({
-            "seed": seed,
-            "core_events": int(len(core)),
-            "core_session_rate": _session_rate(core, core_denom),
-        })
-    perm_rates = np.array([p["core_session_rate"] for p in per_seed])
-    mean_perm = float(perm_rates.mean())
-    diff = float(real_rate - mean_perm)
-    ratio = float(real_rate / max(mean_perm, 1e-9))
-
-    # K1.2.1-P0-1：bootstrap 母体=有核心运行窗口的会话（同点估计 core_denom），
-    # 不得用全部合格会话——否则点估计(349/2939)与 CI(事件标记/5961)口径不一致。
-    sessions = core_run_session_ids(labeled)
-    real_has = np.isin(sessions, list(real_core_sess))
-    perm_has = np.stack([
-        np.isin(sessions, list(perm_core_frames[s]["session_id"].unique()))
-        for s in perm_core_frames
-    ])
-    lo, hi = bootstrap_session_diff_ci(real_has, perm_has, seed=SEED, n_boot=BOOT_N)
-    return {
-        "real_core_session_rate": real_rate,
-        "perm_rate_mean": mean_perm,
-        "perm_rate_per_seed": per_seed,
-        "diff_real_minus_perm": diff,
-        "ratio_real_over_perm": ratio,
-        "diff_bootstrap_ci95": [float(lo), float(hi)],
-        "bootstrap_n_sessions": int(len(sessions)),
-        "interpretation": (
-            "真实时序显著增强事件（diff CI 下界>0），但 pilot/actual 边际分布本身"
-            "也可产生一定事件率；不得表述为'完全排除时序伪相关'。"
-            "bootstrap 母体=有核心运行窗口会话，与点估计 core_denom 同口径（K1.2.1-P0-1）。"
-        ),
-        "perm_core_reference": perm_core_frames[0],
-    }
-
-
 def _negative_controls(
     labeled: pd.DataFrame, events: pd.DataFrame, thr: GapThresholds,
-    core_denom: int, session_summary: pd.DataFrame, core_events: pd.DataFrame,
+    session_summary: pd.DataFrame, core_events: pd.DataFrame,
 ) -> dict:
     neg: dict = {}
     core = core_events
 
     # NC-done-1: 时间置换（会话内，仅核心运行段，阶段切断）——多种子 + 差值 bootstrap
-    neg["time_permutation_core"] = _permutation_control(labeled, thr, core_denom, core)
+    # K1.2.2：置换事件分子强制限制在 core_sessions 母体（同 core_denom）。
+    neg["time_permutation_core"] = permutation_negative_control(
+        labeled, thr, core, perm_seeds=PERM_SEEDS, bootstrap_seed=SEED, n_boot=BOOT_N,
+    )
 
     # NC-done-2: 事件是否集中于完成阶段（done-anchored 特征化，非门判定）
     anch = done_anchored_summary(events)
@@ -349,13 +300,14 @@ def run_e1_lite() -> dict:
     month_rate_df = pd.DataFrame(month_rate)
     month_rate_df.to_csv(OUT / "e1_lite_pool_month_summary.csv", index=False)
 
-    neg = _negative_controls(labeled, events, thr, core_denom, session_summary, core_events)
+    neg = _negative_controls(labeled, events, thr, session_summary, core_events)
     fail_cases = _build_fail_cases(events, neg["time_permutation_core"]["perm_core_reference"],
                                    session_summary)
     fail_cases.to_csv(OUT / "e1_lite_fail_cases.csv", index=False)
     events.to_parquet(OUT / "e1_lite_event_table.parquet", index=False)
     neg["time_permutation_core"] = {
-        k: v for k, v in neg["time_permutation_core"].items() if k != "perm_core_reference"
+        k: v for k, v in neg["time_permutation_core"].items()
+        if k not in ("perm_core_reference", "_real_has", "_perm_has")
     }
 
     stop = cfg["k1_stop_lines"]["e1"]

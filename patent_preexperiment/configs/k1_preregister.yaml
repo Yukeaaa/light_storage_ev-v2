@@ -135,6 +135,10 @@ k1_2_corrections:
   e1_month_gate: "六个月稳定门=冻结 6 个 cycle_month 逐月核心事件会话率>=5%（非'至少两月有事件'）；done 锚点覆盖率按会话数报告；E0-Full 时间切分另用 session connection time（整条会话不跨 split），两种月份用途不同"
   e1_permutation: "时间置换负对照输出 真实率-置换率、真实率/置换率、会话 cluster bootstrap 差值 95%CI、多种子"
 
+# --- K1.2.2 母体过滤（2026-08-07，审查结论4，不改阈值）---
+k1_2_2_corrections:
+  e1_permutation_population: "进入置换循环前冻结 core_session_set=core_run_session_ids(labeled)（同 core_denom）；每种子置换 core 事件先过滤到该母体再计数；real_core_session_rate / perm_rate_per_seed / diff / CI 全部由同一布尔矩阵计算（点估计母体=每种子置换率母体=bootstrap 母体=core_denom）；输出母体过滤诊断 before/outside/after"
+
 outputs:
   k0: ["patent_preexperiment/data_registry/design_baseline.json",
        "patent_preexperiment/data_registry/k0_data_check.json"]

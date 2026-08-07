@@ -1,21 +1,26 @@
-# E1-Lite 门报告：基于充电响应状态识别的功率区间生成——问题强度（K1.2.1 修补后）
+# E1-Lite 门报告：基于充电响应状态识别的功率区间生成——问题强度（K1.2.2 修补后）
 
 实验编号：E1-Lite（V2.1 §6；阈值网格权威口径 V2.0 §4.3）
-日期：2026-08-07（K1.2.1 修补：置换 bootstrap 分母修正 + done 能量拆分 + cycle_month 术语统一）
-预注册：`configs/k1_preregister.yaml`（K1_preregister_v1 + k1_1_corrections + k1_2_corrections）
+日期：2026-08-07（K1.2.1 修补：置换 bootstrap 分母修正 + done 能量拆分 + cycle_month 术语统一；K1.2.2 修补：置换事件分子强制限制 core 母体）
+预注册：`configs/k1_preregister.yaml`（K1_preregister_v1 + k1_1_corrections + k1_2_corrections + k1_2_2_corrections）
 门判定：**K1-M（caltech 主集机制）= Go**；**K1-X（jpl 边界）= 方向一致弱证据**
 
-## 1. 结论摘要（K1.2.1 修补后）
+## 1. 结论摘要（K1.2.2 修补后）
 
-- 评审 K1.2.1 三项全部修复（审查结论3）：
-  1. **置换 bootstrap 分母**：bootstrap 母体改为有核心运行窗口的会话（`bootstrap_n_sessions=2,941`，与点估计 core_denom 同口径），不再用全部 5,961 合格会话 → 真实-置换差值点估计 **4.6pp 现落在 bootstrap 95%CI [3.5, 5.8]pp 内**（K1.2 时点估计在 [1.7, 2.8]pp 外，口径不一致）；`pass_permutation` 改为 CI 下界 >0。
-  2. **done 能量拆分**：`energy_kwh_post_done=0.0`（K1.2 误报 1,141.1 kWh 实为 tail 能量），新增 `energy_kwh_pre_done_tail=1,141.1`、`energy_kwh_pre_done_mid=866.2`。
-  3. **cycle_month 术语统一**：E1/E3 冻结过滤统一为 `cycle_month`（分钟/控制周期所在月份）；`month_connected` 死字段与 REGISTRY 合并且除；E0-Full 时间切分另用 session connection time（用途不同，注释已注明）。
+- 审查结论4 唯一残余项（K1.2.2）已修复：**置换事件分子强制限制在 core_sessions 母体**。
+  点估计、每种子置换率、bootstrap 95%CI 现在全部由**同一布尔矩阵**（事件会话标记 × 2,941 个 core 会话）计算，代码结构保证四者同母体，不再依赖"碰巧一致"。
+  - 诊断字段（新）：`n_perm_event_sessions_before/outside/after_population_filter`，ACN 实际数据 3 种子过滤前后均为 208/216/214 会话、**母体外会话 0**（审查者描述的"真实 core 阶段不活跃、置换后可能在 core 阶段活跃"情形在实际数据中未出现，但代码已从结构上杜绝）；
+  - 数值与 K1.2.1 完全一致：真实率 11.87%、置换均值 7.23%、diff 4.64pp、**CI [3.52, 5.76]pp 现为最终冻结版**（K1.2.1 因分子边界未保证而不可冻结）；
+  - `permutation_negative_control` 已抽到 `src/patent_preexperiment/metrics/permutation.py`，新增真实路径集成回归测试（含构造"置换后可能在 core 阶段活跃"的母体外会话验证其被过滤）。
+- K1.2.1 三项已通过且保持（审查结论4）：
+  1. **置换 bootstrap 分母**：bootstrap 母体=有核心运行窗口会话（`bootstrap_n_sessions=2,941`），点估计 4.6pp 落在 95%CI 内。
+  2. **done 能量拆分**：`energy_kwh_post_done=0.0`，`energy_kwh_pre_done_tail=1,141.1`、`energy_kwh_pre_done_mid=866.2`。
+  3. **cycle_month 术语统一**：E1/E3 冻结过滤统一为 `cycle_month`；`month_connected` 死字段与 REGISTRY 合并且除。
 - 核心运行段主口径数值不变（本轮只改负对照统计，不重跑事件识别）：
   - caltech 主集：2,941 个有核心运行窗口的会话中 349 个出现核心事件（733 段事件），**事件会话率 11.9%**（停止线 5%，超 2.4 倍）；中位功率差 **1.28 kW**（≈ 工作功率 36.7%）。
   - 阶段切断后近完成集中度：done 前 120 min 内段事件占比 84.8%（tail 2,569 + mid 1,549 vs core 733）。
   - 6 个冻结正常月份核心率 7.7%–16.9%，**逐月全部 ≥5%**。
-- 负对照（核心段口径）全稳：时间置换 3 种子均值 7.2% ≪ 11.9%（diff 4.6pp，bootstrap 95%CI [3.5, 5.8]pp 下界>0）；post_done=0；仅实测/计算功率子集 11.9%（一致）；排除短会话 11.9%；单桩 9.8%、单月 23.5% 无集中；38 个桩出现核心事件。
+- 负对照（核心段口径）全稳：时间置换 3 种子均值 7.2% ≪ 11.9%（diff 4.6pp，最终冻结 bootstrap 95%CI [3.5, 5.8]pp 下界>0）；post_done=0；仅实测/计算功率子集 11.9%（一致）；排除短会话 11.9%；单桩 9.8%、单月 23.5% 无集中；38 个桩出现核心事件。
 - K1-X 边界 jpl（2020-06/07）：513 个核心窗口会话，核心率 **5.1%**、中位差 1.43 kW（≈ 工作功率 87%），方向与主集一致（仅弱证据）。
 
 **语义修正**：done 前 120 分钟内事件占比高不是失败，而是问题特征化——响应差异在充电**末段集中**。这与"可执行功率区间生成"主轴的关系是：末段降流差异是可识别信号，但其"有界修正"价值需 E2 验证；核心运行段事件（11.9%）独立支撑问题强度。
@@ -37,6 +42,7 @@
 - 阶段划分：core_run_segment（距 done >120 min）｜ pre_done_mid（30–120 min）｜ pre_done_tail（0–30 min）｜ post_done（<0，应为 0）｜ done_missing。
 - **K1.2 切断规则**：事件在 core/mid/tail 边界强制切断，各段独立重跑持续 ≥T_event；同一会话可产生多段事件（733 段 / 349 会话）。
 - **K1.2.1 统计修补**：置换 bootstrap 母体=有核心运行窗口的会话（同 core_denom），`pass_permutation` = bootstrap 差值 CI 下界 >0；done 能量按 post/tail/mid 拆分。
+- **K1.2.2 母体过滤（审查结论4）**：进入置换循环前冻结 `core_session_set=core_run_session_ids(labeled)`；每种子事件先过滤到该母体再计数；`real_core_session_rate`、`perm_rate_per_seed`、`diff`、CI 全部由同一布尔矩阵计算（`src/patent_preexperiment/metrics/permutation.py`）。
 - V2.1 §6.4 与 V2.0 §4.3 的 δ_r/δ_p/尾段网格不一致，以 V2.0 为准（已记录待协调项）。
 
 ## 4. 主集结果（caltech，核心运行段主口径）
@@ -77,7 +83,7 @@
 
 | 对照 | 观测 | 判定 |
 |---|---|---|
-| 会话内时间置换（seed 42/2024/777） | 7.2%/7.3%/7.3% ≪ 11.9%；diff 4.6pp，95%CI [3.5, 5.8]pp（bootstrap_n=2,941，与点估计同分母） | 保留主量级 ✓ |
+| 会话内时间置换（seed 42/2024/777） | 7.2%/7.3%/7.3% ≪ 11.9%；diff 4.6pp，95%CI [3.5, 5.8]pp（bootstrap_n=2,941，与点估计同分母；置换分子已强制限制同母体，3 种子母体外会话 0） | 保留主量级 ✓ |
 | post_done 事件 | 0 | 排除停车占位伪影 ✓ |
 | 仅实测/计算功率子集 | 11.9%（与主口径一致） | 无估计功率污染 ✓ |
 | 排除短会话（<30 min） | 11.9% | 稳健 ✓ |

@@ -8,6 +8,8 @@
 - A2 严格等于上一连续 5min 周期，而非上一活跃周期；
 - E1 事件在 core/mid 边界切断，各段重新执行持续>=T_event；
 - eligible_mask 精确配对：各代理在完全相同 session 集合上评估。
+- K1.2.1：bootstrap 分母与点估计同母体；done 能量按 post/tail/mid 拆分。
+- K1.2.2：置换事件分子强制限制在 core_sessions 母体（审查结论4）。
 """
 
 from __future__ import annotations
@@ -22,10 +24,8 @@ from patent_preexperiment.allocation.opportunity import (
     compute_proxies,
     eligible_mask,
 )
-from patent_preexperiment.metrics.bootstrap import (
-    bootstrap_session_diff_ci,
-    core_run_session_ids,
-)
+from patent_preexperiment.metrics.bootstrap import bootstrap_session_diff_ci, core_run_session_ids
+from patent_preexperiment.metrics.permutation import permutation_negative_control
 from patent_preexperiment.response.done import add_done_phases, done_anchored_summary
 from patent_preexperiment.response.events import GapThresholds, classify, detect_gap_events
 
@@ -330,3 +330,129 @@ def test_done_anchored_energy_split() -> None:
     assert s["energy_kwh_pre_done_mid"] == pytest.approx(3.0, abs=1e-9)
     assert s["n_post_done"] == 2
     assert s["n_pre_done_tail"] == 1
+
+
+# ---------- K1.2.2（审查结论4） ----------
+
+
+def _core_hot_session(sess: str, start: str, hours: int) -> pd.DataFrame:
+    """核心窗口会话：core 阶段持续高功率（真实有 core 事件），pilot 恒定>actual。"""
+    n = hours * 60
+    done = pd.Timestamp(start) + pd.Timedelta(hours=hours)
+    idx = pd.date_range(start, periods=n, freq="min")
+    return pd.DataFrame(
+        {
+            "session_id": sess,
+            "station_id": f"st_{sess}",
+            "site": "caltech",
+            "garage": "CG1",
+            "timestamp_utc": idx,
+            "actual_power_kw": 1.0,
+            "pilot_power_kw": 6.0,
+            "current_a": 10.0,
+            "connected_elapsed_min": np.arange(n, dtype=float),
+            "minutes_from_end": np.arange(n, 0, -1, dtype=float),
+            "gap_flag": False,
+            "pilot_available": True,
+            "pilot_a": 60.0,
+            "done_charging_time": done,
+            "power_source": "measured",
+        }
+    )
+
+
+def _core_cold_hybrid_session(sess: str, start: str, hours: int) -> pd.DataFrame:
+    """母体外会话：真实 core 阶段不活跃（0.1kW），但其他阶段有大量 1.0kW 分钟。
+
+    置换后高概率把 1.0kW 移到 core 阶段 → 若不加母体过滤会在置换分子中出现，
+    但该会话不在 core_run_session_ids（core 阶段无 charging_active 分钟）。
+    """
+    n = hours * 60
+    done = pd.Timestamp(start) + pd.Timedelta(hours=hours)
+    idx = pd.date_range(start, periods=n, freq="min")
+    mtd = (done - idx).total_seconds() / 60.0
+    core_mask = mtd > 120.0
+    return pd.DataFrame(
+        {
+            "session_id": sess,
+            "station_id": f"st_{sess}",
+            "site": "caltech",
+            "garage": "CG1",
+            "timestamp_utc": idx,
+            "actual_power_kw": np.where(core_mask, 0.1, 1.0),
+            "pilot_power_kw": 6.0,
+            "current_a": 10.0,
+            "connected_elapsed_min": np.arange(n, dtype=float),
+            "minutes_from_end": np.arange(n, 0, -1, dtype=float),
+            "gap_flag": False,
+            "pilot_available": True,
+            "pilot_a": 60.0,
+            "done_charging_time": done,
+            "power_source": "measured",
+        }
+    )
+
+
+def test_permutation_control_excludes_out_of_population_sessions() -> None:
+    """K1.2.2-P0-1：真实 _permutation_control 路径下，置换分子强制限制在 core 母体。
+
+    断言：
+    1. bootstrap_n_sessions == core_denom（core_run_session_ids 行数）；
+    2. 点估计、每种子置换率、diff 全部由 _real_has/_perm_has 同一布尔矩阵计算；
+    3. 构造"真实 core 阶段不活跃、置换后可能在 core 阶段活跃"的母体外会话 X，
+       确认它被过滤（不进入置换分子），且过滤前后计数一致（diagnostics）。
+    """
+    thr = _thr()
+    c = _core_hot_session("C", "2018-11-01 10:00", hours=6)
+    x = _core_cold_hybrid_session("X", "2018-11-01 10:00", hours=4)
+    combined = pd.concat([c, x], ignore_index=True)
+    labeled = add_done_phases(classify(combined, thr), thr.p_on_kw)
+
+    sessions = core_run_session_ids(labeled)
+    assert "C" in set(sessions)
+    assert "X" not in set(sessions), "X 的真实 core 阶段不活跃，不得在 core 母体"
+
+    real_events = _events_of(labeled, thr, PHASE_CORE)
+    assert "X" not in set(real_events["session_id"]), "X 真实无 core 事件"
+    res = permutation_negative_control(
+        labeled, thr, real_events, perm_seeds=[42, 2024, 777],
+        bootstrap_seed=SEED, n_boot=500,
+    )
+
+    real_has = res["_real_has"]
+    perm_has = res["_perm_has"]
+
+    # 1) bootstrap 母体 == core_denom
+    assert res["bootstrap_n_sessions"] == len(sessions)
+    # 2) 点估计/每种子置换率/diff 均来自同一布尔矩阵
+    assert res["real_core_session_rate"] == pytest.approx(float(real_has.mean()), abs=1e-12)
+    for i, seed_rec in enumerate(res["perm_rate_per_seed"]):
+        assert seed_rec["core_session_rate"] == pytest.approx(
+            float(perm_has[i].mean()), abs=1e-12
+        ), f"seed {seed_rec['seed']} 置换率必须来自 perm_has 行均值"
+    assert res["diff_real_minus_perm"] == pytest.approx(
+        float(real_has.mean() - perm_has.mean(axis=1).mean()), abs=1e-12
+    )
+    # 3) 母体外会话 X 不进入置换分子；诊断计数与布尔矩阵逐种子一致
+    for i, seed_rec in enumerate(res["perm_rate_per_seed"]):
+        assert seed_rec["n_perm_event_sessions_after_population_filter"] == int(
+            perm_has[i].sum()
+        ), f"seed {seed_rec['seed']} 过滤后会话数必须等于 perm_has 行和"
+    assert res["n_perm_event_sessions_after_population_filter_total"] == int(
+        perm_has.sum()
+    )
+    x_in_pop = np.isin(sessions, ["X"])
+    assert not perm_has[:, x_in_pop].any(), "母体外会话 X 不得进入置换分子"
+    # 过滤确实做了实际工作：至少一个种子在过滤前捕获了 X（否则断言不成立需改构造）
+    assert res["n_perm_event_sessions_before_population_filter_total"] > \
+        res["n_perm_event_sessions_after_population_filter_total"], \
+        "期望置换在过滤前捕获到母体外会话 X"
+
+
+def _events_of(labeled: pd.DataFrame, thr: GapThresholds, phase: str) -> pd.DataFrame:
+    ev = detect_gap_events(labeled, thr, phase_col="phase")
+    if not len(ev):
+        ev["event_phase"] = pd.Series(dtype=str)
+    else:
+        ev["event_phase"] = ev["phase"]
+    return ev[ev["event_phase"] == phase]
