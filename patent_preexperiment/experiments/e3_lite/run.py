@@ -7,8 +7,9 @@
   pilot 阶跃验证后才允许作吸收证据。
 - K1.2-C：主门基线=候选量最低的预注册可执行简单基线（A2_prev_actual，两证据池）；评估在
   会话×周期层精确交集上进行（eligible_mask），所有代理同一 session 集合。
-- K1.2-D：只保留冻结周期月份（排除跨月尾部伪月份）；周期加权率/日等权率分别报告，
-  日 cluster bootstrap CI 与日等权点估计同口径；消除比例用比例 bootstrap 95%CI。
+- K1.2-D：只保留冻结 cycle_month（分钟/控制周期所在月份，排除跨月尾部伪月份）；
+  周期加权率/日等权率分别报告，日 cluster bootstrap CI 与日等权点估计同口径；
+  消除比例用比例 bootstrap 95%CI。
 
 术语纪律：只称"预算差值/并发候选修正窗口"，不称"可回收能力"。
 """
@@ -57,7 +58,7 @@ EVIDENCE_POOLS = (CAL_POOL, JPL_FALLBACK_POOL)  # 门的两池（主集 + curren
 
 
 def _pool_prox(df: pd.DataFrame, months: set[str]) -> pd.DataFrame:
-    """分钟表 → 会话×周期 预算代理表，只保留冻结周期月份。"""
+    """分钟表 → 会话×周期 预算代理表，只保留冻结 cycle_month（分钟/控制周期所在月份）。"""
     cyc = build_cycles(df)
     pool = compute_pool_stats(cyc)
     prox = compute_proxies(cyc, pool)

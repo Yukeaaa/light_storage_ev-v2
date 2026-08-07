@@ -9,8 +9,9 @@
   事件是否集中于完成阶段（post_done + pre_done_tail）。
 
 K1.2-B 修正：事件连续段在 core/mid/tail 阶段边界处强制切断，各段重新执行持续>=T_event。
-K1.2-D 修正：主集/边界只保留冻结 connection/周期月份；六个月稳定门=冻结 6 个月逐月 ≥5%；
-done 锚点覆盖率按会话数报告；时间置换负对照输出 diff/ratio 与多种子 bootstrap 95%CI。
+K1.2-D 修正：主集/边界只保留冻结 cycle_month（分钟/控制周期所在月份）；六个月稳定门=
+冻结 6 个月逐月 ≥5%；done 锚点覆盖率按会话数报告；时间置换负对照输出 diff/ratio
+与多种子 bootstrap 95%CI。
 """
 
 from __future__ import annotations
@@ -23,12 +24,14 @@ import numpy as np
 import pandas as pd
 
 from patent_preexperiment.config.yamlutil import load_yaml
+from patent_preexperiment.metrics.bootstrap import bootstrap_session_diff_ci, core_run_session_ids
 from patent_preexperiment.response.done import (
     PHASE_CORE,
     PHASE_MISSING,
     PHASE_POST,
     PHASE_TAIL,
     add_done_phases,
+    done_anchored_summary,
 )
 from patent_preexperiment.response.events import GapThresholds, classify, detect_gap_events
 
@@ -36,7 +39,6 @@ REPO = Path(__file__).resolve().parents[3]  # 仓库根
 IMPL = REPO / "patent_preexperiment"
 MINUTE_TABLE = IMPL / "datasets" / "lite_session_minute.parquet"
 BOUNDARY_TABLE = IMPL / "datasets" / "lite_jpl_boundary_minute.parquet"
-REGISTRY = IMPL / "data_registry" / "k1_sample_registry.csv"
 OUT = IMPL / "results" / "raw" / "E1L"
 SEED = 42
 BOOT_N = 2000
@@ -59,23 +61,18 @@ def _events_with_phase(labeled: pd.DataFrame, thr: GapThresholds) -> pd.DataFram
 
 def _load_main(cfg: dict) -> pd.DataFrame:
     df = pd.read_parquet(MINUTE_TABLE)
-    df["month_data"] = df["timestamp_utc"].astype(str).str[:7]
-    reg = pd.read_csv(REGISTRY, dtype=str)
-    df = df.merge(reg[["sessionID", "connection_time"]].rename(columns={"sessionID": "session_id"}),
-                  on="session_id", how="left")
-    df["month_connected"] = df["connection_time"].str[:7]
+    df["cycle_month"] = df["timestamp_utc"].astype(str).str[:7]
     frozen = set(cfg["sample_roles"]["main_set"]["months"])
-    df = df[df["month_data"].isin(frozen)]
+    df = df[df["cycle_month"].isin(frozen)]
     pilot_sess = df[df["pilot_available"]]["session_id"].unique()
     return df[df["session_id"].isin(pilot_sess)].copy()
 
 
 def _load_boundary(cfg: dict) -> pd.DataFrame:
     df = pd.read_parquet(BOUNDARY_TABLE)
-    df["month_data"] = df["timestamp_utc"].astype(str).str[:7]
-    df["month_connected"] = df["month_data"]
+    df["cycle_month"] = df["timestamp_utc"].astype(str).str[:7]
     frozen = set(cfg["sample_roles"]["k1x_boundary"]["months"])
-    return df[df["month_data"].isin(frozen)].copy()
+    return df[df["cycle_month"].isin(frozen)].copy()
 
 
 def _process(
@@ -185,20 +182,15 @@ def _permutation_control(
     diff = float(real_rate - mean_perm)
     ratio = float(real_rate / max(mean_perm, 1e-9))
 
-    sessions = labeled["session_id"].unique()
+    # K1.2.1-P0-1：bootstrap 母体=有核心运行窗口的会话（同点估计 core_denom），
+    # 不得用全部合格会话——否则点估计(349/2939)与 CI(事件标记/5961)口径不一致。
+    sessions = core_run_session_ids(labeled)
     real_has = np.isin(sessions, list(real_core_sess))
     perm_has = np.stack([
         np.isin(sessions, list(perm_core_frames[s]["session_id"].unique()))
         for s in perm_core_frames
     ])
-    rng2 = np.random.default_rng(SEED)
-    diffs: list[float] = []
-    for _ in range(BOOT_N):
-        idx = rng2.integers(0, len(sessions), size=len(sessions))
-        real_b = float(real_has[idx].mean())
-        perm_b = float(perm_has[:, idx].mean(axis=1).mean())
-        diffs.append(real_b - perm_b)
-    lo, hi = np.percentile(diffs, [2.5, 97.5])
+    lo, hi = bootstrap_session_diff_ci(real_has, perm_has, seed=SEED, n_boot=BOOT_N)
     return {
         "real_core_session_rate": real_rate,
         "perm_rate_mean": mean_perm,
@@ -206,9 +198,11 @@ def _permutation_control(
         "diff_real_minus_perm": diff,
         "ratio_real_over_perm": ratio,
         "diff_bootstrap_ci95": [float(lo), float(hi)],
+        "bootstrap_n_sessions": int(len(sessions)),
         "interpretation": (
             "真实时序显著增强事件（diff CI 下界>0），但 pilot/actual 边际分布本身"
             "也可产生一定事件率；不得表述为'完全排除时序伪相关'。"
+            "bootstrap 母体=有核心运行窗口会话，与点估计 core_denom 同口径（K1.2.1-P0-1）。"
         ),
         "perm_core_reference": perm_core_frames[0],
     }
@@ -225,21 +219,13 @@ def _negative_controls(
     neg["time_permutation_core"] = _permutation_control(labeled, thr, core_denom, core)
 
     # NC-done-2: 事件是否集中于完成阶段（done-anchored 特征化，非门判定）
-    done_anchored = events[events["event_phase"].isin([PHASE_POST, PHASE_TAIL])]
-    near_done = events[events["event_phase"].isin([PHASE_POST, PHASE_TAIL, "pre_done_mid"])]
-    neg["done_anchored_events"] = {
-        "n_post_done": int((events["event_phase"] == PHASE_POST).sum()),
-        "n_pre_done_tail": int((events["event_phase"] == PHASE_TAIL).sum()),
-        "n_pre_done_mid": int((events["event_phase"] == "pre_done_mid").sum()),
-        "n_core": int(len(core)),
-        "share_within_120min_of_done": float(len(near_done)) / max(len(events), 1),
-        "energy_kwh_post_done": float(done_anchored["gap_energy_kwh"].sum()),
-        "interpretation": (
-            "特征化：响应差事件在 done 前 120 分钟内占多数（车辆满充/降流机制），post_done=0 "
-            "排除'停车占位'伪影（事件要求 charging_active）。核心运行段事件独立满足停止线，"
-            "问题在正常充电段仍成立；近完成段浓度在 E2 可执行区间生成中须单独建模。"
-        ),
-    }
+    anch = done_anchored_summary(events)
+    anch["interpretation"] = (
+        "特征化：响应差事件在 done 前 120 分钟内占多数（车辆满充/降流机制），post_done=0 "
+        "排除'停车占位'伪影（事件要求 charging_active）。核心运行段事件独立满足停止线，"
+        "问题在正常充电段仍成立；近完成段浓度在 E2 可执行区间生成中须单独建模。"
+    )
+    neg["done_anchored_events"] = anch
 
     # NC-done-3: 仅实测/计算功率子集（核心，阶段切断）
     sub = labeled[labeled["power_source"].isin(["measured", "computed"])].copy()
@@ -350,7 +336,7 @@ def run_e1_lite() -> dict:
     # 月份×核心率（核心运行段分母=该月有核心运行窗口的会话；只统计冻结月份）
     frozen = set(cfg["sample_roles"]["main_set"]["months"])
     month_rate: list[dict] = []
-    for month, gm in labeled[labeled["phase"] == PHASE_CORE].groupby("month_data"):
+    for month, gm in labeled[labeled["phase"] == PHASE_CORE].groupby("cycle_month"):
         if month not in frozen:
             continue
         denom = gm[gm["charging_active"] & gm["pilot_available"]]["session_id"].nunique()
@@ -394,8 +380,7 @@ def run_e1_lite() -> dict:
         "pass_months_stable": six_month_stable,
         "pass_single_station": neg["max_single_station_share_core"]
         <= stop["max_single_station_share"],
-        "pass_permutation": neg["time_permutation_core"]["real_core_session_rate"]
-        > neg["time_permutation_core"]["perm_rate_mean"],
+        "pass_permutation": neg["time_permutation_core"]["diff_bootstrap_ci95"][0] > 0,
     }
 
     # ---------- K1-X 外部边界 jpl（只评估不调参） ----------

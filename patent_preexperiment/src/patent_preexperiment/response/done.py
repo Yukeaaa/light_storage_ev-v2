@@ -118,3 +118,26 @@ def phase_for_minutes(mtd: float) -> str:
     if mtd > MID_MIN:
         return PHASE_MID
     return PHASE_TAIL
+
+
+def done_anchored_summary(events: pd.DataFrame) -> dict:
+    """事件按 done-relative 阶段汇总（K1.2.1-P1-1 修复）。
+
+    修复：energy_kwh_post_done 只含 post_done 能量，不再把 pre_done_tail 能量
+    误记到 post_done 名下（此前 n_post_done=0 却报 1141kWh 的自相矛盾）。
+    """
+    post = events[events["event_phase"] == PHASE_POST]
+    tail = events[events["event_phase"] == PHASE_TAIL]
+    mid = events[events["event_phase"] == PHASE_MID]
+    core = events[events["event_phase"] == PHASE_CORE]
+    near_done = events[events["event_phase"].isin([PHASE_POST, PHASE_TAIL, PHASE_MID])]
+    return {
+        "n_post_done": int(len(post)),
+        "n_pre_done_tail": int(len(tail)),
+        "n_pre_done_mid": int(len(mid)),
+        "n_core": int(len(core)),
+        "share_within_120min_of_done": float(len(near_done)) / max(len(events), 1),
+        "energy_kwh_post_done": float(post["gap_energy_kwh"].sum()),
+        "energy_kwh_pre_done_tail": float(tail["gap_energy_kwh"].sum()),
+        "energy_kwh_pre_done_mid": float(mid["gap_energy_kwh"].sum()),
+    }

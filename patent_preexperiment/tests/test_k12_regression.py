@@ -22,11 +22,16 @@ from patent_preexperiment.allocation.opportunity import (
     compute_proxies,
     eligible_mask,
 )
-from patent_preexperiment.response.done import add_done_phases
+from patent_preexperiment.metrics.bootstrap import (
+    bootstrap_session_diff_ci,
+    core_run_session_ids,
+)
+from patent_preexperiment.response.done import add_done_phases, done_anchored_summary
 from patent_preexperiment.response.events import GapThresholds, classify, detect_gap_events
 
 PHASE_CORE = "core_run_segment"
 PHASE_MID = "pre_done_mid"
+SEED = 42
 
 
 def _minutes(
@@ -248,3 +253,80 @@ def test_eligible_mask_exact_session_intersection() -> None:
     el2 = eligible_mask(prox, ["A2_prev_actual", "A3_rolling_quantile"])
     sub2 = prox[el2]
     assert set(sub2["session_id"].unique()) == {"A", "B"}, "仅实际类代理时 A、B 都应可计算"
+
+
+# ---------- K1.2.1（审查结论3） ----------
+
+
+def _core_labeled(sess: str, start: str, hours: int, pilot_kw: float = 6.0) -> pd.DataFrame:
+    """构造有核心运行窗口的分钟表（done 在 hours 小时后，pilot 恒定>actual）。"""
+    n = hours * 60
+    done = pd.Timestamp(start) + pd.Timedelta(hours=hours)
+    idx = pd.date_range(start, periods=n, freq="min")
+    return pd.DataFrame(
+        {
+            "session_id": sess,
+            "station_id": f"st_{sess}",
+            "site": "caltech",
+            "garage": "CG1",
+            "timestamp_utc": idx,
+            "actual_power_kw": 3.0,
+            "pilot_power_kw": pilot_kw,
+            "current_a": 10.0,
+            "connected_elapsed_min": np.arange(n, dtype=float),
+            "minutes_from_end": np.arange(n, 0, -1, dtype=float),
+            "gap_flag": False,
+            "pilot_available": True,
+            "pilot_a": pilot_kw * 10.0,
+            "done_charging_time": done,
+            "power_source": "measured",
+        }
+    )
+
+
+def _non_core_labeled(sess: str, start: str) -> pd.DataFrame:
+    """构造无核心运行窗口的会话（done 在 60 min 内，全部属于 mid/tail）。"""
+    thr = _thr()
+    df = _gap_session_minutes(pd.Timestamp(start) + pd.Timedelta("60min"), periods=60)
+    df["session_id"] = sess
+    df["station_id"] = f"st_{sess}"
+    labeled = classify(df, thr)
+    return add_done_phases(labeled, thr.p_on_kw)
+
+
+def test_permutation_bootstrap_uses_core_sessions_denominator() -> None:
+    """K1.2.1-P0-1：bootstrap 母体=有核心运行窗口的会话，不是全部合格会话。"""
+    thr = _thr()
+    core = _core_labeled("C", "2018-11-01 10:00", hours=6)
+    core_l = add_done_phases(classify(core, thr), thr.p_on_kw)
+    non_core = _non_core_labeled("N", "2018-11-01 10:00")
+
+    combined = pd.concat([core_l, non_core], ignore_index=True)
+    ids = core_run_session_ids(combined)
+    assert "C" in set(ids)
+    assert "N" not in set(ids), "无核心运行窗口的会话不得进入 bootstrap 母体"
+
+    # 点估计与 bootstrap 同分母：真实-置换差值的点估计应落在 bootstrap CI 内。
+    real_rate = 1.0  # 单核心会话有事件，点估计=1/1
+    perm_rate = 0.0  # 置换后无事件
+    real_has = np.array([True])
+    perm_has = np.array([[False]])
+    lo, hi = bootstrap_session_diff_ci(real_has, perm_has, seed=SEED, n_boot=2000)
+    point = real_rate - perm_rate
+    assert lo <= point <= hi, "点估计必须落在 bootstrap CI 内（同分母要求）"
+
+
+def test_done_anchored_energy_split() -> None:
+    """K1.2.1-P1-1：energy_kwh_post_done 只含 post 能量，不再混入 tail。"""
+    events = pd.DataFrame(
+        {
+            "event_phase": ["post_done", "post_done", "pre_done_tail", "pre_done_mid"],
+            "gap_energy_kwh": [0.0, 0.0, 5.0, 3.0],
+        }
+    )
+    s = done_anchored_summary(events)
+    assert s["energy_kwh_post_done"] == pytest.approx(0.0, abs=1e-9)
+    assert s["energy_kwh_pre_done_tail"] == pytest.approx(5.0, abs=1e-9)
+    assert s["energy_kwh_pre_done_mid"] == pytest.approx(3.0, abs=1e-9)
+    assert s["n_post_done"] == 2
+    assert s["n_pre_done_tail"] == 1
