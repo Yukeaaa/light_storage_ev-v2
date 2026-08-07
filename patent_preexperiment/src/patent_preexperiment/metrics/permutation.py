@@ -9,6 +9,8 @@ core_sessions（与点估计 core_denom 同定义），避免"真实 core 阶段
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import partial
+from typing import Any
 
 import numpy as np
 import pandas as pd
@@ -22,6 +24,10 @@ _EVENT_COLS = [
     "duration_min", "max_gap_kw", "median_gap_kw", "p95_gap_kw", "gap_energy_kwh",
     "working_power_median_kw", "month", "phase", "event_phase",
 ]
+
+
+def _shuffle_series(s: pd.Series, rng: np.random.Generator) -> pd.Series:
+    return pd.Series(rng.permutation(s.to_numpy()), index=s.index)
 
 
 def _events_with_phase(labeled: pd.DataFrame, thr: GapThresholds) -> pd.DataFrame:
@@ -41,7 +47,7 @@ def permutation_negative_control(
     perm_seeds: Sequence[int],
     bootstrap_seed: int = 42,
     n_boot: int = 2000,
-) -> dict:
+) -> dict[str, Any]:
     """会话内时间置换负对照：输出 diff/ratio 与多种子 bootstrap 95%CI。
 
     口径统一：`real_core_session_rate`、每种子置换率、bootstrap 全部由同一布尔
@@ -103,14 +109,15 @@ def permutation_negative_control(
     real_has = np.isin(sessions, list(real_core_sess))
     real_rate = float(real_has.mean())
 
-    per_seed: list[dict] = []
+    per_seed: list[dict[str, Any]] = []
     perm_core_frames: dict[int, pd.DataFrame] = {}
     for s, seed in enumerate(perm_seeds):
         rng = np.random.default_rng(seed)
+
         perm = labeled.copy()
         perm["actual_power_kw"] = perm.groupby("session_id", group_keys=False)[
             "actual_power_kw"
-        ].apply(lambda x, rng=rng: pd.Series(rng.permutation(x.to_numpy()), index=x.index))
+        ].apply(partial(_shuffle_series, rng=rng))
         perm = add_done_phases(perm, thr.p_on_kw)
         core = _events_with_phase(perm, thr)
         core = core[core["event_phase"] == PHASE_CORE]

@@ -91,6 +91,14 @@ def test_e0_connection_time_source_frozen() -> None:
     assert schema["column_definitions"]["connection_time_source"]["dtype"] == "string"
 
 
+def test_e0_connection_time_audit_rule_frozen() -> None:
+    # 审查结论9 强制：矛盾样本禁止自动替换，只登记 anomaly
+    audit = _load_config()["session_join"]["connection_time"]["audit"]
+    assert "矛盾" in audit["rule"] and "anomaly" in audit["rule"]
+    assert audit["contradiction_tolerance_ahead_min"] == 5
+    assert audit["contradiction_tolerance_behind_h"] == 24
+
+
 def test_e0_anomaly_months_match_k1() -> None:
     cfg, k1 = _load_config(), _load_k1_config()
     assert cfg["anomaly_months"] == k1["sample"]["exclude_months"]

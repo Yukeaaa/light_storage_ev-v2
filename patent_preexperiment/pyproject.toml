@@ -20,6 +20,8 @@ dev = [
   "pytest-cov>=5.0",
   "ruff>=0.6",
   "mypy>=1.10",
+  "pandas-stubs>=2.2",
+  "types-PyYAML>=6.0",
 ]
 
 [tool.setuptools.packages.find]
@@ -39,6 +41,10 @@ src = ["src", "tests"]
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.12"
 strict = true
 files = ["src/patent_preexperiment"]
+
+[[tool.mypy.overrides]]
+module = ["pyarrow", "pyarrow.*"]
+ignore_missing_imports = true

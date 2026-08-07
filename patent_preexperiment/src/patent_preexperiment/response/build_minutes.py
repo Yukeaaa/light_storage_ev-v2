@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-import os
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -16,7 +16,7 @@ CONFIG = Path(__file__).resolve().parents[3] / "configs" / "k1_preregister.yaml"
 SAMPLE_REG = Path(__file__).resolve().parents[3] / "data_registry" / "k1_sample_registry.csv"
 
 
-def _to_ts(value: object) -> pd.Timestamp | None:
+def _to_ts(value: Any) -> pd.Timestamp | None:
     if value is None or (isinstance(value, float) and pd.isna(value)):
         return None
     try:
@@ -25,7 +25,7 @@ def _to_ts(value: object) -> pd.Timestamp | None:
         return None
 
 
-def _worker(row: dict) -> pd.DataFrame:
+def _worker(row: dict[str, Any]) -> pd.DataFrame:
     from patent_preexperiment.config.yamlutil import load_yaml
 
     cfg = load_yaml(CONFIG)
@@ -51,12 +51,16 @@ def _frame_ok(f: pd.DataFrame) -> bool:
     return not f.empty and "parse_error" not in f.columns
 
 
-def build_minutes(out: str | Path, max_workers: int | None = None, batch_size: int = 1024) -> pd.DataFrame:
+def build_minutes(
+    out: str | Path, max_workers: int | None = None, batch_size: int = 1024
+) -> pd.DataFrame:
     reg = pd.read_csv(SAMPLE_REG, dtype=str)
     workers = max_workers or 4
     tmp = Path(out).with_suffix("") / "tmp"
     tmp.mkdir(parents=True, exist_ok=True)
-    rows = [r.to_dict() for _, r in reg.iterrows()]
+    rows: list[dict[str, Any]] = [
+        {str(k): v for k, v in r.to_dict().items()} for _, r in reg.iterrows()
+    ]
     n = len(rows)
     parse_fail: list[str] = []
     batch_files: list[Path] = []

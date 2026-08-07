@@ -1,0 +1,143 @@
+{
+  "audit_scope": "input_quality_only_no_split_no_field_registry",
+  "files_total": 85877,
+  "rows_total": 448817084,
+  "read_ok": 85877,
+  "read_fail": 0,
+  "gzip_ok": 85868,
+  "gzip_fail": 9,
+  "trailing_garbage_files": 9,
+  "short_files": 4192,
+  "dup_ts_files": 10684,
+  "reversed_ts_files": 0,
+  "severe_gap_files": 1620,
+  "by_site": {
+    "caltech": {
+      "files": 56680,
+      "measured_power": 55961,
+      "computed_voltage_current": 27837,
+      "estimated_current_only": 28843,
+      "pilot_available": 41842,
+      "state_available": 53323
+    },
+    "jpl": {
+      "files": 27723,
+      "measured_power": 2857,
+      "computed_voltage_current": 2852,
+      "estimated_current_only": 24871,
+      "pilot_available": 2857,
+      "state_available": 2857
+    },
+    "office_01": {
+      "files": 1474,
+      "measured_power": 1474,
+      "computed_voltage_current": 1472,
+      "estimated_current_only": 2,
+      "pilot_available": 1474,
+      "state_available": 1474
+    }
+  },
+  "coverage": {
+    "current": {
+      "files": 85877,
+      "ratio": 1.0
+    },
+    "pilot": {
+      "files": 46173,
+      "ratio": 0.5377
+    },
+    "voltage": {
+      "files": 32161,
+      "ratio": 0.3745
+    },
+    "state": {
+      "files": 57654,
+      "ratio": 0.6714
+    },
+    "energy": {
+      "files": 56150,
+      "ratio": 0.6538
+    },
+    "power": {
+      "files": 60292,
+      "ratio": 0.7021
+    },
+    "short_files": {
+      "files": 4192,
+      "ratio": 0.0488
+    }
+  },
+  "energy_consistency": {
+    "available": true,
+    "by_site": {
+      "caltech": {
+        "sessions": 14812,
+        "median_rel_dev": 0.0036,
+        "p95_rel_dev": 0.0157
+      },
+      "jpl": {
+        "sessions": 24497,
+        "median_rel_dev": 0.0574,
+        "p95_rel_dev": 0.5681
+      },
+      "office001": {
+        "sessions": 1300,
+        "median_rel_dev": 0.0058,
+        "p95_rel_dev": 0.0073
+      }
+    }
+  },
+  "cross_check_vs_index": {
+    "rows_match": 85877,
+    "rows_mismatch": 0
+  },
+  "connection_time": {
+    "matched": 40644,
+    "api_metadata": 40644,
+    "fallback": 0,
+    "anomaly": 0,
+    "rule": "matched：API connectionTime 可解析且不矛盾 → api_metadata；缺失/无法解析 → first_observation_fallback；可解析但与首条观测矛盾 → 仅登记 anomaly，禁止自动替换"
+  },
+  "connection_time_anomalies": [],
+  "stop_lines": {
+    "passed": false,
+    "checks": {
+      "manifest_count": {
+        "ok": true,
+        "actual": 85877,
+        "expected": 85877
+      },
+      "read_failure_rate": {
+        "ok": true,
+        "actual": 0.0001,
+        "rule": "read_fail+gzip_fail <= 1%"
+      },
+      "dup_ts_within_file": {
+        "ok": false,
+        "actual": 10684,
+        "rule": "文件内重复时间戳 == 0"
+      },
+      "severe_gap_rate": {
+        "ok": true,
+        "actual": 0.01886,
+        "rule": "严重缺口文件占比 <= 5%"
+      },
+      "energy_drift": {
+        "ok": true,
+        "detail": {
+          "caltech": 0.0036,
+          "office001": 0.0058
+        },
+        "rule": "caltech/office001 中位偏差 < 1%"
+      }
+    }
+  },
+  "manifest_sha256": "f1a5fd036ed6901bf5b89af9e935b99b071b32b67812f7dff1810f76506bd17a",
+  "dup_ts_classification": {
+    "dup_ts_files": 10684,
+    "identical_dup_rows": 663,
+    "identical_dup_files": 234,
+    "same_second_distinct_samples": 30226,
+    "classification_rule": "逐字节相同行 → 可疑重叠；同秒不同值 → 亚秒采样（可解释）"
+  }
+}

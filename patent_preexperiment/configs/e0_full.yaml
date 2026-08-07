@@ -50,6 +50,10 @@ session_join:
     matched_fallback: "matched 且 API connectionTime 缺失/异常：首条有效 timestamp_utc，标记 first_observation_fallback"
     static_only: "static_only：首条有效 timestamp_utc，标记 first_observation_fallback"
     source_values: [api_metadata, first_observation_fallback]
+    audit:                           # E0F-01 只审计不切分：矛盾样本禁止自动替换（审查结论9 强制）
+      rule: "matched：API connectionTime 可解析且不矛盾 → api_metadata；缺失/无法解析 → first_observation_fallback；可解析但与首条观测矛盾 → 仅登记 anomaly，禁止自动替换"
+      contradiction_tolerance_ahead_min: 5     # api_ct 晚于首条观测超此阈值 → 矛盾（数据先于声称的连接时间）
+      contradiction_tolerance_behind_h: 24     # api_ct 早于首条观测超此阈值 → 矛盾（连接时间远早于数据出现）
   disconnect_time: "离线标签，禁止进入在线特征"
   done_charging_time: "离线标签，禁止进入在线特征"
 

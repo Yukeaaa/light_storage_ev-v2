@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -22,7 +24,7 @@ class GapThresholds:
         self.pilot_active_min_a = pilot_active_min_a
 
     @classmethod
-    def from_cfg(cls, cfg: dict) -> GapThresholds:
+    def from_cfg(cls, cfg: dict[str, Any]) -> GapThresholds:
         pt = cfg["primary_threshold"]
         return cls(
             p_on_kw=pt["P_on_kw"],
@@ -88,7 +90,7 @@ def detect_gap_events(
     各阶段段内重新执行持续 >= T_event 规则（K1.2-B）。事件行携带该阶段。
     """
     labeled = classify(df1m, thr)
-    rows: list[dict] = []
+    rows: list[dict[str, Any]] = []
     keys = ["session_id"] if phase_col is None else ["session_id", phase_col]
     for _key, sess in labeled.groupby(keys, sort=False):
         phase = sess[phase_col].iloc[0] if phase_col is not None else None
@@ -99,7 +101,7 @@ def detect_gap_events(
                 continue
             ev = sess.iloc[a : b]
             g = (ev["pilot_power_kw"] - ev["actual_power_kw"]).clip(lower=0.0)
-            row: dict = {
+            row: dict[str, Any] = {
                 "session_id": sess["session_id"].iloc[0],
                 "site": sess["site"].iloc[0],
                 "garage": sess["garage"].iloc[0],

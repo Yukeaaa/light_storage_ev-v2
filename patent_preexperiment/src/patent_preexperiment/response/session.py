@@ -9,13 +9,13 @@ MINUTE = pd.Timedelta("1min")
 
 
 def _bucket_ts(ts: pd.Series) -> pd.Series:
-    return ts.dt.floor("min")
+    return pd.Series(ts.dt.floor("min").to_numpy(), index=ts.index)
 
 
 def _mode(series: pd.Series) -> str:
     if series.dropna().empty:
         return ""
-    return series.dropna().mode().iloc[0]
+    return str(series.dropna().mode().iloc[0])
 
 
 def derive_power(df_raw: pd.DataFrame, rated_v: float) -> pd.DataFrame:
@@ -27,7 +27,9 @@ def derive_power(df_raw: pd.DataFrame, rated_v: float) -> pd.DataFrame:
     out = pd.DataFrame(index=df.index, columns=["actual_power_kw", "power_source"], dtype=object)
     out.loc[power.notna(), "actual_power_kw"] = power[power.notna()]
     out.loc[power.notna(), "power_source"] = "measured"
-    out.loc[computed, "actual_power_kw"] = df.loc[computed, "voltage_v"] * df.loc[computed, "current_a"] / 1000.0
+    out.loc[computed, "actual_power_kw"] = (
+        df.loc[computed, "voltage_v"] * df.loc[computed, "current_a"] / 1000.0
+    )
     out.loc[computed, "power_source"] = "computed"
     out.loc[estimated, "actual_power_kw"] = df.loc[estimated, "current_a"] * rated_v / 1000.0
     out.loc[estimated, "power_source"] = "estimated"
@@ -83,7 +85,28 @@ def aggregate_session_minute(
     out["pilot_available"] = out["pilot_a"].notna()
     out["gap_flag"] = out["sample_count"] < 10
     out = out.drop(columns=["ts_min"])
-    return out[["session_id", "station_id", "site", "garage", "timestamp_utc", "connected_elapsed_min",
-                "current_a", "voltage_v", "power_kw", "actual_power_kw", "power_source",
-                "pilot_a", "pilot_power_kw", "pilot_available", "state", "energy_kwh",
-                "sample_count", "gap_flag", "minutes_from_end", "disconnect_time", "done_charging_time"]]
+    return out[
+        [
+            "session_id",
+            "station_id",
+            "site",
+            "garage",
+            "timestamp_utc",
+            "connected_elapsed_min",
+            "current_a",
+            "voltage_v",
+            "power_kw",
+            "actual_power_kw",
+            "power_source",
+            "pilot_a",
+            "pilot_power_kw",
+            "pilot_available",
+            "state",
+            "energy_kwh",
+            "sample_count",
+            "gap_flag",
+            "minutes_from_end",
+            "disconnect_time",
+            "done_charging_time",
+        ]
+    ]

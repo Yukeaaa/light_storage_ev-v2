@@ -122,7 +122,9 @@ def compute_proxies(cyc: pd.DataFrame, pool: pd.DataFrame) -> pd.DataFrame:
     cyc["A2_prev_actual"] = cyc["actual_prev"]
     cyc["A3_rolling_quantile"] = cyc["actual_rollq"]
     has_pilot_prev = cyc["pilot_prev_present"].fillna(False)
-    cyc["A4_min_pilot_quantile"] = np.minimum(cyc["pilot_prev"], cyc["actual_rollq"]).where(
+    a4 = np.minimum(cyc["pilot_prev"], cyc["actual_rollq"])
+    a4 = pd.Series(a4, index=cyc.index)
+    cyc["A4_min_pilot_quantile"] = a4.where(
         has_pilot_prev & cyc["actual_rollq"].notna()
     )
     for p in PROXIES:
@@ -167,9 +169,10 @@ def candidate_windows(cyc: pd.DataFrame, proxies: list[str] | None = None) -> pd
         tmp["candidate"] = (tmp["n_slack"] >= 1) & (tmp["n_active"] >= 2)
         tmp["candidate_energy_kwh"] = tmp["total_slack"] * CYCLE_MIN / 60.0
         tmp["candidate_energy_kwh"] = tmp["candidate_energy_kwh"].where(tmp["candidate"], 0.0)
+        sup = np.minimum(tmp["total_slack"], tmp["total_headroom"]) * CYCLE_MIN / 60.0
         tmp["supported_ref_energy_kwh"] = (
-            np.minimum(tmp["total_slack"], tmp["total_headroom"]) * CYCLE_MIN / 60.0
-        ).where(tmp["candidate"], 0.0)
+            pd.Series(sup, index=tmp.index).where(tmp["candidate"], 0.0)
+        )
         tmp = tmp.rename(
             columns={
                 "n_slack": f"n_slack_{name}",

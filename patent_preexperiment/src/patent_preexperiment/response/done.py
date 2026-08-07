@@ -8,6 +8,8 @@ done 缺失时用离线锚点推断：功率 < LOW_KW 持续 SUSTAIN_MIN 分钟�
 
 from __future__ import annotations
 
+from typing import Any
+
 import numpy as np
 import pandas as pd
 
@@ -32,7 +34,8 @@ def minutes_to_done_of(
     """返回 (done - ts) 的分钟数；done 为 None 时返回全 NaN。"""
     if done is None:
         return pd.Series(np.nan, index=ts.index, dtype="float64")
-    return (done - ts).dt.total_seconds() / 60.0
+    secs = (done - ts).dt.total_seconds()
+    return pd.Series(secs.to_numpy() / 60.0, index=ts.index, dtype="float64")
 
 
 def infer_done(
@@ -52,7 +55,8 @@ def infer_done(
     low = a < low_kw
     for t in range(last_work + 1, n - sustain_min + 1):
         if low[t : t + sustain_min].all():
-            return df_sess["timestamp_utc"].iloc[t]
+            ts = df_sess["timestamp_utc"].iloc[t]
+            return pd.Timestamp(ts)
     return None
 
 
@@ -120,7 +124,7 @@ def phase_for_minutes(mtd: float) -> str:
     return PHASE_TAIL
 
 
-def done_anchored_summary(events: pd.DataFrame) -> dict:
+def done_anchored_summary(events: pd.DataFrame) -> dict[str, Any]:
     """事件按 done-relative 阶段汇总（K1.2.1-P1-1 修复）。
 
     修复：energy_kwh_post_done 只含 post_done 能量，不再把 pre_done_tail 能量

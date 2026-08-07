@@ -14,7 +14,13 @@ DEFAULT_PATHS = Path(__file__).resolve().parents[3] / "configs" / "paths.yaml"
 
 
 def load_paths(path: str | Path | None = None) -> dict[str, str]:
-    cfg = load_yaml(path or DEFAULT_PATHS)
+    path = Path(path or DEFAULT_PATHS)
+    if not path.exists():
+        raise FileNotFoundError(
+            f"缺少本地路径配置 {path}。请复制 configs/paths.example.yaml 为 "
+            f"configs/paths.yaml 并填入本机数据路径（ACN 数据在仓库外，路径含中文/空格）。"
+        )
+    cfg = load_yaml(path)
     return expand_vars(cfg)
 
 

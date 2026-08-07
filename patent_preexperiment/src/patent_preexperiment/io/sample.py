@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -13,10 +14,15 @@ from patent_preexperiment.io.paths import acn_project_dir
 CONFIG = Path(__file__).resolve().parents[3] / "configs" / "k1_preregister.yaml"
 
 
-def _read(cfg: dict) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
+def _read(cfg: dict[str, Any]) -> tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]:
     acn = acn_project_dir()
-    idx = pd.read_csv(acn / "manifests" / "static_file_index.csv", dtype={"stationID": str, "file": str})
-    mapf = pd.read_csv(acn / "manifests" / "static_api_mapping.csv", dtype={"stationID": str, "static_file": str})
+    idx = pd.read_csv(
+        acn / "manifests" / "static_file_index.csv", dtype={"stationID": str, "file": str}
+    )
+    mapf = pd.read_csv(
+        acn / "manifests" / "static_api_mapping.csv",
+        dtype={"stationID": str, "static_file": str},
+    )
     api = pd.read_csv(acn / "manifests" / "api_metadata_index.csv", dtype={"stationID": str})
     return idx, mapf, api
 
@@ -28,10 +34,16 @@ def _cluster_rank(df: pd.DataFrame, sites: list[str]) -> list[tuple[str, str, fl
         pilot_ratio=("has_pilot", "mean"),
     )
     g = g.sort_values(["n_matched", "pilot_ratio"], ascending=False)
-    return [(site, garage, row.n_matched) for (site, garage), row in g.iterrows() if site in sites]
+    out: list[tuple[str, str, float]] = []
+    for key, row in g.iterrows():
+        site, garage = key if isinstance(key, tuple) else (key, key)
+        site_s, garage_s = str(site), str(garage)
+        if site_s in sites:
+            out.append((site_s, garage_s, float(row.n_matched)))
+    return out
 
 
-def select_sample(cfg: dict | None = None) -> pd.DataFrame:
+def select_sample(cfg: dict[str, Any] | None = None) -> pd.DataFrame:
     cfg = cfg or load_yaml(CONFIG)
     s = cfg["sample"]
     idx, mapf, api = _read(cfg)
@@ -43,7 +55,9 @@ def select_sample(cfg: dict | None = None) -> pd.DataFrame:
 
     m = mapf[mapf["match_status"] == "matched"].copy()
     m["month"] = m["connection_time"].str[:7]
-    idx2 = idx[["file", "site", "garage", "stationID", "rows", "has_pilot", "has_power", "has_voltage"]]
+    idx2 = idx[
+        ["file", "site", "garage", "stationID", "rows", "has_pilot", "has_power", "has_voltage"]
+    ]
     m = m.drop(columns=["garage", "rows", "stationID"], errors="ignore")
     m = m.merge(idx2, left_on="static_file", right_on="file", how="inner")
 
@@ -78,20 +92,24 @@ def select_sample(cfg: dict | None = None) -> pd.DataFrame:
     return out
 
 
-def build_sample_registry(out: str | Path) -> dict:
+def build_sample_registry(out: str | Path) -> dict[str, Any]:
     cfg = load_yaml(CONFIG)
     reg = select_sample(cfg)
     Path(out).parent.mkdir(parents=True, exist_ok=True)
     reg.to_csv(out, index=False)
-    summary = {
+    per_cluster: dict[str, int] = {}
+    for k, v in reg.groupby(["site", "garage", "month"]).size().items():
+        parts: tuple[Any, ...] = k if isinstance(k, tuple) else (k,)
+        per_cluster[f"{parts[0]}/{parts[1]}/{parts[2]}"] = int(v)
+    summary: dict[str, Any] = {
         "selected_clusters": sorted(reg[["site", "garage"]].drop_duplicates().values.tolist()),
         "selected_months": sorted(reg["month"].unique().tolist()),
         "n_matched_sessions": int(len(reg)),
-        "n_pilot_rich_sessions": int((reg["sample_role"] == "E1_pilot_rich_and_E3_pool").sum()),
+        "n_pilot_rich_sessions": int(
+            (reg["sample_role"] == "E1_pilot_rich_and_E3_pool").sum()
+        ),
         "n_stations": int(reg["stationID"].nunique()),
-        "sessions_per_cluster_month": {
-            f"{k[0]}/{k[1]}/{k[2]}": int(v) for k, v in reg.groupby(["site", "garage", "month"]).size().items()
-        },
+        "sessions_per_cluster_month": per_cluster,
     }
     side = str(out).replace("k1_sample_registry.csv", "k1_sample_summary.json")
     Path(side).write_text(json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -102,5 +120,8 @@ if __name__ == "__main__":
     import sys
 
     cfg = load_yaml(CONFIG)
-    print(json.dumps(build_sample_registry(Path(__file__).resolve().parents[3] / "data_registry" / "k1_sample_registry.csv"), ensure_ascii=False, indent=2))
+    out = Path(__file__).resolve().parents[3] / "data_registry" / "k1_sample_registry.csv"
+    print(
+        json.dumps(build_sample_registry(out), ensure_ascii=False, indent=2)
+    )
     sys.exit(0)

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 import subprocess
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -48,19 +49,19 @@ def _sha256(path: Path) -> str:
 
 
 def _line_count(path: Path) -> int:
-    with open(path, "r", encoding="utf-8", errors="replace") as fh:
+    with open(path, encoding="utf-8", errors="replace") as fh:
         return sum(1 for _ in fh) - 1  # 减表头
 
 
-def build_design_baseline(out: str | Path) -> dict:
+def build_design_baseline(out: str | Path) -> dict[str, Any]:
     """K0-01：冻结协议版本、commit、数据版本（manifest 哈希）、路径、输出目录。"""
     acn = acn_project_dir()
-    manifest_hashes = {}
+    manifest_hashes: dict[str, Any] = {}
     for name in MANIFESTS:
         p = acn / "manifests" / name
         manifest_hashes[name] = {"sha256": _sha256(p), "exists": p.exists()}
     baseline = {
-        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "created_at_utc": datetime.now(UTC).isoformat(),
         "protocol_version": "V2.0",
         "landing_version": "V2.1",
         "engineering_version": "V1.1",
@@ -78,10 +79,16 @@ def build_design_baseline(out: str | Path) -> dict:
     return baseline
 
 
-def check_core_data(out: str | Path | None = None) -> dict:
+def check_core_data(out: str | Path | None = None) -> dict[str, Any]:
     """K0-02：核对核心文件存在、行数、match_status 计数、gold 站数、质量报告关键项。"""
     acn = acn_project_dir()
-    result: dict = {"acn_project_exists": acn.exists(), "manifests": {}, "gold": {}, "quality": {}, "passed": False}
+    result: dict[str, Any] = {
+        "acn_project_exists": acn.exists(),
+        "manifests": {},
+        "gold": {},
+        "quality": {},
+        "passed": False,
+    }
 
     for name, expected_rows in MANIFESTS.items():
         p = acn / "manifests" / name
@@ -89,7 +96,11 @@ def check_core_data(out: str | Path | None = None) -> dict:
             result["manifests"][name] = {"ok": False, "reason": "missing"}
             continue
         rows = _line_count(p)
-        result["manifests"][name] = {"ok": rows == expected_rows, "rows": rows, "expected": expected_rows}
+        result["manifests"][name] = {
+            "ok": rows == expected_rows,
+            "rows": rows,
+            "expected": expected_rows,
+        }
 
     mapping = acn / "manifests" / "static_api_mapping.csv"
     if mapping.exists():
@@ -105,7 +116,12 @@ def check_core_data(out: str | Path | None = None) -> dict:
     gold_15 = acn / "gold" / "benchmark_15min"
     n5 = len(list(gold_5.glob("*.csv"))) if gold_5.exists() else -1
     n15 = len(list(gold_15.glob("*.csv"))) if gold_15.exists() else -1
-    result["gold"] = {"n_5min": n5, "n_15min": n15, "expected": GOLD_EXPECT, "ok": n5 == GOLD_EXPECT == n15}
+    result["gold"] = {
+        "n_5min": n5,
+        "n_15min": n15,
+        "expected": GOLD_EXPECT,
+        "ok": n5 == GOLD_EXPECT == n15,
+    }
 
     ecr = acn / "quality" / "energy_consistency_report.csv"
     if ecr.exists():
@@ -116,7 +132,11 @@ def check_core_data(out: str | Path | None = None) -> dict:
     for name in ("static_scan_summary.json", "coverage_report.csv", "benchmark_summary.json"):
         result["quality"][name] = (acn / "quality" / name).exists()
 
-    manifests_ok = all(v.get("ok", False) for v in result["manifests"].values()) if result["manifests"] else False
+    manifests_ok = (
+        all(v.get("ok", False) for v in result["manifests"].values())
+        if result["manifests"]
+        else False
+    )
     match_ok = bool(result.get("match_status", {}).get("ok"))
     gold_ok = bool(result["gold"]["ok"])
     result["passed"] = manifests_ok and match_ok and gold_ok

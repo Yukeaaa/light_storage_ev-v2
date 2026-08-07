@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import yaml
 
@@ -13,7 +13,8 @@ _PATTERN = re.compile(r"\$\{(\w+)\}")
 
 def load_yaml(path: str | Path) -> dict[str, Any]:
     with open(path, encoding="utf-8") as fh:
-        return yaml.safe_load(fh)
+        data = yaml.safe_load(fh)
+    return dict(data or {})
 
 
 def expand_vars(cfg: dict[str, Any], prefix: str = "") -> dict[str, Any]:
@@ -31,4 +32,4 @@ def expand_vars(cfg: dict[str, Any], prefix: str = "") -> dict[str, Any]:
             return _PATTERN.sub(lambda m: str(scope.get(m.group(1), m.group(0))), node)
         return node
 
-    return _walk(cfg, {})  # type: ignore[return-value]
+    return cast(dict[str, Any], _walk(cfg, {}))

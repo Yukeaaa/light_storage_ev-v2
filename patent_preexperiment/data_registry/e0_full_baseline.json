@@ -1,0 +1,51 @@
+{
+  "created_at_utc": "2026-08-07T08:19:29.946875+00:00",
+  "protocol_version": "V2.0",
+  "landing_version": "V2.1",
+  "experiment_id": "E0_full_preregister_v1",
+  "rule_version": "e0_full_split_v1",
+  "parent_baseline": {
+    "path": "patent_preexperiment/data_registry/design_baseline.json",
+    "commit": "8d7b7c0c29affade90da3ec782eefcfcfdbe8955"
+  },
+  "code_sha": "8d7b7c0c29affade90da3ec782eefcfcfdbe8955",
+  "e0_full_yaml_sha256": "023bb37b25fa63f4c202ef213baa133de9193e1adacb7cee5e21b322389b5458",
+  "manifest_hashes": {
+    "static_file_index.csv": {
+      "sha256": "eff813e2a723749c2529a0174d21e19255c63b216cb18796c4c253037a96ac2e",
+      "rows": 85877,
+      "exists": true
+    },
+    "api_metadata_index.csv": {
+      "sha256": "99fea65a130ccfa7cca178a68b89bd2d4249c992ba15e485c0fc1bf2d2075692",
+      "rows": 51234,
+      "exists": true
+    },
+    "static_api_mapping.csv": {
+      "sha256": "9329c86718c7f5715e321a8057606b2c5c17facc9d35d8b297b2540e9325b620",
+      "rows": 96467,
+      "exists": true
+    }
+  },
+  "runtime_versions": {
+    "python": "3.12.7",
+    "pandas": "3.0.5",
+    "pyarrow": "25.0.0"
+  },
+  "input_logical_id": "acn_project_v1",
+  "data_roots_resolved": {
+    "data_root": "D:\\Users\\Micko\\Documents\\工作\\华润集控\\光储充\\数据",
+    "acn_project": "D:\\Users\\Micko\\Documents\\工作\\华润集控\\光储充\\数据\\ACN-data\\acn_project",
+    "static_root": "D:\\Users\\Micko\\Documents\\工作\\华润集控\\光储充\\数据\\ACN-data\\ACN-Data-Static\\time series data",
+    "acn_full": "D:\\Users\\Micko\\Documents\\工作\\华润集控\\光储充\\数据\\ACN-data\\acn_full"
+  },
+  "split_rule_version": "e0_full_split_v1",
+  "output_manifest": [
+    "data_registry/e0_full_source_manifest.parquet",
+    "data_registry/e0_full_quality_summary.json",
+    "data_registry/e0_full_connection_time_audit.parquet",
+    "reports/E0_Full_input_audit.md",
+    "data_registry/e0_full_baseline.json"
+  ],
+  "source_manifest_sha256": "f1a5fd036ed6901bf5b89af9e935b99b071b32b67812f7dff1810f76506bd17a"
+}
