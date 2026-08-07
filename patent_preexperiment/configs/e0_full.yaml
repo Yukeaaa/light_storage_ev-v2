@@ -99,6 +99,27 @@ roles:
   current_only_fallback: jpl.current_only
   external_only: [office001]
 
+# --- 站点 raw→canonical 映射（审查结论10 P1：E0F-02 前必须冻结，registry 保留两列）---
+# raw 为 acn_project 静态 index/manifest 的原始 site 值（office_01）；canonical 为配置与
+# 下游使用的规范名（office001）。下游禁止裸 .replace()，site_canonical 一律经本映射生成。
+site_mapping:
+  raw_to_canonical:
+    caltech: caltech
+    jpl: jpl
+    office_01: office001
+  canonical_to_role:
+    caltech: main
+    jpl: boundary_and_current_only
+    office001: external_only
+  rule: "site_canonical 经 site_mapping.raw_to_canonical 生成；registry 保留 site_raw 与 site_canonical 两列"
+
+# --- K1 冻结 role×month（审查结论10 P0-2：exact duplicate 按 K1 role/month 汇总）---
+# 与 k1_preregister.yaml sample_roles 保持一致（契约测试强制同步），仅用于重复证据分类。
+k1_role_months:
+  caltech_main: [2018-11, 2019-03, 2019-04, 2019-05, 2019-08, 2019-10]
+  jpl_boundary_2020: [2020-06, 2020-07]
+  jpl_current_only: [2018-11, 2019-03, 2019-04, 2019-05, 2019-08, 2019-10]
+
 # --- D0 数据工程验收门（审查结论7 §9.1；V2.1 §10.4，逐项转测试）---
 acceptance:
   input_traceability: true

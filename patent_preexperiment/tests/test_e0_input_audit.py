@@ -23,8 +23,11 @@ from patent_preexperiment.e0_full.input_audit import (
     audit_connection_time,
     build_source_manifest,
     classify_dup_ts,
+    dup_collapse_impact,
+    file_role,
     manifest_hash,
     scan_static_file,
+    site_canonical,
 )
 
 PP = Path(__file__).resolve().parents[1]
@@ -248,11 +251,11 @@ def test_scan_config_from_cfg() -> None:
     assert ScanConfig().severe_gap_min == 20.0
 
 
-def test_classify_dup_ts_identical_vs_same_second(tmp_path: Path) -> None:
-    # 相同 timestamp 且逐字节相同 → identical_dup_rows；相同 timestamp 不同值 → distinct 采样
+def test_classify_dup_ts_identical_vs_same_timestamp(tmp_path: Path) -> None:
+    # 相同 timestamp 且逐字节相同 → identical_dup_rows；相同 timestamp 不同值 → distinct
     f1 = _write_static(
         tmp_path,
-        "jpl/Arroyo_Garage_01/dup_identical.csv.gz",
+        "jpl/Arroyo_Garage_01/1-1-178-817-2019-11-06T14-19-07-900778.csv.gz",
         [
             f"{_iso(0)},0.0",
             f"{_iso(0)},0.0",
@@ -262,7 +265,7 @@ def test_classify_dup_ts_identical_vs_same_second(tmp_path: Path) -> None:
     )
     f2 = _write_static(
         tmp_path,
-        "caltech/California_Garage_01/dup_distinct.csv.gz",
+        "caltech/California_Garage_01/2-39-123-23-2019-03-01T10-00-00-000000.csv.gz",
         [
             f"{_iso(0)},5.0",
             f"{_iso(0)},5.5",
@@ -273,14 +276,64 @@ def test_classify_dup_ts_identical_vs_same_second(tmp_path: Path) -> None:
     m = pd.DataFrame(
         {
             "logical_path": [str(f1.relative_to(tmp_path)), str(f2.relative_to(tmp_path))],
+            "site": ["jpl", "caltech"],
+            "garage": ["Arroyo_Garage_01", "California_Garage_01"],
+            "station": ["s1", "s2"],
             "n_dup_ts": [1, 1],
+            "time_min": [None, None],
         }
     )
-    res = classify_dup_ts(m, tmp_path)
+    sm = {"raw_to_canonical": {"jpl": "jpl", "caltech": "caltech"}}
+    rm = {
+        "caltech_main": ["2019-03"],
+        "jpl_boundary_2020": ["2020-06", "2020-07"],
+        "jpl_current_only": ["2019-11"],
+    }
+    res = classify_dup_ts(m, tmp_path, site_mapping=sm, role_months=rm)
     assert res["dup_ts_files"] == 2
     assert res["identical_dup_rows"] == 1
+    assert res["identical_zero_idle_rows"] == 1
+    assert res["identical_nonzero_rows"] == 0
     assert res["identical_dup_files"] == 1
-    assert res["same_second_distinct_samples"] == 1
+    assert res["same_timestamp_distinct_rows"] == 1
+    # 文件名嵌入月份：jpl 2019-11 → jpl_current_only；caltech 2019-03 → caltech_main_frozen
+    assert res["by_role"]["jpl_current_only"]["identical_dup_rows"] == 1
+    assert res["by_role"]["caltech_main_frozen"]["same_timestamp_distinct_rows"] == 1
+
+
+def test_classify_dup_ts_zero_idle_and_nonzero_split(tmp_path: Path) -> None:
+    f = _write_static(
+        tmp_path,
+        "jpl/Arroyo_Garage_01/1-1-178-817-2019-11-06T14-19-07-900778.csv.gz",
+        [
+            f"{_iso(0)},0.0",
+            f"{_iso(0)},0.0",
+            f"{_iso(1)},5.0",
+            f"{_iso(1)},5.0",
+        ],
+        header=",Charging Current (A)",
+    )
+    m = pd.DataFrame(
+        {
+            "logical_path": [str(f.relative_to(tmp_path))],
+            "site": ["jpl"],
+            "garage": ["Arroyo_Garage_01"],
+            "station": ["x"],
+            "n_dup_ts": [2],
+            "time_min": [None],
+        }
+    )
+    res = classify_dup_ts(
+        m,
+        tmp_path,
+        site_mapping={"raw_to_canonical": {"jpl": "jpl"}},
+        role_months={"caltech_main": [], "jpl_boundary_2020": [], "jpl_current_only": ["2019-11"]},
+    )
+    assert res["identical_dup_rows"] == 2
+    assert res["identical_zero_idle_rows"] == 1
+    assert res["identical_nonzero_rows"] == 1
+    assert res["by_role"]["jpl_current_only"]["identical_dup_rows"] == 2
+    assert res["by_role"]["jpl_current_only"]["identical_zero_idle_rows"] == 1
 
 
 def test_classify_dup_ts_writes_csv(tmp_path: Path) -> None:
@@ -297,6 +350,97 @@ def test_classify_dup_ts_writes_csv(tmp_path: Path) -> None:
     df = pd.read_csv(out)
     assert df["identical_dup_rows"].sum() == 1
     assert res["identical_dup_rows"] == 1
+    # 明细必须带 site_raw/site_canonical/month/role 列（审查结论10 P0-2 机器可验证）
+    for col in ("site_raw", "site_canonical", "garage", "station", "month", "role"):
+        assert col in df.columns, f"分类 CSV 缺列 {col}"
+
+
+def test_site_canonical_and_file_role() -> None:
+    sm = {"raw_to_canonical": {"office_01": "office001", "caltech": "caltech", "jpl": "jpl"}}
+    assert site_canonical("office_01", sm) == "office001"
+    assert site_canonical("caltech", sm) == "caltech"
+    assert site_canonical("unknown", sm) == "unknown"
+    rm = {
+        "caltech_main": ["2019-03"],
+        "jpl_boundary_2020": ["2020-06", "2020-07"],
+        "jpl_current_only": ["2019-03"],
+    }
+    assert file_role("caltech", "California_Garage_01", "2019-03", sm, rm) == "caltech_main_frozen"
+    assert file_role("caltech", "LIGO_01", "2019-03", sm, rm) == "caltech_other"
+    assert file_role("jpl", "Arroyo_Garage_01", "2020-06", sm, rm) == "jpl_boundary_2020"
+    assert file_role("jpl", "Arroyo_Garage_01", "2019-03", sm, rm) == "jpl_current_only"
+    assert file_role("jpl", "Arroyo_Garage_01", "2019-11", sm, rm) == "jpl_other"
+    assert file_role("office_01", "Parking_Lot_01", "2020-06", sm, rm) == "office_external"
+
+
+def test_month_from_logical_path() -> None:
+    from patent_preexperiment.e0_full.input_audit import _month_from_logical_path
+
+    assert (
+        _month_from_logical_path(
+            "jpl/Arroyo_Garage_01/1-1-178-817-2019-09-25T12-27-05-647151.csv.gz"
+        )
+        == "2019-09"
+    )
+    assert _month_from_logical_path("no_date.csv.gz") is None
+
+
+def test_dup_collapse_impact_shares_minute(tmp_path: Path) -> None:
+    # identical dup 与同一分钟的异值行并存 → 1-min 均值受影响（否则为零）
+    f = _write_static(
+        tmp_path,
+        "jpl/Arroyo_Garage_01/1-1-178-817-2019-11-06T14-19-07-900778.csv.gz",
+        [
+            f"{_iso(0)},0.0",
+            f"{_iso(0)},0.0",
+            f"{_iso(0, sec=30)},5.0",
+            f"{_iso(1)},5.0",
+        ],
+        header=",Charging Current (A)",
+    )
+    m = pd.DataFrame(
+        {
+            "logical_path": [str(f.relative_to(tmp_path))],
+            "site": ["jpl"],
+            "garage": ["Arroyo_Garage_01"],
+            "station": ["x"],
+            "n_dup_ts": [1],
+            "time_min": [None],
+        }
+    )
+    sm = {"raw_to_canonical": {"jpl": "jpl"}}
+    rm = {"caltech_main": [], "jpl_boundary_2020": [], "jpl_current_only": []}
+    res = dup_collapse_impact(m, tmp_path, site_mapping=sm, role_months=rm)
+    assert res["files_scanned"] == 1
+    cur = res["by_role"]["jpl_other"]["fields"]["current"]
+    assert cur["affected_minutes"] == 1
+    assert cur["max_abs_diff"] > 0
+
+
+def test_dup_collapse_impact_no_effect_when_isolated(tmp_path: Path) -> None:
+    # identical dup 独占分钟 → collapse 后 1-min 均值不变
+    f = _write_static(
+        tmp_path,
+        "jpl/Arroyo_Garage_01/1-1-178-817-2019-11-06T14-19-07-900778.csv.gz",
+        [f"{_iso(0)},0.0", f"{_iso(0)},0.0", f"{_iso(1)},5.0"],
+        header=",Charging Current (A)",
+    )
+    m = pd.DataFrame(
+        {
+            "logical_path": [str(f.relative_to(tmp_path))],
+            "site": ["jpl"],
+            "garage": ["Arroyo_Garage_01"],
+            "station": ["x"],
+            "n_dup_ts": [1],
+            "time_min": [None],
+        }
+    )
+    res = dup_collapse_impact(
+        m, tmp_path, site_mapping={"raw_to_canonical": {"jpl": "jpl"}},
+        role_months={"caltech_main": [], "jpl_boundary_2020": [], "jpl_current_only": []},
+    )
+    assert res["files_scanned"] == 1
+    assert res["by_role"]["jpl_other"]["affected_files_any_field"] == 0
 
 
 def test_connection_time_audit_anomaly_not_fallback() -> None:

@@ -55,6 +55,7 @@ def test_e0_config_required_sections() -> None:
         "experiment_id", "protocol_version", "landing_version", "rule_version",
         "inputs", "power", "time", "session_join", "duplicates", "gaps",
         "short_files", "anomaly_months", "field_modes", "split", "roles",
+        "site_mapping", "k1_role_months",
         "acceptance", "k1_replication_stop_lines", "seeds", "evaluable",
         "outputs", "stop_lines", "forbidden_in_code",
     ):
@@ -103,6 +104,26 @@ def test_e0_anomaly_months_match_k1() -> None:
     cfg, k1 = _load_config(), _load_k1_config()
     assert cfg["anomaly_months"] == k1["sample"]["exclude_months"]
     assert cfg["anomaly_year_2021"] is True
+
+
+def test_e0_site_mapping_frozen() -> None:
+    # 审查结论10 P1：office_01(raw) → office001(canonical)，external_only 必须用 canonical
+    cfg = _load_config()
+    sm = cfg["site_mapping"]
+    assert sm["raw_to_canonical"] == {"caltech": "caltech", "jpl": "jpl", "office_01": "office001"}
+    assert sm["canonical_to_role"]["office001"] == "external_only"
+    assert cfg["split"]["external_only"] == ["office001"]
+    assert "office_01" not in cfg["split"]["external_only"]
+    assert "site_raw" in sm["rule"] and "site_canonical" in sm["rule"]
+
+
+def test_e0_k1_role_months_match_k1() -> None:
+    # 审查结论10 P0-2：重复分类的 K1 role×month 必须与 k1_preregister.yaml 冻结样本一致
+    cfg, k1 = _load_config(), _load_k1_config()
+    rm = cfg["k1_role_months"]
+    assert rm["caltech_main"] == k1["sample_roles"]["main_set"]["months"]
+    assert rm["jpl_boundary_2020"] == k1["sample_roles"]["k1x_boundary"]["months"]
+    assert rm["jpl_current_only"] == k1["sample_roles"]["current_only_fallback"]["months"]
 
 
 def test_e0_power_priority_and_rated_voltage() -> None:
@@ -172,9 +193,9 @@ def test_baseline_schema_required_fields() -> None:
         (DATA_REGISTRY / "e0_full_baseline.schema.json").read_text(encoding="utf-8")
     )
     for key in (
-        "code_sha", "e0_full_yaml_sha256", "manifest_hashes", "runtime_versions",
+        "code_sha", "git_status", "e0_full_yaml_sha256", "manifest_hashes", "runtime_versions",
         "input_logical_id", "data_roots_resolved", "split_rule_version",
-        "output_manifest", "parent_baseline",
+        "output_manifest", "parent_baseline", "source_manifest_sha256",
     ):
         assert key in schema["required"], f"baseline schema 缺少 required 字段 {key}"
     for key in ("python", "pandas", "pyarrow"):

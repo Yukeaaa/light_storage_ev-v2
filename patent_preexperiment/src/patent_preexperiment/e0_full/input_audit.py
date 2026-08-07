@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import zlib
 from concurrent.futures import ProcessPoolExecutor
 from dataclasses import dataclass
@@ -421,6 +422,8 @@ def build_quality_summary(
         cfg=cfg,
     )
 
+    site_mapping_audit = _site_mapping_audit(manifest, cfg)
+
     summary = {
         "audit_scope": "input_quality_only_no_split_no_field_registry",
         "files_total": files,
@@ -440,9 +443,36 @@ def build_quality_summary(
         "cross_check_vs_index": cross,
         "connection_time": conn_summary,
         "connection_time_anomalies": _anomaly_list(audit_df),
+        "site_mapping_audit": site_mapping_audit,
         "stop_lines": stop_lines,
     }
     return summary
+
+
+def _site_mapping_audit(manifest: pd.DataFrame, cfg: dict[str, Any]) -> dict[str, Any]:
+    """site raw→canonical 映射审计（审查结论10 P1）：全部 raw site 必须能映射到 canonical。"""
+    sm = cfg.get("site_mapping", {})
+    table = sm.get("raw_to_canonical", {})
+    raw_counts = manifest["site"].astype(str).value_counts().to_dict()
+    canonical_counts: dict[str, int] = {}
+    unmapped: list[str] = []
+    for raw_v, n in raw_counts.items():
+        raw = str(raw_v)
+        canonical = site_canonical(raw, sm)
+        if canonical == raw and raw not in table:
+            unmapped.append(raw)
+        canonical_counts[canonical] = canonical_counts.get(canonical, 0) + n
+    return {
+        "raw_sites": {str(k): int(v) for k, v in raw_counts.items()},
+        "canonical_sites": {str(k): int(v) for k, v in canonical_counts.items()},
+        "unmapped_raw": sorted(unmapped),
+        "mapping_ok": not unmapped,
+        "rule": sm.get(
+            "rule",
+            "site_canonical 经 site_mapping.raw_to_canonical 生成；"
+            "registry 保留 site_raw 与 site_canonical 两列",
+        ),
+    }
 
 
 def _anomaly_list(audit_df: pd.DataFrame) -> list[dict[str, Any]]:
@@ -510,10 +540,13 @@ def _stop_line_verdict(
     }
 
     # 3) 同一会话存在无法解释的重叠记录：文件内重复时间戳必须为 0
+    #    （审查结论10 P0-2：本检查是对该冻结条件更严格的实现解释；分类证据见 dup_ts_classification，
+    #     不得删检查或改阈值，需 STOP 后的口径澄清 gate resolution 才可解锁）
     checks["dup_ts_within_file"] = {
         "ok": dup_files == 0,
         "actual": dup_files,
         "rule": "文件内重复时间戳 == 0",
+        "note": "对 stop_lines 冻结条件'同一会话存在无法解释的重叠记录'的实现解释",
     }
 
     # 4) 数据缺失集中在关键站点/月份：严重缺口文件占比 <= 5%
@@ -555,78 +588,416 @@ def _decompress_text(raw: bytes) -> bytes:
         return _decompress_first_gzip_member(raw)
 
 
+_MONTH_RE = re.compile(r"-(\d{4})-(\d{2})-(\d{2})T")
+
+
+def _month_from_logical_path(logical_path: str) -> str | None:
+    """从 ACN 文件名嵌入时间提取 YYYY-MM（如 1-1-178-817-2019-09-25T12-27-05-…）。"""
+    m = _MONTH_RE.search(logical_path)
+    return f"{m.group(1)}-{m.group(2)}" if m else None
+
+
+def _is_zero_idle_row(line: str) -> bool:
+    """0.0 空闲心跳行：时间戳之后所有字段为空或数值为 0（如 '2019-…,0.0,,,,,'）。"""
+    for field in line.split(",")[1:]:
+        field = field.strip()
+        if not field:
+            continue
+        try:
+            if float(field) != 0.0:
+                return False
+        except ValueError:
+            return False
+    return True
+
+
+def site_canonical(site_raw: str, site_mapping: dict[str, Any]) -> str:
+    """raw site → canonical site（审查结论10 P1；registry 保留 site_raw/site_canonical 两列）。
+
+    映射来自 e0_full.yaml site_mapping.raw_to_canonical；未登记 raw 原样返回（上游会报警）。
+    """
+    table = site_mapping.get("raw_to_canonical", {})
+    return str(table.get(site_raw, site_raw))
+
+
+def file_role(
+    site_raw: str,
+    garage: str,
+    month: str | None,
+    site_mapping: dict[str, Any],
+    role_months: dict[str, Any],
+) -> str:
+    """文件级 K1 role 分类（审查结论10 P0-2）：用于判断 exact duplicate 是否污染 R1 证据。
+
+    caltech_main_frozen / jpl_boundary_2020 / jpl_current_only / jpl_other /
+    caltech_other / office_external / other。
+    """
+    canonical = site_canonical(site_raw, site_mapping)
+    main = set(role_months.get("caltech_main", []))
+    boundary = set(role_months.get("jpl_boundary_2020", []))
+    current_only = set(role_months.get("jpl_current_only", []))
+    if canonical == "office001":
+        return "office_external"
+    if canonical == "caltech":
+        if garage == "California_Garage_01" and month in main:
+            return "caltech_main_frozen"
+        return "caltech_other"
+    if canonical == "jpl":
+        if garage == "Arroyo_Garage_01" and month in boundary:
+            return "jpl_boundary_2020"
+        if garage == "Arroyo_Garage_01" and month in current_only:
+            return "jpl_current_only"
+        return "jpl_other"
+    return "other"
+
+
 def classify_dup_ts(
     manifest: pd.DataFrame,
     static_root: str | Path,
     out_csv: str | Path | None = None,
+    site_mapping: dict[str, Any] | None = None,
+    role_months: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """重复时间戳分类：同秒多次采样（可解释） vs 逐字节相同行（可疑重叠）。
+    """重复时间戳分类（审查结论10 P0-2 措辞与结构）。
 
-    输入 manifest 的 n_dup_ts 只标记"存在重复"，本函数重读含重复的文件做精细分类：
-    - 相同 timestamp 的若干行若逐字节不同 → 亚秒级采样（可解释，信息性指标）；
-    - 相同 timestamp 的若干行存在逐字节相同 → 可疑重叠（报告但不删除，只读输入）。
-    返回汇总 dict；out_csv 给出逐文件 identical_dup_rows 明细（可复现）。
+    输入 manifest 的 n_dup_ts 只标记"存在重复"，本函数只读重扫含重复的文件做精细分类：
+    - 同一记录时间戳、不同观测值 → same_timestamp_distinct_rows（保留进入确定性分钟聚合；
+      具体采样机制未被当前数据证明，不作"亚秒采样"断言）；
+    - 同一记录时间戳、逐字节相同行 → identical_dup_rows（可疑重叠；保留不删，派生层按冻结
+      规则 collapse）；再按内容分 identical_zero_idle_rows / identical_nonzero_rows。
+    明细 CSV 含 site_raw/site_canonical/garage/station/month/role，并按 role×month 汇总。
     """
+    mapping = site_mapping or {}
+    rmonths = role_months or {}
     dup = manifest[manifest["n_dup_ts"] > 0]
     root = Path(static_root)
     rows_out: list[dict[str, Any]] = []
     extra_identical = 0
+    extra_identical_zero = 0
+    extra_identical_nonzero = 0
     extra_distinct = 0
     files_with_identical = 0
+    failed: list[str] = []
     for _, r in dup.iterrows():
-        text = _decompress_text((root / r["logical_path"]).read_bytes())
+        lp = str(r["logical_path"])
+        month = _month_from_logical_path(lp)
+        if month is None:
+            t = str(r.get("time_min") or "")
+            month = t[:7] if len(t) >= 7 else None
+        site_raw = str(r.get("site") or "")
+        garage = str(r.get("garage") or "")
+        station = str(r.get("station") or "")
+        try:
+            text = _decompress_text((root / lp).read_bytes())
+        except OSError:
+            failed.append(lp)
+            continue
         lines = text.decode("utf-8", errors="replace").splitlines()
         data = [ln for ln in lines[1:] if ln.strip()]
         seen: dict[str, list[str]] = {}
         for ln in data:
             seen.setdefault(ln.split(",", 1)[0], []).append(ln)
         file_identical = 0
+        file_zero = 0
+        file_nonzero = 0
         file_distinct = 0
         for group in seen.values():
             if len(group) < 2:
                 continue
-            n_unique = len(set(group))
-            file_identical += len(group) - n_unique
-            file_distinct += n_unique - 1
+            counts: dict[str, int] = {}
+            for ln in group:
+                counts[ln] = counts.get(ln, 0) + 1
+            for ln, cnt in counts.items():
+                if cnt < 2:
+                    continue
+                n_id = cnt - 1
+                file_identical += n_id
+                if _is_zero_idle_row(ln):
+                    file_zero += n_id
+                else:
+                    file_nonzero += n_id
+            file_distinct += len(counts) - 1
         extra_identical += file_identical
+        extra_identical_zero += file_zero
+        extra_identical_nonzero += file_nonzero
         extra_distinct += file_distinct
         if file_identical:
             files_with_identical += 1
         rows_out.append(
             {
-                "logical_path": r["logical_path"],
+                "logical_path": lp,
+                "site_raw": site_raw,
+                "site_canonical": site_canonical(site_raw, mapping),
+                "garage": garage,
+                "station": station,
+                "month": month,
+                "role": file_role(site_raw, garage, month, mapping, rmonths),
                 "n_dup_ts": int(r["n_dup_ts"]),
                 "identical_dup_rows": file_identical,
-                "same_second_distinct_samples": file_distinct,
+                "identical_zero_idle_rows": file_zero,
+                "identical_nonzero_rows": file_nonzero,
+                "same_timestamp_distinct_rows": file_distinct,
             }
         )
 
+    cols = [
+        "logical_path", "site_raw", "site_canonical", "garage", "station", "month",
+        "role", "n_dup_ts", "identical_dup_rows", "identical_zero_idle_rows",
+        "identical_nonzero_rows", "same_timestamp_distinct_rows",
+    ]
+    df_out = pd.DataFrame(rows_out, columns=cols) if rows_out else pd.DataFrame(columns=cols)
     if out_csv is not None:
         Path(out_csv).parent.mkdir(parents=True, exist_ok=True)
-        pd.DataFrame(rows_out).to_csv(out_csv, index=False)
+        df_out.to_csv(out_csv, index=False)
+
+    def _agg(sub: pd.DataFrame) -> dict[str, Any]:
+        return {
+            "files": int(len(sub)),
+            "identical_dup_rows": int(sub["identical_dup_rows"].sum()),
+            "identical_zero_idle_rows": int(sub["identical_zero_idle_rows"].sum()),
+            "identical_nonzero_rows": int(sub["identical_nonzero_rows"].sum()),
+            "same_timestamp_distinct_rows": int(sub["same_timestamp_distinct_rows"].sum()),
+        }
+
+    by_site: dict[str, Any] = {}
+    by_role: dict[str, Any] = {}
+    by_role_month: dict[str, Any] = {}
+    by_month: dict[str, Any] = {}
+    if len(df_out):
+        by_site = {str(k): _agg(g) for k, g in df_out.groupby("site_canonical")}
+        by_role = {str(k): _agg(g) for k, g in df_out.groupby("role")}
+        by_month = {str(k): _agg(g) for k, g in df_out.groupby("month")}
+        for (role, m), g in df_out.groupby(["role", "month"]):
+            by_role_month.setdefault(str(role), {})[str(m)] = _agg(g)
     return {
         "dup_ts_files": int(len(dup)),
         "identical_dup_rows": extra_identical,
+        "identical_zero_idle_rows": extra_identical_zero,
+        "identical_nonzero_rows": extra_identical_nonzero,
         "identical_dup_files": files_with_identical,
-        "same_second_distinct_samples": extra_distinct,
-        "classification_rule": "逐字节相同行 → 可疑重叠；同秒不同值 → 亚秒采样（可解释）",
+        "same_timestamp_distinct_rows": extra_distinct,
+        "files_failed": len(failed),
+        "by_site": by_site,
+        "by_role": by_role,
+        "by_role_month": by_role_month,
+        "by_month": by_month,
+        "classification_rule": (
+            "逐字节相同行 → 可疑重叠（保留不删，派生层按冻结规则 collapse）；"
+            "同一记录时间戳不同观测值 → 保留进入确定性分钟聚合；"
+            "采样机制未被当前数据证明"
+        ),
     }
+
+
+_AGG_MEAN_FIELDS = ("current", "power", "pilot")
+
+
+def _parse_static_rows(text: bytes) -> list[dict[str, Any]]:
+    """解析静态 csv 文本为行记录（只含可解析数值列，缺列跳过；供影响量检查用）。"""
+    header = text.split(b"\n", 1)[0]
+    cols = header.decode("utf-8", errors="replace").strip().split(",")
+    col_idx: dict[str, int] = {}
+    for i, c in enumerate(cols):
+        key = c.strip()
+        if key in _COL_KEY:
+            col_idx[_COL_KEY[key]] = i
+    rows: list[dict[str, Any]] = []
+    for line in text.split(b"\n")[1:]:
+        if not line.strip():
+            continue
+        parts = line.split(b",")
+        try:
+            ts = datetime.fromisoformat(parts[0].decode("ascii"))
+        except (ValueError, UnicodeDecodeError):
+            continue
+        rec: dict[str, Any] = {"ts": ts}
+        for key, idx in col_idx.items():
+            if idx < len(parts) and parts[idx].strip():
+                try:
+                    rec[key] = float(parts[idx])
+                except ValueError:
+                    pass
+        rows.append(rec)
+    return rows
+
+
+def _minute_impact(
+    keep_rows: list[dict[str, Any]],
+    coll_rows: list[dict[str, Any]],
+) -> dict[str, Any]:
+    """1-min 聚合下 keep vs collapse 的逐字段差值（current/power/pilot 取均值，energy 取末值）。"""
+    zero_stats: dict[str, Any] = {
+        f: {"affected_minutes": 0, "max_abs_diff": 0.0, "mean_abs_diff": 0.0}
+        for f in (*_AGG_MEAN_FIELDS, "energy")
+    }
+    if not keep_rows:
+        return zero_stats
+    keep_df = pd.DataFrame(keep_rows)
+    coll_df = pd.DataFrame(coll_rows)
+    keep_df["ts"] = pd.to_datetime(keep_df["ts"], utc=True)
+    coll_df["ts"] = pd.to_datetime(coll_df["ts"], utc=True)
+    keep_df["minute"] = keep_df["ts"].dt.floor("min")
+    coll_df["minute"] = coll_df["ts"].dt.floor("min")
+    fields: dict[str, Any] = {}
+    for f in _AGG_MEAN_FIELDS:
+        if f not in keep_df.columns or f not in coll_df.columns:
+            fields[f] = dict(zero_stats[f])
+            continue
+        ka = keep_df.groupby("minute")[f].mean()
+        ca = coll_df.groupby("minute")[f].mean()
+        fields[f] = _diff_stats((ka - ca).abs())
+    if "energy" in keep_df.columns and "energy" in coll_df.columns:
+        ke = keep_df.groupby("minute")["energy"].last()
+        ce = coll_df.groupby("minute")["energy"].last()
+        fields["energy"] = _diff_stats((ke - ce).abs())
+    else:
+        fields["energy"] = dict(zero_stats["energy"])
+    return fields
+
+
+def _diff_stats(diff: pd.Series) -> dict[str, Any]:
+    vals = diff.dropna().astype(float)
+    n = int(len(vals))
+    if n == 0:
+        return {"affected_minutes": 0, "max_abs_diff": 0.0, "mean_abs_diff": 0.0}
+    return {
+        "affected_minutes": int((vals > 0).sum()),
+        "max_abs_diff": round(float(vals.max()), 9),
+        "mean_abs_diff": round(float(vals.mean()), 9),
+    }
+
+
+def dup_collapse_impact(
+    manifest: pd.DataFrame,
+    static_root: str | Path,
+    out_json: str | Path | None = None,
+    site_mapping: dict[str, Any] | None = None,
+    role_months: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """exact-duplicate 保留 vs 派生层 collapse 的 1-min 影响量（审查结论10 建议3）。
+
+    只读输入，永不修改原始文件。只扫描 identical_dup_rows>0 的文件；对每文件比较
+    "保留全部行" 与 "collapse 逐字节相同行" 两种派生口径在 1-min 聚合下的差异
+    （current/power/pilot 取均值、energy 取分钟末值），按 role 汇总。
+    """
+    mapping = site_mapping or {}
+    rmonths = role_months or {}
+    dup = manifest[manifest["n_dup_ts"] > 0]
+    root = Path(static_root)
+    file_stats: dict[str, dict[str, Any]] = {}
+    for _, r in dup.iterrows():
+        lp = str(r["logical_path"])
+        try:
+            text = _decompress_text((root / lp).read_bytes())
+        except OSError:
+            continue
+        decoded = text.decode("utf-8", errors="replace")
+        raw_lines = [ln for ln in decoded.splitlines()[1:] if ln.strip()]
+        if not raw_lines:
+            continue
+        coll_lines = list(dict.fromkeys(raw_lines))
+        if len(coll_lines) == len(raw_lines):
+            continue
+        keep_rows = _parse_static_rows(text)
+        header = decoded.split("\n", 1)[0]
+        coll_text = ("\n".join([header, *coll_lines]) + "\n").encode("utf-8")
+        coll_rows = _parse_static_rows(coll_text)
+        impact = _minute_impact(keep_rows, coll_rows)
+        month = _month_from_logical_path(lp)
+        if month is None:
+            t = str(r.get("time_min") or "")
+            month = t[:7] if len(t) >= 7 else None
+        file_stats[lp] = {
+            "role": file_role(
+                str(r.get("site") or ""),
+                str(r.get("garage") or ""),
+                month,
+                mapping,
+                rmonths,
+            ),
+            "identical_dup_rows": len(raw_lines) - len(coll_lines),
+            "fields": impact,
+        }
+
+    by_role: dict[str, Any] = {}
+    totals: dict[str, Any] = {
+        f: {"affected_minutes": 0, "max_abs_diff": 0.0, "mean_abs_diff": 0.0}
+        for f in (*_AGG_MEAN_FIELDS, "energy")
+    }
+    for _, st in file_stats.items():
+        role = st["role"]
+        br = by_role.setdefault(
+            role,
+            {
+                "files": 0,
+                "affected_files_any_field": 0,
+                "fields": {
+                    f: {"affected_minutes": 0, "max_abs_diff": 0.0, "mean_abs_diff": 0.0}
+                    for f in (*_AGG_MEAN_FIELDS, "energy")
+                },
+            },
+        )
+        br["files"] += 1
+        affected_any = any(s["affected_minutes"] > 0 for s in st["fields"].values())
+        if affected_any:
+            br["affected_files_any_field"] += 1
+        for f, s in st["fields"].items():
+            br["fields"][f]["affected_minutes"] += s["affected_minutes"]
+            br["fields"][f]["max_abs_diff"] = max(
+                br["fields"][f]["max_abs_diff"], s["max_abs_diff"]
+            )
+            br["fields"][f]["mean_abs_diff"] += s["mean_abs_diff"]
+            totals[f]["affected_minutes"] += s["affected_minutes"]
+            totals[f]["max_abs_diff"] = max(totals[f]["max_abs_diff"], s["max_abs_diff"])
+            totals[f]["mean_abs_diff"] += s["mean_abs_diff"]
+    n_files = len(file_stats)
+    if n_files:
+        for br in by_role.values():
+            for f in br["fields"]:
+                br["fields"][f]["mean_abs_diff"] = round(
+                    br["fields"][f]["mean_abs_diff"] / br["files"], 9
+                )
+        for f in totals:
+            totals[f]["mean_abs_diff"] = round(totals[f]["mean_abs_diff"] / max(n_files, 1), 9)
+
+    result: dict[str, Any] = {
+        "scope": (
+            "只扫描 identical_dup_rows>0 的文件；派生层 1-min 聚合："
+            "current/power/pilot 取均值、energy 取分钟末值"
+        ),
+        "input_untouched": True,
+        "files_scanned": n_files,
+        "by_role": by_role,
+        "overall_fields": totals,
+    }
+    if out_json is not None:
+        Path(out_json).parent.mkdir(parents=True, exist_ok=True)
+        Path(out_json).write_text(
+            json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    return result
 
 
 def run_e0f01(
     cfg_path: str | Path | None = None,
     workers: int = 1,
     reuse_manifest: bool = False,
+    require_clean_baseline: bool = True,
 ) -> dict[str, Any]:
-    """E0F-01 全量执行：构建 manifest → 质量汇总 → 连接时间审计 → 冻结四个产物。
+    """E0F-01/01.1 全量执行：manifest → 质量汇总 → 连接时间审计 → 重复分类 → 影响量 → 冻结产物。
 
     产物：
     - data_registry/e0_full_source_manifest.parquet
     - data_registry/e0_full_quality_summary.json
+    - data_registry/e0_full_connection_time_audit.parquet
+    - data_registry/e0_full_dup_ts_classification.csv
+    - data_registry/e0_full_dup_collapse_impact.json
     - data_registry/e0_full_baseline.json
     - reports/E0_Full_input_audit.md
 
     reuse_manifest=True 时复用已存在的 manifest（迭代用），默认全量重扫保证确定性。
+    require_clean_baseline=True：正式冻结运行时存在未提交代码则拒绝生成 baseline
+    （审查结论10 P0-1：代码 commit → clean run → evidence commit）。
     """
     cfg = load_yaml(cfg_path or (Path(__file__).resolve().parents[3] / "configs" / "e0_full.yaml"))
     acn = acn_project_dir()
@@ -660,8 +1031,19 @@ def run_e0f01(
         manifest,
         static_root,
         out_csv=impl_root / "data_registry" / "e0_full_dup_ts_classification.csv",
+        site_mapping=cfg.get("site_mapping"),
+        role_months=cfg.get("k1_role_months"),
     )
     quality["dup_ts_classification"] = dup_cls
+
+    impact = dup_collapse_impact(
+        manifest,
+        static_root,
+        out_json=impl_root / "data_registry" / "e0_full_dup_collapse_impact.json",
+        site_mapping=cfg.get("site_mapping"),
+        role_months=cfg.get("k1_role_months"),
+    )
+    quality["dup_collapse_impact"] = impact
 
     quality_out = impl_root / "data_registry" / "e0_full_quality_summary.json"
     quality_out.write_text(json.dumps(quality, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -673,6 +1055,7 @@ def run_e0f01(
         out=baseline_out,
         manifest_hash_hex=quality["manifest_sha256"],
         config=cfg,
+        require_clean=require_clean_baseline,
     )
 
     _write_audit_report(quality, impl_root / "reports" / "E0_Full_input_audit.md", cfg)
@@ -733,14 +1116,53 @@ def _write_audit_report(quality: dict[str, Any], out: Path, cfg: dict[str, Any])
     lines.append(f"- 规则：{ct['rule']}")
     dup = quality.get("dup_ts_classification")
     if dup:
-        lines += ["", "## 重复时间戳分类（对冻结 stop-line 的证据补充）", ""]
+        lines += ["", "## 重复时间戳分类（对冻结 stop-line 的证据补充，审查结论10 P0-2）", ""]
         lines.append(
             f"- 含重复时间戳文件：{dup['dup_ts_files']}；"
-            f"同秒不同值（亚秒采样，可解释）：{dup['same_second_distinct_samples']} 行；"
-            f"逐字节相同行（可疑重叠）：{dup['identical_dup_rows']} 行"
-            f"（分布于 {dup['identical_dup_files']} 个文件）"
+            f"同一记录时间戳、不同观测值：{dup['same_timestamp_distinct_rows']} 行"
+            f"（保留进入确定性分钟聚合，机制未被当前数据证明）；"
+            f"逐字节相同行：{dup['identical_dup_rows']} 行"
+            f"（含 {dup['identical_zero_idle_rows']} 行 0.0 空闲 + "
+            f"{dup['identical_nonzero_rows']} 行非零，分布于 {dup['identical_dup_files']} 个文件）"
         )
         lines.append(f"- 规则：{dup['classification_rule']}")
+        if dup.get("by_role"):
+            lines.append("")
+            lines.append(
+                "| role | files | identical_dup_rows | zero_idle | nonzero | same_ts_distinct |"
+            )
+            lines.append("|---|---|---|---|---|---|")
+            for role, v in sorted(dup["by_role"].items()):
+                lines.append(
+                    f"| {role} | {v['files']} | {v['identical_dup_rows']} | "
+                    f"{v['identical_zero_idle_rows']} | {v['identical_nonzero_rows']} | "
+                    f"{v['same_timestamp_distinct_rows']} |"
+                )
+    impact = quality.get("dup_collapse_impact")
+    if impact:
+        lines += [
+            "",
+            "## exact-duplicate 保留 vs 派生层 collapse 的 1-min 影响量（审查结论10 建议3）",
+            "",
+        ]
+        lines.append(f"- 范围：{impact['scope']}；输入未修改：{impact['input_untouched']}")
+        for role, v in sorted(impact["by_role"].items()):
+            lines.append(
+                f"- {role}：{v['files']} 文件，其中 {v['affected_files_any_field']} 个受影响；"
+                f"受影响分钟数 current={v['fields']['current']['affected_minutes']} "
+                f"power={v['fields']['power']['affected_minutes']} "
+                f"pilot={v['fields']['pilot']['affected_minutes']} "
+                f"energy={v['fields']['energy']['affected_minutes']}；"
+                f"最大绝对差 current={v['fields']['current']['max_abs_diff']} "
+                f"power={v['fields']['power']['max_abs_diff']}"
+            )
+    sm = quality.get("site_mapping_audit")
+    if sm:
+        lines += ["", "## 站点 raw→canonical 映射（审查结论10 P1，E0F-02 前冻结）", ""]
+        lines.append(
+            f"- raw_sites：{sm['raw_sites']}；canonical_sites：{sm['canonical_sites']}；"
+            f"未映射：{sm['unmapped_raw']}；mapping_ok：{sm['mapping_ok']}"
+        )
     lines += ["", "## 停止线判定", ""]
     for name, check in quality["stop_lines"]["checks"].items():
         lines.append(f"- {name}：{'PASS' if check['ok'] else 'FAIL'}（{check}）")
