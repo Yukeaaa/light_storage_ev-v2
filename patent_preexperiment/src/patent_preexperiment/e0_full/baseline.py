@@ -28,7 +28,7 @@ from patent_preexperiment.io.paths import acn_project_dir, load_paths
 _REPO_ROOT = Path(__file__).resolve().parents[4]
 _IMPL_ROOT = Path(__file__).resolve().parents[3]
 
-# E0F-01/01.1 证据产物输出路径（生成期间允许为已跟踪修改；其余已跟踪文件修改视为未提交代码）
+# 证据产物输出路径白名单（生成期间允许为已跟踪修改；其余已跟踪文件修改视为未提交代码）
 _OUTPUT_PATHS = {
     "patent_preexperiment/data_registry/e0_full_source_manifest.parquet",
     "patent_preexperiment/data_registry/e0_full_quality_summary.json",
@@ -39,6 +39,15 @@ _OUTPUT_PATHS = {
     "patent_preexperiment/data_registry/e0_full_baseline.json",
     "patent_preexperiment/reports/E0_Full_input_audit.md",
 }
+
+# 审查结论11 低优先级增强：代码目录内任何 untracked 文件也视为未提交代码。
+# 证据产物（data_registry/reports 等）不在这些目录，两段式下 untracked 证据不受影响。
+_CODE_DIR_PREFIXES = (
+    "patent_preexperiment/src/",
+    "patent_preexperiment/configs/",
+    "patent_preexperiment/experiments/",
+    "patent_preexperiment/tests/",
+)
 
 
 def _git_commit() -> str:
@@ -58,9 +67,10 @@ def _git_commit() -> str:
 
 
 def _git_dirty_code() -> list[str]:
-    """未提交代码列表：修改/删除的已跟踪文件，排除证据产物输出路径。
+    """未提交代码列表：已跟踪文件的修改/删除（排除证据产物输出路径）＋代码目录内 untracked 文件。
 
-    只读检查；untracked（??）一律不算未提交代码（两段式下 evidence 在代码 commit 之后才生成）。
+    只读检查（审查结论11 低优先级增强）：src/configs/experiments/tests 下任何 untracked 文件
+    都使 code_clean=false；data_registry/reports 下的 untracked 证据产物不计。
     """
     try:
         r = subprocess.run(
@@ -77,6 +87,10 @@ def _git_dirty_code() -> list[str]:
         if not line:
             continue
         if line.startswith("??"):
+            path = line[2:].strip()
+            path = path.strip('"').replace("\\", "/")
+            if path.startswith(_CODE_DIR_PREFIXES):
+                dirty.append(path)
             continue
         path = line[3:].strip()
         if " -> " in path:
