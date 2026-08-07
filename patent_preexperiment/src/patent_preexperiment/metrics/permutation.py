@@ -17,6 +17,12 @@ from patent_preexperiment.metrics.bootstrap import bootstrap_session_diff_ci, co
 from patent_preexperiment.response.done import PHASE_CORE, PHASE_MISSING, add_done_phases
 from patent_preexperiment.response.events import GapThresholds, detect_gap_events
 
+_EVENT_COLS = [
+    "session_id", "site", "garage", "station_id", "start_utc", "end_utc",
+    "duration_min", "max_gap_kw", "median_gap_kw", "p95_gap_kw", "gap_energy_kwh",
+    "working_power_median_kw", "month", "phase", "event_phase",
+]
+
 
 def _events_with_phase(labeled: pd.DataFrame, thr: GapThresholds) -> pd.DataFrame:
     """检测事件并在阶段边界切断；事件行携带 event_phase。"""
@@ -59,6 +65,39 @@ def permutation_negative_control(
     sessions = core_run_session_ids(labeled)
     core_session_set = set(sessions)
     n_core = int(len(sessions))
+
+    if n_core == 0:
+        return {
+            "evaluable": False,
+            "reason": "no_core_sessions",
+            "real_core_session_rate": 0.0,
+            "perm_rate_mean": 0.0,
+            "perm_rate_per_seed": [
+                {
+                    "seed": int(seed),
+                    "core_events": 0,
+                    "core_session_rate": 0.0,
+                    "n_perm_event_sessions_before_population_filter": 0,
+                    "n_perm_event_sessions_outside_core_population": 0,
+                    "n_perm_event_sessions_after_population_filter": 0,
+                }
+                for seed in perm_seeds
+            ],
+            "diff_real_minus_perm": 0.0,
+            "ratio_real_over_perm": 0.0,
+            "diff_bootstrap_ci95": [0.0, 0.0],
+            "bootstrap_n_sessions": 0,
+            "n_perm_event_sessions_before_population_filter_total": 0,
+            "n_perm_event_sessions_outside_core_population_total": 0,
+            "n_perm_event_sessions_after_population_filter_total": 0,
+            "interpretation": (
+                "无核心运行窗口会话，负对照不可评估（evaluable=False, no_core_sessions）；"
+                "调用方应跳过该池/月，避免空数组均值产生 NaN。"
+            ),
+            "_real_has": np.empty(0, dtype=bool),
+            "_perm_has": np.empty((len(perm_seeds), 0), dtype=bool),
+            "perm_core_reference": pd.DataFrame(columns=_EVENT_COLS),
+        }
 
     real_core_sess = set(real_core_events["session_id"].unique()) & core_session_set
     real_has = np.isin(sessions, list(real_core_sess))

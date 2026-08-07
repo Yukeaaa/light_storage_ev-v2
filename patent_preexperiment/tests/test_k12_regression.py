@@ -456,3 +456,28 @@ def _events_of(labeled: pd.DataFrame, thr: GapThresholds, phase: str) -> pd.Data
     else:
         ev["event_phase"] = ev["phase"]
     return ev[ev["event_phase"] == phase]
+
+
+def test_permutation_control_nocore_returns_evaluable_false() -> None:
+    """E0-Full 健壮性（审查结论5）：无核心窗口会话时返回 evaluable=False，不产生 NaN。
+
+    分池/月份子集可能遇到零合格会话；此时必须跳过而非对空数组求均值。
+    """
+    thr = _thr()
+    non_core = _non_core_labeled("N", "2018-11-01 10:00")
+    sessions = core_run_session_ids(non_core)
+    assert len(sessions) == 0, "无 core 会话是前置条件"
+
+    res = permutation_negative_control(
+        non_core, thr, _events_of(non_core, thr, PHASE_CORE),
+        perm_seeds=[42, 2024, 777], bootstrap_seed=SEED, n_boot=200,
+    )
+    assert res["evaluable"] is False
+    assert res["reason"] == "no_core_sessions"
+    assert res["bootstrap_n_sessions"] == 0
+    assert res["real_core_session_rate"] == 0.0
+    assert res["perm_rate_mean"] == 0.0
+    assert res["diff_real_minus_perm"] == 0.0
+    assert res["diff_bootstrap_ci95"] == [0.0, 0.0]
+    assert len(res["_real_has"]) == 0
+    assert res["_perm_has"].shape == (3, 0)
