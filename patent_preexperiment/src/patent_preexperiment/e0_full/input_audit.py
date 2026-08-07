@@ -26,10 +26,19 @@ from datetime import datetime
 from pathlib import Path
 from typing import Any
 
+import numpy as np
 import pandas as pd
 
+from patent_preexperiment.allocation.opportunity import (
+    build_cycles,
+    candidate_windows,
+    compute_pool_stats,
+    compute_proxies,
+    eligible_mask,
+)
 from patent_preexperiment.config.yamlutil import load_yaml
 from patent_preexperiment.io.paths import acn_project_dir, static_root_dir
+from patent_preexperiment.response.session import aggregate_session_minute, derive_power
 
 _COL_KEY = {
     "Charging Current (A)": "current",
@@ -629,24 +638,26 @@ def file_role(
 ) -> str:
     """文件级 K1 role 分类（审查结论10 P0-2）：用于判断 exact duplicate 是否污染 R1 证据。
 
-    caltech_main_frozen / jpl_boundary_2020 / jpl_current_only / jpl_other /
-    caltech_other / office_external / other。
+    审查结论11 P1：role 名只表述"月份窗口代理"，不直接等同"最终样本角色"——
+    caltech_main_window / jpl_boundary_window / jpl_current_only_window /
+    jpl_other / caltech_other / office_external / other。
+    真正进入样本的 eligibility（has_current/has_pilot/…）逐文件单独登记在分类明细列。
     """
     canonical = site_canonical(site_raw, site_mapping)
-    main = set(role_months.get("caltech_main", []))
-    boundary = set(role_months.get("jpl_boundary_2020", []))
-    current_only = set(role_months.get("jpl_current_only", []))
+    main = set(role_months.get("caltech_main_window", []))
+    boundary = set(role_months.get("jpl_boundary_window", []))
+    current_only = set(role_months.get("jpl_current_only_window", []))
     if canonical == "office001":
         return "office_external"
     if canonical == "caltech":
         if garage == "California_Garage_01" and month in main:
-            return "caltech_main_frozen"
+            return "caltech_main_window"
         return "caltech_other"
     if canonical == "jpl":
         if garage == "Arroyo_Garage_01" and month in boundary:
-            return "jpl_boundary_2020"
+            return "jpl_boundary_window"
         if garage == "Arroyo_Garage_01" and month in current_only:
-            return "jpl_current_only"
+            return "jpl_current_only_window"
         return "jpl_other"
     return "other"
 
@@ -666,6 +677,8 @@ def classify_dup_ts(
     - 同一记录时间戳、逐字节相同行 → identical_dup_rows（可疑重叠；保留不删，派生层按冻结
       规则 collapse）；再按内容分 identical_zero_idle_rows / identical_nonzero_rows。
     明细 CSV 含 site_raw/site_canonical/garage/station/month/role，并按 role×month 汇总。
+    审查结论11 P1：明细逐文件登记 eligibility（has_current/has_pilot/has_voltage/has_power），
+    role 仅作"月份窗口"代理，不直接等同"最终样本角色"。
     """
     mapping = site_mapping or {}
     rmonths = role_months or {}
@@ -732,6 +745,10 @@ def classify_dup_ts(
                 "station": station,
                 "month": month,
                 "role": file_role(site_raw, garage, month, mapping, rmonths),
+                "has_current": bool(r.get("has_current", False)),
+                "has_pilot": bool(r.get("has_pilot", False)),
+                "has_voltage": bool(r.get("has_voltage", False)),
+                "has_power": bool(r.get("has_power", False)),
                 "n_dup_ts": int(r["n_dup_ts"]),
                 "identical_dup_rows": file_identical,
                 "identical_zero_idle_rows": file_zero,
@@ -742,7 +759,8 @@ def classify_dup_ts(
 
     cols = [
         "logical_path", "site_raw", "site_canonical", "garage", "station", "month",
-        "role", "n_dup_ts", "identical_dup_rows", "identical_zero_idle_rows",
+        "role", "has_current", "has_pilot", "has_voltage", "has_power",
+        "n_dup_ts", "identical_dup_rows", "identical_zero_idle_rows",
         "identical_nonzero_rows", "same_timestamp_distinct_rows",
     ]
     df_out = pd.DataFrame(rows_out, columns=cols) if rows_out else pd.DataFrame(columns=cols)
@@ -821,17 +839,80 @@ def _parse_static_rows(text: bytes) -> list[dict[str, Any]]:
     return rows
 
 
+def _canonical_df_from_rows(rows: list[dict[str, Any]]) -> pd.DataFrame:
+    """行记录 → 规范化静态 df（列名与 io/static.read_static_csv 一致，含电压/功率列）。
+
+    供冻结 1min/5min 派生管线复用（derive_power 是唯一 canonical 功率派生实现）。
+    """
+    if not rows:
+        return pd.DataFrame()
+    df = pd.DataFrame(rows)
+    if "ts" not in df.columns:
+        return pd.DataFrame()
+    df = df.rename(columns={"ts": "timestamp"})
+    rename = {
+        "current": "current_a",
+        "pilot": "pilot_a",
+        "voltage": "voltage_v",
+        "energy": "energy_kwh",
+        "power": "power_kw",
+    }
+    for k, v in rename.items():
+        if k in df.columns:
+            df[v] = df[k]
+    for col in ("current_a", "pilot_a", "voltage_v", "energy_kwh", "power_kw"):
+        if col not in df.columns:
+            df[col] = np.nan
+    df["timestamp"] = pd.to_datetime(df["timestamp"], utc=True)
+    df["state"] = pd.NA
+    return df[["timestamp", "current_a", "pilot_a", "voltage_v", "state", "energy_kwh", "power_kw"]]
+
+
+def _minute_actual_power_kw(rows: list[dict[str, Any]], rated_v: float) -> pd.Series:
+    """行记录 → 派生 actual_power_kw 的 1-min 均值（冻结优先级 measured→computed→estimated）。"""
+    df = _canonical_df_from_rows(rows)
+    if df.empty or "current_a" not in df.columns:
+        return pd.Series(dtype="float64")
+    df = df.dropna(subset=["current_a"]).copy()
+    df = derive_power(df, rated_v)
+    df["minute"] = df["timestamp"].dt.floor("min")
+    return df.groupby("minute")["actual_power_kw"].mean()
+
+
+def _minute_table_from_rows(
+    rows: list[dict[str, Any]],
+    rated_v: float,
+    session_id: str,
+    station_id: str,
+    site: str,
+    garage: str,
+) -> pd.DataFrame:
+    """行记录 → 生产路径 1 分钟会话表（aggregate_session_minute，冻结口径）。"""
+    df = _canonical_df_from_rows(rows)
+    if df.empty:
+        return df
+    return aggregate_session_minute(
+        df, rated_v, session_id=session_id, station_id=station_id, site=site, garage=garage
+    )
+
+
 def _minute_impact(
     keep_rows: list[dict[str, Any]],
     coll_rows: list[dict[str, Any]],
+    rated_v: float | None = None,
 ) -> dict[str, Any]:
-    """1-min 聚合下 keep vs collapse 的逐字段差值（current/power/pilot 取均值，energy 取末值）。"""
+    """1-min 聚合下 keep vs collapse 的逐字段差值。
+
+    fields：current/power/pilot 取均值、energy 取末值（原始 CSV 字段）。
+    derived_power：当 rated_v 给定且两侧都有可派生 current 时，用冻结优先级
+    derive_power 在派生层比较 actual_power_kw（JPL current-only 即 I×192.7/1000，审查结论11 P0）。
+    """
     zero_stats: dict[str, Any] = {
         f: {"affected_minutes": 0, "max_abs_diff": 0.0, "mean_abs_diff": 0.0}
         for f in (*_AGG_MEAN_FIELDS, "energy")
     }
     if not keep_rows:
-        return zero_stats
+        return {"fields": zero_stats, "derived_power": None}
     keep_df = pd.DataFrame(keep_rows)
     coll_df = pd.DataFrame(coll_rows)
     keep_df["ts"] = pd.to_datetime(keep_df["ts"], utc=True)
@@ -852,7 +933,49 @@ def _minute_impact(
         fields["energy"] = _diff_stats((ke - ce).abs())
     else:
         fields["energy"] = dict(zero_stats["energy"])
-    return fields
+
+    derived_power: dict[str, Any] | None = None
+    if rated_v is not None:
+        kp = _minute_actual_power_kw(keep_rows, rated_v)
+        cp = _minute_actual_power_kw(coll_rows, rated_v)
+        if len(kp) or len(cp):
+            derived_power = {
+                "diff_minutes": (kp - cp).abs(),
+                "n_minutes_keep": int(len(kp)),
+                "n_minutes_collapse": int(len(cp)),
+            }
+    return {"fields": fields, "derived_power": derived_power}
+
+
+def _agg_power_diff(diffs: list[pd.Series]) -> dict[str, Any]:
+    """按 role 汇总 derived_power 分钟绝对差（absolute/相对口径分开，避免把总差当平均差）。"""
+    if not diffs:
+        return {
+            "affected_minutes": 0,
+            "max_abs_diff_kw": 0.0,
+            "p95_abs_diff_kw": 0.0,
+            "mean_abs_diff_kw": 0.0,
+            "total_abs_energy_diff_kwh": 0.0,
+            "n_files_contributing": 0,
+        }
+    vals = pd.concat(diffs, axis=0).dropna().astype(float)
+    if not len(vals):
+        return {
+            "affected_minutes": 0,
+            "max_abs_diff_kw": 0.0,
+            "p95_abs_diff_kw": 0.0,
+            "mean_abs_diff_kw": 0.0,
+            "total_abs_energy_diff_kwh": 0.0,
+            "n_files_contributing": len(diffs),
+        }
+    return {
+        "affected_minutes": int((vals > 0).sum()),
+        "max_abs_diff_kw": round(float(vals.max()), 6),
+        "p95_abs_diff_kw": round(float(vals.quantile(0.95)), 6),
+        "mean_abs_diff_kw": round(float(vals.mean()), 6),
+        "total_abs_energy_diff_kwh": round(float(vals.sum() / 60.0), 6),
+        "n_files_contributing": len(diffs),
+    }
 
 
 def _diff_stats(diff: pd.Series) -> dict[str, Any]:
@@ -873,15 +996,22 @@ def dup_collapse_impact(
     out_json: str | Path | None = None,
     site_mapping: dict[str, Any] | None = None,
     role_months: dict[str, Any] | None = None,
+    rated_voltage: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """exact-duplicate 保留 vs 派生层 collapse 的 1-min 影响量（审查结论10 建议3）。
 
     只读输入，永不修改原始文件。只扫描 identical_dup_rows>0 的文件；对每文件比较
     "保留全部行" 与 "collapse 逐字节相同行" 两种派生口径在 1-min 聚合下的差异
     （current/power/pilot 取均值、energy 取分钟末值），按 role 汇总。
+
+    审查结论11 P0：原始 CSV power 列为空时"power 零影响"不成立——同一差异必须在派生层
+    actual_power_kw（derive_power：measured→computed→estimated，rated_voltage 按 canonical
+    site 从 e0_full.yaml power.rated_voltage 取）重新评估，否则 JPL current-only 的
+    I×192.7/1000 传播被漏报。
     """
     mapping = site_mapping or {}
     rmonths = role_months or {}
+    rated_v_by_site = rated_voltage or {}
     dup = manifest[manifest["n_dup_ts"] > 0]
     root = Path(static_root)
     file_stats: dict[str, dict[str, Any]] = {}
@@ -902,21 +1032,21 @@ def dup_collapse_impact(
         header = decoded.split("\n", 1)[0]
         coll_text = ("\n".join([header, *coll_lines]) + "\n").encode("utf-8")
         coll_rows = _parse_static_rows(coll_text)
-        impact = _minute_impact(keep_rows, coll_rows)
+        site_raw = str(r.get("site") or "")
+        canonical = site_canonical(site_raw, mapping)
+        rated_v = rated_v_by_site.get(canonical)
+        impact = _minute_impact(keep_rows, coll_rows, rated_v=rated_v)
         month = _month_from_logical_path(lp)
         if month is None:
             t = str(r.get("time_min") or "")
             month = t[:7] if len(t) >= 7 else None
         file_stats[lp] = {
-            "role": file_role(
-                str(r.get("site") or ""),
-                str(r.get("garage") or ""),
-                month,
-                mapping,
-                rmonths,
-            ),
+            "role": file_role(site_raw, str(r.get("garage") or ""), month, mapping, rmonths),
+            "canonical_site": canonical,
+            "rated_v": rated_v,
             "identical_dup_rows": len(raw_lines) - len(coll_lines),
-            "fields": impact,
+            "fields": impact["fields"],
+            "derived_power": impact["derived_power"],
         }
 
     by_role: dict[str, Any] = {}
@@ -924,6 +1054,8 @@ def dup_collapse_impact(
         f: {"affected_minutes": 0, "max_abs_diff": 0.0, "mean_abs_diff": 0.0}
         for f in (*_AGG_MEAN_FIELDS, "energy")
     }
+    role_pwr_diffs: dict[str, list[pd.Series]] = {}
+    all_pwr_diffs: list[pd.Series] = []
     for _, st in file_stats.items():
         role = st["role"]
         br = by_role.setdefault(
@@ -950,6 +1082,10 @@ def dup_collapse_impact(
             totals[f]["affected_minutes"] += s["affected_minutes"]
             totals[f]["max_abs_diff"] = max(totals[f]["max_abs_diff"], s["max_abs_diff"])
             totals[f]["mean_abs_diff"] += s["mean_abs_diff"]
+        if st["derived_power"] is not None and st["derived_power"]["diff_minutes"] is not None:
+            d = st["derived_power"]["diff_minutes"]
+            role_pwr_diffs.setdefault(role, []).append(d)
+            all_pwr_diffs.append(d)
     n_files = len(file_stats)
     if n_files:
         for br in by_role.values():
@@ -960,15 +1096,312 @@ def dup_collapse_impact(
         for f in totals:
             totals[f]["mean_abs_diff"] = round(totals[f]["mean_abs_diff"] / max(n_files, 1), 9)
 
+    derived_power_summary: dict[str, Any] = {
+        "rule": (
+            "派生层 actual_power_kw（derive_power 冻结优先级 measured→computed→estimated，"
+            "JPL current-only=rated 192.7×current/1000）；keep vs collapse 1-min 均值绝对差"
+        ),
+        "by_role": {role: _agg_power_diff(v) for role, v in sorted(role_pwr_diffs.items())},
+        "overall": _agg_power_diff(all_pwr_diffs),
+    }
+
     result: dict[str, Any] = {
         "scope": (
             "只扫描 identical_dup_rows>0 的文件；派生层 1-min 聚合："
-            "current/power/pilot 取均值、energy 取分钟末值"
+            "current/power/pilot 取均值、energy 取分钟末值；"
+            "actual_power_kw 按冻结功率优先级在派生层评估"
         ),
         "input_untouched": True,
         "files_scanned": n_files,
         "by_role": by_role,
         "overall_fields": totals,
+        "derived_power": derived_power_summary,
+    }
+    if out_json is not None:
+        Path(out_json).parent.mkdir(parents=True, exist_ok=True)
+        Path(out_json).write_text(
+            json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    return result
+
+
+# current-only 池预算代理（与 e3_lite.run JPL_PROX 冻结集一致：只含实际类代理，无 pilot 类）
+_CURRENT_ONLY_PROXIES = ("A2_prev_actual", "A3_rolling_quantile")
+_CURRENT_ONLY_MAIN = "A2_prev_actual"
+
+
+def _current_only_e3_cand(min_df: pd.DataFrame, frozen_months: set[str]) -> pd.DataFrame:
+    """分钟表 → current-only 池×周期 候选窗口表（E3-Lite 同管线，仅冻结月份）。"""
+    cyc = build_cycles(min_df)
+    pool = compute_pool_stats(cyc)
+    prox = compute_proxies(cyc, pool)
+    prox_m = prox[prox["month"].isin(frozen_months)]
+    cand = candidate_windows(prox_m[eligible_mask(prox_m, list(_CURRENT_ONLY_PROXIES))])
+    meta = prox_m[["site", "garage", "cycle", "day", "month"]].drop_duplicates()
+    if len(cand):
+        cand = cand.merge(meta, on=["site", "garage", "cycle"], how="left")
+    return cand
+
+
+def _day_rate_ci(
+    cand: pd.DataFrame, proxy: str, seed: int, n_boot: int
+) -> dict[str, Any]:
+    """日等权率 + 日 cluster bootstrap 95%CI（与 e3_lite._day_bootstrap_ci 同口径）。"""
+    daily = cand.groupby("day")[f"candidate_{proxy}"].mean()
+    if len(daily) < 2:
+        return {"n_days": int(len(daily)), "day_rate": None, "ci95": None}
+    vals = daily.to_numpy()
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(daily), size=(n_boot, len(daily)))
+    rates = vals[idx].mean(axis=1)
+    return {
+        "n_days": int(len(daily)),
+        "day_rate": float(vals.mean()),
+        "ci95": [float(np.percentile(rates, 2.5)), float(np.percentile(rates, 97.5))],
+    }
+
+
+def current_only_sensitivity(
+    manifest: pd.DataFrame,
+    static_root: str | Path,
+    out_json: str | Path | None = None,
+    site_mapping: dict[str, Any] | None = None,
+    role_months: dict[str, Any] | None = None,
+    rated_voltage: dict[str, Any] | None = None,
+    p_on_kw: float = 0.5,
+    e3_stop: dict[str, Any] | None = None,
+    bootstrap_seed: int = 42,
+    n_boot: int = 2000,
+) -> dict[str, Any]:
+    """审查结论11 P0：current-only 月份窗口 exact-duplicate 的 E3 门敏感性。
+
+    exact-duplicate 在派生层被 collapse；本函数把"保留全部行 keep"与"collapse"两套 1min 表
+    分别跑冻结 E3-Lite 管线（K1.2-A/C：A2_prev_actual 主基线，预算差值=候选窗口，无吸收假设），
+    对比：low_power_state 占比（P_on_kw 阈值）、A2 周期加权/日等权候选率 + 日 cluster bootstrap
+    95%CI、日候选能量占比中位数，以及候选/活跃窗口翻转数量；并判 E3 门在 keep/collapse 下是否
+    翻转。只读输入，永不修改原始文件。
+    """
+    stop = e3_stop or {}
+    lower_rate = float(stop.get("caltech_a2_daily_ci_lower_rate", 0.01))
+    share_min = float(stop.get("daily_energy_share_each_pool", 0.005))
+    mapping = site_mapping or {}
+    rmonths = role_months or {}
+    rated_v_by_site = rated_voltage or {}
+    frozen_months = set(rmonths.get("jpl_current_only_window", []))
+    root = Path(static_root)
+
+    affected_files: list[dict[str, Any]] = []
+    for _, r in manifest[manifest["n_dup_ts"] > 0].iterrows():
+        lp = str(r["logical_path"])
+        month = _month_from_logical_path(lp)
+        if month is None:
+            t = str(r.get("time_min") or "")
+            month = t[:7] if len(t) >= 7 else None
+        role = file_role(
+            str(r.get("site") or ""), str(r.get("garage") or ""), month, mapping, rmonths
+        )
+        if role != "jpl_current_only_window":
+            continue
+        try:
+            text = _decompress_text((root / lp).read_bytes())
+        except OSError:
+            continue
+        decoded = text.decode("utf-8", errors="replace")
+        raw_lines = [ln for ln in decoded.splitlines()[1:] if ln.strip()]
+        if not raw_lines:
+            continue
+        coll_lines = list(dict.fromkeys(raw_lines))
+        if len(coll_lines) == len(raw_lines):
+            continue
+        site_raw = str(r.get("site") or "")
+        canonical = site_canonical(site_raw, mapping)
+        rated_v = rated_v_by_site.get(canonical)
+        if rated_v is None:
+            continue
+        keep_rows = _parse_static_rows(text)
+        header = decoded.split("\n", 1)[0]
+        coll_text = ("\n".join([header, *coll_lines]) + "\n").encode("utf-8")
+        coll_rows = _parse_static_rows(coll_text)
+        affected_files.append(
+            {
+                "logical_path": lp,
+                "role": role,
+                "rated_v": float(rated_v),
+                "station_id": str(r.get("station") or ""),
+                "garage": str(r.get("garage") or ""),
+                "site": canonical,
+                "keep_rows": keep_rows,
+                "coll_rows": coll_rows,
+            }
+        )
+
+    empty_ret: dict[str, Any] = {
+        "scope": (
+            "current-only 冻结月份窗口（jpl_current_only_window）内 exact-duplicate 文件，"
+            "keep vs collapse 各跑冻结 E3-Lite 管线（A2_prev_actual 主基线）"
+        ),
+        "input_untouched": True,
+        "files_scanned": 0,
+        "files_with_identical_rows": 0,
+        "low_power_state": {"keep": None, "collapse": None},
+        "e3_a2": {"keep": None, "collapse": None},
+        "flips": {"candidate_flips": 0, "n_candidate_rows": 0, "active_flips": 0},
+        "gate": {
+            "pass_candidate_rate_keep": False,
+            "pass_candidate_rate_collapse": False,
+            "pass_daily_share_keep": False,
+            "pass_daily_share_collapse": False,
+            "gate_flipped": False,
+        },
+    }
+    if not affected_files:
+        if out_json is not None:
+            Path(out_json).parent.mkdir(parents=True, exist_ok=True)
+            Path(out_json).write_text(
+                json.dumps(empty_ret, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+        return empty_ret
+
+    keep_min_list: list[pd.DataFrame] = []
+    coll_min_list: list[pd.DataFrame] = []
+    for af in affected_files:
+        keep_min = _minute_table_from_rows(
+            af["keep_rows"], af["rated_v"], af["logical_path"], af["station_id"],
+            af["site"], af["garage"],
+        )
+        coll_min = _minute_table_from_rows(
+            af["coll_rows"], af["rated_v"], af["logical_path"], af["station_id"],
+            af["site"], af["garage"],
+        )
+        if not keep_min.empty:
+            keep_min_list.append(keep_min)
+        if not coll_min.empty:
+            coll_min_list.append(coll_min)
+    if not keep_min_list or not coll_min_list:
+        if out_json is not None:
+            Path(out_json).parent.mkdir(parents=True, exist_ok=True)
+            Path(out_json).write_text(
+                json.dumps(empty_ret, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+        return empty_ret
+
+    keep_min = pd.concat(keep_min_list, ignore_index=True)
+    coll_min = pd.concat(coll_min_list, ignore_index=True)
+
+    def _low_power(min_df: pd.DataFrame) -> dict[str, Any]:
+        n = int(len(min_df))
+        if not n:
+            return {"n_minutes": 0, "ratio": None}
+        ratio = float((min_df["actual_power_kw"].fillna(0.0) <= p_on_kw).mean())
+        return {"n_minutes": n, "ratio": ratio}
+
+    def _e3_block(min_df: pd.DataFrame, cand: pd.DataFrame) -> dict[str, Any]:
+        if not len(cand):
+            return {
+                "n_cycles": 0, "n_days": 0, "n_pool_months": 0,
+                "cycle_weighted_rate": 0.0, "day_rate": None, "day_rate_ci95": None,
+                "day_rate_ci_lower": None, "daily_energy_share_median": None,
+                "daily_energy_share_mean": None, "candidate_energy_total_kwh": 0.0,
+            }
+        ev_day = min_df.copy()
+        ev_day["day"] = ev_day["timestamp_utc"].astype(str).str[:10]
+        ev_day_energy = ev_day.groupby("day")["actual_power_kw"].sum() / 60.0
+        cand_day = cand.groupby("day")[f"candidate_energy_{_CURRENT_ONLY_MAIN}_kwh"].sum()
+        share = cand_day.div(ev_day_energy.reindex(cand_day.index)).reindex(
+            ev_day_energy.index
+        ).fillna(0.0)
+        ci = _day_rate_ci(cand, _CURRENT_ONLY_MAIN, bootstrap_seed, n_boot)
+        return {
+            "n_cycles": int(len(cand)),
+            "n_days": int(cand["day"].nunique()),
+            "n_pool_months": int(cand["month"].nunique()),
+            "cycle_weighted_rate": float(cand[f"candidate_{_CURRENT_ONLY_MAIN}"].mean()),
+            "day_rate": ci["day_rate"],
+            "day_rate_ci95": ci["ci95"],
+            "day_rate_ci_lower": float(ci["ci95"][0]) if ci["ci95"] else None,
+            "daily_energy_share_median": round(float(share.median()), 6),
+            "daily_energy_share_mean": round(float(share.mean()), 6),
+            "candidate_energy_total_kwh": round(
+                float(cand[f"candidate_energy_{_CURRENT_ONLY_MAIN}_kwh"].sum()), 6
+            ),
+        }
+
+    keep_cand = _current_only_e3_cand(keep_min, frozen_months)
+    coll_cand = _current_only_e3_cand(coll_min, frozen_months)
+    keep_e3 = _e3_block(keep_min, keep_cand)
+    coll_e3 = _e3_block(coll_min, coll_cand)
+
+    keep_cyc = build_cycles(keep_min)
+    coll_cyc = build_cycles(coll_min)
+
+    n_cand_rows = 0
+    candidate_flips = 0
+    if len(keep_cand) and len(coll_cand):
+        key = ["site", "garage", "cycle"]
+        kk = keep_cand.set_index(key)[f"candidate_{_CURRENT_ONLY_MAIN}"]
+        cc = coll_cand.set_index(key)[f"candidate_{_CURRENT_ONLY_MAIN}"]
+        merged = kk.rename("keep").to_frame().join(cc.rename("collapse"), how="outer")
+        merged["keep"] = merged["keep"].fillna(False)
+        merged["collapse"] = merged["collapse"].fillna(False)
+        n_cand_rows = int(len(merged))
+        candidate_flips = int((merged["keep"] != merged["collapse"]).sum())
+
+    active_flips = 0
+    if len(keep_cyc) and len(coll_cyc):
+        key = ["site", "garage", "session_id", "cycle"]
+        kk = keep_cyc.set_index(key)["active"].rename("keep")
+        cc = coll_cyc.set_index(key)["active"].rename("collapse")
+        merged = kk.to_frame().join(cc, how="outer")
+        merged["keep"] = merged["keep"].fillna(False)
+        merged["collapse"] = merged["collapse"].fillna(False)
+        active_flips = int((merged["keep"] != merged["collapse"]).sum())
+
+    def _pass_rate(e3: dict[str, Any]) -> bool:
+        lo = e3.get("day_rate_ci_lower")
+        return bool(lo is not None and lo >= lower_rate)
+
+    def _pass_share(e3: dict[str, Any]) -> bool:
+        sh = e3.get("daily_energy_share_median")
+        return bool(sh is not None and sh >= share_min)
+
+    pass_rate_keep = _pass_rate(keep_e3)
+    pass_rate_collapse = _pass_rate(coll_e3)
+    pass_share_keep = _pass_share(keep_e3)
+    pass_share_collapse = _pass_share(coll_e3)
+    gate_flipped = (pass_rate_keep != pass_rate_collapse) or (
+        pass_share_keep != pass_share_collapse
+    )
+
+    result: dict[str, Any] = {
+        "scope": (
+            "current-only 冻结月份窗口（jpl_current_only_window）内 exact-duplicate 文件，"
+            "keep vs collapse 各跑冻结 E3-Lite 管线（K1.2-A/C A2_prev_actual 主基线，"
+            "预算差值=候选窗口，无吸收假设）"
+        ),
+        "input_untouched": True,
+        "p_on_kw": float(p_on_kw),
+        "frozen_months": sorted(frozen_months),
+        "proxy_main": _CURRENT_ONLY_MAIN,
+        "files_scanned": len(affected_files),
+        "files_with_identical_rows": len(affected_files),
+        "low_power_state": {"keep": _low_power(keep_min), "collapse": _low_power(coll_min)},
+        "e3_a2": {"keep": keep_e3, "collapse": coll_e3},
+        "flips": {
+            "candidate_flips": candidate_flips,
+            "n_candidate_rows": n_cand_rows,
+            "active_flips": active_flips,
+        },
+        "gate": {
+            "rule": (
+                f"日等权候选率日 cluster bootstrap 95%CI 下界 >= {lower_rate} 且 "
+                f"日候选能量占比中位数 >= {share_min}（与 e0_full.yaml e3 停止线同值）"
+            ),
+            "pass_candidate_rate_keep": pass_rate_keep,
+            "pass_candidate_rate_collapse": pass_rate_collapse,
+            "pass_daily_share_keep": pass_share_keep,
+            "pass_daily_share_collapse": pass_share_collapse,
+            "gate_flipped": gate_flipped,
+        },
     }
     if out_json is not None:
         Path(out_json).parent.mkdir(parents=True, exist_ok=True)
@@ -992,6 +1425,7 @@ def run_e0f01(
     - data_registry/e0_full_connection_time_audit.parquet
     - data_registry/e0_full_dup_ts_classification.csv
     - data_registry/e0_full_dup_collapse_impact.json
+    - data_registry/e0_full_dup_current_only_sensitivity.json
     - data_registry/e0_full_baseline.json
     - reports/E0_Full_input_audit.md
 
@@ -1000,6 +1434,7 @@ def run_e0f01(
     （审查结论10 P0-1：代码 commit → clean run → evidence commit）。
     """
     cfg = load_yaml(cfg_path or (Path(__file__).resolve().parents[3] / "configs" / "e0_full.yaml"))
+    k1_cfg = load_yaml(Path(__file__).resolve().parents[3] / "configs" / "k1_preregister.yaml")
     acn = acn_project_dir()
     static_root = static_root_dir()
     impl_root = Path(__file__).resolve().parents[3]
@@ -1042,8 +1477,23 @@ def run_e0f01(
         out_json=impl_root / "data_registry" / "e0_full_dup_collapse_impact.json",
         site_mapping=cfg.get("site_mapping"),
         role_months=cfg.get("k1_role_months"),
+        rated_voltage=cfg.get("power", {}).get("rated_voltage"),
     )
     quality["dup_collapse_impact"] = impact
+
+    sens = current_only_sensitivity(
+        manifest,
+        static_root,
+        out_json=impl_root / "data_registry" / "e0_full_dup_current_only_sensitivity.json",
+        site_mapping=cfg.get("site_mapping"),
+        role_months=cfg.get("k1_role_months"),
+        rated_voltage=cfg.get("power", {}).get("rated_voltage"),
+        p_on_kw=float(k1_cfg["primary_threshold"]["P_on_kw"]),
+        e3_stop=cfg.get("k1_replication_stop_lines", {}).get("e3"),
+        bootstrap_seed=int(cfg.get("seeds", {}).get("bootstrap", 42)),
+        n_boot=int(cfg.get("seeds", {}).get("n_boot", 2000)),
+    )
+    quality["dup_current_only_sensitivity"] = sens
 
     quality_out = impl_root / "data_registry" / "e0_full_quality_summary.json"
     quality_out.write_text(json.dumps(quality, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -1156,6 +1606,61 @@ def _write_audit_report(quality: dict[str, Any], out: Path, cfg: dict[str, Any])
                 f"最大绝对差 current={v['fields']['current']['max_abs_diff']} "
                 f"power={v['fields']['power']['max_abs_diff']}"
             )
+        dp = impact.get("derived_power")
+        if dp:
+            lines.append("")
+            lines.append(
+                "派生层 actual_power_kw 影响量（审查结论11 P0：JPL current-only 经 "
+                "rated 192.7×current/1000 传播）："
+            )
+            lines.append(f"- 规则：{dp['rule']}")
+            for role, v in sorted(dp["by_role"].items()):
+                lines.append(
+                    f"- {role}：{v['affected_minutes']} 受影响分钟，"
+                    f"max={v['max_abs_diff_kw']}kW p95={v['p95_abs_diff_kw']}kW "
+                    f"mean={v['mean_abs_diff_kw']}kW，累计绝对能量差 "
+                    f"{v['total_abs_energy_diff_kwh']}kWh"
+                )
+            o = dp["overall"]
+            lines.append(
+                f"- 总体：{o['affected_minutes']} 受影响分钟，max={o['max_abs_diff_kw']}kW "
+                f"p95={o['p95_abs_diff_kw']}kW mean={o['mean_abs_diff_kw']}kW，"
+                f"累计绝对能量差 {o['total_abs_energy_diff_kwh']}kWh"
+            )
+    sens = quality.get("dup_current_only_sensitivity")
+    if sens:
+        lines += [
+            "",
+            "## current-only exact-duplicate 的 E3 门敏感性（审查结论11 P0）",
+            "",
+        ]
+        lines.append(
+            f"- 范围：{sens['scope']}；P_on_kw={sens['p_on_kw']}；"
+            f"冻结月份 {sens['frozen_months']}；文件 {sens['files_scanned']}"
+        )
+        for tag, s in (("keep", sens["low_power_state"]["keep"]),
+                       ("collapse", sens["low_power_state"]["collapse"])):
+            if s:
+                lines.append(f"- low_power_state {tag}：{s['ratio']:.4f}（{s['n_minutes']} 分钟）")
+        for tag, e in (("keep", sens["e3_a2"]["keep"]), ("collapse", sens["e3_a2"]["collapse"])):
+            if e:
+                lines.append(
+                    f"- A2 {tag}：cycle_rate={e['cycle_weighted_rate']:.5f} "
+                    f"day_rate={e['day_rate']} ci95={e['day_rate_ci95']} "
+                    f"n_days={e['n_days']}；日能量占比中位数={e['daily_energy_share_median']}"
+                )
+        flips = sens["flips"]
+        lines.append(
+            f"- 翻转：候选窗口 {flips['candidate_flips']}/{flips['n_candidate_rows']}，"
+            f"活跃周期 {flips['active_flips']}"
+        )
+        g = sens["gate"]
+        lines.append(
+            f"- 门：rate keep={g['pass_candidate_rate_keep']} / "
+            f"collapse={g['pass_candidate_rate_collapse']}；"
+            f"share keep={g['pass_daily_share_keep']} / "
+            f"collapse={g['pass_daily_share_collapse']}；门翻转：{g['gate_flipped']}"
+        )
     sm = quality.get("site_mapping_audit")
     if sm:
         lines += ["", "## 站点 raw→canonical 映射（审查结论10 P1，E0F-02 前冻结）", ""]

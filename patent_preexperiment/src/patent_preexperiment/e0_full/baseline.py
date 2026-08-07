@@ -35,6 +35,7 @@ _OUTPUT_PATHS = {
     "patent_preexperiment/data_registry/e0_full_connection_time_audit.parquet",
     "patent_preexperiment/data_registry/e0_full_dup_ts_classification.csv",
     "patent_preexperiment/data_registry/e0_full_dup_collapse_impact.json",
+    "patent_preexperiment/data_registry/e0_full_dup_current_only_sensitivity.json",
     "patent_preexperiment/data_registry/e0_full_baseline.json",
     "patent_preexperiment/reports/E0_Full_input_audit.md",
 }
@@ -182,6 +183,7 @@ def build_e0_full_baseline(
             "data_registry/e0_full_connection_time_audit.parquet",
             "data_registry/e0_full_dup_ts_classification.csv",
             "data_registry/e0_full_dup_collapse_impact.json",
+            "data_registry/e0_full_dup_current_only_sensitivity.json",
             "reports/E0_Full_input_audit.md",
             "data_registry/e0_full_baseline.json",
         ],

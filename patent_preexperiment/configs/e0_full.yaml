@@ -115,10 +115,12 @@ site_mapping:
 
 # --- K1 冻结 role×month（审查结论10 P0-2：exact duplicate 按 K1 role/month 汇总）---
 # 与 k1_preregister.yaml sample_roles 保持一致（契约测试强制同步），仅用于重复证据分类。
+# 审查结论11 P1：role 名表述"月份窗口"代理（*_window），不直接等同"最终样本角色"；
+# 真正进入样本的 eligibility（has_current/has_pilot/…）逐文件登记在分类明细列。
 k1_role_months:
-  caltech_main: [2018-11, 2019-03, 2019-04, 2019-05, 2019-08, 2019-10]
-  jpl_boundary_2020: [2020-06, 2020-07]
-  jpl_current_only: [2018-11, 2019-03, 2019-04, 2019-05, 2019-08, 2019-10]
+  caltech_main_window: [2018-11, 2019-03, 2019-04, 2019-05, 2019-08, 2019-10]
+  jpl_boundary_window: [2020-06, 2020-07]
+  jpl_current_only_window: [2018-11, 2019-03, 2019-04, 2019-05, 2019-08, 2019-10]
 
 # --- D0 数据工程验收门（审查结论7 §9.1；V2.1 §10.4，逐项转测试）---
 acceptance:

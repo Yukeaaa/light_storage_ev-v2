@@ -121,9 +121,9 @@ def test_e0_k1_role_months_match_k1() -> None:
     # 审查结论10 P0-2：重复分类的 K1 role×month 必须与 k1_preregister.yaml 冻结样本一致
     cfg, k1 = _load_config(), _load_k1_config()
     rm = cfg["k1_role_months"]
-    assert rm["caltech_main"] == k1["sample_roles"]["main_set"]["months"]
-    assert rm["jpl_boundary_2020"] == k1["sample_roles"]["k1x_boundary"]["months"]
-    assert rm["jpl_current_only"] == k1["sample_roles"]["current_only_fallback"]["months"]
+    assert rm["caltech_main_window"] == k1["sample_roles"]["main_set"]["months"]
+    assert rm["jpl_boundary_window"] == k1["sample_roles"]["k1x_boundary"]["months"]
+    assert rm["jpl_current_only_window"] == k1["sample_roles"]["current_only_fallback"]["months"]
 
 
 def test_e0_power_priority_and_rated_voltage() -> None:

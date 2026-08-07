@@ -23,6 +23,7 @@ from patent_preexperiment.e0_full.input_audit import (
     audit_connection_time,
     build_source_manifest,
     classify_dup_ts,
+    current_only_sensitivity,
     dup_collapse_impact,
     file_role,
     manifest_hash,
@@ -285,9 +286,9 @@ def test_classify_dup_ts_identical_vs_same_timestamp(tmp_path: Path) -> None:
     )
     sm = {"raw_to_canonical": {"jpl": "jpl", "caltech": "caltech"}}
     rm = {
-        "caltech_main": ["2019-03"],
-        "jpl_boundary_2020": ["2020-06", "2020-07"],
-        "jpl_current_only": ["2019-11"],
+        "caltech_main_window": ["2019-03"],
+        "jpl_boundary_window": ["2020-06", "2020-07"],
+        "jpl_current_only_window": ["2019-11"],
     }
     res = classify_dup_ts(m, tmp_path, site_mapping=sm, role_months=rm)
     assert res["dup_ts_files"] == 2
@@ -296,9 +297,9 @@ def test_classify_dup_ts_identical_vs_same_timestamp(tmp_path: Path) -> None:
     assert res["identical_nonzero_rows"] == 0
     assert res["identical_dup_files"] == 1
     assert res["same_timestamp_distinct_rows"] == 1
-    # 文件名嵌入月份：jpl 2019-11 → jpl_current_only；caltech 2019-03 → caltech_main_frozen
-    assert res["by_role"]["jpl_current_only"]["identical_dup_rows"] == 1
-    assert res["by_role"]["caltech_main_frozen"]["same_timestamp_distinct_rows"] == 1
+    # 文件名嵌入月份：jpl 2019-11 → jpl_current_only_window；caltech 2019-03 → caltech_main_window
+    assert res["by_role"]["jpl_current_only_window"]["identical_dup_rows"] == 1
+    assert res["by_role"]["caltech_main_window"]["same_timestamp_distinct_rows"] == 1
 
 
 def test_classify_dup_ts_zero_idle_and_nonzero_split(tmp_path: Path) -> None:
@@ -327,13 +328,17 @@ def test_classify_dup_ts_zero_idle_and_nonzero_split(tmp_path: Path) -> None:
         m,
         tmp_path,
         site_mapping={"raw_to_canonical": {"jpl": "jpl"}},
-        role_months={"caltech_main": [], "jpl_boundary_2020": [], "jpl_current_only": ["2019-11"]},
+        role_months={
+            "caltech_main_window": [],
+            "jpl_boundary_window": [],
+            "jpl_current_only_window": ["2019-11"],
+        },
     )
     assert res["identical_dup_rows"] == 2
     assert res["identical_zero_idle_rows"] == 1
     assert res["identical_nonzero_rows"] == 1
-    assert res["by_role"]["jpl_current_only"]["identical_dup_rows"] == 2
-    assert res["by_role"]["jpl_current_only"]["identical_zero_idle_rows"] == 1
+    assert res["by_role"]["jpl_current_only_window"]["identical_dup_rows"] == 2
+    assert res["by_role"]["jpl_current_only_window"]["identical_zero_idle_rows"] == 1
 
 
 def test_classify_dup_ts_writes_csv(tmp_path: Path) -> None:
@@ -353,6 +358,9 @@ def test_classify_dup_ts_writes_csv(tmp_path: Path) -> None:
     # 明细必须带 site_raw/site_canonical/month/role 列（审查结论10 P0-2 机器可验证）
     for col in ("site_raw", "site_canonical", "garage", "station", "month", "role"):
         assert col in df.columns, f"分类 CSV 缺列 {col}"
+    # 审查结论11 P1：明细逐文件登记 eligibility，role 仅作月份窗口代理
+    for col in ("has_current", "has_pilot", "has_voltage", "has_power"):
+        assert col in df.columns, f"分类 CSV 缺 eligibility 列 {col}"
 
 
 def test_site_canonical_and_file_role() -> None:
@@ -361,14 +369,14 @@ def test_site_canonical_and_file_role() -> None:
     assert site_canonical("caltech", sm) == "caltech"
     assert site_canonical("unknown", sm) == "unknown"
     rm = {
-        "caltech_main": ["2019-03"],
-        "jpl_boundary_2020": ["2020-06", "2020-07"],
-        "jpl_current_only": ["2019-03"],
+        "caltech_main_window": ["2019-03"],
+        "jpl_boundary_window": ["2020-06", "2020-07"],
+        "jpl_current_only_window": ["2019-03"],
     }
-    assert file_role("caltech", "California_Garage_01", "2019-03", sm, rm) == "caltech_main_frozen"
+    assert file_role("caltech", "California_Garage_01", "2019-03", sm, rm) == "caltech_main_window"
     assert file_role("caltech", "LIGO_01", "2019-03", sm, rm) == "caltech_other"
-    assert file_role("jpl", "Arroyo_Garage_01", "2020-06", sm, rm) == "jpl_boundary_2020"
-    assert file_role("jpl", "Arroyo_Garage_01", "2019-03", sm, rm) == "jpl_current_only"
+    assert file_role("jpl", "Arroyo_Garage_01", "2020-06", sm, rm) == "jpl_boundary_window"
+    assert file_role("jpl", "Arroyo_Garage_01", "2019-03", sm, rm) == "jpl_current_only_window"
     assert file_role("jpl", "Arroyo_Garage_01", "2019-11", sm, rm) == "jpl_other"
     assert file_role("office_01", "Parking_Lot_01", "2020-06", sm, rm) == "office_external"
 
@@ -409,12 +417,24 @@ def test_dup_collapse_impact_shares_minute(tmp_path: Path) -> None:
         }
     )
     sm = {"raw_to_canonical": {"jpl": "jpl"}}
-    rm = {"caltech_main": [], "jpl_boundary_2020": [], "jpl_current_only": []}
-    res = dup_collapse_impact(m, tmp_path, site_mapping=sm, role_months=rm)
+    rm = {
+        "caltech_main_window": [],
+        "jpl_boundary_window": [],
+        "jpl_current_only_window": [],
+    }
+    rated = {"jpl": 192.7, "caltech": 240.0, "office001": 240.0}
+    res = dup_collapse_impact(
+        m, tmp_path, site_mapping=sm, role_months=rm, rated_voltage=rated
+    )
     assert res["files_scanned"] == 1
     cur = res["by_role"]["jpl_other"]["fields"]["current"]
     assert cur["affected_minutes"] == 1
     assert cur["max_abs_diff"] > 0
+    # 审查结论11 P0：current-only 在派生层经 rated 192.7 传播，actual_power 不再零影响
+    dp = res["derived_power"]["by_role"]["jpl_other"]
+    assert dp["affected_minutes"] == 1
+    assert dp["max_abs_diff_kw"] == pytest.approx(0.833333 * 192.7 / 1000.0, abs=1e-6)
+    assert res["derived_power"]["rule"] != ""
 
 
 def test_dup_collapse_impact_no_effect_when_isolated(tmp_path: Path) -> None:
@@ -437,10 +457,17 @@ def test_dup_collapse_impact_no_effect_when_isolated(tmp_path: Path) -> None:
     )
     res = dup_collapse_impact(
         m, tmp_path, site_mapping={"raw_to_canonical": {"jpl": "jpl"}},
-        role_months={"caltech_main": [], "jpl_boundary_2020": [], "jpl_current_only": []},
+        role_months={
+            "caltech_main_window": [],
+            "jpl_boundary_window": [],
+            "jpl_current_only_window": [],
+        },
+        rated_voltage={"jpl": 192.7, "caltech": 240.0, "office001": 240.0},
     )
     assert res["files_scanned"] == 1
     assert res["by_role"]["jpl_other"]["affected_files_any_field"] == 0
+    # 派生层同分钟均值：独立独占分钟的 0.0 与 5.0 两口径一致 → actual_power 也不受影响
+    assert res["derived_power"]["by_role"]["jpl_other"]["affected_minutes"] == 0
 
 
 def test_connection_time_audit_anomaly_not_fallback() -> None:
@@ -521,3 +548,94 @@ def test_fresh_clone_import_works_without_paths_yaml() -> None:
     finally:
         if backup is not None:
             paths_yaml.write_bytes(backup)
+
+
+def _iso19(minutes: int, sec: int = 0) -> str:
+    base = pd.Timestamp("2019-03-06 14:00:00", tz="UTC")
+    return (base + pd.Timedelta(minutes=minutes, seconds=sec)).isoformat()
+
+
+def test_current_only_sensitivity_structure_and_active_flip(tmp_path: Path) -> None:
+    """审查结论11 P0：current-only exact-duplicate 在冻结月份窗口上跑 E3 门敏感性。
+
+    min0 同分钟含 0.0×3（identical dup）+ 6.0（distinct）：keep 分钟均值 1.5A（0.289kW，非工作），
+    collapse 分钟均值 3.0A（0.578kW，工作）→ 该分钟工作状态翻转 → 5min 周期活跃标记翻转。
+    """
+    f = _write_static(
+        tmp_path,
+        "jpl/Arroyo_Garage_01/1-1-178-817-2019-03-06T14-19-07-900778.csv.gz",
+        [
+            f"{_iso19(0)},0.0",
+            f"{_iso19(0)},0.0",
+            f"{_iso19(0)},0.0",
+            f"{_iso19(0)},6.0",
+            f"{_iso19(1)},0.0",
+            f"{_iso19(2)},0.0",
+            f"{_iso19(3)},6.0",
+            f"{_iso19(4)},6.0",
+        ],
+        header=",Charging Current (A)",
+    )
+    m = pd.DataFrame(
+        {
+            "logical_path": [str(f.relative_to(tmp_path))],
+            "site": ["jpl"],
+            "garage": ["Arroyo_Garage_01"],
+            "station": ["x"],
+            "n_dup_ts": [3],
+            "time_min": [None],
+        }
+    )
+    sm = {"raw_to_canonical": {"jpl": "jpl"}}
+    rm = {
+        "caltech_main_window": [],
+        "jpl_boundary_window": [],
+        "jpl_current_only_window": ["2019-03"],
+    }
+    rated = {"jpl": 192.7, "caltech": 240.0, "office001": 240.0}
+    res = current_only_sensitivity(
+        m, tmp_path, site_mapping=sm, role_months=rm,
+        rated_voltage=rated, p_on_kw=0.5, e3_stop={
+            "caltech_a2_daily_ci_lower_rate": 0.01,
+            "daily_energy_share_each_pool": 0.005,
+        },
+    )
+    assert res["input_untouched"] is True
+    assert res["files_scanned"] == 1
+    assert res["frozen_months"] == ["2019-03"]
+    # low_power_state：keep 0.6（min0 被 0.0 复制拖低） vs collapse 0.4
+    assert res["low_power_state"]["keep"]["ratio"] == pytest.approx(0.6)
+    assert res["low_power_state"]["collapse"]["ratio"] == pytest.approx(0.4)
+    # 单会话池 n_active<2 → 无候选窗口；结构必须齐全
+    assert res["e3_a2"]["keep"]["cycle_weighted_rate"] == 0.0
+    assert res["e3_a2"]["collapse"]["day_rate_ci_lower"] is None
+    assert res["gate"]["gate_flipped"] is False
+    # 周期级活跃标记翻转（keep 0.4 → collapse 0.6）
+    assert res["flips"]["active_flips"] == 1
+
+
+def test_current_only_sensitivity_empty_when_no_dup(tmp_path: Path) -> None:
+    """非重复（n_dup_ts=0）current-only 文件不进入敏感性。"""
+    f = _write_static(
+        tmp_path,
+        "jpl/Arroyo_Garage_01/1-1-178-817-2019-03-06T14-19-07-900778.csv.gz",
+        [f"{_iso19(0)},6.0"],
+        header=",Charging Current (A)",
+    )
+    m = pd.DataFrame(
+        {
+            "logical_path": [str(f.relative_to(tmp_path))],
+            "site": ["jpl"],
+            "garage": ["Arroyo_Garage_01"],
+            "station": ["x"],
+            "n_dup_ts": [0],
+            "time_min": [None],
+        }
+    )
+    res = current_only_sensitivity(
+        m, tmp_path, site_mapping={"raw_to_canonical": {"jpl": "jpl"}},
+        role_months={"jpl_current_only_window": ["2019-03"]},
+        rated_voltage={"jpl": 192.7},
+    )
+    assert res["files_scanned"] == 0
+    assert res["gate"]["gate_flipped"] is False
