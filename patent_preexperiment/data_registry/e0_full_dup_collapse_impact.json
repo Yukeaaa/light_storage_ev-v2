@@ -1,5 +1,5 @@
 {
-  "scope": "只扫描 identical_dup_rows>0 的文件；派生层 1-min 聚合：current/power/pilot 取均值、energy 取分钟末值",
+  "scope": "只扫描 identical_dup_rows>0 的文件；派生层 1-min 聚合：current/power/pilot 取均值、energy 取分钟末值；actual_power_kw 按冻结功率优先级在派生层评估",
   "input_untouched": true,
   "files_scanned": 234,
   "by_role": {
@@ -29,7 +29,7 @@
         }
       }
     },
-    "jpl_current_only": {
+    "jpl_current_only_window": {
       "files": 54,
       "affected_files_any_field": 39,
       "fields": {
@@ -76,6 +76,35 @@
       "affected_minutes": 0,
       "max_abs_diff": 0.0,
       "mean_abs_diff": 0.0
+    }
+  },
+  "derived_power": {
+    "rule": "派生层 actual_power_kw（derive_power 冻结优先级 measured→computed→estimated，JPL current-only=rated 192.7×current/1000）；keep vs collapse 1-min 均值绝对差",
+    "by_role": {
+      "jpl_current_only_window": {
+        "affected_minutes": 71,
+        "max_abs_diff_kw": 0.475327,
+        "p95_abs_diff_kw": 0.0,
+        "mean_abs_diff_kw": 0.000102,
+        "total_abs_energy_diff_kwh": 0.047718,
+        "n_files_contributing": 54
+      },
+      "jpl_other": {
+        "affected_minutes": 340,
+        "max_abs_diff_kw": 0.337653,
+        "p95_abs_diff_kw": 0.0,
+        "mean_abs_diff_kw": 9.6e-05,
+        "total_abs_energy_diff_kwh": 0.139488,
+        "n_files_contributing": 180
+      }
+    },
+    "overall": {
+      "affected_minutes": 411,
+      "max_abs_diff_kw": 0.475327,
+      "p95_abs_diff_kw": 0.0,
+      "mean_abs_diff_kw": 9.7e-05,
+      "total_abs_energy_diff_kwh": 0.187206,
+      "n_files_contributing": 234
     }
   }
 }

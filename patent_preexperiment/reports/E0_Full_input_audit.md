@@ -45,18 +45,34 @@
 
 | role | files | identical_dup_rows | zero_idle | nonzero | same_ts_distinct |
 |---|---|---|---|---|---|
-| caltech_main_frozen | 805 | 0 | 0 | 0 | 2098 |
+| caltech_main_window | 805 | 0 | 0 | 0 | 2098 |
 | caltech_other | 9203 | 0 | 0 | 0 | 26181 |
-| jpl_boundary_2020 | 3 | 0 | 0 | 0 | 3 |
-| jpl_current_only | 159 | 109 | 109 | 0 | 312 |
+| jpl_boundary_window | 3 | 0 | 0 | 0 | 3 |
+| jpl_current_only_window | 159 | 109 | 109 | 0 | 312 |
 | jpl_other | 502 | 554 | 552 | 2 | 1605 |
 | office_external | 12 | 0 | 0 | 0 | 27 |
 
 ## exact-duplicate 保留 vs 派生层 collapse 的 1-min 影响量（审查结论10 建议3）
 
-- 范围：只扫描 identical_dup_rows>0 的文件；派生层 1-min 聚合：current/power/pilot 取均值、energy 取分钟末值；输入未修改：True
-- jpl_current_only：54 文件，其中 39 个受影响；受影响分钟数 current=71 power=0 pilot=0 energy=0；最大绝对差 current=2.466666667 power=0.0
+- 范围：只扫描 identical_dup_rows>0 的文件；派生层 1-min 聚合：current/power/pilot 取均值、energy 取分钟末值；actual_power_kw 按冻结功率优先级在派生层评估；输入未修改：True
+- jpl_current_only_window：54 文件，其中 39 个受影响；受影响分钟数 current=71 power=0 pilot=0 energy=0；最大绝对差 current=2.466666667 power=0.0
 - jpl_other：180 文件，其中 127 个受影响；受影响分钟数 current=340 power=0 pilot=0 energy=0；最大绝对差 current=1.752222222 power=0.0
+
+派生层 actual_power_kw 影响量（审查结论11 P0：JPL current-only 经 rated 192.7×current/1000 传播）：
+- 规则：派生层 actual_power_kw（derive_power 冻结优先级 measured→computed→estimated，JPL current-only=rated 192.7×current/1000）；keep vs collapse 1-min 均值绝对差
+- jpl_current_only_window：71 受影响分钟，max=0.475327kW p95=0.0kW mean=0.000102kW，累计绝对能量差 0.047718kWh
+- jpl_other：340 受影响分钟，max=0.337653kW p95=0.0kW mean=9.6e-05kW，累计绝对能量差 0.139488kWh
+- 总体：411 受影响分钟，max=0.475327kW p95=0.0kW mean=9.7e-05kW，累计绝对能量差 0.187206kWh
+
+## current-only exact-duplicate 的 E3 门敏感性（审查结论11 P0）
+
+- 范围：current-only 冻结月份窗口（jpl_current_only_window）内 exact-duplicate 文件，keep vs collapse 各跑冻结 E3-Lite 管线（K1.2-A/C A2_prev_actual 主基线，预算差值=候选窗口，无吸收假设）；P_on_kw=0.5；冻结月份 ['2018-11', '2019-03', '2019-04', '2019-05', '2019-08', '2019-10']；文件 54
+- low_power_state keep：0.6531（28161 分钟）
+- low_power_state collapse：0.6531（28161 分钟）
+- A2 keep：cycle_rate=0.01980 day_rate=0.012107949624590431 ci95=[0.0028879072996720054, 0.022678842163677215] n_days=39；日能量占比中位数=0.0
+- A2 collapse：cycle_rate=0.01980 day_rate=0.012107949624590431 ci95=[0.0028879072996720054, 0.022678842163677215] n_days=39；日能量占比中位数=0.0
+- 翻转：候选窗口 0/3131，活跃周期 0
+- 门：rate keep=False / collapse=False；share keep=False / collapse=False；门翻转：False
 
 ## 站点 raw→canonical 映射（审查结论10 P1，E0F-02 前冻结）
 

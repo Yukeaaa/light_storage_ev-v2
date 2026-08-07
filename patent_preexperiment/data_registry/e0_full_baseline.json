@@ -1,5 +1,5 @@
 {
-  "created_at_utc": "2026-08-07T09:23:36.738002+00:00",
+  "created_at_utc": "2026-08-07T13:44:23.854283+00:00",
   "protocol_version": "V2.0",
   "landing_version": "V2.1",
   "experiment_id": "E0_full_preregister_v1",
@@ -8,13 +8,13 @@
     "path": "patent_preexperiment/data_registry/design_baseline.json",
     "commit": "41dd1dd038ebce13b28a76c3254f08e61569dabe"
   },
-  "code_sha": "9143c6845c835fbd2d23b2e4f58e8478058448c7",
+  "code_sha": "90f485c1475ce386857fc23b7e33f9fecce05b80",
   "git_status": {
     "code_dirty_files": [],
     "code_clean": true,
     "note": "已跟踪文件修改（证据产物输出路径除外）视为未提交代码；untracked 不计"
   },
-  "e0_full_yaml_sha256": "ed83d4463c149d470ad023cc7eb26c73e9abc1c82fe726dddebd2ed1ecaf764b",
+  "e0_full_yaml_sha256": "5db5923623ef1144013456bf04c4a030d2c87d4197616238111447695a343166",
   "manifest_hashes": {
     "static_file_index.csv": {
       "sha256": "eff813e2a723749c2529a0174d21e19255c63b216cb18796c4c253037a96ac2e",
@@ -51,6 +51,7 @@
     "data_registry/e0_full_connection_time_audit.parquet",
     "data_registry/e0_full_dup_ts_classification.csv",
     "data_registry/e0_full_dup_collapse_impact.json",
+    "data_registry/e0_full_dup_current_only_sensitivity.json",
     "reports/E0_Full_input_audit.md",
     "data_registry/e0_full_baseline.json"
   ],
