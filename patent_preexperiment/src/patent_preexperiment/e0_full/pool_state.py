@@ -419,14 +419,15 @@ def evidence_pool_reproduction_audit(
     cfg: dict[str, Any],
     impl_root: Path,
 ) -> dict[str, Any]:
-    """#15 acceptance-3 冻结证据池复现审计（审查结论20 第3节）。
+    """#15 acceptance-3 冻结证据池复现审计（审查结论20 第3节 / 审查结论21 P0）。
 
-    只在 E0F-02 registry 上做纯计数审计：
+    只在 E0F-02 registry 上做纯人口审计：
     - sample_layer <-> match_status 必须 1:1（L1<->matched、L0<->static_only）；
     - 每个证据池窗口（cfg.pool.evidence_pools.windows，月份取 k1_role_months[name]）
       按 match_status×sample_layer / match_status×split / role 报告组成；
-    - matched 子集计数必须 == k1_sample_registry.csv 按 site 的冻结计数
-      （机器可证：matched-only pool_state 等于冻结证据池人口，当场复现 E3-Lite）。
+    - matched session_id **集合**必须与 k1_sample_registry.csv 按 site 的冻结
+      session 集合完全相等（missing=0 且 extra=0）。仅数量相等不通过：审计审查结论21
+      指明"same count, wrong set"与 E0F-03 已修的治理漏洞同型，必须逐 session 核对。
     k1_sample_registry.csv 缺失则交叉核对记 not_checked（组成仍报告，不放松 L0/L1 判定）。
     """
     ep = cfg["pool"]["evidence_pools"]
@@ -444,6 +445,7 @@ def evidence_pool_reproduction_audit(
         )
 
     win_results: dict[str, Any] = {}
+    actual_matched_ids: dict[str, set[str]] = {}
     for w in ep["windows"]:
         name = str(w["name"])
         site = str(w["site"])
@@ -463,12 +465,14 @@ def evidence_pool_reproduction_audit(
         by_role: dict[str, int] = {}
         for rl, g in df.groupby(["role"]):
             by_role[str(rl)] = int(len(g))
+        matched_df = df[df["match_status"].astype(str).eq("matched")]
+        actual_matched_ids[name] = set(matched_df["session_id"].astype(str))
         win_results[name] = {
             "site": site,
             "field_mode": w.get("field_mode"),
             "months": months,
             "n_sessions": int(len(df)),
-            "n_matched": int((df["match_status"].astype(str) == "matched").sum()),
+            "n_matched": int(len(matched_df)),
             "n_static_only": int((df["match_status"].astype(str) == "static_only").sum()),
             "by_match_status_x_sample_layer": by_ms_layer,
             "by_match_status_x_split": by_ms_split,
@@ -478,29 +482,50 @@ def evidence_pool_reproduction_audit(
     k1_path = impl_root / str(ep["k1_sample_registry"])
     k1_check: dict[str, Any] = {
         "checked": False,
-        "reason": "k1_sample_registry.csv 不存在，跳过计数交叉核对（组成仍报告）",
+        "reason": "k1_sample_registry.csv 不存在，跳过 session 集合交叉核对（组成仍报告）",
     }
     if k1_path.exists():
         k1 = pd.read_csv(k1_path)
-        expected = {str(s): int(n) for s, n in k1["site"].value_counts().items()}
+        k1 = k1.rename(columns={"sessionID": "session_id"})
+        k1["session_id"] = k1["session_id"].astype(str)
+        expected_sets = {
+            str(site): set(g["session_id"])
+            for site, g in k1.groupby(k1["site"].astype(str))
+        }
+        expected_counts = {s: len(v) for s, v in expected_sets.items()}
+        identity: dict[str, Any] = {}
         mismatch: dict[str, Any] = {}
         for name, v in win_results.items():
-            if v["site"] in expected and v["n_matched"] != expected[v["site"]]:
-                mismatch[name] = {
-                    "window_matched": v["n_matched"],
-                    "k1_frozen": expected[v["site"]],
-                }
+            site = v["site"]
+            if site not in expected_sets:
+                continue
+            exp = expected_sets[site]
+            actual = actual_matched_ids[name]
+            missing = exp - actual
+            extra = actual - exp
+            identity[name] = {
+                "k1_frozen_n": len(exp),
+                "window_matched_n": len(actual),
+                "missing_n": len(missing),
+                "extra_n": len(extra),
+                "missing_sample": sorted(missing)[:5],
+                "extra_sample": sorted(extra)[:5],
+            }
+            if missing or extra:
+                mismatch[name] = identity[name]
         k1_check = {
             "checked": True,
-            "expected_by_site": expected,
+            "expected_by_site": expected_counts,
             "actual_matched_by_window": {
                 name: v["n_matched"] for name, v in win_results.items()
             },
+            "identity": identity,
             "mismatch": mismatch,
         }
         if mismatch:
             raise RuntimeError(
-                "E0F-04 停止（证据池复现失败）：matched 子集 != k1_sample_registry 冻结计数；"
+                "E0F-04 停止（证据池复现失败）：matched session_id 集合 != "
+                "k1_sample_registry 冻结集合（missing/extra 非空）；"
                 f"{mismatch}"
             )
 
@@ -509,8 +534,9 @@ def evidence_pool_reproduction_audit(
         "windows": win_results,
         "k1_sample_registry_cross_check": k1_check,
         "conclusion": (
-            "冻结证据池人口 100% matched（matched 子集 == K1 冻结计数），matched-only "
-            "pool_state 保留复现冻结 E3-Lite 所需人口；无需 amendment 到 R1/#17"
+            "冻结证据池人口 100% matched，且 matched session_id 集合与 K1 frozen "
+            "registry 完全相等（missing=0, extra=0）；matched-only pool_state 无歧义"
+            "映射至冻结证据池人口；正式 E3-Lite 指标 hard-split 复现移交 R1/#17"
         ),
     }
 
@@ -696,11 +722,25 @@ def _build_report(
         )
     lines += [
         "",
-        "## 冻结证据池复现审计（#15 acceptance-3）",
+        "## D0 sensitivity 待办（审查结论21 P1，不阻塞 E0F-04）",
         "",
-        f"- sample_layer <-> match_status 1:1（L1<->matched、L0<->static_only）："
-        f"{'PASS' if evidence['sample_layer_match_status_1to1'] else 'FAIL'}",
+        "JPL gold 池按冻结 per-pool median gate 通过，但以下项必须在 D0 "
+        "gold_consistency / completeness 复查中保留为 sensitivity item：",
     ]
+    for pid, v in gold["per_pool"].items():
+        if v["gold_energy_kwh"] > 0:
+            total_rel = v["ours_energy_kwh"] / v["gold_energy_kwh"] - 1.0
+            if total_rel < -0.03 or v["p95_abs_rel_dev"] > 0.10:
+                lines.append(
+                    f"- {pid}：聚合总能量 {total_rel:+.2%}（gold={v['gold_energy_kwh']:.2f} kWh，"
+                    f"ours={v['ours_energy_kwh']:.2f} kWh），p95 |rel dev| "
+                    f"{v['p95_abs_rel_dev']:.2%}。不做月份删除处理。"
+                )
+    lines += ["", "## 冻结证据池复现审计（#15 acceptance-3）", ""]
+    lines.append(
+        f"- sample_layer <-> match_status 1:1（L1<->matched、L0<->static_only）："
+        f"{'PASS' if evidence['sample_layer_match_status_1to1'] else 'FAIL'}"
+    )
     for name, v in evidence["windows"].items():
         lines.append(
             f"- **{name}**（site={v['site']}，field_mode={v['field_mode']}）："
@@ -711,12 +751,17 @@ def _build_report(
         )
     k1c = evidence["k1_sample_registry_cross_check"]
     if k1c["checked"]:
-        lines.append(
-            f"- K1 冻结样本计数交叉核对：PASS（matched 子集 == k1_sample_registry，"
-            f"{k1c['actual_matched_by_window']}）"
-        )
+        lines.append("- K1 冻结 session 集合交叉核对：PASS（matched session_id 集合与 "
+                     "k1_sample_registry 完全相等）")
+        for name, idn in k1c["identity"].items():
+            lines.append(
+                f"  - {name}：k1_frozen={idn['k1_frozen_n']:,}，window_matched="
+                f"{idn['window_matched_n']:,}，missing={idn['missing_n']}，"
+                f"extra={idn['extra_n']}（按 site 冻结 {k1c['expected_by_site']}，"
+                f"窗口实际 {k1c['actual_matched_by_window']}）"
+            )
     else:
-        lines.append(f"- K1 冻结样本计数交叉核对：未做（{k1c['reason']}）")
+        lines.append(f"- K1 冻结 session 集合交叉核对：未做（{k1c['reason']}）")
     lines += ["", "## 池清单（n_stations / gold）", ""]
     for (pid, gold_flag), g in pool_registry.groupby(["pool_id", "gold"], sort=True):
         lines.append(

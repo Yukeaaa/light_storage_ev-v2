@@ -439,9 +439,11 @@ def _write_mini_impl(impl: Path):
 
 
 def test_evidence_pool_reproduction_audit(tmp_path: Path) -> None:
-    """#15 acceptance-3：冻结证据窗口 matched 子集 == k1 冻结计数 → PASS。"""
+    """#15 acceptance-3（审查结论21）：冻结窗口 matched session_id 集合 == K1 → PASS。"""
     cfg = _mini_cfg()
-    k1 = pd.DataFrame({"site": ["caltech", "caltech", "jpl"], "sessionID": ["a", "b", "c"]})
+    k1 = pd.DataFrame(
+        {"site": ["caltech", "caltech", "jpl"], "sessionID": ["m1", "m2", "s3"]}
+    )
     k1_path = tmp_path / "k1_sample_registry.csv"
     k1.to_csv(k1_path, index=False)
     cfg["pool"]["evidence_pools"]["k1_sample_registry"] = str(k1_path)
@@ -450,7 +452,13 @@ def test_evidence_pool_reproduction_audit(tmp_path: Path) -> None:
     assert ev["windows"]["caltech_main_window"]["n_matched"] == 2
     assert ev["windows"]["jpl_current_only_window"]["n_matched"] == 1
     assert ev["windows"]["jpl_current_only_window"]["n_static_only"] == 0
-    assert ev["k1_sample_registry_cross_check"]["checked"] is True
+    k1c = ev["k1_sample_registry_cross_check"]
+    assert k1c["checked"] is True
+    assert k1c["mismatch"] == {}
+    assert k1c["identity"]["caltech_main_window"]["missing_n"] == 0
+    assert k1c["identity"]["caltech_main_window"]["extra_n"] == 0
+    assert k1c["identity"]["jpl_current_only_window"]["missing_n"] == 0
+    assert k1c["identity"]["jpl_current_only_window"]["extra_n"] == 0
 
 
 def test_evidence_pool_reproduction_audit_stops_on_k1_mismatch(tmp_path: Path) -> None:
@@ -461,8 +469,33 @@ def test_evidence_pool_reproduction_audit_stops_on_k1_mismatch(tmp_path: Path) -
     k1_path = tmp_path / "k1_sample_registry.csv"
     k1.to_csv(k1_path, index=False)
     cfg["pool"]["evidence_pools"]["k1_sample_registry"] = str(k1_path)
-    with pytest.raises(RuntimeError, match="matched 子集 != k1_sample_registry"):
+    with pytest.raises(RuntimeError, match="matched session_id 集合 != k1_sample_registry"):
         evidence_pool_reproduction_audit(_mini_registry_full(), cfg, tmp_path)
+
+
+def test_evidence_pool_reproduction_audit_stops_on_same_count_wrong_set(
+    tmp_path: Path,
+) -> None:
+    """审查结论21 P0 回归：数量相同但会话集合不同必须 STOP（K1={A,B,C} vs E0={A,B,X}）。
+
+    之前只比 count（len==len），same-count/wrong-set 会漏过；现在必须逐 session_id
+    集合比对，missing 或 extra 任一非空即 STOP。
+    """
+    reg = _mini_registry_full()
+    ghost = reg.iloc[[0]].copy()
+    ghost["session_id"] = "m5"
+    ghost["connection_time"] = pd.Timestamp("2018-11-01T00:30:00Z", tz="UTC")
+    reg = pd.concat([reg, ghost], ignore_index=True)
+    # 数量同是 3，但集合不同：K1 有 ghost_old，窗口实际有 m5
+    k1 = pd.DataFrame(
+        {"site": ["caltech", "caltech", "caltech"], "sessionID": ["m1", "m2", "ghost_old"]}
+    )
+    k1_path = tmp_path / "k1_sample_registry.csv"
+    k1.to_csv(k1_path, index=False)
+    cfg = _mini_cfg()
+    cfg["pool"]["evidence_pools"]["k1_sample_registry"] = str(k1_path)
+    with pytest.raises(RuntimeError, match="matched session_id 集合 != k1_sample_registry"):
+        evidence_pool_reproduction_audit(reg, cfg, tmp_path)
 
 
 def test_evidence_pool_reproduction_audit_stops_on_layer_status_mismatch(tmp_path: Path) -> None:

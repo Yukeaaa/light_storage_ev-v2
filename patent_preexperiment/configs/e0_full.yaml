@@ -212,12 +212,14 @@ pool:
       - {site: caltech, garage: California_Garage_01}
       - {site: jpl, garage: Arroyo_Garage_01}
       - {site: office001, garage: Parking_Lot_01}
-  # #15 acceptance-3（审查结论20）：冻结 E3-Lite 两证据池（Caltech main + JPL current-only）复现审计。
+  # #15 acceptance-3（审查结论20/21）：冻结 E3-Lite 两证据池（Caltech main + JPL current-only）复现审计。
   # E0F-02 registry 审计证明冻结证据池人口 100% matched（jpl current_only 窗口无 static_only；
-  # caltech main 窗口 matched 子集即 K1 冻结样本），matched-only pool_state 可当场复现原冻结总量，
-  # 无需 amendment 到 R1/#17。windows.name 引用 k1_role_months 冻结月份窗口。
+  # caltech main 窗口 matched 子集即 K1 冻结样本），matched-only pool_state 可无歧义映射至冻结
+  # 证据池人口。matched session_id 集合必须与 k1_sample_registry.csv 按 site 的冻结 session 集合
+  # 完全相等（missing=0 且 extra=0），仅数量相等不通过（审查结论21 P0）。正式 E3-Lite 指标
+  # hard-split 复现由 E0F-06/R1 #17 执行。windows.name 引用 k1_role_months 冻结月份窗口。
   evidence_pools:
-    description: "冻结证据池人口审计：windows 内 matched 会话子集必须 == k1_sample_registry.csv 冻结计数（machine-verifiable）"
+    description: "冻结证据池人口审计：windows 内 matched session_id 集合必须 == k1_sample_registry.csv 冻结集合（missing=0, extra=0；machine-verifiable）"
     windows:
       - {name: caltech_main_window, site: caltech, field_mode: null}
       - {name: jpl_current_only_window, site: jpl, field_mode: current_only}
