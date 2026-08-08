@@ -23,7 +23,7 @@ def derive_power(df_raw: pd.DataFrame, rated_v: float) -> pd.DataFrame:
     df = df_raw.copy()
     power = df["power_kw"]
     computed = power.isna() & df["voltage_v"].notna() & df["current_a"].notna()
-    estimated = power.isna() & df["current_a"].notna()
+    estimated = power.isna() & df["current_a"].notna() & ~computed
     out = pd.DataFrame(index=df.index, columns=["actual_power_kw", "power_source"], dtype=object)
     out.loc[power.notna(), "actual_power_kw"] = power[power.notna()]
     out.loc[power.notna(), "power_source"] = "measured"

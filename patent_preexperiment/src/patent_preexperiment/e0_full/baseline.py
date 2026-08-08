@@ -42,6 +42,8 @@ _OUTPUT_PATHS = {
     "patent_preexperiment/data_registry/e0_full_split_registry.parquet",
     "patent_preexperiment/data_registry/e0_full_field_mode_registry.parquet",
     "patent_preexperiment/reports/E0_Full_split_audit.md",
+    "patent_preexperiment/data_registry/e0_full_session_response_partitions.json",
+    "patent_preexperiment/reports/E0_Full_session_response_audit.md",
 }
 
 # 审查结论11 低优先级增强：代码目录内任何 untracked 文件也视为未提交代码。
@@ -135,6 +137,7 @@ def build_e0_full_baseline(
     config: dict[str, Any],
     require_clean: bool = True,
     split_registry: dict[str, Any] | None = None,
+    session_response: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """按 schema 组装并写出 e0_full_baseline.json。
 
@@ -142,6 +145,8 @@ def build_e0_full_baseline(
     require_clean=True：正式冻结运行时存在未提交代码（git_dirty_code 非空）则拒绝生成。
     split_registry：E0F-02 产物哈希（split/field_mode registry sha256 + 行数），写入
     `split_registry` 节并追加到 output_manifest。
+    session_response：E0F-03 产物哈希（分区注册表 sha256 + 行数），写入
+    `session_response` 节并追加到 output_manifest。
     """
     acn = acn_project_dir()
     paths = load_paths()
@@ -181,7 +186,10 @@ def build_e0_full_baseline(
         "git_status": {
             "code_dirty_files": dirty_code,
             "code_clean": not dirty_code,
-            "note": "已跟踪文件修改（证据产物输出路径除外）视为未提交代码；untracked 不计",
+            "note": (
+                "已跟踪文件修改（证据产物输出路径除外）与 src/configs/experiments/tests "
+                "下 untracked 文件均视为未提交代码"
+            ),
         },
         "e0_full_yaml_sha256": _sha256(e0_yaml),
         "manifest_hashes": manifest_hashes,
@@ -199,6 +207,7 @@ def build_e0_full_baseline(
         },
         "split_rule_version": config["split"]["rule_version"],
         "split_registry": split_registry,
+        "session_response": session_response,
         "output_manifest": [
             "data_registry/e0_full_source_manifest.parquet",
             "data_registry/e0_full_quality_summary.json",
@@ -211,7 +220,9 @@ def build_e0_full_baseline(
             "data_registry/e0_full_field_mode_registry.parquet",
             "reports/E0_Full_split_audit.md",
             "data_registry/e0_full_baseline.json",
-        ],
+        ]
+        + (["data_registry/e0_full_session_response_partitions.json"] if session_response else [])
+        + (["reports/E0_Full_session_response_audit.md"] if session_response else []),
         "source_manifest_sha256": manifest_hash_hex,
     }
     out = Path(out)

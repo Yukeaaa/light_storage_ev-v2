@@ -180,6 +180,22 @@ outputs:
   split_audit_report: "reports/E0_Full_split_audit.md"
   baseline: "data_registry/e0_full_baseline.json"
 
+# --- E0F-03 session_response_1min 构建口径（审查结论17 授权；issue #14 验收）---
+# 只做原始响应→canonical 分钟观测的可追溯转换；不定义可执行能力/吸收余量/D1-R 判断。
+session_response:
+  scope: "85,877 session universe 原样继承；session_id/split/role/sample_layer/field_mode 只从 E0F-02 registry join，禁止重新推导"
+  collapse_rule: "逐字节完全相同原始行在派生层 collapse（保留首次出现）并登记 raw_duplicate_count；同一时间戳不同观测保留进入确定性分钟聚合"
+  timezone_local: America/Los_Angeles
+  minute_sample_threshold: 10          # 与 gaps.minute_sample_threshold 一致
+  severe_gap_min: 20                   # 与 gaps.severe_gap_min 一致
+  partition_cols: [site, year, month]
+  offline_labels: [disconnect_time, done_charging_time, kwh_delivered]  # 在线禁止；仅离线标签/评价
+  sample_count_rule: "post-collapse 有效观测数（10 点/分钟 参考线）"
+  energy_consistency:
+    tolerance_median_dev: 0.01          # caltech/office001 分钟积分 vs 原始能量中位偏差 <1%（硬 STOP）
+    jpl_rule: "会话级离群过滤 + 敏感性；聚合可用"
+  test_policy: "可构建 test 分区；本步只做数据工程检查，不查看 test 上 K1/D1-R outcome 指标"
+
 # --- 数据工程停止线（审查结论7 §5.3，冻结）---
 stop_lines:
   conditions:

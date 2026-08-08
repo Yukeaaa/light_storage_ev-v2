@@ -31,14 +31,24 @@ def _decompress_first_gzip_member(raw: bytes) -> bytes:
     return b"".join(chunks)
 
 
-def read_static_csv(path: str | Path) -> pd.DataFrame:
-    """读取单个静态 csv.gz，返回规范化列名的 DataFrame。"""
+def read_static_bytes(path: str | Path) -> bytes:
+    """读取单个静态 csv.gz 的解压字节（按首 gzip 成员解压，忽略尾部垃圾）。"""
     path = Path(path)
     raw = path.read_bytes()
     try:
         text = zlib.decompress(raw, zlib.MAX_WBITS | 16)
     except zlib.error:
         text = _decompress_first_gzip_member(raw)
+    return text
+
+
+def read_static_text(path: str | Path) -> str:
+    """读取单个静态 csv.gz 的文本内容（解压后按 utf-8 errors=replace 解码）。"""
+    return read_static_bytes(path).decode("utf-8", errors="replace")
+
+
+def parse_static_bytes(text: bytes) -> pd.DataFrame:
+    """把静态 csv 解压字节解析为规范化列名的 DataFrame（read_static_csv 的内核）。"""
     df = pd.read_csv(io.BytesIO(text), header=0, skip_blank_lines=False)
     df = df.rename(columns=_RAW_COLS)
     time_col = df.columns[0]
@@ -51,3 +61,8 @@ def read_static_csv(path: str | Path) -> pd.DataFrame:
     if "state" not in df.columns:
         df["state"] = pd.NA
     return df[["timestamp", "current_a", "pilot_a", "voltage_v", "state", "energy_kwh", "power_kw"]]
+
+
+def read_static_csv(path: str | Path) -> pd.DataFrame:
+    """读取单个静态 csv.gz，返回规范化列名的 DataFrame。"""
+    return parse_static_bytes(read_static_bytes(path))
