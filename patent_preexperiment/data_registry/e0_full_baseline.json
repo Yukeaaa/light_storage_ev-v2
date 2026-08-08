@@ -1,5 +1,5 @@
 {
-  "created_at_utc": "2026-08-08T10:11:16.521199+00:00",
+  "created_at_utc": "2026-08-08T12:40:26.238481+00:00",
   "protocol_version": "V2.0",
   "landing_version": "V2.1",
   "experiment_id": "E0_full_preregister_v1",
@@ -8,13 +8,13 @@
     "path": "patent_preexperiment/data_registry/design_baseline.json",
     "commit": "41dd1dd038ebce13b28a76c3254f08e61569dabe"
   },
-  "code_sha": "fdb061213d278c2231cc72d19f1b5e5f0bdd0f84",
+  "code_sha": "0b0f39cb9bc52c5f27377d0271ca615906356ff9",
   "git_status": {
     "code_dirty_files": [],
     "code_clean": true,
-    "note": "已跟踪文件修改（证据产物输出路径除外）视为未提交代码；untracked 不计"
+    "note": "已跟踪文件修改（证据产物输出路径除外）与 src/configs/experiments/tests 下 untracked 文件均视为未提交代码"
   },
-  "e0_full_yaml_sha256": "5db5923623ef1144013456bf04c4a030d2c87d4197616238111447695a343166",
+  "e0_full_yaml_sha256": "bcf4ac1eb80cdff0d0ed2fded2af3f9b89bc138877c7f215d2f6756cfdfc22ac",
   "manifest_hashes": {
     "static_file_index.csv": {
       "sha256": "eff813e2a723749c2529a0174d21e19255c63b216cb18796c4c253037a96ac2e",
@@ -59,6 +59,15 @@
       "rows": 85877
     }
   },
+  "session_response": {
+    "partition_registry": {
+      "sha256": "84132d631b976bd1688c441cf6ccfc960e34217d0277a76e06bdc6e9fa141862",
+      "n_partitions": 81,
+      "n_sessions": 85877,
+      "n_rows": 28301657
+    },
+    "report": "reports/E0_Full_session_response_audit.md"
+  },
   "output_manifest": [
     "data_registry/e0_full_source_manifest.parquet",
     "data_registry/e0_full_quality_summary.json",
@@ -70,7 +79,9 @@
     "data_registry/e0_full_split_registry.parquet",
     "data_registry/e0_full_field_mode_registry.parquet",
     "reports/E0_Full_split_audit.md",
-    "data_registry/e0_full_baseline.json"
+    "data_registry/e0_full_baseline.json",
+    "data_registry/e0_full_session_response_partitions.json",
+    "reports/E0_Full_session_response_audit.md"
   ],
   "source_manifest_sha256": "f1a5fd036ed6901bf5b89af9e935b99b071b32b67812f7dff1810f76506bd17a"
 }
