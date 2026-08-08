@@ -25,6 +25,7 @@ from patent_preexperiment.config.yamlutil import load_yaml
 from patent_preexperiment.e0_full.session_response import (
     _OUTPUT_COLUMNS,
     _build_meta,
+    _energy_consistency_summary,
     _session_worker,
     aggregate_session_minutes,
     build_session_response,
@@ -620,6 +621,83 @@ def test_finalize_no_partitions_stops(tmp_path: Path) -> None:
             out_dir=tmp_path / "nope",
             partition_registry_out=tmp_path / "nope" / "partitions.json",
         )
+
+
+def test_finalize_same_count_wrong_session_stops(tmp_path: Path) -> None:
+    # P0-1 回归：covered 与 registry 数量相同但集合不同（stale/orphan session）必须 STOP。
+    # registry {m1,m2,s3} → 换成 {m1,m2,ghost}，数量仍为 3，仅比数量会漏过。
+    _seed_files(tmp_path)
+    out_dir = tmp_path / "out" / "session_response_1min"
+    build_session_response(
+        registry=_mini_registry(),
+        manifest=_mini_manifest(),
+        api_meta=_mini_api_meta(),
+        cfg=CFG,
+        static_root=tmp_path,
+        out_dir=out_dir,
+        partition_registry_out=tmp_path / "out" / "partitions.json",
+        max_workers=2,
+    )
+    wrong = _mini_registry()
+    wrong.loc[wrong["session_id"] == "s3", "session_id"] = "ghost"
+    with pytest.raises(RuntimeError, match="覆盖不完整") as exc:
+        finalize_existing_partitions(
+            registry=wrong,
+            cfg=CFG,
+            out_dir=out_dir,
+            partition_registry_out=tmp_path / "out" / "partitions2.json",
+        )
+    assert "missing 1 个" in str(exc.value)
+    assert "extra 1 个" in str(exc.value)
+    assert "s3" in str(exc.value)
+    assert "ghost" in str(exc.value)
+
+
+def test_finalize_wrong_partition_path_stops(tmp_path: Path) -> None:
+    # P0-2 回归：分区路径与行 site/year/month 不一致（stale/wrong 分区文件）必须 STOP。
+    _seed_files(tmp_path)
+    out_dir = tmp_path / "out" / "session_response_1min"
+    build_session_response(
+        registry=_mini_registry(),
+        manifest=_mini_manifest(),
+        api_meta=_mini_api_meta(),
+        cfg=CFG,
+        static_root=tmp_path,
+        out_dir=out_dir,
+        partition_registry_out=tmp_path / "out" / "partitions.json",
+        max_workers=2,
+    )
+    src = out_dir / "site=caltech" / "year=2018" / "month=05" / "data.parquet"
+    bad_dir = out_dir / "site=caltech" / "year=2018" / "month=06"
+    bad_dir.mkdir(parents=True)
+    pd.read_parquet(src).to_parquet(bad_dir / "data.parquet", index=False)
+    with pytest.raises(RuntimeError, match="分区路径不一致"):
+        finalize_existing_partitions(
+            registry=_mini_registry(),
+            cfg=CFG,
+            out_dir=out_dir,
+            partition_registry_out=tmp_path / "out" / "partitions2.json",
+        )
+
+
+def test_energy_stop_at_exact_tolerance() -> None:
+    # P0-3 回归：中位 |dev| == 冻结 tolerance 必须 STOP（>= 语义，等值即 STOP）。
+    # 用恰好可精确表示的 0.5 边界（(1.0-2.0)/2.0 == -0.5），避免 0.01 浮点表示抖动。
+    import copy
+
+    cfg = copy.deepcopy(CFG)
+    cfg["session_response"]["energy_consistency"]["tolerance_median_dev"] = 0.5
+    audits = [{
+        "session_id": "x1", "site": "caltech", "match_status": "matched",
+        "has_energy": True, "n_minutes": 60, "integral_kwh": 1.0,
+        "energy_first": 0.0, "energy_last": 2.0, "ref_api_kwh": None,
+    }]
+    with pytest.raises(RuntimeError, match="能量一致性 STOP"):
+        _energy_consistency_summary(audits, cfg)
+    # 略低于门线 → 通过；显示值 round，门线用原始值
+    below = [dict(audits[0], integral_kwh=1.9)]  # dev=(1.9-2.0)/2.0=-0.05
+    res = _energy_consistency_summary(below, cfg)
+    assert res["by_site"]["caltech"]["median_abs_dev"] == pytest.approx(0.05, abs=1e-9)
 
 
 def test_finalize_coverage_missing_session_stops(tmp_path: Path) -> None:

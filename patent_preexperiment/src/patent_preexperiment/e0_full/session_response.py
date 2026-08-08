@@ -444,8 +444,8 @@ def _energy_consistency_summary(
 
     能量为累计计量；会话末尾 UNPLUGGED 复位行（仪表 re-arm 到 0.0）为已知伪影，
     能量跨度按 峰值(energy_cum_kwh) - 首条非空分钟读数(energy_cum_kwh) 计算。
-    caltech/office001 中位 |dev| > tolerance_median_dev 触发硬 STOP；jpl 聚合可用，
-    会话级离群另报不做 STOP。
+    caltech/office001 原始中位 |dev| >= tolerance_median_dev 触发硬 STOP（等值即 STOP，
+    round 只用于显示）；jpl 聚合可用，会话级离群另报不做 STOP。
     """
     if not audits:
         return {"by_site": {}, "api_kwh": {}}
@@ -453,6 +453,7 @@ def _energy_consistency_summary(
     tolerance = float(cfg["session_response"]["energy_consistency"]["tolerance_median_dev"])
 
     by_site: dict[str, Any] = {}
+    raw_median: dict[str, float] = {}
     for site in ("caltech", "jpl", "office001"):
         g = df[(df["site"] == site) & df["has_energy"]].copy()
         if g.empty:
@@ -463,9 +464,11 @@ def _energy_consistency_summary(
         )
         ok = g["dev_energy"].notna()
         abs_dev = g.loc[ok, "dev_energy"].abs()
+        med = float(abs_dev.median()) if ok.any() else None
+        raw_median[site] = med if med is not None else float("nan")
         by_site[site] = {
             "sessions": int(len(g)),
-            "median_abs_dev": round(float(abs_dev.median()), 6) if ok.any() else None,
+            "median_abs_dev": round(med, 6) if med is not None else None,
             "p95_abs_dev": round(float(abs_dev.quantile(0.95)), 6) if ok.any() else None,
             "n_outliers_gt_20pct": int((g.loc[ok, "dev_energy"].abs() > 0.20).sum()),
         }
@@ -484,15 +487,38 @@ def _energy_consistency_summary(
                 "p95_abs_dev": round(float(g["dev_api"].abs().quantile(0.95)), 6),
             }
 
+    # 门线用原始中位（>= 冻结 tolerance 即 STOP，等值也 STOP）；round 只用于报告显示。
     stop_hits = [
-        f"{site} 中位 |dev|={by_site[site]['median_abs_dev']} > {tolerance}"
+        f"{site} 中位 |dev|={raw_median[site]} >= {tolerance}（冻结 tolerance_median_dev）"
         for site in ("caltech", "office001")
-        if by_site.get(site, {}).get("median_abs_dev") is not None
-        and by_site[site]["median_abs_dev"] > tolerance
+        if not np.isnan(raw_median.get(site, float("nan")))
+        and raw_median[site] >= tolerance
     ]
     if stop_hits:
         raise RuntimeError("E0F-03 能量一致性 STOP：" + "；".join(stop_hits))
     return {"by_site": by_site, "api_kwh": api_kwh}
+
+
+def _assert_partition_path_consistent(
+    df: pd.DataFrame, site: str, year: int, month: int, label: str
+) -> None:
+    """分区路径 ↔ 行内容一致性：site 与 timestamp_utc 的 year/month 必须等于所在分区路径。
+
+    结合"分区内 [session_id, timestamp_utc] 唯一"，可廉价机器证明全局唯一：
+    若每行 timestamp 的 year/month 与其所在 year/month 分区路径一致，则同一 key
+    不可能同时出现在两个不同月份分区（timestamp 决定唯一分区），无需维护 28M key 的全局集合。
+    finalize 是从已有文件读取，必须防 stale/wrong 分区文件。
+    """
+    if df["site"].astype(str).ne(site).any():
+        raise RuntimeError(
+            f"E0F-03 {label} 停止（分区路径不一致）：路径 site={site} 内存在 site 与路径不符的行"
+        )
+    ts = df["timestamp_utc"]
+    if ts.dt.year.ne(year).any() or ts.dt.month.ne(month).any():
+        raise RuntimeError(
+            f"E0F-03 {label} 停止（分区路径不一致）：路径 {site}/{year}-{month:02d} "
+            "内存在 timestamp_utc 的 year/month 与路径不符的行"
+        )
 
 
 def _partition_stats(df: pd.DataFrame) -> dict[str, Any]:
@@ -588,6 +614,7 @@ def build_session_response(
         df = df.sort_values(
             ["session_id", "timestamp_utc"], kind="mergesort"
         ).reset_index(drop=True)
+        _assert_partition_path_consistent(df, *key, "build")
         if df.duplicated(subset=["session_id", "timestamp_utc"]).any():
             raise RuntimeError(
                 "E0F-03 停止（主键非法重复）：partition "
@@ -614,14 +641,13 @@ def build_session_response(
         _merge_stats(merged_stats, stats)
         del frames, df
 
-    n_registry = int(len(registry))
     summary = _build_final_registry(
         partitions=partitions,
         merged_stats=merged_stats,
         covered=covered,
         audits=audits,
         cfg=cfg,
-        n_registry=n_registry,
+        expected=set(registry["session_id"].astype(str)),
         partition_registry_out=partition_registry_out,
         n_failed=len(fails),
     )
@@ -650,18 +676,24 @@ def _build_final_registry(
     covered: set[str],
     audits: list[dict[str, Any]],
     cfg: dict[str, Any],
-    n_registry: int,
+    expected: set[str],
     partition_registry_out: str | Path,
     n_failed: int,
 ) -> dict[str, Any]:
     """覆盖校验 → 能量审计 → 分区注册表写出 → summary。build 与 finalize 共用。
 
-    覆盖校验按去重会话集合比较：registry 中每条会话必须有分钟数据。禁止用
+    覆盖校验按去重会话**集合**相等（covered == registry 集合），不只比较数量：
+    同数量的错误集合（stale partition / orphan session）必须机器可证失败。禁止用
     分区会话数求和——跨 year/month 边界的会话会在多个分区被计数，求和会虚高。
+    失败时报告 missing / extra 的计数与首个示例。
     """
-    if len(covered) != n_registry:
+    if covered != expected:
+        missing = sorted(expected - covered)
+        extra = sorted(covered - expected)
         raise RuntimeError(
-            f"E0F-03 停止（覆盖不完整）：已建会话 {len(covered)} != registry {n_registry}"
+            "E0F-03 停止（覆盖不完整）：covered 会话集合 != registry 会话集合；"
+            f"missing {len(missing)} 个（首个 {missing[0] if missing else None}），"
+            f"extra {len(extra)} 个（首个 {extra[0] if extra else None}）"
         )
 
     energy = _energy_consistency_summary(audits, cfg)
@@ -670,9 +702,10 @@ def _build_final_registry(
         "schema": "e0_full_session_response_1min.schema.json",
         "partition_cols": ["site", "year", "month"],
         "n_partitions": len(partitions),
-        "n_sessions": n_registry,
+        "n_sessions": len(expected),
         "n_rows": sum(p["rows"] for p in partitions),
-        "uniqueness_check": "per-partition [session_id, timestamp_utc] unique enforced",
+        "uniqueness_check": "per-partition [session_id, timestamp_utc] unique enforced + "
+        "partition path ↔ row site/year/month 一致性",
         "partitions": sorted(partitions, key=lambda p: (p["site"], p["year"], p["month"])),
     }
     Path(partition_registry_out).parent.mkdir(parents=True, exist_ok=True)
@@ -680,7 +713,7 @@ def _build_final_registry(
         json.dumps(part_registry, ensure_ascii=False, indent=2), encoding="utf-8"
     )
     return {
-        "n_sessions": n_registry,
+        "n_sessions": len(expected),
         "n_rows": part_registry["n_rows"],
         "n_partitions": len(partitions),
         "merged_stats": merged_stats,
@@ -717,6 +750,7 @@ def finalize_existing_partitions(
         year = int(rel.parts[1].split("=", 1)[1])
         month = int(rel.parts[2].split("=", 1)[1])
         df = pd.read_parquet(f)
+        _assert_partition_path_consistent(df, site, year, month, "finalize")
         if df.duplicated(subset=["session_id", "timestamp_utc"]).any():
             raise RuntimeError(
                 f"E0F-03 finalize 停止（主键非法重复）：{f} 内 "
@@ -765,7 +799,7 @@ def finalize_existing_partitions(
         covered=covered,
         audits=audits,
         cfg=cfg,
-        n_registry=int(len(registry)),
+        expected=set(registry["session_id"].astype(str)),
         partition_registry_out=partition_registry_out,
         n_failed=0,
     )
@@ -839,7 +873,8 @@ def _build_report(summary: dict[str, Any], cfg: dict[str, Any]) -> str:
     tol = cfg["session_response"]["energy_consistency"]["tolerance_median_dev"]
     lines.append("")
     lines.append(
-        f"caltech/office001 分钟积分 vs 原始能量跨度中位 |dev| 必须 < {tol}（硬 STOP）；"
+        f"caltech/office001 分钟积分 vs 原始能量跨度中位 |dev| >= {tol} 即硬 STOP"
+        "（门线用原始中位，等值即 STOP；round 只用于报告显示）；"
         "jpl 聚合可用、会话级离群过滤后另报（不做 STOP）。"
     )
     lines.append(
@@ -847,6 +882,25 @@ def _build_report(summary: dict[str, Any], cfg: dict[str, Any]) -> str:
         "为已知伪影；基于 canonical 分钟表 energy_cum_kwh 计算，energy_last 取分钟峰值、"
         "energy_first 取首条非空分钟读数（口径与 build/finalize 两条路径一致）。"
     )
+    lines.append("")
+    lines += ["## 数据质量风险登记（D0/#16 P1 debt）", ""]
+    amber_sites = [
+        (site, v["median_abs_dev"])
+        for site, v in summary["energy_consistency"].get("by_site", {}).items()
+        if site in ("caltech", "office001")
+        and v["median_abs_dev"] is not None
+        and v["median_abs_dev"] >= tol * 0.8
+    ]
+    if amber_sites:
+        for site, med in amber_sites:
+            lines.append(
+                f"- **{site}**：中位 |dev|={med} 已达冻结门线 {tol} 的 80%，标记为 Amber。"
+                "不改变 E1 主样本定义、不删样本；在 D0/#16 按 month × split × field_mode "
+                "报告 energy deviation 分布（≤5% / 5–20% / >20%），并在 train/validation/"
+                "test、frozen K1 months、field_mode、site 上做高偏差会话敏感性分析。"
+            )
+    else:
+        lines.append("- 无站点接近门线，无需 Amber 登记。")
     lines.append("")
     lines += ["## 分区清单（行数/会话数，sha256 见 partition registry）", ""]
     lines.append(
