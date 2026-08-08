@@ -1423,7 +1423,7 @@ _FROZEN_JPL_CURRENT_ONLY = {
 }
 # 浮点复现容差（n_cycles/sessions 精确一致；比率允许微小数值误差）
 _RATES_TOL = 1e-4
-_SHARE_TOL = 5e-3
+_SHARE_TOL = 1e-5
 
 
 def _run_jpl_current_only_e3(
@@ -1474,6 +1474,42 @@ def _run_jpl_current_only_e3(
         "_cand": cand,
         "_cyc": cyc,
     }
+
+
+def _sensitivity_stop_reason(
+    keep_reproduces: bool,
+    population_identity_preserved: bool,
+    rebuild_failed: list[str],
+    nonaffected_unchanged: bool,
+    no_extra_minutes: bool,
+    site_garage_unchanged: bool,
+    nonaffected_apk_zero_diff: bool,
+    keep_gate: bool,
+    collapse_gate: bool,
+    gate_flipped: bool,
+) -> str | None:
+    """完整池 keep-vs-collapse 敏感性 STOP 判定（审查结论13 P0-2，全部硬检查进 STOP）。"""
+    if not keep_reproduces:
+        return "KEEP_NOT_REPRODUCED"
+    if not population_identity_preserved:
+        return "POPULATION_IDENTITY_BROKEN"
+    if rebuild_failed:
+        return "REBUILD_FAILED_SESSIONS"
+    if not nonaffected_unchanged:
+        return "NONAFFECTED_SESSIONS_CHANGED"
+    if not no_extra_minutes:
+        return "EXTRA_OR_MISSING_MINUTES"
+    if not site_garage_unchanged:
+        return "SITE_GARAGE_CHANGED"
+    if not nonaffected_apk_zero_diff:
+        return "NONAFFECTED_ACTUAL_POWER_CHANGED"
+    if not keep_gate:
+        return "KEEP_GATE_NOT_PASS"
+    if not collapse_gate:
+        return "COLLAPSE_GATE_NOT_PASS"
+    if gate_flipped:
+        return "GATE_FLIPPED"
+    return None
 
 
 def current_only_full_pool_sensitivity(
@@ -1711,13 +1747,28 @@ def current_only_full_pool_sensitivity(
     coll_cand = coll_e3.pop("_cand")
     coll_cyc = coll_e3.pop("_cyc")
 
-    # ---- flips ----
+    # ---- flips（按唯一 [site, garage, cycle] 对齐；审查结论13 P1）----
+    key = ["site", "garage", "cycle"]
+    candidate_key_unique_keep = True
+    candidate_key_unique_collapse = True
+    n_unique_cycles_keep = 0
+    n_unique_cycles_collapse = 0
+    if len(keep_cand):
+        candidate_key_unique_keep = not keep_cand.duplicated(subset=key).any()
+        n_unique_cycles_keep = int(keep_cand.drop_duplicates(subset=key).shape[0])
+    if len(coll_cand):
+        candidate_key_unique_collapse = not coll_cand.duplicated(subset=key).any()
+        n_unique_cycles_collapse = int(coll_cand.drop_duplicates(subset=key).shape[0])
+
     n_cand_rows = 0
     candidate_flips = 0
     if len(keep_cand) and len(coll_cand):
-        key = ["site", "garage", "cycle"]
-        kk = keep_cand.set_index(key)[f"candidate_{_CURRENT_ONLY_MAIN}"]
-        cc = coll_cand.set_index(key)[f"candidate_{_CURRENT_ONLY_MAIN}"]
+        kk = keep_cand.drop_duplicates(subset=key).set_index(key)[
+            f"candidate_{_CURRENT_ONLY_MAIN}"
+        ]
+        cc = coll_cand.drop_duplicates(subset=key).set_index(key)[
+            f"candidate_{_CURRENT_ONLY_MAIN}"
+        ]
         merged = kk.rename("keep").to_frame().join(cc.rename("collapse"), how="outer")
         merged["keep"] = merged["keep"].fillna(False)
         merged["collapse"] = merged["collapse"].fillna(False)
@@ -1726,9 +1777,8 @@ def current_only_full_pool_sensitivity(
 
     eligible_cycle_flips = 0
     if len(keep_cand) and len(coll_cand):
-        key = ["site", "garage", "cycle"]
-        keep_set = set(map(tuple, keep_cand[key].to_numpy()))
-        coll_set = set(map(tuple, coll_cand[key].to_numpy()))
+        keep_set = set(map(tuple, keep_cand.drop_duplicates(subset=key)[key].to_numpy()))
+        coll_set = set(map(tuple, coll_cand.drop_duplicates(subset=key)[key].to_numpy()))
         eligible_cycle_flips = len(keep_set.symmetric_difference(coll_set))
 
     active_flips = 0
@@ -1746,6 +1796,10 @@ def current_only_full_pool_sensitivity(
         "n_candidate_rows": n_cand_rows,
         "eligible_cycle_flips": eligible_cycle_flips,
         "active_flips": active_flips,
+        "candidate_key_unique_keep": candidate_key_unique_keep,
+        "candidate_key_unique_collapse": candidate_key_unique_collapse,
+        "n_unique_candidate_cycles_keep": n_unique_cycles_keep,
+        "n_unique_candidate_cycles_collapse": n_unique_cycles_collapse,
     }
 
     # ---- gate verdict ----
@@ -1790,15 +1844,18 @@ def current_only_full_pool_sensitivity(
         "gate_flipped": gate_flipped,
     }
 
-    stop_reason: str | None = None
-    if not keep_reproduces:
-        stop_reason = "KEEP_NOT_REPRODUCED"
-    elif not population_identity_preserved:
-        stop_reason = "POPULATION_IDENTITY_BROKEN"
-    elif not nonaffected_unchanged:
-        stop_reason = "NONAFFECTED_SESSIONS_CHANGED"
-    elif not keep_gate:
-        stop_reason = "KEEP_GATE_NOT_PASS"
+    stop_reason = _sensitivity_stop_reason(
+        keep_reproduces,
+        population_identity_preserved,
+        rebuild_failed,
+        nonaffected_unchanged,
+        no_extra_minutes,
+        site_garage_unchanged,
+        nonaffected_apk_zero_diff,
+        keep_gate,
+        collapse_gate,
+        gate_flipped,
+    )
 
     result = {
         "scope": base["scope"],

@@ -20,6 +20,7 @@ import pytest
 
 from patent_preexperiment.e0_full.input_audit import (
     ScanConfig,
+    _sensitivity_stop_reason,
     audit_connection_time,
     build_source_manifest,
     classify_dup_ts,
@@ -795,6 +796,12 @@ def test_current_only_full_pool_sensitivity_keep_reproduces_and_collapse_local(
     assert "keep_gate" in acc
     assert "collapse_gate" in acc
     assert "gate_flipped" in acc
+    # 审查结论13 P1：flip 对齐唯一 cycle，诊断字段齐全
+    fl = res["flips"]
+    assert fl["candidate_key_unique_keep"] is True
+    assert fl["candidate_key_unique_collapse"] is True
+    assert fl["n_unique_candidate_cycles_keep"] > 0
+    assert fl["n_unique_candidate_cycles_collapse"] > 0
 
 
 def test_current_only_full_pool_sensitivity_stop_when_keep_not_reproduced(
@@ -834,3 +841,158 @@ def test_current_only_full_pool_sensitivity_stop_when_keep_not_reproduced(
     assert res["collapse"] is None
     assert res["stop"] is not None
     assert "KEEP_NOT_REPRODUCED" in res["stop"]
+
+
+# ---- 审查结论13 P0-3：STOP 失败路径单测（collapse_gate / gate_flipped 必须 STOP）----
+
+
+def test_sensitivity_stop_reason_collapse_gate_not_pass() -> None:
+    """collapse 臂 E3 门不 PASS → 一定 STOP（COLLAPSE_GATE_NOT_PASS）。"""
+    stop = _sensitivity_stop_reason(
+        keep_reproduces=True,
+        population_identity_preserved=True,
+        rebuild_failed=[],
+        nonaffected_unchanged=True,
+        no_extra_minutes=True,
+        site_garage_unchanged=True,
+        nonaffected_apk_zero_diff=True,
+        keep_gate=True,
+        collapse_gate=False,
+        gate_flipped=True,
+    )
+    assert stop == "COLLAPSE_GATE_NOT_PASS"
+
+
+def test_sensitivity_stop_reason_gate_flipped() -> None:
+    """gate_flipped=True（两臂判定不一致）→ 一定 STOP（GATE_FLIPPED）。"""
+    stop = _sensitivity_stop_reason(
+        keep_reproduces=True,
+        population_identity_preserved=True,
+        rebuild_failed=[],
+        nonaffected_unchanged=True,
+        no_extra_minutes=True,
+        site_garage_unchanged=True,
+        nonaffected_apk_zero_diff=True,
+        keep_gate=True,
+        collapse_gate=True,
+        gate_flipped=True,
+    )
+    assert stop == "GATE_FLIPPED"
+
+
+def test_sensitivity_stop_reason_consistency_checks_block_signing() -> None:
+    """审查结论13 P0-2：rebuild 失败与硬一致性检查全部进 STOP，异常不得静默通过。"""
+
+    def _call(
+        *,
+        keep: bool = True,
+        identity: bool = True,
+        rebuild: list[str] | None = None,
+        unchanged: bool = True,
+        extra: bool = True,
+        site: bool = True,
+        apk: bool = True,
+        keep_gate: bool = True,
+        collapse_gate: bool = True,
+        flipped: bool = False,
+    ) -> str | None:
+        return _sensitivity_stop_reason(
+            keep,
+            identity,
+            rebuild or [],
+            unchanged,
+            extra,
+            site,
+            apk,
+            keep_gate,
+            collapse_gate,
+            flipped,
+        )
+
+    assert _call(rebuild=["s1"]) == "REBUILD_FAILED_SESSIONS"
+    assert _call(extra=False) == "EXTRA_OR_MISSING_MINUTES"
+    assert _call(site=False) == "SITE_GARAGE_CHANGED"
+    assert _call(apk=False) == "NONAFFECTED_ACTUAL_POWER_CHANGED"
+    assert _call(unchanged=False) == "NONAFFECTED_SESSIONS_CHANGED"
+    assert _call(identity=False) == "POPULATION_IDENTITY_BROKEN"
+    assert _call(keep_gate=False) == "KEEP_GATE_NOT_PASS"
+    assert _call() is None
+
+
+def test_current_only_full_pool_sensitivity_stop_when_collapse_gate_fails(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """真实管线路径：collapse 臂 CI 下界与日能量占比跌破停止线 → stop=COLLAPSE_GATE_NOT_PASS。
+
+    通过 monkeypatch _run_jpl_current_only_e3 控制两臂 E3 输出（Keep 复现冻结基线、
+    Collapse 门不 PASS），验证 STOP 判定真正接入完整池敏感性函数。
+    """
+    import patent_preexperiment.e0_full.input_audit as mod
+
+    raw_b = [f"{_iso19(m)},6.0" for m in range(0, 30)]
+    min_b = _build_jpl_session_minute(raw_b, "sessB", "1-1-2")
+    minute_path = tmp_path / "lite.parquet"
+    min_b.to_parquet(minute_path, index=False)
+    reg = pd.DataFrame([{"site": "jpl", "garage": "Arroyo_Garage_01", "stationID": "1-1-2",
+                         "static_file": "jpl\\Arroyo_Garage_01\\sessB.csv.gz",
+                         "sessionID": "sessB", "sample_role": "E3_pool", "month": "2019-03"}])
+    reg_path = tmp_path / "reg.csv"
+    reg.to_csv(reg_path, index=False)
+    clf = pd.DataFrame(columns=[
+        "logical_path", "site_raw", "site_canonical", "garage", "station", "month",
+        "role", "has_current", "has_pilot", "has_voltage", "has_power",
+        "n_dup_ts", "identical_dup_rows", "identical_zero_idle_rows",
+        "identical_nonzero_rows", "same_timestamp_distinct_rows",
+    ])
+    clf_path = tmp_path / "clf.csv"
+    clf.to_csv(clf_path, index=False)
+
+    main = "A2_prev_actual"
+    empty_cand = pd.DataFrame(columns=[
+        "site", "garage", "cycle", "day", "month", "month_conn",
+        f"candidate_{main}", f"candidate_energy_{main}_kwh",
+    ])
+    empty_cyc = pd.DataFrame(columns=["site", "garage", "session_id", "cycle", "active"])
+    keep_e3 = {
+        "n_cycles": 100, "n_days": 10, "n_pool_months": 1,
+        "a2_cycle_weighted_rate": 0.4, "a2_day_rate": 0.36,
+        "a2_day_rate_ci95": [0.34, 0.38], "a2_day_rate_ci_lower": 0.34,
+        "daily_energy_share_median": 0.039, "daily_energy_share_mean": 0.04,
+        "candidate_energy_total_kwh": 100.0,
+        "_cand": empty_cand.copy(), "_cyc": empty_cyc.copy(),
+    }
+    coll_e3 = {
+        "n_cycles": 100, "n_days": 10, "n_pool_months": 1,
+        "a2_cycle_weighted_rate": 0.3, "a2_day_rate": 0.2,
+        "a2_day_rate_ci95": [0.005, 0.4], "a2_day_rate_ci_lower": 0.005,
+        "daily_energy_share_median": 0.003, "daily_energy_share_mean": 0.004,
+        "candidate_energy_total_kwh": 50.0,
+        "_cand": empty_cand.copy(), "_cyc": empty_cyc.copy(),
+    }
+    calls: list[str] = []
+
+    def _fake_e3(
+        minute_df: pd.DataFrame, frozen_months: set[str], seed: int, n_boot: int
+    ) -> dict[str, object]:
+        calls.append("coll" if len(calls) else "keep")
+        return coll_e3 if calls[-1] == "coll" else keep_e3
+
+    monkeypatch.setattr(mod, "_run_jpl_current_only_e3", _fake_e3)
+
+    res = current_only_full_pool_sensitivity(
+        minute_table_path=minute_path, sample_registry_path=reg_path,
+        classification_csv_path=clf_path, static_root=tmp_path,
+        site_mapping={"raw_to_canonical": {"jpl": "jpl"}},
+        role_months={"jpl_current_only_window": ["2019-03"]},
+        rated_voltage={"jpl": 192.7},
+        e3_stop={"caltech_a2_daily_ci_lower_rate": 0.01, "daily_energy_share_each_pool": 0.005},
+        frozen_baseline={"n_cycles": 100, "a2_cycle_weighted_rate": 0.4,
+                         "a2_day_rate": 0.36, "a2_day_rate_ci95": [0.34, 0.38],
+                         "daily_energy_share_median": 0.039, "gate": "PASS"},
+    )
+    assert calls == ["keep", "coll"]
+    assert res["keep_reproduces_frozen_baseline"] is True
+    assert res["gate"]["keep_gate"] is True
+    assert res["gate"]["collapse_gate"] is False
+    assert res["gate"]["gate_flipped"] is True
+    assert res["stop"] == "COLLAPSE_GATE_NOT_PASS"
