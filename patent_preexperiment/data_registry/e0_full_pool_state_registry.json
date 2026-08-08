@@ -1,0 +1,790 @@
+{
+  "schema": "e0_full_pool_state.schema.json",
+  "created_at_utc": "2026-08-08T14:51:34.283281+00:00",
+  "code_sha": "6ef802d46846d7cc8f17ecc571ba265222edbbe6",
+  "pool_registry": {
+    "path": "data_registry/pool_registry.csv",
+    "sha256": "9579eb6398869983a2eb3980d47be9de6858176c0d7f401c042ecf63fb0d5856",
+    "n_pools": 3,
+    "n_stations": 115,
+    "n_gold_stations": 115
+  },
+  "pool_state_1min": {
+    "dir": "datasets/pool_state_1min",
+    "n_rows": 1458623,
+    "n_partitions": 81,
+    "partitions": [
+      {
+        "site": "caltech",
+        "year": 2018,
+        "month": 5,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "caltech",
+        "year": 2018,
+        "month": 6,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "caltech",
+        "year": 2018,
+        "month": 7,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "caltech",
+        "year": 2018,
+        "month": 8,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "caltech",
+        "year": 2018,
+        "month": 9,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "caltech",
+        "year": 2018,
+        "month": 10,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "caltech",
+        "year": 2018,
+        "month": 11,
+        "rows": 42306,
+        "pools": 1,
+        "sha256": "8d2261191880e858638217518e9b2cb3ed4d05d33d0411a620de2f8d6e3775c5"
+      },
+      {
+        "site": "caltech",
+        "year": 2018,
+        "month": 12,
+        "rows": 42906,
+        "pools": 1,
+        "sha256": "7faf748cd5ff323f052aee683ac2a45de5d49a7e370a1138a529714032e4add1"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 1,
+        "rows": 42413,
+        "pools": 1,
+        "sha256": "bddd1c72f6f7a33671d43222bd85ed8a46720471bd0f0154d7dea1160fec5fe0"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 2,
+        "rows": 39370,
+        "pools": 1,
+        "sha256": "ce79aee255e5df1eb09c74796a01400ec72e7e376648671f1f965f3ae5e69e64"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 3,
+        "rows": 42026,
+        "pools": 1,
+        "sha256": "4af436e33a4890adb52dc1a419e0c1e945b2efb8ca32b1a3a8745d039d36e25c"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 4,
+        "rows": 40554,
+        "pools": 1,
+        "sha256": "77b8a087860fa1668dd5b82911dd2705094689f6404ad3fafb13d55858c2cbf2"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 5,
+        "rows": 41771,
+        "pools": 1,
+        "sha256": "9901f0910bbab209db8578acdeb7dc3ef2d0cb28455e6e2d926edfb4e982bd73"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 6,
+        "rows": 40783,
+        "pools": 1,
+        "sha256": "39e683176cf1ab12899cbf73924b2f445a9a6d86d020c314bfa3fbc94785df66"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 7,
+        "rows": 40079,
+        "pools": 1,
+        "sha256": "163988681d3fe26ebb6844e32344af32ae6b36163412bdc400bc00e2c701d71c"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 8,
+        "rows": 37784,
+        "pools": 1,
+        "sha256": "17547b60c56827e2cba2cc2e9d1288e437f5eaa89246bc3bc47ebd9f143e83ad"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 9,
+        "rows": 35292,
+        "pools": 1,
+        "sha256": "6b4f6e9ecc8d37baed45c19e4ee1ffdf66d8cfa52ff7656a27f97a6f6bb590e8"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 10,
+        "rows": 37516,
+        "pools": 1,
+        "sha256": "2f28d7a76c9401f132aaefb465084340329f27cccb3711b7d267f56c8091ad47"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 11,
+        "rows": 32189,
+        "pools": 1,
+        "sha256": "17289fe0249bb915bea99558847f09bef3925169ba276b950c87d5fb5a4d3cb0"
+      },
+      {
+        "site": "caltech",
+        "year": 2019,
+        "month": 12,
+        "rows": 31122,
+        "pools": 1,
+        "sha256": "80f2d1c53b8d460e6c7a76307a115c0617749322af0d6fee13f8d621ab174dc4"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 1,
+        "rows": 32824,
+        "pools": 1,
+        "sha256": "e33a5a52531afded050eb7f04602a16df947ef8827ebeeb2d5e0db46b51158b8"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 2,
+        "rows": 26295,
+        "pools": 1,
+        "sha256": "ebf8171ca989213c84192c75eff3ea30396d3ae233fd8356c18035b560686cfe"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 3,
+        "rows": 19905,
+        "pools": 1,
+        "sha256": "47c2bee8a08e9d63bbec83729d2d4e070df348737fdca67a78f5faeb371c635f"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 4,
+        "rows": 5982,
+        "pools": 1,
+        "sha256": "a368d23d7f56b090b9ac74d5ec3259b9574c04627ae382efb6cd48de36aca7e7"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 5,
+        "rows": 2539,
+        "pools": 1,
+        "sha256": "2fb33f0c4c18096b8fe9b28d62f8cb902b5f0aa60a537d8922d2af8987ec4600"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 6,
+        "rows": 7532,
+        "pools": 1,
+        "sha256": "a92250d7c4dcfe9b8c75ae1d9f90f5e79466b6df0abce433464ced64e6b524f2"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 7,
+        "rows": 5882,
+        "pools": 1,
+        "sha256": "063f59ed6e0f844e7f117b5d631dad69ad5506433985c997a1c7cf900b2794e9"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 8,
+        "rows": 1164,
+        "pools": 1,
+        "sha256": "5ab749ec1989ed372e1984aa2c1390a993e5d345abece6a455b2125986b3ae83"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 9,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 10,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 11,
+        "rows": 8073,
+        "pools": 1,
+        "sha256": "9226e5ecebd5b701d50dbff792c300efc0a7e48c6e78ccbcfe84bb73e9c38485"
+      },
+      {
+        "site": "caltech",
+        "year": 2020,
+        "month": 12,
+        "rows": 1852,
+        "pools": 1,
+        "sha256": "3545ee560ef0c7b0fc06a521e19ebc512ee888b4dd7bc915bd20875cc5c4a661"
+      },
+      {
+        "site": "jpl",
+        "year": 2018,
+        "month": 10,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "jpl",
+        "year": 2018,
+        "month": 11,
+        "rows": 28215,
+        "pools": 1,
+        "sha256": "6f3bee4ee2ade0e25d14863c16ea451e37d5c4cb0ec86680346a1f845bef2879"
+      },
+      {
+        "site": "jpl",
+        "year": 2018,
+        "month": 12,
+        "rows": 24074,
+        "pools": 1,
+        "sha256": "2ef69db2aed597bde4944550d4bb877adcbac099b746e2ef89ab405d2885d473"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 1,
+        "rows": 27318,
+        "pools": 1,
+        "sha256": "c2032a14a337c27c54e5c252003879fcb8fb696b2a75258f58d467d958f2ad4b"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 2,
+        "rows": 23770,
+        "pools": 1,
+        "sha256": "604ab1c8a47fe21b28c872a56e44190836a5d621cae6e03d522c0828b073357d"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 3,
+        "rows": 29911,
+        "pools": 1,
+        "sha256": "27572efcd394eba5eb81d806b47344ed1b2e5bb49751dca1c05345a3141774b0"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 4,
+        "rows": 27540,
+        "pools": 1,
+        "sha256": "653f548a2d3123d901852415e2a3778bdb1940d67ee3f2b65fc36b6c17f22979"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 5,
+        "rows": 33975,
+        "pools": 1,
+        "sha256": "82c793cce07db1b64d14395835cd4002176eb7cbf80e1612b322c74a603b6d31"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 6,
+        "rows": 30354,
+        "pools": 1,
+        "sha256": "f9bf9cd2f1f2a0bbd00e5be9c0854d738daed38ff2b80957c2a8bf2825a6a13d"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 7,
+        "rows": 29362,
+        "pools": 1,
+        "sha256": "cc8cc4951b8f88e186da049b3ca37cf00d3dd5a5f6a7d70b7aac548261c81dd2"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 8,
+        "rows": 29850,
+        "pools": 1,
+        "sha256": "1392895ea033c55c39f6f8806beaf51e34baac52b131be86600c92421ab432e1"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 9,
+        "rows": 26772,
+        "pools": 1,
+        "sha256": "2eae97df0e3abc5c0c1257b54cac93c7bf462405787c57227e903fab2f1eaee9"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 10,
+        "rows": 35408,
+        "pools": 1,
+        "sha256": "2d3f3c60a186d66b38bea28a9d20d1b365dfc7d5e0b1dbb638972de13067fdb1"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 11,
+        "rows": 30537,
+        "pools": 1,
+        "sha256": "df6742552be523d6048227ddc6002d5d23962049297303e2da8ad6ede7b44468"
+      },
+      {
+        "site": "jpl",
+        "year": 2019,
+        "month": 12,
+        "rows": 21039,
+        "pools": 1,
+        "sha256": "d05fe2c0bf402e976880296779ad9f5353d991648956a9e1c452d8916e442cec"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 1,
+        "rows": 31243,
+        "pools": 1,
+        "sha256": "07e686b8161d953cfd7052a4ee826ad97e99c1472bdae37c876539b64dfcdca4"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 2,
+        "rows": 30280,
+        "pools": 1,
+        "sha256": "6b8d14a03182d81c3cfe3a7105238da9ecb76fdf32b3e5b20a66d5f4b06d4b86"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 3,
+        "rows": 26699,
+        "pools": 1,
+        "sha256": "57dddf3446074ae322db8a8f783f140859238e89d4647192f41656de1c010b06"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 4,
+        "rows": 4393,
+        "pools": 1,
+        "sha256": "e1393d7206b24dbf10c8a86e613123d08222ad0f7731076ae14fc097e03a84c6"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 5,
+        "rows": 19156,
+        "pools": 1,
+        "sha256": "0c697970378a22ba92604bedbdcdb5a154cda08954ca424de8449849c26b9340"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 6,
+        "rows": 19304,
+        "pools": 1,
+        "sha256": "3086ee57a7c086fd60a1970bc014bcee699f239de427cff5eeb655594a2d154f"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 7,
+        "rows": 21264,
+        "pools": 1,
+        "sha256": "bdaae1782c02461277a93b4b4a3a6b67d80e29764bdfdfffe52e62f5ca8184e5"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 8,
+        "rows": 2184,
+        "pools": 1,
+        "sha256": "4d3edb8262b1bf2e32d2a09b6dbc6abda2caae0e159cb47b4ba0fdc16747c282"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 9,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 10,
+        "rows": 0,
+        "pools": 0,
+        "sha256": "8939d34c7f78d4553ae2d341505e527efbb4000499e96c2bb693202c53e169c2"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 11,
+        "rows": 8146,
+        "pools": 1,
+        "sha256": "e4f4c850f9b838cf8eee2813602522ae81fab8c8ae907ddf057890a985b01ffb"
+      },
+      {
+        "site": "jpl",
+        "year": 2020,
+        "month": 12,
+        "rows": 2073,
+        "pools": 1,
+        "sha256": "5d96f807320625890eb8e93a6affa18ac5ebfae059faf556dce6e05b25334d4f"
+      },
+      {
+        "site": "office001",
+        "year": 2019,
+        "month": 3,
+        "rows": 2224,
+        "pools": 1,
+        "sha256": "964ad6dccecbe8d99b1a6b9fdd9f8c811819b769ff7aa449d3f241c5e7c15df0"
+      },
+      {
+        "site": "office001",
+        "year": 2019,
+        "month": 4,
+        "rows": 13423,
+        "pools": 1,
+        "sha256": "97d4e9845ffae5a708dc0adef799c280ab246504ad279401d7ce86f0829808be"
+      },
+      {
+        "site": "office001",
+        "year": 2019,
+        "month": 5,
+        "rows": 10202,
+        "pools": 1,
+        "sha256": "d3e8f2b3202a3fffa99ffe3a0093d355d49b671ab1791aeb0b2e52e4f8799097"
+      },
+      {
+        "site": "office001",
+        "year": 2019,
+        "month": 6,
+        "rows": 5134,
+        "pools": 1,
+        "sha256": "d76047d0408dae880b3641fe9653e00150e2e08a9fa9eb8e8c3fdf19e3c6723d"
+      },
+      {
+        "site": "office001",
+        "year": 2019,
+        "month": 7,
+        "rows": 13036,
+        "pools": 1,
+        "sha256": "2735316697f6bb0583b788e422aad0ad7108757f52a0ce8f8af42867b4f03fcb"
+      },
+      {
+        "site": "office001",
+        "year": 2019,
+        "month": 8,
+        "rows": 16612,
+        "pools": 1,
+        "sha256": "7bd76e97f8a1f0c1a607d71e9ee616fdbb1c24f17ffb52c0e9c8f4f7c5f75b73"
+      },
+      {
+        "site": "office001",
+        "year": 2019,
+        "month": 9,
+        "rows": 17181,
+        "pools": 1,
+        "sha256": "b195c027a7ea6b2e8e22b5b7f71c6ee878b4274ecd2380f0a00ef4ff2642f41b"
+      },
+      {
+        "site": "office001",
+        "year": 2019,
+        "month": 10,
+        "rows": 16830,
+        "pools": 1,
+        "sha256": "42c414c878c3a1b432734d2acb229306c967d5b2d012f08eda32d1ffaca9ae34"
+      },
+      {
+        "site": "office001",
+        "year": 2019,
+        "month": 11,
+        "rows": 15774,
+        "pools": 1,
+        "sha256": "a2ebe471d4f935bc08870147644c1ee90503346151adc050097efb38f4651a10"
+      },
+      {
+        "site": "office001",
+        "year": 2019,
+        "month": 12,
+        "rows": 14611,
+        "pools": 1,
+        "sha256": "1fc2da6f9adc557dc40db6ececdf41180c1ae1ad3354b6724ebf32b64445357d"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 1,
+        "rows": 17323,
+        "pools": 1,
+        "sha256": "2d14ebb71a5d59c8eb0439b72fa7399db3e86dff70599aace509f8640c64bd61"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 2,
+        "rows": 13181,
+        "pools": 1,
+        "sha256": "0f9ad9815174e19fcfc07dcea6159a556307b91890860316eb5bed643a4fd4e7"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 3,
+        "rows": 9930,
+        "pools": 1,
+        "sha256": "0f649b8edc49bb917ad572426f5ef176c02a09a7466e6bc9157caca834eb32c7"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 4,
+        "rows": 6555,
+        "pools": 1,
+        "sha256": "4e524465ed8a95d400c64705320442b8af129f7fc880b1be8c36523b63f1cfc6"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 5,
+        "rows": 6171,
+        "pools": 1,
+        "sha256": "1430e42a67b904f75922dc0218becfeabed3b2be8e7061755de74b63b08f6e18"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 6,
+        "rows": 10327,
+        "pools": 1,
+        "sha256": "fe02ed784913f2318904c3dbf97b853447bca18788039cb19572f80114dfc319"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 7,
+        "rows": 11997,
+        "pools": 1,
+        "sha256": "45b156e12c2012ef9e1e038d4ecb2dcab4238a56df78686438ccdd09e2d03593"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 8,
+        "rows": 4830,
+        "pools": 1,
+        "sha256": "e284ca20d5e813c6a4f300858b52e22a1e14c51d72fac5cd7a39f0b7219a21f6"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 9,
+        "rows": 11614,
+        "pools": 1,
+        "sha256": "01c8b310c312875d765954f3a87edd69aaaadc9e135f607e04610ad15671e6b8"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 10,
+        "rows": 12230,
+        "pools": 1,
+        "sha256": "0b411648eeb5457467c79c0aafeb5a5b999c77d6c5614dc0ac353d83d55e6f08"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 11,
+        "rows": 8103,
+        "pools": 1,
+        "sha256": "f8c6258f13315a44f0c8c4d6dd18b64a464bc6019af659acd2e7cbcc22aa1f19"
+      },
+      {
+        "site": "office001",
+        "year": 2020,
+        "month": 12,
+        "rows": 309,
+        "pools": 1,
+        "sha256": "ee806b890f64db318da46896aacd07d76abe5cedbde615ad23ec179a02b8ac4b"
+      }
+    ]
+  },
+  "pool_state_5min": {
+    "file": "datasets/pool_state_5min/pool_state_5min.parquet",
+    "n_rows": 293122,
+    "n_pools": 3,
+    "sha256": "b978780883c7ada6b8d1c6c16d0bc82cad510c9b47f030272b2326b923dbc66d"
+  },
+  "consistency": {
+    "cross_granularity": {
+      "cross_granularity": true,
+      "5min_rows": 293122,
+      "5min_energy_kwh": 483227.9159850587
+    },
+    "session_source": {
+      "session_source_consistent": true,
+      "partitions_checked": 81
+    }
+  },
+  "gold": {
+    "gold_consistency": true,
+    "gate": "每个 gold 池中位 |rel dev| < tolerance（overall 中位仅作摘要，p95 仅报告）",
+    "tolerance": 0.02,
+    "per_pool": {
+      "caltech__California_Garage_01": {
+        "buckets": 94957,
+        "median_abs_rel_dev": 0.0027115018383695308,
+        "median_rel_dev": 0.0004198525084519443,
+        "p95_abs_rel_dev": 0.02629616358760691,
+        "gold_energy_kwh": 130549.41536500001,
+        "ours_energy_kwh": 129964.8516901857,
+        "pass": true
+      },
+      "jpl__Arroyo_Garage_01": {
+        "buckets": 94326,
+        "median_abs_rel_dev": 0.0019818155993360977,
+        "median_rel_dev": 1.6775801141745105e-05,
+        "p95_abs_rel_dev": 0.14257834295487856,
+        "gold_energy_kwh": 353914.90871399996,
+        "ours_energy_kwh": 331522.3979115954,
+        "pass": true
+      },
+      "office001__Parking_Lot_01": {
+        "buckets": 37804,
+        "median_abs_rel_dev": 0.0022405206767124454,
+        "median_rel_dev": 6.388324363701514e-05,
+        "p95_abs_rel_dev": 0.011446181784227087,
+        "gold_energy_kwh": 21732.15816,
+        "ours_energy_kwh": 21740.666383277578,
+        "pass": true
+      }
+    }
+  },
+  "evidence_pool_reproduction": {
+    "sample_layer_match_status_1to1": true,
+    "windows": {
+      "caltech_main_window": {
+        "site": "caltech",
+        "field_mode": null,
+        "months": [
+          "2018-11",
+          "2019-03",
+          "2019-04",
+          "2019-05",
+          "2019-08",
+          "2019-10"
+        ],
+        "n_sessions": 11776,
+        "n_matched": 6060,
+        "n_static_only": 5716,
+        "by_match_status_x_sample_layer": {
+          "matched/L1_strict_matched": 6060,
+          "static_only/L0_static_extension": 5716
+        },
+        "by_match_status_x_split": {
+          "matched/train": 4936,
+          "matched/validation": 1124,
+          "static_only/train": 3952,
+          "static_only/validation": 1764
+        },
+        "roles": {
+          "('main',)": 11776
+        }
+      },
+      "jpl_current_only_window": {
+        "site": "jpl",
+        "field_mode": "current_only",
+        "months": [
+          "2018-11",
+          "2019-03",
+          "2019-04",
+          "2019-05",
+          "2019-08",
+          "2019-10"
+        ],
+        "n_sessions": 9023,
+        "n_matched": 9023,
+        "n_static_only": 0,
+        "by_match_status_x_sample_layer": {
+          "matched/L1_strict_matched": 9023
+        },
+        "by_match_status_x_split": {
+          "matched/train": 7333,
+          "matched/validation": 1690
+        },
+        "roles": {
+          "('current_only_fallback',)": 9023
+        }
+      }
+    },
+    "k1_sample_registry_cross_check": {
+      "checked": true,
+      "expected_by_site": {
+        "jpl": 9023,
+        "caltech": 6060
+      },
+      "actual_matched_by_window": {
+        "caltech_main_window": 6060,
+        "jpl_current_only_window": 9023
+      },
+      "mismatch": {}
+    },
+    "conclusion": "冻结证据池人口 100% matched（matched 子集 == K1 冻结计数），matched-only pool_state 保留复现冻结 E3-Lite 所需人口；无需 amendment 到 R1/#17"
+  },
+  "report": "reports/E0_Full_pool_state_audit.md"
+}

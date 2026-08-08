@@ -1,5 +1,5 @@
 {
-  "created_at_utc": "2026-08-08T13:29:45.911798+00:00",
+  "created_at_utc": "2026-08-08T14:51:34.548485+00:00",
   "protocol_version": "V2.0",
   "landing_version": "V2.1",
   "experiment_id": "E0_full_preregister_v1",
@@ -8,13 +8,13 @@
     "path": "patent_preexperiment/data_registry/design_baseline.json",
     "commit": "41dd1dd038ebce13b28a76c3254f08e61569dabe"
   },
-  "code_sha": "572786d04c1c20f9448c10619046b1e3f6839e53",
+  "code_sha": "6ef802d46846d7cc8f17ecc571ba265222edbbe6",
   "git_status": {
     "code_dirty_files": [],
     "code_clean": true,
     "note": "已跟踪文件修改（证据产物输出路径除外）与 src/configs/experiments/tests 下 untracked 文件均视为未提交代码"
   },
-  "e0_full_yaml_sha256": "bcf4ac1eb80cdff0d0ed2fded2af3f9b89bc138877c7f215d2f6756cfdfc22ac",
+  "e0_full_yaml_sha256": "d4e9b27e023220abbba2f0944324330fd22e1d6f66d7461cb301a73b319ffe4d",
   "manifest_hashes": {
     "static_file_index.csv": {
       "sha256": "eff813e2a723749c2529a0174d21e19255c63b216cb18796c4c253037a96ac2e",
@@ -68,6 +68,18 @@
     },
     "report": "reports/E0_Full_session_response_audit.md"
   },
+  "pool_state": {
+    "pool_registry": {
+      "sha256": "9579eb6398869983a2eb3980d47be9de6858176c0d7f401c042ecf63fb0d5856",
+      "n_pools": 3
+    },
+    "pool_state_registry": {
+      "sha256": "c713213761d2b1b2f3277bc849f02148260cf3c2fcee449b4fd6a2250ae1ca14",
+      "n_rows_1min": 1458623,
+      "n_partitions_1min": 81
+    },
+    "report": "reports/E0_Full_pool_state_audit.md"
+  },
   "output_manifest": [
     "data_registry/e0_full_source_manifest.parquet",
     "data_registry/e0_full_quality_summary.json",
@@ -81,7 +93,10 @@
     "reports/E0_Full_split_audit.md",
     "data_registry/e0_full_baseline.json",
     "data_registry/e0_full_session_response_partitions.json",
-    "reports/E0_Full_session_response_audit.md"
+    "reports/E0_Full_session_response_audit.md",
+    "data_registry/pool_registry.csv",
+    "data_registry/e0_full_pool_state_registry.json",
+    "reports/E0_Full_pool_state_audit.md"
   ],
   "source_manifest_sha256": "f1a5fd036ed6901bf5b89af9e935b99b071b32b67812f7dff1810f76506bd17a"
 }
