@@ -196,6 +196,23 @@ session_response:
     jpl_rule: "会话级离群过滤 + 敏感性；聚合可用"
   test_policy: "可构建 test 分区；本步只做数据工程检查，不查看 test 上 K1/D1-R outcome 指标"
 
+# --- E0F-04 控制池状态表（issue #15；V2.0 §6.3；V1.0 A.4.2）---
+pool:
+  scope: "只含 matched 会话（严格会话验证口径）；static_only 仅用于响应机制扩展，不进池表"
+  pool_id_rule: "pool_id = site + garage(cluster) 唯一组合；禁止跨车库合并"
+  partition_cols: [site, year, month]
+  timezone_local: America/Los_Angeles
+  consistency:
+    cross_granularity: true           # 5min == 1min 块聚合（同 reducer 重算无跳变）
+    session_source_consistent: true   # 同池同分钟聚合与 session_response_1min 对得上
+  gold:
+    stations_frozen: 115              # 与 inputs.manifests.gold_benchmark_stations 一致
+    tolerance_median_rel_dev: 0.02    # 池级 5min 能量 vs gold 中位相对偏差 < 2%（分钟量级）
+    pools:
+      - {site: caltech, garage: California_Garage_01}
+      - {site: jpl, garage: Arroyo_Garage_01}
+      - {site: office001, garage: Parking_Lot_01}
+
 # --- 数据工程停止线（审查结论7 §5.3，冻结）---
 stop_lines:
   conditions:
