@@ -39,6 +39,9 @@ _OUTPUT_PATHS = {
     "patent_preexperiment/data_registry/e0_full_dup_current_only_full_pool_sensitivity.json",
     "patent_preexperiment/data_registry/e0_full_baseline.json",
     "patent_preexperiment/reports/E0_Full_input_audit.md",
+    "patent_preexperiment/data_registry/e0_full_split_registry.parquet",
+    "patent_preexperiment/data_registry/e0_full_field_mode_registry.parquet",
+    "patent_preexperiment/reports/E0_Full_split_audit.md",
 }
 
 # 审查结论11 低优先级增强：代码目录内任何 untracked 文件也视为未提交代码。
@@ -131,11 +134,14 @@ def build_e0_full_baseline(
     manifest_hash_hex: str,
     config: dict[str, Any],
     require_clean: bool = True,
+    split_registry: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """按 schema 组装并写出 e0_full_baseline.json。
 
     manifest_hash_hex：source manifest 的确定性哈希（manifest_hash(df) 输出）。
     require_clean=True：正式冻结运行时存在未提交代码（git_dirty_code 非空）则拒绝生成。
+    split_registry：E0F-02 产物哈希（split/field_mode registry sha256 + 行数），写入
+    `split_registry` 节并追加到 output_manifest。
     """
     acn = acn_project_dir()
     paths = load_paths()
@@ -192,6 +198,7 @@ def build_e0_full_baseline(
             "acn_full": paths["acn_full"],
         },
         "split_rule_version": config["split"]["rule_version"],
+        "split_registry": split_registry,
         "output_manifest": [
             "data_registry/e0_full_source_manifest.parquet",
             "data_registry/e0_full_quality_summary.json",
@@ -200,6 +207,9 @@ def build_e0_full_baseline(
             "data_registry/e0_full_dup_collapse_impact.json",
             "data_registry/e0_full_dup_current_only_sensitivity.json",
             "reports/E0_Full_input_audit.md",
+            "data_registry/e0_full_split_registry.parquet",
+            "data_registry/e0_full_field_mode_registry.parquet",
+            "reports/E0_Full_split_audit.md",
             "data_registry/e0_full_baseline.json",
         ],
         "source_manifest_sha256": manifest_hash_hex,
