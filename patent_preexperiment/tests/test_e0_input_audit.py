@@ -23,6 +23,7 @@ from patent_preexperiment.e0_full.input_audit import (
     audit_connection_time,
     build_source_manifest,
     classify_dup_ts,
+    current_only_full_pool_sensitivity,
     current_only_sensitivity,
     dup_collapse_impact,
     file_role,
@@ -639,3 +640,197 @@ def test_current_only_sensitivity_empty_when_no_dup(tmp_path: Path) -> None:
     )
     assert res["files_scanned"] == 0
     assert res["gate"]["gate_flipped"] is False
+
+
+# ---- 审查结论12 P0：完整 JPL current-only 母体 keep-vs-collapse 敏感性（E0F-01.3）----
+
+
+def _build_jpl_session_minute(
+    raw_rows: list[str], sid: str, station: str, rated_v: float = 192.7
+) -> pd.DataFrame:
+    """合成静态 csv.gz 行 → 生产路径 1min 会话表（aggregate_session_minute）。"""
+    import tempfile
+
+    from patent_preexperiment.io.static import read_static_csv
+    from patent_preexperiment.response.session import aggregate_session_minute
+
+    with tempfile.NamedTemporaryFile(suffix=".csv.gz", delete=False) as tf:
+        with gzip.open(tf.name, "wb") as fh:
+            fh.write((_HEADER + "\n").encode("utf-8"))
+            for line in raw_rows:
+                fh.write((line + "\n").encode("utf-8"))
+        raw = read_static_csv(tf.name)
+    return aggregate_session_minute(
+        raw, rated_v, session_id=sid, station_id=station, site="jpl",
+        garage="Arroyo_Garage_01",
+    )
+
+
+def _iso19(minutes: int, sec: int = 0, day: int = 6) -> str:
+    base = pd.Timestamp(f"2019-03-0{day} 23:00:00", tz="UTC")
+    return (base + pd.Timedelta(minutes=minutes, seconds=sec)).isoformat()
+
+
+def test_current_only_full_pool_sensitivity_keep_reproduces_and_collapse_local(
+    tmp_path: Path,
+) -> None:
+    """审查结论12 P0：完整冻结母体 keep-vs-collapse，仅替换含 exact-dup 的母体成员会话。
+
+    合成 3 个 jpl 会话（同日同池，n_active>=2 形成候选窗口）：A 受影响（含 0.0 identical
+    dup）、B/C 不受影响。Keep 臂原样跑 E3 管线复现合成冻结基线（传 frozen_baseline=Keep 输出）；
+    Collapse 臂仅替换 A 的会话分钟，B/C 逐字节不变。验证 5 项验收逻辑全部成立。
+    """
+    rated = {"jpl": 192.7, "caltech": 240.0, "office001": 240.0}
+    sm = {"raw_to_canonical": {"jpl": "jpl"}}
+    rm = {"jpl_current_only_window": ["2019-03"]}
+    e3_stop = {"caltech_a2_daily_ci_lower_rate": 0.01, "daily_energy_share_each_pool": 0.005}
+
+    # 会话 A：受影响（min0 含 3 行 0.0 identical dup + 1 行 6.0 distinct），03-06
+    raw_a = [
+        f"{_iso19(0)},0.0", f"{_iso19(0)},0.0", f"{_iso19(0)},0.0", f"{_iso19(0)},6.0",
+        *[f"{_iso19(m)},6.0" for m in range(1, 30)],
+    ]
+    # 会话 B：不受影响，03-06
+    raw_b = [f"{_iso19(m, day=6)},6.0" for m in range(0, 30)]
+    # 会话 C：不受影响，03-07（跨 2 天供 bootstrap CI）
+    raw_c = [f"{_iso19(m, day=7)},6.0" for m in range(0, 30)]
+
+    min_a = _build_jpl_session_minute(raw_a, "sessA", "1-1-1")
+    min_b = _build_jpl_session_minute(raw_b, "sessB", "1-1-2")
+    min_c = _build_jpl_session_minute(raw_c, "sessC", "1-1-3")
+    keep_table = pd.concat([min_a, min_b, min_c], ignore_index=True)
+
+    minute_path = tmp_path / "lite_session_minute.parquet"
+    keep_table.to_parquet(minute_path, index=False)
+
+    # sample registry：static_file 用反斜杠（与 resolve_static 一致）
+    reg = pd.DataFrame([
+        {"site": "jpl", "garage": "Arroyo_Garage_01", "stationID": "1-1-1",
+         "static_file": "jpl\\Arroyo_Garage_01\\sessA.csv.gz", "sessionID": "sessA",
+         "sample_role": "E3_pool", "month": "2019-03"},
+        {"site": "jpl", "garage": "Arroyo_Garage_01", "stationID": "1-1-2",
+         "static_file": "jpl\\Arroyo_Garage_01\\sessB.csv.gz", "sessionID": "sessB",
+         "sample_role": "E3_pool", "month": "2019-03"},
+        {"site": "jpl", "garage": "Arroyo_Garage_01", "stationID": "1-1-3",
+         "static_file": "jpl\\Arroyo_Garage_01\\sessC.csv.gz", "sessionID": "sessC",
+         "sample_role": "E3_pool", "month": "2019-03"},
+    ])
+    reg_path = tmp_path / "k1_sample_registry.csv"
+    reg.to_csv(reg_path, index=False)
+
+    # classification CSV：仅 A 标记 identical_dup_rows>0
+    clf = pd.DataFrame([
+        {"logical_path": "jpl/Arroyo_Garage_01/sessA.csv.gz", "site_raw": "jpl",
+         "site_canonical": "jpl", "garage": "Arroyo_Garage_01", "station": "1-1-1",
+         "month": "2019-03", "role": "jpl_current_only_window",
+         "has_current": True, "has_pilot": False, "has_voltage": False, "has_power": False,
+         "n_dup_ts": 1, "identical_dup_rows": 2,
+         "identical_zero_idle_rows": 2, "identical_nonzero_rows": 0,
+         "same_timestamp_distinct_rows": 1},
+    ])
+    clf_path = tmp_path / "e0_full_dup_ts_classification.csv"
+    clf.to_csv(clf_path, index=False)
+
+    # 写受影响会话 A 的 raw static 文件（供 collapse 重建读取）
+    _write_static(
+        tmp_path, "jpl/Arroyo_Garage_01/sessA.csv.gz", raw_a,
+    )
+
+    # 先跑一次 Keep 拿到合成冻结基线值，作为 frozen_baseline 传入
+    from patent_preexperiment.e0_full.input_audit import (
+        current_only_full_pool_sensitivity as _run_keep,
+    )
+    keep_probe = _run_keep(
+        minute_table_path=minute_path, sample_registry_path=reg_path,
+        classification_csv_path=clf_path, static_root=tmp_path,
+        site_mapping=sm, role_months=rm, rated_voltage=rated, e3_stop=e3_stop,
+        frozen_baseline={"n_cycles": -1, "a2_cycle_weighted_rate": -1.0,
+                         "a2_day_rate": -1.0, "a2_day_rate_ci95": [-1.0, -1.0],
+                         "daily_energy_share_median": -1.0, "gate": "PASS"},
+    )
+    assert keep_probe["keep_reproduces_frozen_baseline"] is False  # 占位基线不匹配
+    ke = keep_probe["keep"]
+    synth_frozen = {
+        "n_cycles": ke["n_cycles"],
+        "a2_cycle_weighted_rate": ke["a2_cycle_weighted_rate"],
+        "a2_day_rate": ke["a2_day_rate"],
+        "a2_day_rate_ci95": ke["a2_day_rate_ci95"],
+        "daily_energy_share_median": ke["daily_energy_share_median"],
+        "gate": "PASS" if ke["a2_day_rate_ci_lower"] and ke["a2_day_rate_ci_lower"] >= 0.01
+        and ke["daily_energy_share_median"] and ke["daily_energy_share_median"] >= 0.005
+        else "FAIL",
+    }
+
+    res = current_only_full_pool_sensitivity(
+        minute_table_path=minute_path, sample_registry_path=reg_path,
+        classification_csv_path=clf_path, static_root=tmp_path,
+        site_mapping=sm, role_months=rm, rated_voltage=rated, e3_stop=e3_stop,
+        frozen_baseline=synth_frozen,
+    )
+
+    # Keep 必须复现合成冻结基线
+    assert res["keep_reproduces_frozen_baseline"] is True
+    # 母体 membership：3 个冻结会话，1 个受影响在母体内，2 个未受影响
+    pop = res["population"]
+    assert pop["n_frozen_sessions"] == 3
+    assert pop["n_affected_sessions_found_in_frozen_population"] == 1
+    assert pop["n_affected_sessions_not_in_population"] == 0
+    assert pop["n_population_sessions_untouched"] == 2
+    # 硬一致性：母体不变、未受影响 session 逐字节一致、无额外分钟、site/garage 不变
+    cons = res["consistency"]
+    assert cons["population_identity_preserved"] is True
+    assert cons["nonaffected_sessions_unchanged"] is True
+    assert cons["no_extra_or_missing_minutes"] is True
+    assert cons["site_garage_unchanged"] is True
+    assert cons["nonaffected_actual_power_zero_diff"] is True
+    # 输入未修改
+    assert res["input_untouched"] is True
+    # 结构完整性：collapse/gate/acceptance 齐全
+    assert res["collapse"] is not None
+    assert res["gate"] is not None
+    acc = res["acceptance"]
+    assert "keep_reproduces_frozen_baseline" in acc
+    assert "population_identity_preserved" in acc
+    assert "nonaffected_sessions_unchanged" in acc
+    assert "keep_gate" in acc
+    assert "collapse_gate" in acc
+    assert "gate_flipped" in acc
+
+
+def test_current_only_full_pool_sensitivity_stop_when_keep_not_reproduced(
+    tmp_path: Path,
+) -> None:
+    """Keep 不能复现冻结基线（传不匹配的 frozen_baseline）→ 立即 STOP，不生成 collapse。"""
+    rated = {"jpl": 192.7}
+    sm = {"raw_to_canonical": {"jpl": "jpl"}}
+    rm = {"jpl_current_only_window": ["2019-03"]}
+    raw_b = [f"{_iso19(m)},6.0" for m in range(0, 30)]
+    min_b = _build_jpl_session_minute(raw_b, "sessB", "1-1-2")
+    minute_path = tmp_path / "lite.parquet"
+    min_b.to_parquet(minute_path, index=False)
+    reg = pd.DataFrame([{"site": "jpl", "garage": "Arroyo_Garage_01", "stationID": "1-1-2",
+                         "static_file": "jpl\\Arroyo_Garage_01\\sessB.csv.gz",
+                         "sessionID": "sessB", "sample_role": "E3_pool", "month": "2019-03"}])
+    reg_path = tmp_path / "reg.csv"
+    reg.to_csv(reg_path, index=False)
+    clf = pd.DataFrame(columns=[
+        "logical_path", "site_raw", "site_canonical", "garage", "station", "month",
+        "role", "has_current", "has_pilot", "has_voltage", "has_power",
+        "n_dup_ts", "identical_dup_rows", "identical_zero_idle_rows",
+        "identical_nonzero_rows", "same_timestamp_distinct_rows",
+    ])
+    clf_path = tmp_path / "clf.csv"
+    clf.to_csv(clf_path, index=False)
+
+    res = current_only_full_pool_sensitivity(
+        minute_table_path=minute_path, sample_registry_path=reg_path,
+        classification_csv_path=clf_path, static_root=tmp_path,
+        site_mapping=sm, role_months=rm, rated_voltage=rated,
+        frozen_baseline={"n_cycles": 999999, "a2_cycle_weighted_rate": 0.999,
+                         "a2_day_rate": 0.999, "a2_day_rate_ci95": [0.999, 0.999],
+                         "daily_energy_share_median": 0.999, "gate": "PASS"},
+    )
+    assert res["keep_reproduces_frozen_baseline"] is False
+    assert res["collapse"] is None
+    assert res["stop"] is not None
+    assert "KEEP_NOT_REPRODUCED" in res["stop"]

@@ -38,6 +38,7 @@ from patent_preexperiment.allocation.opportunity import (
 )
 from patent_preexperiment.config.yamlutil import load_yaml
 from patent_preexperiment.io.paths import acn_project_dir, static_root_dir
+from patent_preexperiment.io.static import read_static_csv
 from patent_preexperiment.response.session import aggregate_session_minute, derive_power
 
 _COL_KEY = {
@@ -1411,6 +1412,420 @@ def current_only_sensitivity(
     return result
 
 
+# 审查结论12 冻结 E3-Lite JPL current-only 池复现基线（来自 e3_lite_summary.json / E3_Lite_gate.md）
+_FROZEN_JPL_CURRENT_ONLY = {
+    "n_cycles": 36736,
+    "a2_cycle_weighted_rate": 0.39261215156794427,
+    "a2_day_rate": 0.3623694692507855,
+    "a2_day_rate_ci95": [0.32995762618758384, 0.395798678130819],
+    "daily_energy_share_median": 0.038928678037374986,
+    "gate": "PASS",
+}
+# 浮点复现容差（n_cycles/sessions 精确一致；比率允许微小数值误差）
+_RATES_TOL = 1e-4
+_SHARE_TOL = 5e-3
+
+
+def _run_jpl_current_only_e3(
+    minute_df: pd.DataFrame, frozen_months: set[str], seed: int, n_boot: int
+) -> dict[str, Any]:
+    """完整 JPL current-only 分钟母体 → 冻结 E3-Lite 管线（A2_prev_actual 主基线）。
+
+    直接复用 E3-Lite 同一组函数（build_cycles→compute_pool_stats→compute_proxies
+    →eligible_mask→candidate_windows），月过滤按冻结 cycle_month，meta 含 month_conn
+    防止 merge fan-out。能量分母按 timestamp month ∈ frozen_months（与 e3_lite.run 同口径）。
+    """
+    prox_m_meta = ["site", "garage", "cycle", "day", "month", "month_conn"]
+    cyc = build_cycles(minute_df)
+    pool = compute_pool_stats(cyc)
+    prox = compute_proxies(cyc, pool)
+    prox_m = prox[prox["month"].isin(frozen_months)]
+    elig = eligible_mask(prox_m, list(_CURRENT_ONLY_PROXIES))
+    cand = candidate_windows(prox_m[elig])
+    meta = prox_m[prox_m_meta].drop_duplicates()
+    if len(cand):
+        cand = cand.merge(meta, on=["site", "garage", "cycle"], how="left")
+    ci = _day_rate_ci(cand, _CURRENT_ONLY_MAIN, seed, n_boot)
+    ev = minute_df.copy()
+    ev = ev[ev["timestamp_utc"].astype(str).str[:7].isin(frozen_months)]
+    ev["day"] = ev["timestamp_utc"].astype(str).str[:10]
+    ev_day_energy = ev.groupby("day")["actual_power_kw"].sum() / 60.0
+    cand_day = cand.groupby("day")[f"candidate_energy_{_CURRENT_ONLY_MAIN}_kwh"].sum()
+    share = cand_day.div(ev_day_energy.reindex(cand_day.index)).reindex(
+        ev_day_energy.index
+    ).fillna(0.0)
+    return {
+        "n_cycles": int(len(cand)),
+        "n_days": int(cand["day"].nunique()) if len(cand) else 0,
+        "n_pool_months": int(cand["month"].nunique()) if len(cand) else 0,
+        "a2_cycle_weighted_rate": float(cand[f"candidate_{_CURRENT_ONLY_MAIN}"].mean())
+        if len(cand)
+        else 0.0,
+        "a2_day_rate": ci["day_rate"],
+        "a2_day_rate_ci95": ci["ci95"],
+        "a2_day_rate_ci_lower": float(ci["ci95"][0]) if ci["ci95"] else None,
+        "daily_energy_share_median": round(float(share.median()), 6) if len(share) else None,
+        "daily_energy_share_mean": round(float(share.mean()), 6) if len(share) else None,
+        "candidate_energy_total_kwh": round(
+            float(cand[f"candidate_energy_{_CURRENT_ONLY_MAIN}_kwh"].sum()), 6
+        )
+        if len(cand)
+        else 0.0,
+        "_cand": cand,
+        "_cyc": cyc,
+    }
+
+
+def current_only_full_pool_sensitivity(
+    minute_table_path: str | Path,
+    sample_registry_path: str | Path,
+    classification_csv_path: str | Path,
+    static_root: str | Path,
+    out_json: str | Path | None = None,
+    site_mapping: dict[str, Any] | None = None,
+    role_months: dict[str, Any] | None = None,
+    rated_voltage: dict[str, Any] | None = None,
+    e3_stop: dict[str, Any] | None = None,
+    bootstrap_seed: int = 42,
+    n_boot: int = 2000,
+    frozen_baseline: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """审查结论12 P0：冻结完整 JPL current-only 母体 keep-vs-collapse 敏感性。
+
+    以冻结 K1 的完整 JPL current-only 分钟母体（lite_session_minute.parquet JPL 部分，
+    即 E3-Lite 正式池构造用的同一母体）为基准。Keep 臂原样跑冻结 E3-Lite 管线，必须先
+    复现历史冻结值（n_cycles=36736、A2≈39.3%、日率≈36.2%、CI≈[33.0,39.6]、能量占比≈3.9%、
+    gate=PASS）；复现失败立即 STOP。Collapse 臂只替换真正属于冻结母体且含 exact-duplicate
+    的会话分钟，其余数千会话逐字节与 Keep 一致，再跑同一完整池管线。比较两臂 gate verdict。
+
+    不得用 54-file 子池代替完整冻结池；eligibility 以冻结 K1 sample 母体成员身份为准，
+    窗口（jpl_current_only_window）只作定位辅助。只读输入，永不修改原始文件。
+    """
+    stop = e3_stop or {}
+    lower_rate = float(stop.get("caltech_a2_daily_ci_lower_rate", 0.01))
+    share_min = float(stop.get("daily_energy_share_each_pool", 0.005))
+    frozen: dict[str, Any] = dict(frozen_baseline or _FROZEN_JPL_CURRENT_ONLY)
+    frozen_months = set(role_months.get("jpl_current_only_window", [])) if role_months else set()
+
+    keep_min = pd.read_parquet(minute_table_path)
+    keep_min = keep_min[keep_min["site"] == "jpl"].copy()
+    frozen_sessions = set(keep_min["session_id"].unique())
+
+    # ---- Keep 臂：复现冻结 E3 ----
+    keep_e3 = _run_jpl_current_only_e3(keep_min, frozen_months, bootstrap_seed, n_boot)
+    keep_cand = keep_e3.pop("_cand")
+    keep_cyc = keep_e3.pop("_cyc")
+
+    def _close(a: Any, b: Any, tol: float) -> bool:
+        if a is None or b is None:
+            return a is None and b is None
+        return abs(float(a) - float(b)) <= tol
+
+    keep_reproduces = (
+        keep_e3["n_cycles"] == int(frozen["n_cycles"])
+        and _close(keep_e3["a2_cycle_weighted_rate"], frozen["a2_cycle_weighted_rate"], _RATES_TOL)
+        and _close(keep_e3["a2_day_rate"], frozen["a2_day_rate"], _RATES_TOL)
+        and keep_e3["a2_day_rate_ci95"] is not None
+        and frozen["a2_day_rate_ci95"] is not None
+        and _close(keep_e3["a2_day_rate_ci95"][0], frozen["a2_day_rate_ci95"][0], _RATES_TOL)
+        and _close(keep_e3["a2_day_rate_ci95"][1], frozen["a2_day_rate_ci95"][1], _RATES_TOL)
+        and keep_e3["daily_energy_share_median"] is not None
+        and _close(
+            keep_e3["daily_energy_share_median"], frozen["daily_energy_share_median"], _SHARE_TOL
+        )
+    )
+
+    frozen_ref = {
+        "n_cycles": int(frozen["n_cycles"]),
+        "a2_cycle_weighted_rate": float(frozen["a2_cycle_weighted_rate"]),
+        "a2_day_rate": float(frozen["a2_day_rate"]) if frozen["a2_day_rate"] is not None else None,
+        "a2_day_rate_ci95": (
+            [float(x) for x in frozen["a2_day_rate_ci95"]]
+            if frozen["a2_day_rate_ci95"] is not None else None
+        ),
+        "daily_energy_share_median": (
+            float(frozen["daily_energy_share_median"])
+            if frozen["daily_energy_share_median"] is not None else None
+        ),
+        "gate": str(frozen["gate"]),
+    }
+    base: dict[str, Any] = {
+        "scope": (
+            "冻结完整 JPL current-only 分钟母体（lite_session_minute.parquet JPL 部分）"
+            "keep vs collapse（仅替换含 exact-duplicate 的母体成员会话）"
+        ),
+        "input_untouched": True,
+        "frozen_months": sorted(frozen_months),
+        "proxy_main": _CURRENT_ONLY_MAIN,
+        "frozen_baseline_reference": frozen_ref,
+        "population": {
+            "n_frozen_sessions": len(frozen_sessions),
+        },
+        "keep": keep_e3,
+        "keep_reproduces_frozen_baseline": keep_reproduces,
+    }
+
+    if not keep_reproduces:
+        result: dict[str, Any] = {
+            "scope": base["scope"],
+            "input_untouched": True,
+            "frozen_months": base["frozen_months"],
+            "proxy_main": base["proxy_main"],
+            "frozen_baseline_reference": base["frozen_baseline_reference"],
+            "population": {
+                "n_frozen_sessions": len(frozen_sessions),
+                "n_duplicate_affected_sessions": 0,
+                "n_affected_sessions_found_in_frozen_population": 0,
+                "n_affected_sessions_not_in_population": 0,
+                "n_population_sessions_untouched": len(frozen_sessions),
+            },
+            "keep": keep_e3,
+            "keep_reproduces_frozen_baseline": False,
+            "collapse": None,
+            "consistency": None,
+            "flips": None,
+            "gate": None,
+            "acceptance": {
+                "keep_reproduces_frozen_baseline": False,
+                "population_identity_preserved": None,
+                "nonaffected_sessions_unchanged": None,
+                "keep_gate": None,
+                "collapse_gate": None,
+                "gate_flipped": None,
+            },
+            "stop": "KEEP_NOT_REPRODUCED — 完整 JPL 母体未复现冻结 E3 基线，立即 STOP 查 pipeline",
+        }
+        if out_json is not None:
+            Path(out_json).parent.mkdir(parents=True, exist_ok=True)
+            Path(out_json).write_text(
+                json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
+            )
+        return result
+
+    # ---- 冻结样本 membership：受 exact-dup 影响文件 → session_id ----
+    clf = pd.read_csv(classification_csv_path, dtype=str)
+    reg = pd.read_csv(sample_registry_path, dtype=str)
+    reg_jpl = reg[reg["site"] == "jpl"].copy()
+    reg_jpl["lp"] = reg_jpl["static_file"].str.replace("\\", "/", regex=False)
+    jpl_dup = clf[
+        (clf["site_canonical"] == "jpl") & (clf["identical_dup_rows"].astype(int) > 0)
+    ].copy()
+    jpl_dup["lp"] = jpl_dup["logical_path"]
+    mapped = jpl_dup.merge(
+        reg_jpl[["lp", "sessionID", "sample_role", "month", "static_file", "stationID"]],
+        on="lp",
+        how="left",
+    )
+    affected_all = mapped[mapped["sessionID"].notna()]["sessionID"].tolist()
+    affected_in_pop = [s for s in affected_all if s in frozen_sessions]
+    affected_not_in_pop = [s for s in affected_all if s not in frozen_sessions]
+    affected_sessions = set(affected_in_pop)
+
+    # ---- Collapse 臂：局部 session 替换 ----
+    rated_v_by_site = rated_voltage or {}
+    rated_v_raw = rated_v_by_site.get("jpl")
+    rated_v = float(rated_v_raw) if rated_v_raw is not None else 192.7
+    root = Path(static_root)
+    coll_rebuild: dict[str, pd.DataFrame] = {}
+    rebuild_failed: list[str] = []
+    for _, r in mapped[mapped["sessionID"].notna()].iterrows():
+        sid = str(r["sessionID"])
+        if sid not in affected_sessions:
+            continue
+        try:
+            raw = read_static_csv(root / str(r["static_file"]))
+        except (OSError, ValueError):
+            rebuild_failed.append(sid)
+            continue
+        # collapse：逐字节相同行去重
+        dup_mask = raw.duplicated(keep="first")
+        raw_coll = raw[~dup_mask].copy() if dup_mask.any() else raw.copy()
+        reg_row = reg_jpl[reg_jpl["sessionID"] == sid].iloc[0]
+        coll_min = aggregate_session_minute(
+            raw_coll,
+            rated_v,
+            session_id=sid,
+            station_id=str(reg_row["stationID"]),
+            site="jpl",
+            garage=str(reg_row["garage"]),
+        )
+        if not coll_min.empty:
+            coll_rebuild[sid] = coll_min
+
+    # 构造 collapse 完整表：未受影响 session 逐字节保留 keep；受影响 session 替换
+    keep_unaffected = keep_min[~keep_min["session_id"].isin(affected_sessions)]
+    rebuilt_parts = [df for df in coll_rebuild.values() if not df.empty]
+    coll_min = pd.concat([keep_unaffected, *rebuilt_parts], ignore_index=True)
+
+    # ---- 硬一致性检查 ----
+    coll_sessions = set(coll_min["session_id"].unique())
+    population_identity_preserved = coll_sessions == frozen_sessions
+    nonaffected_unchanged = True
+    if len(keep_unaffected):
+        ku = keep_unaffected.sort_values(["session_id", "timestamp_utc"]).reset_index(drop=True)
+        unaffected_ids = keep_unaffected["session_id"].unique()
+        cu = (
+            coll_min[coll_min["session_id"].isin(unaffected_ids)]
+            .sort_values(["session_id", "timestamp_utc"])
+            .reset_index(drop=True)
+        )
+        nonaffected_unchanged = ku.equals(cu)
+    no_extra_minutes = len(coll_min) == len(keep_min)
+    site_garage_unchanged = set(
+        zip(coll_min["site"], coll_min["garage"], strict=True)
+    ) == set(zip(keep_min["site"], keep_min["garage"], strict=True))
+    # 受影响 session 之外 actual_power diff = 0
+    coll_check = coll_min.merge(
+        keep_min[["session_id", "timestamp_utc", "actual_power_kw"]].rename(
+            columns={"actual_power_kw": "keep_apk"}
+        ),
+        on=["session_id", "timestamp_utc"],
+        how="inner",
+    )
+    non_target_diff = coll_check[~coll_check["session_id"].isin(affected_sessions)]
+    nonaffected_apk_zero_diff = True
+    if len(non_target_diff):
+        na = non_target_diff["actual_power_kw"].fillna(-999.0)
+        nk = non_target_diff["keep_apk"].fillna(-999.0)
+        nonaffected_apk_zero_diff = bool((na == nk).all())
+
+    consistency = {
+        "population_identity_preserved": population_identity_preserved,
+        "nonaffected_sessions_unchanged": nonaffected_unchanged,
+        "no_extra_or_missing_minutes": no_extra_minutes,
+        "site_garage_unchanged": site_garage_unchanged,
+        "nonaffected_actual_power_zero_diff": nonaffected_apk_zero_diff,
+        "keep_rows": int(len(keep_min)),
+        "collapse_rows": int(len(coll_min)),
+        "keep_sessions": int(len(frozen_sessions)),
+        "collapse_sessions": int(len(coll_sessions)),
+    }
+
+    # ---- Collapse 臂：跑同一完整池管线 ----
+    coll_e3 = _run_jpl_current_only_e3(coll_min, frozen_months, bootstrap_seed, n_boot)
+    coll_cand = coll_e3.pop("_cand")
+    coll_cyc = coll_e3.pop("_cyc")
+
+    # ---- flips ----
+    n_cand_rows = 0
+    candidate_flips = 0
+    if len(keep_cand) and len(coll_cand):
+        key = ["site", "garage", "cycle"]
+        kk = keep_cand.set_index(key)[f"candidate_{_CURRENT_ONLY_MAIN}"]
+        cc = coll_cand.set_index(key)[f"candidate_{_CURRENT_ONLY_MAIN}"]
+        merged = kk.rename("keep").to_frame().join(cc.rename("collapse"), how="outer")
+        merged["keep"] = merged["keep"].fillna(False)
+        merged["collapse"] = merged["collapse"].fillna(False)
+        n_cand_rows = int(len(merged))
+        candidate_flips = int((merged["keep"] != merged["collapse"]).sum())
+
+    eligible_cycle_flips = 0
+    if len(keep_cand) and len(coll_cand):
+        key = ["site", "garage", "cycle"]
+        keep_set = set(map(tuple, keep_cand[key].to_numpy()))
+        coll_set = set(map(tuple, coll_cand[key].to_numpy()))
+        eligible_cycle_flips = len(keep_set.symmetric_difference(coll_set))
+
+    active_flips = 0
+    if len(keep_cyc) and len(coll_cyc):
+        key = ["site", "garage", "session_id", "cycle"]
+        kk = keep_cyc.set_index(key)["active"].rename("keep")
+        cc = coll_cyc.set_index(key)["active"].rename("collapse")
+        merged = kk.to_frame().join(cc, how="outer")
+        merged["keep"] = merged["keep"].fillna(False)
+        merged["collapse"] = merged["collapse"].fillna(False)
+        active_flips = int((merged["keep"] != merged["collapse"]).sum())
+
+    flips = {
+        "candidate_flips": candidate_flips,
+        "n_candidate_rows": n_cand_rows,
+        "eligible_cycle_flips": eligible_cycle_flips,
+        "active_flips": active_flips,
+    }
+
+    # ---- gate verdict ----
+    def _pass_rate(e3: dict[str, Any]) -> bool:
+        lo = e3.get("a2_day_rate_ci_lower")
+        return bool(lo is not None and lo >= lower_rate)
+
+    def _pass_share(e3: dict[str, Any]) -> bool:
+        sh = e3.get("daily_energy_share_median")
+        return bool(sh is not None and sh >= share_min)
+
+    pass_rate_keep = _pass_rate(keep_e3)
+    pass_rate_collapse = _pass_rate(coll_e3)
+    pass_share_keep = _pass_share(keep_e3)
+    pass_share_collapse = _pass_share(coll_e3)
+    keep_gate = pass_rate_keep and pass_share_keep
+    collapse_gate = pass_rate_collapse and pass_share_collapse
+    gate_flipped = (pass_rate_keep != pass_rate_collapse) or (
+        pass_share_keep != pass_share_collapse
+    )
+
+    gate = {
+        "rule": (
+            f"日等权候选率日 cluster bootstrap 95%CI 下界 >= {lower_rate} 且 "
+            f"日候选能量占比中位数 >= {share_min}（与 e0_full.yaml e3 停止线同值）"
+        ),
+        "pass_candidate_rate_keep": pass_rate_keep,
+        "pass_candidate_rate_collapse": pass_rate_collapse,
+        "pass_daily_share_keep": pass_share_keep,
+        "pass_daily_share_collapse": pass_share_collapse,
+        "keep_gate": keep_gate,
+        "collapse_gate": collapse_gate,
+        "gate_flipped": gate_flipped,
+    }
+
+    acceptance = {
+        "keep_reproduces_frozen_baseline": keep_reproduces,
+        "population_identity_preserved": population_identity_preserved,
+        "nonaffected_sessions_unchanged": nonaffected_unchanged,
+        "keep_gate": keep_gate,
+        "collapse_gate": collapse_gate,
+        "gate_flipped": gate_flipped,
+    }
+
+    stop_reason: str | None = None
+    if not keep_reproduces:
+        stop_reason = "KEEP_NOT_REPRODUCED"
+    elif not population_identity_preserved:
+        stop_reason = "POPULATION_IDENTITY_BROKEN"
+    elif not nonaffected_unchanged:
+        stop_reason = "NONAFFECTED_SESSIONS_CHANGED"
+    elif not keep_gate:
+        stop_reason = "KEEP_GATE_NOT_PASS"
+
+    result = {
+        "scope": base["scope"],
+        "input_untouched": True,
+        "frozen_months": base["frozen_months"],
+        "proxy_main": base["proxy_main"],
+        "frozen_baseline_reference": base["frozen_baseline_reference"],
+        "population": {
+            "n_frozen_sessions": len(frozen_sessions),
+            "n_duplicate_affected_sessions": len(affected_all),
+            "n_affected_sessions_found_in_frozen_population": len(affected_in_pop),
+            "n_affected_sessions_not_in_population": len(affected_not_in_pop),
+            "n_population_sessions_untouched": len(frozen_sessions) - len(affected_sessions),
+        },
+        "keep": keep_e3,
+        "keep_reproduces_frozen_baseline": keep_reproduces,
+        "collapse": coll_e3,
+        "consistency": consistency,
+        "flips": flips,
+        "gate": gate,
+        "acceptance": acceptance,
+        "stop": stop_reason,
+        "rebuild_failed_sessions": rebuild_failed,
+    }
+    if out_json is not None:
+        Path(out_json).parent.mkdir(parents=True, exist_ok=True)
+        Path(out_json).write_text(
+            json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8"
+        )
+    return result
+
+
 def run_e0f01(
     cfg_path: str | Path | None = None,
     workers: int = 1,
@@ -1426,6 +1841,7 @@ def run_e0f01(
     - data_registry/e0_full_dup_ts_classification.csv
     - data_registry/e0_full_dup_collapse_impact.json
     - data_registry/e0_full_dup_current_only_sensitivity.json
+    - data_registry/e0_full_dup_current_only_full_pool_sensitivity.json
     - data_registry/e0_full_baseline.json
     - reports/E0_Full_input_audit.md
 
@@ -1494,6 +1910,24 @@ def run_e0f01(
         n_boot=int(cfg.get("seeds", {}).get("n_boot", 2000)),
     )
     quality["dup_current_only_sensitivity"] = sens
+
+    # 审查结论12 P0：冻结完整 JPL current-only 母体 keep-vs-collapse 敏感性（E0F-01.3）
+    full_pool_sens = current_only_full_pool_sensitivity(
+        minute_table_path=impl_root / "datasets" / "lite_session_minute.parquet",
+        sample_registry_path=impl_root / "data_registry" / "k1_sample_registry.csv",
+        classification_csv_path=impl_root / "data_registry" / "e0_full_dup_ts_classification.csv",
+        static_root=static_root,
+        out_json=impl_root
+        / "data_registry"
+        / "e0_full_dup_current_only_full_pool_sensitivity.json",
+        site_mapping=cfg.get("site_mapping"),
+        role_months=cfg.get("k1_role_months"),
+        rated_voltage=cfg.get("power", {}).get("rated_voltage"),
+        e3_stop=cfg.get("k1_replication_stop_lines", {}).get("e3"),
+        bootstrap_seed=int(cfg.get("seeds", {}).get("bootstrap", 42)),
+        n_boot=int(cfg.get("seeds", {}).get("n_boot", 2000)),
+    )
+    quality["dup_current_only_full_pool_sensitivity"] = full_pool_sens
 
     quality_out = impl_root / "data_registry" / "e0_full_quality_summary.json"
     quality_out.write_text(json.dumps(quality, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -1661,6 +2095,69 @@ def _write_audit_report(quality: dict[str, Any], out: Path, cfg: dict[str, Any])
             f"share keep={g['pass_daily_share_keep']} / "
             f"collapse={g['pass_daily_share_collapse']}；门翻转：{g['gate_flipped']}"
         )
+    fps = quality.get("dup_current_only_full_pool_sensitivity")
+    if fps:
+        lines += [
+            "",
+            "## 完整 JPL current-only 母体 keep-vs-collapse 敏感性（审查结论12 P0，E0F-01.3）",
+            "",
+        ]
+        lines.append(f"- 范围：{fps['scope']}；输入未修改：{fps['input_untouched']}")
+        lines.append(
+            f"- 冻结基线参考：n_cycles={fps['frozen_baseline_reference']['n_cycles']}，"
+            f"A2={fps['frozen_baseline_reference']['a2_cycle_weighted_rate']:.6f}，"
+            f"日率={fps['frozen_baseline_reference']['a2_day_rate']:.6f}，"
+            f"CI={fps['frozen_baseline_reference']['a2_day_rate_ci95']}，"
+            f"能量占比={fps['frozen_baseline_reference']['daily_energy_share_median']}，"
+            f"gate={fps['frozen_baseline_reference']['gate']}"
+        )
+        pop = fps["population"]
+        lines.append(
+            f"- 母体 membership：frozen_sessions={pop['n_frozen_sessions']}，"
+            f"affected={pop['n_duplicate_affected_sessions']}，"
+            f"affected_in_pop={pop['n_affected_sessions_found_in_frozen_population']}，"
+            f"affected_not_in_pop={pop['n_affected_sessions_not_in_population']}，"
+            f"untouched={pop['n_population_sessions_untouched']}"
+        )
+        ke = fps.get("keep")
+        if ke:
+            lines.append(
+                f"- Keep：n_cycles={ke['n_cycles']} A2={ke['a2_cycle_weighted_rate']:.6f} "
+                f"日率={ke['a2_day_rate']} CI={ke['a2_day_rate_ci95']} "
+                f"能量占比中位={ke['daily_energy_share_median']}"
+            )
+        lines.append(f"- Keep 复现冻结基线：{fps['keep_reproduces_frozen_baseline']}")
+        ce = fps.get("collapse")
+        if ce:
+            lines.append(
+                f"- Collapse：n_cycles={ce['n_cycles']} A2={ce['a2_cycle_weighted_rate']:.6f} "
+                f"日率={ce['a2_day_rate']} CI={ce['a2_day_rate_ci95']} "
+                f"能量占比中位={ce['daily_energy_share_median']}"
+            )
+        cons = fps.get("consistency")
+        if cons:
+            lines.append(
+                f"- 一致性：population_identity={cons['population_identity_preserved']}，"
+                f"nonaffected_unchanged={cons['nonaffected_sessions_unchanged']}，"
+                f"no_extra_minutes={cons['no_extra_or_missing_minutes']}，"
+                f"site_garage={cons['site_garage_unchanged']}，"
+                f"nonaffected_apk_zero_diff={cons['nonaffected_actual_power_zero_diff']}"
+            )
+        fl = fps.get("flips")
+        if fl:
+            lines.append(
+                f"- 翻转：候选 {fl['candidate_flips']}/{fl['n_candidate_rows']}，"
+                f"eligible_cycle={fl['eligible_cycle_flips']}，活跃 {fl['active_flips']}"
+            )
+        g = fps.get("gate")
+        if g:
+            lines.append(
+                f"- 门：keep_gate={g['keep_gate']} collapse_gate={g['collapse_gate']} "
+                f"gate_flipped={g['gate_flipped']}"
+            )
+        lines.append(f"- 验收：{fps['acceptance']}")
+        if fps.get("stop"):
+            lines.append(f"- STOP 原因：{fps['stop']}")
     sm = quality.get("site_mapping_audit")
     if sm:
         lines += ["", "## 站点 raw→canonical 映射（审查结论10 P1，E0F-02 前冻结）", ""]
