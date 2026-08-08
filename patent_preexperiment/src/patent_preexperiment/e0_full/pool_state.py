@@ -13,15 +13,23 @@
 2. 5 分钟池状态 = 1 分钟表按 UTC 对齐 5 分钟块聚合（能量求和，其余 mean），
    跨粒度一致性 = 用同一 reducer 从 1 分钟表重算并与 5 分钟表逐行全等（无跳变）。
 3. gold 一致性：金标准按 station 的 5 分钟能量（样本级前向 hold 积分）聚合到池，
-   与本表池级 5 分钟能量比相对偏差，中位 |rel dev| < tolerance 才 gold_consistency=true。
+   与本表池级 5 分钟能量比相对偏差；**每个 gold 池**的中位 |rel dev| < tolerance 才
+   gold_consistency=true（per-pool gate，审查结论20 P0-2；overall 中位仅作摘要）。
+   gold_consistency=false 时 run_e0f04 必须 hard STOP（审查结论20 P0-1）。
 4. session 同源一致性：从 session_response_1min 重聚合到池级并与已写 pool_state_1min
    逐行全等（两条路径同一来源）。
+5. 冻结证据池复现审计（#15 acceptance-3）：E0F-02 registry 上核对 k1_role_months 窗口
+   证据池（Caltech main / JPL current-only）的 match_status×sample_layer 组成；matched
+   子集计数必须 == k1_sample_registry.csv 冻结计数，证明 matched-only pool_state 保留
+   复现冻结 E3-Lite 所需人口（不把 static_only 塞进池表）。
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import subprocess
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
@@ -147,6 +155,9 @@ def aggregate_5min_from_1min(pool_1min: pd.DataFrame) -> pd.DataFrame:
     df = pool_1min.copy()
     if df.empty:
         return pd.DataFrame(columns=_POOL_5MIN_COLUMNS)
+    # 空分区（无 matched 行）写出再读回后 timestamp_utc 可能为 object dtype，
+    # 与 datetime 分区 concat 会整体 upcast；先统一 coerce 避免 .dt 失败。
+    df["timestamp_utc"] = pd.to_datetime(df["timestamp_utc"], utc=True)
     df["timestamp_utc"] = df["timestamp_utc"].dt.floor("5min")
     g = df.groupby(["pool_id", "site", "garage", "timestamp_utc"], sort=True)
     out = g.agg(
@@ -312,11 +323,14 @@ def gold_consistency(
     cfg: dict[str, Any],
     pool_5min: pd.DataFrame,
 ) -> dict[str, Any]:
-    """池级 5 分钟能量 vs gold 中位相对偏差 < tolerance 才 gold_consistency=true。"""
+    """池级 5 分钟能量 vs gold：**每个 gold 池**中位 |rel dev| < tolerance 才通过。
+
+    per-pool gate（审查结论20 P0-2）：单池系统性偏差不得被总体中位掩盖。
+    overall 中位保留作摘要，不作为门依据。p95 只报告不作门线。
+    """
     tol = float(cfg["pool"]["gold"]["tolerance_median_rel_dev"])
     gold_pools = cfg["pool"]["gold"]["pools"]
     per_pool: dict[str, dict[str, Any]] = {}
-    all_devs: list[float] = []
     for p in gold_pools:
         pid = f"{p['site']}__{p['garage']}"
         gold = _read_gold_pool(gold_dir, pid, pool_registry)
@@ -329,23 +343,267 @@ def gold_consistency(
         if m.empty:
             raise RuntimeError(f"E0F-04 停止：gold 池 {pid} 无重叠桶可对比")
         dev = (m["ours"] - m["gold"]) / m["gold"]
+        median_abs = float(dev.abs().median())
         per_pool[pid] = {
             "buckets": int(len(m)),
+            "median_abs_rel_dev": median_abs,
             "median_rel_dev": float(dev.median()),
             "p95_abs_rel_dev": float(dev.abs().quantile(0.95)),
             "gold_energy_kwh": float(m["gold"].sum()),
             "ours_energy_kwh": float(m["ours"].sum()),
+            "pass": median_abs < tol,
         }
-        all_devs.extend(dev.abs().tolist())
-    overall = float(np.median(all_devs)) if all_devs else float("nan")
-    ok = overall < tol
+    ok = bool(per_pool) and all(v["pass"] for v in per_pool.values())
     return {
-        "gold_consistency": bool(ok),
-        "median_abs_rel_dev": overall,
+        "gold_consistency": ok,
+        "gate": "每个 gold 池中位 |rel dev| < tolerance（overall 中位仅作摘要，p95 仅报告）",
         "tolerance": tol,
         "per_pool": per_pool,
-        "gate": f"池级 5min 能量 vs gold 中位 |rel dev| < {tol}",
     }
+
+
+def _assert_gold_gate(gold: dict[str, Any]) -> None:
+    """gold_consistency=false 时正式 runner hard STOP（审查结论20 P0-1）。"""
+    if gold["gold_consistency"]:
+        return
+    fails = [
+        f"{pid} 中位|rel dev|={v['median_abs_rel_dev']:.6f} >= 冻结 {gold['tolerance']}"
+        for pid, v in gold["per_pool"].items()
+        if not v["pass"]
+    ]
+    raise RuntimeError(
+        "E0F-04 停止（gold 一致性未通过，per-pool gate）：" + "；".join(fails)
+    )
+
+
+def evidence_pool_reproduction_audit(
+    registry: pd.DataFrame,
+    cfg: dict[str, Any],
+    impl_root: Path,
+) -> dict[str, Any]:
+    """#15 acceptance-3 冻结证据池复现审计（审查结论20 第3节）。
+
+    只在 E0F-02 registry 上做纯计数审计：
+    - sample_layer <-> match_status 必须 1:1（L1<->matched、L0<->static_only）；
+    - 每个证据池窗口（cfg.pool.evidence_pools.windows，月份取 k1_role_months[name]）
+      按 match_status×sample_layer / match_status×split / role 报告组成；
+    - matched 子集计数必须 == k1_sample_registry.csv 按 site 的冻结计数
+      （机器可证：matched-only pool_state 等于冻结证据池人口，当场复现 E3-Lite）。
+    k1_sample_registry.csv 缺失则交叉核对记 not_checked（组成仍报告，不放松 L0/L1 判定）。
+    """
+    ep = cfg["pool"]["evidence_pools"]
+    cross = pd.crosstab(registry["sample_layer"], registry["match_status"])
+    l1_ok = int(cross.get("matched", pd.Series(dtype="int64")).get("L1_strict_matched", 0)) == int(
+        (registry["match_status"].astype(str) == "matched").sum()
+    )
+    l0_ok = int(
+        cross.get("static_only", pd.Series(dtype="int64")).get("L0_static_extension", 0)
+    ) == int((registry["match_status"].astype(str) == "static_only").sum())
+    if not (l1_ok and l0_ok):
+        raise RuntimeError(
+            "E0F-04 停止（证据池复现）：sample_layer <-> match_status 不是 1:1 "
+            "(L1<->matched、L0<->static_only)"
+        )
+
+    win_results: dict[str, Any] = {}
+    for w in ep["windows"]:
+        name = str(w["name"])
+        site = str(w["site"])
+        months = [str(m) for m in cfg["k1_role_months"][name]]
+        df = registry[registry["site"].astype(str).eq(site)].copy()
+        if w.get("field_mode"):
+            df = df[df["field_mode"].astype(str).eq(str(w["field_mode"]))]
+        df["_cyc"] = df["connection_time"].dt.strftime("%Y-%m")
+        df = df[df["_cyc"].isin(months)]
+
+        by_ms_layer: dict[str, int] = {}
+        for (ms, sl), g in df.groupby(["match_status", "sample_layer"]):
+            by_ms_layer[f"{ms}/{sl}"] = int(len(g))
+        by_ms_split: dict[str, int] = {}
+        for (ms, sp), g in df.groupby(["match_status", "split"]):
+            by_ms_split[f"{ms}/{sp}"] = int(len(g))
+        by_role: dict[str, int] = {}
+        for rl, g in df.groupby(["role"]):
+            by_role[str(rl)] = int(len(g))
+        win_results[name] = {
+            "site": site,
+            "field_mode": w.get("field_mode"),
+            "months": months,
+            "n_sessions": int(len(df)),
+            "n_matched": int((df["match_status"].astype(str) == "matched").sum()),
+            "n_static_only": int((df["match_status"].astype(str) == "static_only").sum()),
+            "by_match_status_x_sample_layer": by_ms_layer,
+            "by_match_status_x_split": by_ms_split,
+            "roles": by_role,
+        }
+
+    k1_path = impl_root / str(ep["k1_sample_registry"])
+    k1_check: dict[str, Any] = {
+        "checked": False,
+        "reason": "k1_sample_registry.csv 不存在，跳过计数交叉核对（组成仍报告）",
+    }
+    if k1_path.exists():
+        k1 = pd.read_csv(k1_path)
+        expected = {str(s): int(n) for s, n in k1["site"].value_counts().items()}
+        mismatch: dict[str, Any] = {}
+        for name, v in win_results.items():
+            if v["site"] in expected and v["n_matched"] != expected[v["site"]]:
+                mismatch[name] = {
+                    "window_matched": v["n_matched"],
+                    "k1_frozen": expected[v["site"]],
+                }
+        k1_check = {
+            "checked": True,
+            "expected_by_site": expected,
+            "actual_matched_by_window": {
+                name: v["n_matched"] for name, v in win_results.items()
+            },
+            "mismatch": mismatch,
+        }
+        if mismatch:
+            raise RuntimeError(
+                "E0F-04 停止（证据池复现失败）：matched 子集 != k1_sample_registry 冻结计数；"
+                f"{mismatch}"
+            )
+
+    return {
+        "sample_layer_match_status_1to1": True,
+        "windows": win_results,
+        "k1_sample_registry_cross_check": k1_check,
+        "conclusion": (
+            "冻结证据池人口 100% matched（matched 子集 == K1 冻结计数），matched-only "
+            "pool_state 保留复现冻结 E3-Lite 所需人口；无需 amendment 到 R1/#17"
+        ),
+    }
+
+
+def _git_commit() -> str:
+    root = Path(__file__).resolve().parents[4]
+    try:
+        return (
+            subprocess.run(
+                ["git", "rev-parse", "HEAD"],
+                capture_output=True,
+                text=True,
+                check=True,
+                cwd=root,
+            )
+            .stdout.strip()
+        )
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return "unknown"
+
+
+def _pool_partition_summary(pool_dir_1min: Path) -> dict[str, Any]:
+    """finalize 路径的 1 分钟池分区摘要（含逐分区 sha256），与 build 路径同构。"""
+    files = sorted(pool_dir_1min.glob("site=*/year=*/month=*/data.parquet"))
+    if not files:
+        raise RuntimeError(f"E0F-04 停止：{pool_dir_1min} 下无池状态分区")
+    partitions: list[dict[str, Any]] = []
+    n_rows = 0
+    for f in files:
+        rel = f.relative_to(pool_dir_1min)
+        site = rel.parts[0].split("=", 1)[1]
+        year = int(rel.parts[1].split("=", 1)[1])
+        month = int(rel.parts[2].split("=", 1)[1])
+        df = pd.read_parquet(f, columns=["pool_id"])
+        n_rows += len(df)
+        partitions.append(
+            {
+                "site": site,
+                "year": year,
+                "month": month,
+                "rows": int(len(df)),
+                "pools": int(df["pool_id"].nunique()) if not df.empty else 0,
+                "sha256": _sha256_file(f),
+            }
+        )
+    return {"n_rows": n_rows, "n_partitions": len(partitions), "partitions": partitions}
+
+
+def write_pool_state_registry(
+    impl_root: Path,
+    pool_registry: pd.DataFrame,
+    summary1: dict[str, Any],
+    summary5: dict[str, Any],
+    cross: dict[str, Any],
+    source: dict[str, Any],
+    gold: dict[str, Any],
+    evidence: dict[str, Any],
+    cfg: dict[str, Any],
+) -> Path:
+    """E0F-04 产物注册表（哈希冻结：pool_registry + 1min 分区 + 5min 文件 + 报告）。"""
+    data: dict[str, Any] = {
+        "schema": "e0_full_pool_state.schema.json",
+        "created_at_utc": datetime.now(UTC).isoformat(),
+        "code_sha": _git_commit(),
+        "pool_registry": {
+            "path": "data_registry/pool_registry.csv",
+            "sha256": _sha256_file(impl_root / "data_registry" / "pool_registry.csv"),
+            "n_pools": int(pool_registry["pool_id"].nunique()),
+            "n_stations": int(pool_registry["station"].nunique()),
+            "n_gold_stations": int(pool_registry["gold"].sum()),
+        },
+        "pool_state_1min": {
+            "dir": str(cfg["outputs"]["pool_state_1min"]),
+            "n_rows": summary1["n_rows"],
+            "n_partitions": summary1["n_partitions"],
+            "partitions": summary1["partitions"],
+        },
+        "pool_state_5min": {
+            "file": str(cfg["outputs"]["pool_state_5min"]) + "/pool_state_5min.parquet",
+            "n_rows": summary5["n_rows"],
+            "n_pools": summary5["n_pools"],
+            "sha256": _sha256_file(
+                impl_root / cfg["outputs"]["pool_state_5min"] / "pool_state_5min.parquet"
+            ),
+        },
+        "consistency": {"cross_granularity": cross, "session_source": source},
+        "gold": gold,
+        "evidence_pool_reproduction": evidence,
+        "report": "reports/E0_Full_pool_state_audit.md",
+    }
+    out = impl_root / "data_registry" / "e0_full_pool_state_registry.json"
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(data, ensure_ascii=False, indent=2), encoding="utf-8")
+    return out
+
+
+def _update_baseline(
+    impl_root: Path,
+    cfg: dict[str, Any],
+    pool_registry_json: Path,
+    pool_registry: pd.DataFrame,
+    summary1: dict[str, Any],
+) -> None:
+    """把 E0F-04 产物哈希追加进 e0_full_baseline.json（保留 E0F-01..03 节点）。"""
+    baseline_out = impl_root / "data_registry" / "e0_full_baseline.json"
+    if not baseline_out.exists():
+        return
+    prev = json.loads(baseline_out.read_text(encoding="utf-8"))
+    from patent_preexperiment.e0_full.baseline import build_e0_full_baseline
+
+    pool_state_meta = {
+        "pool_registry": {
+            "sha256": _sha256_file(impl_root / "data_registry" / "pool_registry.csv"),
+            "n_pools": int(pool_registry["pool_id"].nunique()),
+        },
+        "pool_state_registry": {
+            "sha256": _sha256_file(pool_registry_json),
+            "n_rows_1min": summary1["n_rows"],
+            "n_partitions_1min": summary1["n_partitions"],
+        },
+        "report": "reports/E0_Full_pool_state_audit.md",
+    }
+    build_e0_full_baseline(
+        out=baseline_out,
+        manifest_hash_hex=str(prev["source_manifest_sha256"]),
+        config=cfg,
+        require_clean=True,
+        split_registry=prev.get("split_registry"),
+        session_response=prev.get("session_response"),
+        pool_state=pool_state_meta,
+    )
 
 
 def _build_report(
@@ -355,6 +613,7 @@ def _build_report(
     cross: dict[str, Any],
     source: dict[str, Any],
     gold: dict[str, Any],
+    evidence: dict[str, Any],
     cfg: dict[str, Any],
 ) -> str:
     lines = [
@@ -383,20 +642,43 @@ def _build_report(
         f"{'PASS' if source['session_source_consistent'] else 'FAIL'}；"
         f"检查 {source['partitions_checked']} 个分区",
         f"- gold 一致性：{'PASS' if gold['gold_consistency'] else 'FAIL'}；"
-        f"中位 |rel dev| = {gold['median_abs_rel_dev']:.6f} < {gold['tolerance']}；"
-        f"{gold['gate']}",
+        f"{gold['gate']}；gold_consistency=false 即 hard STOP（审查结论20 P0-1）",
         "",
-        "### gold 逐池",
+        "### gold 逐池（per-pool gate：每个池中位 |rel dev| < tolerance）",
         "",
-        "| pool_id | buckets | 中位 |rel dev| | p95 | gold kWh | ours kWh |",
-        "|---|---|---|---|---|---|",
+        "| pool_id | buckets | 中位 |rel dev| | 中位 rel dev | p95 | gold kWh | ours kWh | PASS |",
+        "|---|---|---|---|---|---|---|---|",
     ]
     for pid, v in gold["per_pool"].items():
         lines.append(
-            f"| {pid} | {v['buckets']:,} | {v['median_rel_dev']:.6f} | "
-            f"{v['p95_abs_rel_dev']:.6f} | {v['gold_energy_kwh']:.2f} | "
-            f"{v['ours_energy_kwh']:.2f} |"
+            f"| {pid} | {v['buckets']:,} | {v['median_abs_rel_dev']:.6f} | "
+            f"{v['median_rel_dev']:.6f} | {v['p95_abs_rel_dev']:.6f} | "
+            f"{v['gold_energy_kwh']:.2f} | {v['ours_energy_kwh']:.2f} | "
+            f"{'PASS' if v['pass'] else 'FAIL'} |"
         )
+    lines += [
+        "",
+        "## 冻结证据池复现审计（#15 acceptance-3）",
+        "",
+        f"- sample_layer <-> match_status 1:1（L1<->matched、L0<->static_only）："
+        f"{'PASS' if evidence['sample_layer_match_status_1to1'] else 'FAIL'}",
+    ]
+    for name, v in evidence["windows"].items():
+        lines.append(
+            f"- **{name}**（site={v['site']}，field_mode={v['field_mode']}）："
+            f"冻结窗口 {v['months']} 内 n={v['n_sessions']:,} 会话，"
+            f"matched={v['n_matched']:,}，static_only={v['n_static_only']:,}；"
+            f"组成 {v['by_match_status_x_sample_layer']}；"
+            f"split 分布 {v['by_match_status_x_split']}；role={v['roles']}"
+        )
+    k1c = evidence["k1_sample_registry_cross_check"]
+    if k1c["checked"]:
+        lines.append(
+            f"- K1 冻结样本计数交叉核对：PASS（matched 子集 == k1_sample_registry，"
+            f"{k1c['actual_matched_by_window']}）"
+        )
+    else:
+        lines.append(f"- K1 冻结样本计数交叉核对：未做（{k1c['reason']}）")
     lines += ["", "## 池清单（n_stations / gold）", ""]
     for (pid, gold_flag), g in pool_registry.groupby(["pool_id", "gold"], sort=True):
         lines.append(
@@ -410,39 +692,49 @@ def _build_report(
         f"- gold 冻结站数：`{cfg['pool']['gold']['stations_frozen']}`；"
         f"tolerance：`{cfg['pool']['gold']['tolerance_median_rel_dev']}`"
     )
+    lines.append(f"- 证据池：`{cfg['pool']['evidence_pools']['description']}`")
     return "\n".join(lines) + "\n"
 
 
-def run_e0f04(cfg_path: str | Path | None = None, finalize_only: bool = False) -> dict[str, Any]:
-    """E0F-04 全量执行：pool_registry → pool_state_1min → pool_state_5min → 一致性验收 → 报告。
+def run_e0f04(
+    cfg_path: str | Path | None = None,
+    finalize_only: bool = False,
+    impl_root: str | Path | None = None,
+    gold_dir: str | Path | None = None,
+) -> dict[str, Any]:
+    """E0F-04 全量执行：证据审计 → pool_registry → pool_state_1min → 5min → 一致性 → 报告。
 
     产物：
     - data_registry/pool_registry.csv
     - datasets/pool_state_1min/site=<site>/year=YYYY/month=MM/data.parquet
     - datasets/pool_state_5min/pool_state_5min.parquet
     - reports/E0_Full_pool_state_audit.md
+    - data_registry/e0_full_pool_state_registry.json
+    - data_registry/e0_full_baseline.json（追加 pool_state 节）
+
+    gold_consistency=false 一律 hard STOP（审查结论20 P0-1/P0-2），不产出报告。
+    impl_root/gold_dir 可注入用于测试（默认解析真实实现根与 acn_project/gold）。
     """
-    impl_root = Path(__file__).resolve().parents[3]
-    cfg = load_yaml(cfg_path or (impl_root / "configs" / "e0_full.yaml"))
-    registry = pd.read_parquet(impl_root / "data_registry" / "e0_full_split_registry.parquet")
+    root = Path(impl_root) if impl_root is not None else Path(__file__).resolve().parents[3]
+    cfg = load_yaml(cfg_path or (root / "configs" / "e0_full.yaml"))
+    registry = pd.read_parquet(root / "data_registry" / "e0_full_split_registry.parquet")
+
+    evidence = evidence_pool_reproduction_audit(registry, cfg, root)
 
     pool_registry = build_pool_registry(registry, cfg)
-    pool_registry_out = impl_root / "data_registry" / "pool_registry.csv"
+    pool_registry_out = root / "data_registry" / "pool_registry.csv"
+    pool_registry_out.parent.mkdir(parents=True, exist_ok=True)
     pool_registry_out.write_text(
         pool_registry.to_csv(index=False), encoding="utf-8"
     )
 
-    session_dir = impl_root / cfg["outputs"]["session_minute_1min"]
-    pool_dir_1min = impl_root / cfg["outputs"]["pool_state_1min"]
-    pool_dir_5min = impl_root / cfg["outputs"]["pool_state_5min"]
-    gold_dir = acn_project_dir() / "gold"
+    session_dir = root / cfg["outputs"]["session_minute_1min"]
+    pool_dir_1min = root / cfg["outputs"]["pool_state_1min"]
+    pool_dir_5min = root / cfg["outputs"]["pool_state_5min"]
+    gold_dir_resolved = Path(gold_dir) if gold_dir is not None else acn_project_dir() / "gold"
 
     if finalize_only:
-        p1 = _read_pool_partitions(pool_dir_1min)
-        summary1 = {
-            "n_rows": int(len(p1)),
-            "n_partitions": len(list(pool_dir_1min.glob("site=*/year=*/month=*/data.parquet"))),
-        }
+        summary1 = _pool_partition_summary(pool_dir_1min)
         p5 = pd.read_parquet(pool_dir_5min / "pool_state_5min.parquet")
         summary5 = {
             "n_rows": int(len(p5)),
@@ -455,22 +747,33 @@ def run_e0f04(cfg_path: str | Path | None = None, finalize_only: bool = False) -
     cross = verify_cross_granularity(pool_dir_1min, pool_dir_5min)
     source = verify_session_source(session_dir, pool_dir_1min)
     p5 = pd.read_parquet(pool_dir_5min / "pool_state_5min.parquet")
-    gold = gold_consistency(pool_registry, gold_dir, cfg, p5)
+    gold = gold_consistency(pool_registry, gold_dir_resolved, cfg, p5)
+    _assert_gold_gate(gold)
 
-    report = _build_report(pool_registry, summary1, summary5, cross, source, gold, cfg)
-    report_out = impl_root / "reports" / "E0_Full_pool_state_audit.md"
+    report = _build_report(
+        pool_registry, summary1, summary5, cross, source, gold, evidence, cfg
+    )
+    report_out = root / "reports" / "E0_Full_pool_state_audit.md"
+    report_out.parent.mkdir(parents=True, exist_ok=True)
     report_out.write_text(report, encoding="utf-8")
+
+    pool_registry_json = write_pool_state_registry(
+        root, pool_registry, summary1, summary5, cross, source, gold, evidence, cfg
+    )
+    _update_baseline(root, cfg, pool_registry_json, pool_registry, summary1)
 
     return {
         "pool_registry": str(pool_registry_out),
         "pool_state_1min": str(pool_dir_1min),
         "pool_state_5min": str(pool_dir_5min / "pool_state_5min.parquet"),
         "report": str(report_out),
+        "pool_state_registry": str(pool_registry_json),
         "summary1": summary1,
         "summary5": summary5,
         "cross_granularity": cross,
         "session_source": source,
         "gold": gold,
+        "evidence_pool_reproduction": evidence,
     }
 
 
@@ -479,6 +782,11 @@ if __name__ == "__main__":
 
     r = run_e0f04(finalize_only="--finalize-only" in sys.argv)
     print(json.dumps(
-        {"gold": r["gold"], "cross": r["cross_granularity"], "source": r["session_source"]},
+        {
+            "gold": r["gold"],
+            "cross": r["cross_granularity"],
+            "source": r["session_source"],
+            "evidence": r["evidence_pool_reproduction"],
+        },
         ensure_ascii=False, indent=2,
     ))

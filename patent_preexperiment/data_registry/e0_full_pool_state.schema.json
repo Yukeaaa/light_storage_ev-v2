@@ -1,0 +1,64 @@
+{
+  "$table": "e0_full_pool_state",
+  "output_version": "e0_full_v1",
+  "rule_version": "e0_full_split_v1",
+  "tables": {
+    "pool_registry": {
+      "columns": ["pool_id", "site", "garage", "station", "gold"],
+      "unique_columns": ["pool_id", "station"],
+      "description": "pool_id = site + garage(cluster) 唯一组合；成员由 matched 会话定义；gold 池标注（冻结 115 站哨兵）。"
+    },
+    "pool_state_1min": {
+      "columns": [
+        "pool_id", "site", "garage", "timestamp_utc",
+        "n_active", "n_matched", "n_charging",
+        "actual_power_kw_total", "pilot_upper_kw_total", "current_a_total",
+        "measured_kwh", "estimated_kwh",
+        "pilot_coverage", "state_coverage", "measured_ratio"
+      ],
+      "unique_columns": ["pool_id", "timestamp_utc"],
+      "partition_cols": ["site", "year", "month"],
+      "description": "1 分钟池状态：每 (pool_id, timestamp_utc) 一行；能量 = actual_power_kw/60；measured/estimated 按 power_source 拆分。"
+    },
+    "pool_state_5min": {
+      "columns": [
+        "pool_id", "site", "garage", "timestamp_utc",
+        "n_active", "n_matched", "n_charging",
+        "actual_power_kw_total", "pilot_upper_kw_total", "current_a_total",
+        "measured_kwh", "estimated_kwh",
+        "pilot_coverage", "state_coverage", "measured_ratio"
+      ],
+      "unique_columns": ["pool_id", "timestamp_utc"],
+      "description": "5 分钟池状态 = 1 分钟表按 UTC 对齐 5 分钟块聚合（能量求和，其余 mean）；跨粒度一致性用同一 reducer 重算全等。"
+    }
+  },
+  "constraints": {
+    "matched_only": true,
+    "static_only_excluded": true,
+    "no_cross_garage_merge": true,
+    "timestamp_utc_utc": true,
+    "gold_consistency_per_pool": true,
+    "gold_consistency_hard_stop": true,
+    "session_source_consistent": true,
+    "evidence_pool_reproduction_matched_only": true
+  },
+  "column_definitions": {
+    "pool_id": { "dtype": "string", "description": "site__garage（cluster），禁止跨车库合并" },
+    "site": { "dtype": "string", "description": "canonical 站点（caltech/jpl/office001）" },
+    "garage": { "dtype": "string", "description": "车库/桩群（来自 E0F-02 registry.garage）" },
+    "station": { "dtype": "string", "description": "桩点（pool_registry 专属，来自 matched 会话）" },
+    "gold": { "dtype": "bool", "description": "该池是否为 gold 基准池（configs/e0_full.yaml pool.gold.pools）" },
+    "timestamp_utc": { "dtype": "datetime", "description": "池级分钟主键（UTC，floor('min')/[5min]），[pool_id, timestamp_utc] 唯一" },
+    "n_active": { "dtype": "int", "description": "该分钟池内活跃会话数（1min=nunique；5min=mean）" },
+    "n_matched": { "dtype": "int", "description": "该分钟 matched 会话数（= n_active）" },
+    "n_charging": { "dtype": "int", "description": "该分钟 charging 会话数" },
+    "actual_power_kw_total": { "dtype": "float", "description": "实际响应功率合计 kW（1min=sum；5min=mean）" },
+    "pilot_upper_kw_total": { "dtype": "float", "description": "pilot 允许功率合计 kW（1min=sum；5min=mean）" },
+    "current_a_total": { "dtype": "float", "description": "电流合计 A（1min=sum；5min=mean）" },
+    "measured_kwh": { "dtype": "float", "description": "measured/computed 能量 kWh（=actual_power_kw/60 拆分）" },
+    "estimated_kwh": { "dtype": "float", "description": "estimated 能量 kWh（=actual_power_kw/60 拆分）" },
+    "pilot_coverage": { "dtype": "float", "description": "pilot_available 分钟行占比" },
+    "state_coverage": { "dtype": "float", "description": "state_available 分钟行占比" },
+    "measured_ratio": { "dtype": "float", "description": "measured/computed 行占比" }
+  }
+}

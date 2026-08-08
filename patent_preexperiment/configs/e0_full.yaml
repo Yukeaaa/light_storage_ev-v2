@@ -207,11 +207,21 @@ pool:
     session_source_consistent: true   # 同池同分钟聚合与 session_response_1min 对得上
   gold:
     stations_frozen: 115              # 与 inputs.manifests.gold_benchmark_stations 一致
-    tolerance_median_rel_dev: 0.02    # 池级 5min 能量 vs gold 中位相对偏差 < 2%（分钟量级）
+    tolerance_median_rel_dev: 0.02    # 每个 gold 池池级 5min 能量 vs gold 中位相对偏差 < 2%（per-pool gate）
     pools:
       - {site: caltech, garage: California_Garage_01}
       - {site: jpl, garage: Arroyo_Garage_01}
       - {site: office001, garage: Parking_Lot_01}
+  # #15 acceptance-3（审查结论20）：冻结 E3-Lite 两证据池（Caltech main + JPL current-only）复现审计。
+  # E0F-02 registry 审计证明冻结证据池人口 100% matched（jpl current_only 窗口无 static_only；
+  # caltech main 窗口 matched 子集即 K1 冻结样本），matched-only pool_state 可当场复现原冻结总量，
+  # 无需 amendment 到 R1/#17。windows.name 引用 k1_role_months 冻结月份窗口。
+  evidence_pools:
+    description: "冻结证据池人口审计：windows 内 matched 会话子集必须 == k1_sample_registry.csv 冻结计数（machine-verifiable）"
+    windows:
+      - {name: caltech_main_window, site: caltech, field_mode: null}
+      - {name: jpl_current_only_window, site: jpl, field_mode: current_only}
+    k1_sample_registry: "data_registry/k1_sample_registry.csv"
 
 # --- 数据工程停止线（审查结论7 §5.3，冻结）---
 stop_lines:

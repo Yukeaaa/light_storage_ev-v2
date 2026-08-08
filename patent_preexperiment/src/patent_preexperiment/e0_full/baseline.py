@@ -44,6 +44,9 @@ _OUTPUT_PATHS = {
     "patent_preexperiment/reports/E0_Full_split_audit.md",
     "patent_preexperiment/data_registry/e0_full_session_response_partitions.json",
     "patent_preexperiment/reports/E0_Full_session_response_audit.md",
+    "patent_preexperiment/data_registry/pool_registry.csv",
+    "patent_preexperiment/data_registry/e0_full_pool_state_registry.json",
+    "patent_preexperiment/reports/E0_Full_pool_state_audit.md",
 }
 
 # 审查结论11 低优先级增强：代码目录内任何 untracked 文件也视为未提交代码。
@@ -138,6 +141,7 @@ def build_e0_full_baseline(
     require_clean: bool = True,
     split_registry: dict[str, Any] | None = None,
     session_response: dict[str, Any] | None = None,
+    pool_state: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """按 schema 组装并写出 e0_full_baseline.json。
 
@@ -147,6 +151,8 @@ def build_e0_full_baseline(
     `split_registry` 节并追加到 output_manifest。
     session_response：E0F-03 产物哈希（分区注册表 sha256 + 行数），写入
     `session_response` 节并追加到 output_manifest。
+    pool_state：E0F-04 产物哈希（pool_registry + pool_state_registry sha256 + 行数），
+    写入 `pool_state` 节并追加到 output_manifest。
     """
     acn = acn_project_dir()
     paths = load_paths()
@@ -208,6 +214,7 @@ def build_e0_full_baseline(
         "split_rule_version": config["split"]["rule_version"],
         "split_registry": split_registry,
         "session_response": session_response,
+        "pool_state": pool_state,
         "output_manifest": [
             "data_registry/e0_full_source_manifest.parquet",
             "data_registry/e0_full_quality_summary.json",
@@ -222,7 +229,10 @@ def build_e0_full_baseline(
             "data_registry/e0_full_baseline.json",
         ]
         + (["data_registry/e0_full_session_response_partitions.json"] if session_response else [])
-        + (["reports/E0_Full_session_response_audit.md"] if session_response else []),
+        + (["reports/E0_Full_session_response_audit.md"] if session_response else [])
+        + (["data_registry/pool_registry.csv", "data_registry/e0_full_pool_state_registry.json"]
+           if pool_state else [])
+        + (["reports/E0_Full_pool_state_audit.md"] if pool_state else []),
         "source_manifest_sha256": manifest_hash_hex,
     }
     out = Path(out)

@@ -8,6 +8,7 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 import pytest
+import yaml
 
 from patent_preexperiment.config.yamlutil import load_yaml
 from patent_preexperiment.e0_full.pool_state import (
@@ -16,7 +17,9 @@ from patent_preexperiment.e0_full.pool_state import (
     aggregate_5min_from_1min,
     aggregate_partition_1min,
     build_pool_registry,
+    evidence_pool_reproduction_audit,
     gold_consistency,
+    run_e0f04,
     verify_cross_granularity,
     verify_session_source,
     write_pool_1min_partitions,
@@ -51,6 +54,46 @@ def _mini_registry() -> pd.DataFrame:
             ],
             "station": ["CA-01", "CA-02", "AR-01", "CA-03"],
             "match_status": ["matched", "matched", "matched", "static_only"],
+        }
+    )
+
+
+def _mini_registry_full() -> pd.DataFrame:
+    """含治理列（sample_layer/role/split/field_mode/connection_time）的 mini registry。
+
+    m1/m2 落在 caltech_main_window（2018-11）、s3 落在 jpl_current_only_window（2018-11）、
+    s4 为 static_only 且连接月在窗口外（2018-05）→ 冻结证据窗口 matched 子集 = {m1,m2,s3}。
+    """
+    return pd.DataFrame(
+        {
+            "session_id": ["m1", "m2", "s3", "s4"],
+            "site": ["caltech", "caltech", "jpl", "caltech"],
+            "garage": [
+                "California_Garage_01",
+                "California_Garage_01",
+                "Arroyo_Garage_01",
+                "California_Garage_01",
+            ],
+            "station": ["CA-01", "CA-02", "AR-01", "CA-03"],
+            "match_status": ["matched", "matched", "matched", "static_only"],
+            "sample_layer": [
+                "L1_strict_matched",
+                "L1_strict_matched",
+                "L1_strict_matched",
+                "L0_static_extension",
+            ],
+            "role": ["main", "main", "current_only_fallback", "main"],
+            "split": ["train", "train", "train", "stress"],
+            "field_mode": ["measured_pilot", "measured_pilot", "current_only", "measured_pilot"],
+            "connection_time": pd.to_datetime(
+                [
+                    "2018-11-01T00:00:00Z",
+                    "2018-11-02T00:00:00Z",
+                    "2018-11-03T00:00:00Z",
+                    "2018-05-01T00:00:00Z",
+                ],
+                utc=True,
+            ),
         }
     )
 
@@ -273,13 +316,102 @@ def test_gold_consistency_pass_and_fail(tmp_path: Path) -> None:
     _write_gold(tmp_path, caltech_scale=1.0, jpl_scale=1.0)
     ok = gold_consistency(_mini_pool_registry(), tmp_path / "gold", cfg, p5)
     assert ok["gold_consistency"] is True
-    assert ok["median_abs_rel_dev"] < cfg["pool"]["gold"]["tolerance_median_rel_dev"]
+    assert all(v["pass"] for v in ok["per_pool"].values())
     assert set(ok["per_pool"].keys()) == {
         "caltech__California_Garage_01",
         "jpl__Arroyo_Garage_01",
     }
 
-    _write_gold(tmp_path, caltech_scale=2.0, jpl_scale=2.0)
+    _write_gold(tmp_path, caltech_scale=1.0, jpl_scale=2.0)
     bad = gold_consistency(_mini_pool_registry(), tmp_path / "gold", cfg, p5)
     assert bad["gold_consistency"] is False
-    assert bad["median_abs_rel_dev"] > cfg["pool"]["gold"]["tolerance_median_rel_dev"]
+    assert bad["per_pool"]["caltech__California_Garage_01"]["pass"] is True
+    assert bad["per_pool"]["jpl__Arroyo_Garage_01"]["pass"] is False
+    assert bad["per_pool"]["jpl__Arroyo_Garage_01"]["median_abs_rel_dev"] > 0.02
+
+
+def test_run_e0f04_gold_fail_stops(tmp_path: Path) -> None:
+    """审查结论20 P0-1：gold_consistency=false 时正式 runner 必须 hard STOP。"""
+    impl = tmp_path / "impl"
+    _write_mini_impl(impl)
+    _write_gold(tmp_path, caltech_scale=1.0, jpl_scale=2.0)
+    with pytest.raises(RuntimeError, match="gold 一致性未通过"):
+        run_e0f04(
+            cfg_path=impl / "configs" / "e0_full.yaml",
+            impl_root=impl,
+            gold_dir=tmp_path / "gold",
+        )
+    assert not (impl / "reports" / "E0_Full_pool_state_audit.md").exists()
+    assert not (impl / "data_registry" / "e0_full_pool_state_registry.json").exists()
+    # 对照：gold 通过 → 正常产出报告 + 产物注册表
+    _write_gold(tmp_path, caltech_scale=1.0, jpl_scale=1.0)
+    r = run_e0f04(
+        cfg_path=impl / "configs" / "e0_full.yaml",
+        impl_root=impl,
+        gold_dir=tmp_path / "gold",
+    )
+    assert r["gold"]["gold_consistency"] is True
+    assert (impl / "reports" / "E0_Full_pool_state_audit.md").exists()
+    assert (impl / "data_registry" / "e0_full_pool_state_registry.json").exists()
+
+
+def _write_mini_impl(impl: Path):
+    (impl / "data_registry").mkdir(parents=True)
+    (impl / "datasets" / "session_response_1min" / "site=caltech" / "year=2018" / "month=05").mkdir(
+        parents=True
+    )
+    (impl / "configs").mkdir(parents=True)
+    _mini_registry_full().to_parquet(
+        impl / "data_registry" / "e0_full_split_registry.parquet", index=False
+    )
+    _mini_session_partition().to_parquet(
+        impl
+        / "datasets"
+        / "session_response_1min"
+        / "site=caltech"
+        / "year=2018"
+        / "month=05"
+        / "data.parquet",
+        index=False,
+    )
+    cfg = _mini_cfg()
+    cfg["pool"]["evidence_pools"]["k1_sample_registry"] = "k1_sample_registry.csv"
+    with open(impl / "configs" / "e0_full.yaml", "w", encoding="utf-8") as fh:
+        yaml.safe_dump(cfg, fh, allow_unicode=True)
+    return cfg
+
+
+def test_evidence_pool_reproduction_audit(tmp_path: Path) -> None:
+    """#15 acceptance-3：冻结证据窗口 matched 子集 == k1 冻结计数 → PASS。"""
+    cfg = _mini_cfg()
+    k1 = pd.DataFrame({"site": ["caltech", "caltech", "jpl"], "sessionID": ["a", "b", "c"]})
+    k1_path = tmp_path / "k1_sample_registry.csv"
+    k1.to_csv(k1_path, index=False)
+    cfg["pool"]["evidence_pools"]["k1_sample_registry"] = str(k1_path)
+    ev = evidence_pool_reproduction_audit(_mini_registry_full(), cfg, tmp_path)
+    assert ev["sample_layer_match_status_1to1"] is True
+    assert ev["windows"]["caltech_main_window"]["n_matched"] == 2
+    assert ev["windows"]["jpl_current_only_window"]["n_matched"] == 1
+    assert ev["windows"]["jpl_current_only_window"]["n_static_only"] == 0
+    assert ev["k1_sample_registry_cross_check"]["checked"] is True
+
+
+def test_evidence_pool_reproduction_audit_stops_on_k1_mismatch(tmp_path: Path) -> None:
+    cfg = _mini_cfg()
+    k1 = pd.DataFrame(
+        {"site": ["caltech", "caltech", "caltech", "jpl"], "sessionID": ["a", "b", "c", "d"]}
+    )
+    k1_path = tmp_path / "k1_sample_registry.csv"
+    k1.to_csv(k1_path, index=False)
+    cfg["pool"]["evidence_pools"]["k1_sample_registry"] = str(k1_path)
+    with pytest.raises(RuntimeError, match="matched 子集 != k1_sample_registry"):
+        evidence_pool_reproduction_audit(_mini_registry_full(), cfg, tmp_path)
+
+
+def test_evidence_pool_reproduction_audit_stops_on_layer_status_mismatch(tmp_path: Path) -> None:
+    reg = _mini_registry_full()
+    reg.loc[reg["session_id"] == "s4", "sample_layer"] = "L1_strict_matched"
+    cfg = _mini_cfg()
+    cfg["pool"]["evidence_pools"]["k1_sample_registry"] = "k1_sample_registry.csv"
+    with pytest.raises(RuntimeError, match="sample_layer <-> match_status 不是 1:1"):
+        evidence_pool_reproduction_audit(reg, cfg, tmp_path)
