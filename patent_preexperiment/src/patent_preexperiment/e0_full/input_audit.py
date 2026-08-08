@@ -1656,6 +1656,11 @@ def current_only_full_pool_sensitivity(
     keep_unaffected = keep_min[~keep_min["session_id"].isin(affected_sessions)]
     rebuilt_parts = [df for df in coll_rebuild.values() if not df.empty]
     coll_min = pd.concat([keep_unaffected, *rebuilt_parts], ignore_index=True)
+    # concat 会把 datetime 列 upcast 成 object（rebuild 产物含 pd.NA），逐列对齐到冻结表 dtype
+    for c in keep_min.columns:
+        target = keep_min[c].dtype
+        if c in coll_min.columns and coll_min[c].dtype != target:
+            coll_min[c] = coll_min[c].astype(target)
 
     # ---- 硬一致性检查 ----
     coll_sessions = set(coll_min["session_id"].unique())

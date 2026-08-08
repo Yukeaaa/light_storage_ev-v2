@@ -74,6 +74,20 @@
 - 翻转：候选窗口 0/3131，活跃周期 0
 - 门：rate keep=False / collapse=False；share keep=False / collapse=False；门翻转：False
 
+## 完整 JPL current-only 母体 keep-vs-collapse 敏感性（审查结论12 P0，E0F-01.3）
+
+- 范围：冻结完整 JPL current-only 分钟母体（lite_session_minute.parquet JPL 部分）keep vs collapse（仅替换含 exact-duplicate 的母体成员会话）；输入未修改：True
+- 冻结基线参考：n_cycles=36736，A2=0.392612，日率=0.362369，CI=[0.32995762618758384, 0.395798678130819]，能量占比=0.038928678037374986，gate=PASS
+- 母体 membership：frozen_sessions=9023，affected=54，affected_in_pop=54，affected_not_in_pop=0，untouched=8969
+- Keep：n_cycles=36736 A2=0.392612 日率=0.3623694692507855 CI=[0.32995762618758384, 0.395798678130819] 能量占比中位=0.038929
+- Keep 复现冻结基线：True
+- Collapse：n_cycles=36736 A2=0.392612 日率=0.3623694692507855 CI=[0.32995762618758384, 0.395798678130819] 能量占比中位=0.038929
+- 一致性：population_identity=True，nonaffected_unchanged=False，no_extra_minutes=True，site_garage=True，nonaffected_apk_zero_diff=True
+- 翻转：候选 0/36842，eligible_cycle=0，活跃 0
+- 门：keep_gate=True collapse_gate=True gate_flipped=False
+- 验收：{'keep_reproduces_frozen_baseline': True, 'population_identity_preserved': True, 'nonaffected_sessions_unchanged': False, 'keep_gate': True, 'collapse_gate': True, 'gate_flipped': False}
+- STOP 原因：NONAFFECTED_SESSIONS_CHANGED
+
 ## 站点 raw→canonical 映射（审查结论10 P1，E0F-02 前冻结）
 
 - raw_sites：{'caltech': 56680, 'jpl': 27723, 'office_01': 1474}；canonical_sites：{'caltech': 56680, 'jpl': 27723, 'office001': 1474}；未映射：[]；mapping_ok：True
