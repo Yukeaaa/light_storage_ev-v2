@@ -1,7 +1,7 @@
 {
   "schema": "e0_full_pool_state.schema.json",
-  "created_at_utc": "2026-08-08T14:51:34.283281+00:00",
-  "code_sha": "6ef802d46846d7cc8f17ecc571ba265222edbbe6",
+  "created_at_utc": "2026-08-08T15:18:34.915235+00:00",
+  "code_sha": "b75e591390c7213583facab7e65556896610dd58",
   "pool_registry": {
     "path": "data_registry/pool_registry.csv",
     "sha256": "9579eb6398869983a2eb3980d47be9de6858176c0d7f401c042ecf63fb0d5856",
@@ -775,16 +775,34 @@
     "k1_sample_registry_cross_check": {
       "checked": true,
       "expected_by_site": {
-        "jpl": 9023,
-        "caltech": 6060
+        "caltech": 6060,
+        "jpl": 9023
       },
       "actual_matched_by_window": {
         "caltech_main_window": 6060,
         "jpl_current_only_window": 9023
       },
+      "identity": {
+        "caltech_main_window": {
+          "k1_frozen_n": 6060,
+          "window_matched_n": 6060,
+          "missing_n": 0,
+          "extra_n": 0,
+          "missing_sample": [],
+          "extra_sample": []
+        },
+        "jpl_current_only_window": {
+          "k1_frozen_n": 9023,
+          "window_matched_n": 9023,
+          "missing_n": 0,
+          "extra_n": 0,
+          "missing_sample": [],
+          "extra_sample": []
+        }
+      },
       "mismatch": {}
     },
-    "conclusion": "冻结证据池人口 100% matched（matched 子集 == K1 冻结计数），matched-only pool_state 保留复现冻结 E3-Lite 所需人口；无需 amendment 到 R1/#17"
+    "conclusion": "冻结证据池人口 100% matched，且 matched session_id 集合与 K1 frozen registry 完全相等（missing=0, extra=0）；matched-only pool_state 无歧义映射至冻结证据池人口；正式 E3-Lite 指标 hard-split 复现移交 R1/#17"
   },
   "report": "reports/E0_Full_pool_state_audit.md"
 }

@@ -1,5 +1,5 @@
 {
-  "created_at_utc": "2026-08-08T14:51:34.548485+00:00",
+  "created_at_utc": "2026-08-08T15:18:35.894337+00:00",
   "protocol_version": "V2.0",
   "landing_version": "V2.1",
   "experiment_id": "E0_full_preregister_v1",
@@ -8,13 +8,13 @@
     "path": "patent_preexperiment/data_registry/design_baseline.json",
     "commit": "41dd1dd038ebce13b28a76c3254f08e61569dabe"
   },
-  "code_sha": "6ef802d46846d7cc8f17ecc571ba265222edbbe6",
+  "code_sha": "b75e591390c7213583facab7e65556896610dd58",
   "git_status": {
     "code_dirty_files": [],
     "code_clean": true,
     "note": "已跟踪文件修改（证据产物输出路径除外）与 src/configs/experiments/tests 下 untracked 文件均视为未提交代码"
   },
-  "e0_full_yaml_sha256": "d4e9b27e023220abbba2f0944324330fd22e1d6f66d7461cb301a73b319ffe4d",
+  "e0_full_yaml_sha256": "d0c38dec45d2b2ece5493d9f6b02461c20af458faaa8f2d0ef3266063d4ca023",
   "manifest_hashes": {
     "static_file_index.csv": {
       "sha256": "eff813e2a723749c2529a0174d21e19255c63b216cb18796c4c253037a96ac2e",
@@ -74,7 +74,7 @@
       "n_pools": 3
     },
     "pool_state_registry": {
-      "sha256": "c713213761d2b1b2f3277bc849f02148260cf3c2fcee449b4fd6a2250ae1ca14",
+      "sha256": "a0bd8d035cc0585da3f32792d743847a714fdb7455c289148712568936112f2e",
       "n_rows_1min": 1458623,
       "n_partitions_1min": 81
     },
