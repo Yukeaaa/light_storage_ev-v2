@@ -41,6 +41,12 @@ def _load_golden():
 
 def _cfg() -> dict:
     return {
+        "inputs": {
+            "manifests": {
+                "static_file_index_rows": 4,
+                "match_status": {"matched": 2, "static_only": 2, "api_only": 1},
+            },
+        },
         "site_mapping": {
             "raw_to_canonical": {"caltech": "caltech", "jpl": "jpl", "office_01": "office001"},
         },
@@ -422,6 +428,81 @@ def test_registry_missing_manifest_raises() -> None:
     manifest = manifest.iloc[:-1].copy()
     with pytest.raises(ValueError, match="不在 manifest"):
         build_split_registry(mapping, audit, api_meta, manifest, _cfg())
+
+
+# ---- E0F-02.1 治理收尾（审查结论16） ----
+
+
+def test_population_freeze_stop_on_row_count() -> None:
+    mapping, audit, api_meta, manifest = _synthetic_inputs()
+    cfg = _cfg()
+    cfg["inputs"]["manifests"]["static_file_index_rows"] = 5
+    with pytest.raises(ValueError, match="人口冻结"):
+        build_split_registry(mapping, audit, api_meta, manifest, cfg)
+
+
+def test_population_freeze_stop_on_matched_count() -> None:
+    mapping, audit, api_meta, manifest = _synthetic_inputs()
+    cfg = _cfg()
+    cfg["inputs"]["manifests"]["match_status"]["matched"] = 3
+    with pytest.raises(ValueError, match="人口冻结"):
+        build_split_registry(mapping, audit, api_meta, manifest, cfg)
+
+
+def test_population_freeze_stop_on_static_only_count() -> None:
+    mapping, audit, api_meta, manifest = _synthetic_inputs()
+    cfg = _cfg()
+    cfg["inputs"]["manifests"]["match_status"]["static_only"] = 1
+    with pytest.raises(ValueError, match="人口冻结"):
+        build_split_registry(mapping, audit, api_meta, manifest, cfg)
+
+
+def test_audit_duplicate_session_id_fails_fast() -> None:
+    mapping, audit, api_meta, manifest = _synthetic_inputs()
+    audit2 = pd.concat([audit, audit.iloc[[0]]], ignore_index=True)
+    with pytest.raises(ValueError, match="connection_time_audit.*唯一"):
+        build_split_registry(mapping, audit2, api_meta, manifest, _cfg())
+
+
+def test_api_meta_duplicate_session_id_fails_fast() -> None:
+    mapping, audit, api_meta, manifest = _synthetic_inputs()
+    api2 = pd.concat([api_meta, api_meta.iloc[[0]]], ignore_index=True)
+    with pytest.raises(ValueError, match="api_metadata_index.*唯一"):
+        build_split_registry(mapping, audit, api2, manifest, _cfg())
+
+
+def test_manifest_duplicate_logical_path_fails_fast() -> None:
+    mapping, audit, api_meta, manifest = _synthetic_inputs()
+    manifest2 = pd.concat([manifest, manifest.iloc[[0]]], ignore_index=True)
+    with pytest.raises(ValueError, match="source_manifest.*唯一"):
+        build_split_registry(mapping, audit, api_meta, manifest2, _cfg())
+
+
+def test_field_mode_registry_manifest_duplicate_fails_fast() -> None:
+    mapping, audit, api_meta, manifest = _synthetic_inputs()
+    manifest2 = pd.concat([manifest, manifest.iloc[[0]]], ignore_index=True)
+    with pytest.raises(ValueError, match="source_manifest.*唯一"):
+        build_field_mode_registry(mapping, manifest2, _cfg())
+
+
+def test_cross_registry_session_set_mismatch_raises() -> None:
+    from patent_preexperiment.e0_full.split import _assert_cross_registry_consistency
+
+    mapping, audit, api_meta, manifest = _synthetic_inputs()
+    reg = build_split_registry(mapping, audit, api_meta, manifest, _cfg())
+    fm = build_field_mode_registry(mapping, manifest, _cfg())
+    extra = fm.iloc[[0]].copy()
+    extra["session_id"] = "extra_session_x"
+    fm2 = pd.concat([fm, extra], ignore_index=True)
+    with pytest.raises(ValueError, match="会话集合必须完全一致"):
+        _assert_cross_registry_consistency(reg, fm2)
+
+
+def test_cross_registry_session_set_consistent_ok() -> None:
+    mapping, audit, api_meta, manifest = _synthetic_inputs()
+    reg = build_split_registry(mapping, audit, api_meta, manifest, _cfg())
+    fm = build_field_mode_registry(mapping, manifest, _cfg())
+    assert set(fm["session_id"]) == set(reg["session_id"])
 
 
 def test_field_mode_registry_matches_split_registry() -> None:

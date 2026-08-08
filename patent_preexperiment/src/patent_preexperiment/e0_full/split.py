@@ -13,9 +13,15 @@
    [connection_time_canonical, session_id] mergesort 稳定排序，前 60% train /
    中 20% validation / 后 20% test；external（office001）→ external；异常月份 → stress。
    与 tests/test_e0_split.py 金标准 assign_split 逐会话对齐。
-4. sample_layer 分离证据资格：matched → L1_strict_matched；static_only → L0_static_extension。
-   训练资格由后续实验显式过滤（E1 严格主结论 = L1_strict_matched ∧ split∈{train,val,test}
-   ∧ role==main；JPL boundary/current_only_fallback 即使 split==train 也不得调参）。
+4. sample_layer 分离证据层级：matched → L1_strict_matched；static_only → L0_static_extension。
+   main_evidence_universe（主证据体系资格，与模型权限无关）=
+       sample_layer == L1_strict_matched ∧ role == main ∧ split ∈ {train, validation, test}。
+   模型权限必须单独冻结，禁止把 train/validation/test 混为一谈：
+       fit_eligible:             split == train
+       model_selection_eligible: split == validation
+       final_test_eligible:      split == test
+   test 只允许一次正式评估：不得据此选择特征/阈值/模型/支持域规则，不得根据 test 图形回调参数。
+   JPL boundary/current_only_fallback 即使 split==train 也不得获得主模型调参资格。
 5. role 独立于时间 split：caltech → main；jpl.Arroyo_Garage_01（2020-06/07）→ boundary；
    其余 jpl → current_only_fallback；office001 → external_only。
 6. field_mode 五类（measured_pilot/measured_no_pilot/computed_pilot/computed_no_pilot/
@@ -190,22 +196,18 @@ def build_split_registry(
     mb = mapping[mapping["match_status"].isin([_MATCHED, _STATIC_ONLY])].copy()
     mb["static_file_norm"] = mb["static_file"].str.replace("\\", "/", regex=False)
 
+    _assert_key_unique(audit, "session_id", "connection_time_audit")
+    _assert_key_unique(manifest, "logical_path", "source_manifest")
     audit_idx = audit.set_index("session_id") if not audit.empty else pd.DataFrame()
-    if not audit_idx.empty:
-        audit_idx = audit_idx[~audit_idx.index.duplicated()]
 
     if "disconnectTime" in api_meta.columns:
-        api_disc = (
-            api_meta[["sessionID", "disconnectTime"]]
-            .dropna(subset=["sessionID"])
-            .drop_duplicates(subset=["sessionID"])
-            .set_index("sessionID")["disconnectTime"]
-        )
+        api_disc_src = api_meta[["sessionID", "disconnectTime"]].dropna(subset=["sessionID"])
+        _assert_key_unique(api_disc_src, "sessionID", "api_metadata_index")
+        api_disc = api_disc_src.set_index("sessionID")["disconnectTime"]
     else:
         api_disc = pd.Series(dtype=str)
 
     mf = manifest.set_index("logical_path")
-    mf = mf[~mf.index.duplicated()]
 
     rows: list[dict[str, Any]] = []
     missing_manifest: list[str] = []
@@ -338,14 +340,30 @@ def build_split_registry(
 
     reg = reg.sort_values(["site_raw", "session_id"]).reset_index(drop=True)
     reg = reg[_REGISTRY_COLUMNS]
-    _assert_registry_invariants(reg)
+    _assert_registry_invariants(reg, cfg)
     return reg
 
 
-def _assert_registry_invariants(reg: pd.DataFrame) -> None:
-    """E0F-02 验收不变量（审查结论15 冻结）。"""
+def _assert_key_unique(df: pd.DataFrame, key: str, label: str) -> None:
+    """可追溯性关键索引唯一性 fail-fast（审查结论16 P0-3）：原始重复禁止静默丢弃。"""
+    col = df[key]
+    dup = col[col.duplicated()]
+    if not dup.empty:
+        raise ValueError(
+            f"E0F-02 停止：{label} 键必须唯一，发现 {len(dup)} 个重复"
+            "（原始异常禁止静默 drop_duplicates，须显式登记消歧）；"
+            f"首例重复键：{dup.iloc[0]}"
+        )
+
+
+def _assert_registry_invariants(reg: pd.DataFrame, cfg: dict[str, Any]) -> None:
+    """E0F-02 验收不变量（审查结论15/16 冻结）。
+
+    结构不变量 + 人口冻结 machine STOP（审查结论16 P0-2）：population 数字不再只是
+    报告检查，任何偏离 cfg 冻结值（85877/40644/45233）直接 raise。
+    """
     if len(reg) == 0:
-        return
+        raise ValueError("E0F-02 验收失败：registry 为空（冻结 population 不为零）")
     if not reg["session_id"].is_unique:
         raise ValueError("E0F-02 验收失败：session_id 必须唯一（每会话恰好一行）")
     if reg["session_id"].isna().any():
@@ -373,6 +391,39 @@ def _assert_registry_invariants(reg: pd.DataFrame) -> None:
     if not reg["field_mode"].isin(_FIELD_MODE_CATEGORIES).all():
         raise ValueError("E0F-02 验收失败：field_mode 必须是冻结五类")
 
+    frozen = cfg["inputs"]["manifests"]
+    expected_rows = int(frozen["static_file_index_rows"])
+    expected_matched = int(frozen["match_status"]["matched"])
+    expected_static = int(frozen["match_status"]["static_only"])
+    if len(reg) != expected_rows:
+        raise ValueError(
+            f"E0F-02 人口冻结 STOP：registry 行数 {len(reg)} != 冻结 {expected_rows}"
+            "（上游 mapping 变化必须显式评审，禁止静默接受新 population）"
+        )
+    if int((reg["match_status"] == _MATCHED).sum()) != expected_matched:
+        raise ValueError(
+            f"E0F-02 人口冻结 STOP：matched {(reg['match_status'] == _MATCHED).sum()} "
+            f"!= 冻结 {expected_matched}"
+        )
+    if int((reg["match_status"] == _STATIC_ONLY).sum()) != expected_static:
+        raise ValueError(
+            f"E0F-02 人口冻结 STOP：static_only {(reg['match_status'] == _STATIC_ONLY).sum()} "
+            f"!= 冻结 {expected_static}"
+        )
+    if bool((reg["match_status"] == "api_only").any()):
+        raise ValueError("E0F-02 人口冻结 STOP：registry 不得含 api_only 会话")
+
+
+def _assert_cross_registry_consistency(reg: pd.DataFrame, fm: pd.DataFrame) -> None:
+    """split registry 与 field_mode registry 会话集合完全一致（审查结论16 P0-2）。"""
+    only_fm = sorted(set(fm["session_id"]) - set(reg["session_id"]))
+    only_reg = sorted(set(reg["session_id"]) - set(fm["session_id"]))
+    if only_fm or only_reg:
+        raise ValueError(
+            "E0F-02 验收失败：split registry 与 field_mode registry 会话集合必须完全一致"
+            f"；仅 field_mode 有 {len(only_fm)} 个、仅 split 有 {len(only_reg)} 个"
+        )
+
 
 def build_field_mode_registry(
     mapping: pd.DataFrame,
@@ -391,7 +442,7 @@ def build_field_mode_registry(
         + mb["connection_time"].str.replace("T", " ", regex=False),
     )
     mf = manifest.set_index("logical_path")
-    mf = mf[~mf.index.duplicated()]
+    _assert_key_unique(manifest, "logical_path", "source_manifest")
 
     rows: list[dict[str, Any]] = []
     for _, r in mb.iterrows():
@@ -455,6 +506,7 @@ def run_e0f02(
     reg.to_parquet(split_out, index=False)
 
     fm = build_field_mode_registry(mapping, manifest, cfg)
+    _assert_cross_registry_consistency(reg, fm)
     fm_out = impl_root / "data_registry" / "e0_full_field_mode_registry.parquet"
     fm_out.parent.mkdir(parents=True, exist_ok=True)
     fm.to_parquet(fm_out, index=False)
@@ -518,16 +570,25 @@ def _build_split_audit_report(
     fm: pd.DataFrame,
     cfg: dict[str, Any],
 ) -> str:
+    frozen = cfg["inputs"]["manifests"]
+    n_all = int(frozen["static_file_index_rows"])
+    n_matched = int(frozen["match_status"]["matched"])
+    n_static = int(frozen["match_status"]["static_only"])
     lines: list[str] = [
         "# E0-Full 时间切分审计（E0F-02）",
         "",
         "## 口径声明",
         "",
         "split registry 表示**时间位置**，不表示**训练资格**。",
-        "全部 85,877 个有静态时序的会话进入统一 registry；40,644 matched 属 L1 严格集，",
-        "45,233 static_only 属 L0 扩展集；api_only 无静态响应时序，不进入本 registry。",
-        "训练资格由后续实验显式过滤：E1 严格主结论 = `sample_layer==L1_strict_matched` "
-        "∧ `split in {train,validation,test}` ∧ `role==main`；",
+        f"全部 {n_all:,} 个有静态时序的会话进入统一 registry；{n_matched:,} matched 属 L1 严格集，",
+        f"{n_static:,} static_only 属 L0 扩展集；api_only 无静态响应时序，不进入本 registry。",
+        "main_evidence_universe（主证据体系资格，与模型权限无关）="
+        " `sample_layer==L1_strict_matched` ∧ `role==main` ∧ "
+        "`split in {train,validation,test}`。",
+        "模型权限必须单独冻结：fit_eligible=`split==train`；"
+        "model_selection_eligible=`split==validation`；final_test_eligible=`split==test`。",
+        "test 只允许一次正式评估：不得据此选择特征/阈值/模型/支持域规则，"
+        "不得根据 test 图形回调参数。",
         "JPL boundary/current_only_fallback 即使 `split==train` 也不得获得主模型调参资格。",
         "",
         "## 验收不变量",
@@ -576,6 +637,28 @@ def _build_split_audit_report(
     lines.append(reg["role"].value_counts().to_string())
     lines.append("")
 
+    lines += ["## role×field_mode 交叉审计（role ≠ 字段模式；审查结论16 P1）", ""]
+    rf = reg.pivot_table(
+        index="role", columns="field_mode", values="session_id", aggfunc="count", fill_value=0
+    )
+    lines.append(rf.to_string())
+    lines.append("")
+    lines.append(
+        "注意：`role==current_only_fallback` 只是粗粒度证据角色（jpl 非 boundary 会话），"
+        "**不意味着**该会话是 `field_mode==current_only`。K1 current-only 证据池必须显式"
+        "同时满足 `role==current_only_fallback` ∧ `field_mode==current_only` ∧ 冻结月份资格 "
+        "∧ K1 原有其他 eligibility（最终以 R1 冻结协议为准），禁止以 role 单独冒充 "
+        "current-only 池。"
+    )
+    lines.append("")
+
+    lines += ["## role×sample_layer 交叉审计（审查结论16 P1）", ""]
+    rs = reg.pivot_table(
+        index="role", columns="sample_layer", values="session_id", aggfunc="count", fill_value=0
+    )
+    lines.append(rs.to_string())
+    lines.append("")
+
     lines += ["## stress 分布", ""]
     stress_tab = (
         reg.assign(_m=reg["connection_time"].dt.strftime("%Y-%m"))
@@ -607,7 +690,10 @@ def _build_split_audit_report(
         lines.append(f"- {site}（n={n}）：{shares}")
     lines.append("")
 
-    lines += ["## role×split 交叉（证明时间位置与角色相互独立）", ""]
+    lines += [
+        "## role×split 交叉审计（验证 role 作为正交治理字段保存，role 不参与 assign_split 决策）",
+        "",
+    ]
     cross = reg.pivot_table(
         index="role", columns="split", values="session_id", aggfunc="count", fill_value=0
     )
