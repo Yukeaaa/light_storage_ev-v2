@@ -8,7 +8,7 @@
   "n_partitions": 81,
   "n_sessions": 85877,
   "n_rows": 28301657,
-  "uniqueness_check": "per-partition [session_id, timestamp_utc] unique enforced + partition path ↔ row site/year/month 一致性",
+  "uniqueness_check": "per-partition [session_id, timestamp_utc] unique + partition path ↔ row site/year/month 一致性 + 行治理列 == E0F-02 registry 会话级值（三腿合成全局唯一）",
   "partitions": [
     {
       "site": "caltech",

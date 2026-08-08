@@ -8,6 +8,7 @@ session_response_1min 只把原始响应转成可追溯的 canonical 分钟观�
 - 派生层 exact-duplicate collapse（逐字节相同原始行保留首次出现），逐分钟登记 raw_duplicate_count；同时间戳不同观测保留进入确定性分钟聚合。
 - actual_power_kw 冻结优先级 measured→computed→estimated（rated：jpl=192.7/caltech=240/office001=240）。
 - 主键 [session_id, timestamp_utc(1min)] 唯一，非法重复 hard STOP。
+- 全局唯一证明（E0F-03.2 三腿合成）：每行治理列（site/split/role/sample_layer/field_mode/match_status/external/stress）必须等于 E0F-02 registry 该会话值（session_id → 唯一 canonical site）+ timestamp → 唯一 year/month 分区 + 分区内 key unique，无需维护 28.3M key 的全局集合。
 - disconnect_time/done_charging_time/kwh_delivered 只作离线标签与能量审计基准，禁止在线特征。
 - 分区：site/year/month，共 81 个分区，28,301,657 行；test 分区只做数据工程检查，不查看 outcome 指标。
 
