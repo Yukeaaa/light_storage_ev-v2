@@ -1,5 +1,5 @@
 {
-  "created_at_utc": "2026-08-08T09:55:25.142852+00:00",
+  "created_at_utc": "2026-08-08T10:11:16.521199+00:00",
   "protocol_version": "V2.0",
   "landing_version": "V2.1",
   "experiment_id": "E0_full_preregister_v1",
@@ -8,7 +8,7 @@
     "path": "patent_preexperiment/data_registry/design_baseline.json",
     "commit": "41dd1dd038ebce13b28a76c3254f08e61569dabe"
   },
-  "code_sha": "91319fe9bd0bcc9184761816cc8ecfc95d12755a",
+  "code_sha": "fdb061213d278c2231cc72d19f1b5e5f0bdd0f84",
   "git_status": {
     "code_dirty_files": [],
     "code_clean": true,

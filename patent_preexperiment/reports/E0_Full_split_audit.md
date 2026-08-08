@@ -5,7 +5,9 @@
 split registry 表示**时间位置**，不表示**训练资格**。
 全部 85,877 个有静态时序的会话进入统一 registry；40,644 matched 属 L1 严格集，
 45,233 static_only 属 L0 扩展集；api_only 无静态响应时序，不进入本 registry。
-训练资格由后续实验显式过滤：E1 严格主结论 = `sample_layer==L1_strict_matched` ∧ `split in {train,validation,test}` ∧ `role==main`；
+main_evidence_universe（主证据体系资格，与模型权限无关）= `sample_layer==L1_strict_matched` ∧ `role==main` ∧ `split in {train,validation,test}`。
+模型权限必须单独冻结：fit_eligible=`split==train`；model_selection_eligible=`split==validation`；final_test_eligible=`split==test`。
+test 只允许一次正式评估：不得据此选择特征/阈值/模型/支持域规则，不得根据 test 图形回调参数。
 JPL boundary/current_only_fallback 即使 `split==train` 也不得获得主模型调参资格。
 
 ## 验收不变量
@@ -44,6 +46,26 @@ current_only_fallback    26843
 external_only             1474
 boundary                   880
 
+## role×field_mode 交叉审计（role ≠ 字段模式；审查结论16 P1）
+
+field_mode             current_only  measured_no_pilot  measured_pilot
+role                                                                  
+boundary                        224                  0             656
+current_only_fallback         24642                  0            2201
+external_only                     0                  0            1474
+main                            719              14119           41842
+
+注意：`role==current_only_fallback` 只是粗粒度证据角色（jpl 非 boundary 会话），**不意味着**该会话是 `field_mode==current_only`。K1 current-only 证据池必须显式同时满足 `role==current_only_fallback` ∧ `field_mode==current_only` ∧ 冻结月份资格 ∧ K1 原有其他 eligibility（最终以 R1 冻结协议为准），禁止以 role 单独冒充 current-only 池。
+
+## role×sample_layer 交叉审计（审查结论16 P1）
+
+sample_layer           L0_static_extension  L1_strict_matched
+role                                                         
+boundary                                24                856
+current_only_fallback                 3167              23676
+external_only                          174               1300
+main                                 41868              14812
+
 ## stress 分布
 
 _m
@@ -59,7 +81,7 @@ _m
 - caltech（n=52641）：train=31585 (60.0%)  validation=10528 (20.0%)  test=10528 (20.0%)
 - jpl（n=25132）：train=15079 (60.0%)  validation=5026 (20.0%)  test=5027 (20.0%)
 
-## role×split 交叉（证明时间位置与角色相互独立）
+## role×split 交叉审计（验证 role 作为正交治理字段保存，role 不参与 assign_split 决策）
 
 split                  external  stress   test  train  validation
 role                                                             
