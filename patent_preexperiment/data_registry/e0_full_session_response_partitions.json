@@ -8,7 +8,7 @@
   "n_partitions": 81,
   "n_sessions": 85877,
   "n_rows": 28301657,
-  "uniqueness_check": "per-partition [session_id, timestamp_utc] unique enforced",
+  "uniqueness_check": "per-partition [session_id, timestamp_utc] unique enforced + partition path ↔ row site/year/month 一致性",
   "partitions": [
     {
       "site": "caltech",

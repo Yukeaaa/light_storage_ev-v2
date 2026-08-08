@@ -1,5 +1,5 @@
 {
-  "created_at_utc": "2026-08-08T12:40:26.238481+00:00",
+  "created_at_utc": "2026-08-08T13:09:54.296716+00:00",
   "protocol_version": "V2.0",
   "landing_version": "V2.1",
   "experiment_id": "E0_full_preregister_v1",
@@ -8,7 +8,7 @@
     "path": "patent_preexperiment/data_registry/design_baseline.json",
     "commit": "41dd1dd038ebce13b28a76c3254f08e61569dabe"
   },
-  "code_sha": "0b0f39cb9bc52c5f27377d0271ca615906356ff9",
+  "code_sha": "7ea1a0f075c36be6b21d223611d5038b42d51993",
   "git_status": {
     "code_dirty_files": [],
     "code_clean": true,
@@ -61,7 +61,7 @@
   },
   "session_response": {
     "partition_registry": {
-      "sha256": "84132d631b976bd1688c441cf6ccfc960e34217d0277a76e06bdc6e9fa141862",
+      "sha256": "b5fa8cb048564b8a375495b2b2019fc50132e2ccaaa49e529abe438c9a1e40e0",
       "n_partitions": 81,
       "n_sessions": 85877,
       "n_rows": 28301657

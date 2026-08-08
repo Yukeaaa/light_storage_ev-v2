@@ -28,8 +28,13 @@ session_response_1min 只把原始响应转成可追溯的 canonical 分钟观�
 - jpl（vs API kWhDelivered）：n=837，中位|dev|=0.006301，p95=0.011575
 - office001（vs API kWhDelivered）：n=1,300，中位|dev|=0.006644，p95=0.021579
 
-caltech/office001 分钟积分 vs 原始能量跨度中位 |dev| 必须 < 0.01（硬 STOP）；jpl 聚合可用、会话级离群过滤后另报（不做 STOP）。
+caltech/office001 分钟积分 vs 原始能量跨度中位 |dev| >= 0.01 即硬 STOP（门线用原始中位，等值即 STOP；round 只用于报告显示）；jpl 聚合可用、会话级离群过滤后另报（不做 STOP）。
 能量跨度口径：原始能量为累计计量，会话末尾 UNPLUGGED 复位行（仪表 re-arm 到 0.0）为已知伪影；基于 canonical 分钟表 energy_cum_kwh 计算，energy_last 取分钟峰值、energy_first 取首条非空分钟读数（口径与 build/finalize 两条路径一致）。
+
+## 数据质量风险登记（D0/#16 P1 debt）
+
+- **caltech**：中位 |dev|=0.009748 已达冻结门线 0.01 的 80%，标记为 Amber。不改变 E1 主样本定义、不删样本；在 D0/#16 按 month × split × field_mode 报告 energy deviation 分布（≤5% / 5–20% / >20%），并在 train/validation/test、frozen K1 months、field_mode、site 上做高偏差会话敏感性分析。
+- **office001**：中位 |dev|=0.008672 已达冻结门线 0.01 的 80%，标记为 Amber。不改变 E1 主样本定义、不删样本；在 D0/#16 按 month × split × field_mode 报告 energy deviation 分布（≤5% / 5–20% / >20%），并在 train/validation/test、frozen K1 months、field_mode、site 上做高偏差会话敏感性分析。
 
 ## 分区清单（行数/会话数，sha256 见 partition registry）
 
