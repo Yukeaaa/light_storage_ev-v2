@@ -1,5 +1,5 @@
 {
-  "created_at_utc": "2026-08-08T08:50:20.009129+00:00",
+  "created_at_utc": "2026-08-08T09:55:25.142852+00:00",
   "protocol_version": "V2.0",
   "landing_version": "V2.1",
   "experiment_id": "E0_full_preregister_v1",
@@ -8,7 +8,7 @@
     "path": "patent_preexperiment/data_registry/design_baseline.json",
     "commit": "41dd1dd038ebce13b28a76c3254f08e61569dabe"
   },
-  "code_sha": "abad0ec88542fc0ce94c3d1eb3f1872baa3aea49",
+  "code_sha": "91319fe9bd0bcc9184761816cc8ecfc95d12755a",
   "git_status": {
     "code_dirty_files": [],
     "code_clean": true,
@@ -45,6 +45,20 @@
     "acn_full": "D:\\Users\\Micko\\Documents\\工作\\华润集控\\光储充\\数据\\ACN-data\\acn_full"
   },
   "split_rule_version": "e0_full_split_v1",
+  "split_registry": {
+    "split_registry": {
+      "sha256": "5cb0710240a570764dfac5421c3e834008c33629b6525313b6ab6e7b88c64e53",
+      "rows": 85877,
+      "matched": 40644,
+      "static_only": 45233,
+      "api_only": 0,
+      "anomaly": 0
+    },
+    "field_mode_registry": {
+      "sha256": "d5d4d863fd99b9e8d36d2b8ccf2ad891d46dbc3c06730cc095b12190d0a8959b",
+      "rows": 85877
+    }
+  },
   "output_manifest": [
     "data_registry/e0_full_source_manifest.parquet",
     "data_registry/e0_full_quality_summary.json",
@@ -53,6 +67,9 @@
     "data_registry/e0_full_dup_collapse_impact.json",
     "data_registry/e0_full_dup_current_only_sensitivity.json",
     "reports/E0_Full_input_audit.md",
+    "data_registry/e0_full_split_registry.parquet",
+    "data_registry/e0_full_field_mode_registry.parquet",
+    "reports/E0_Full_split_audit.md",
     "data_registry/e0_full_baseline.json"
   ],
   "source_manifest_sha256": "f1a5fd036ed6901bf5b89af9e935b99b071b32b67812f7dff1810f76506bd17a"
