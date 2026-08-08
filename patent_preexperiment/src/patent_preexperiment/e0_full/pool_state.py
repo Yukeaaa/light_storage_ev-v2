@@ -55,7 +55,45 @@ _POOL_5MIN_COLUMNS = [
     "pilot_coverage", "state_coverage", "measured_ratio",
 ]
 
+_POOL_1MIN_DTYPES: dict[str, str] = {
+    "pool_id": "object",
+    "site": "object",
+    "garage": "object",
+    "timestamp_utc": "datetime64[ns, UTC]",
+    "n_active": "int64",
+    "n_matched": "int64",
+    "n_charging": "int64",
+    "actual_power_kw_total": "float64",
+    "pilot_upper_kw_total": "float64",
+    "current_a_total": "float64",
+    "measured_kwh": "float64",
+    "estimated_kwh": "float64",
+    "pilot_coverage": "float64",
+    "state_coverage": "float64",
+    "measured_ratio": "float64",
+}
+
+# 5min 的 n_active/n_matched/n_charging 是 mean（int→float），其余列同 1min
+_POOL_5MIN_DTYPES: dict[str, str] = {
+    **_POOL_1MIN_DTYPES,
+    "n_active": "float64",
+    "n_matched": "float64",
+    "n_charging": "float64",
+}
+
 _GOLD_STATIONS_FROZEN = 115  # 只作哨兵，实际冻结值以 cfg['pool']['gold']['stations_frozen'] 为准
+
+
+def _empty_frame(columns: list[str], dtypes: dict[str, str]) -> pd.DataFrame:
+    """空 DataFrame 也带正确 dtype：空分区写出 parquet 再读回 schema 一致，concat 不会 upcast。
+
+    否则所有列都是 object，空分区与正常分区 concat 会把整表 upcast 成 object，
+    聚合输出与 parquet 读回值 dtype 不同，`lv.equals(rv)` 仅因 dtype 即判 False。
+    """
+    df = pd.DataFrame(index=pd.Index([], name=None))
+    for c in columns:
+        df[c] = pd.Series(dtype=dtypes[c])
+    return df
 
 
 def _sha256_file(path: Path) -> str:
@@ -113,7 +151,7 @@ def aggregate_partition_1min(session_df: pd.DataFrame) -> pd.DataFrame:
     """单个 session_response 分区的池级 1 分钟聚合（纯函数，build/verify 共用）。"""
     df = session_df[session_df["match_status"].astype(str) == "matched"].copy()
     if df.empty:
-        return pd.DataFrame(columns=_POOL_1MIN_COLUMNS)
+        return _empty_frame(_POOL_1MIN_COLUMNS, _POOL_1MIN_DTYPES)
     df["energy_kwh"] = df["actual_power_kw"] / 60.0
     df["is_measured"] = df["power_source"].isin(["measured", "computed"])
     df["measured_kwh"] = df["energy_kwh"].where(df["is_measured"], 0.0)
@@ -154,7 +192,7 @@ def aggregate_5min_from_1min(pool_1min: pd.DataFrame) -> pd.DataFrame:
     """
     df = pool_1min.copy()
     if df.empty:
-        return pd.DataFrame(columns=_POOL_5MIN_COLUMNS)
+        return _empty_frame(_POOL_5MIN_COLUMNS, _POOL_5MIN_DTYPES)
     # 空分区（无 matched 行）写出再读回后 timestamp_utc 可能为 object dtype，
     # 与 datetime 分区 concat 会整体 upcast；先统一 coerce 避免 .dt 失败。
     df["timestamp_utc"] = pd.to_datetime(df["timestamp_utc"], utc=True)

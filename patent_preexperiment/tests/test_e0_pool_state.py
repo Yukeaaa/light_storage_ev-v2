@@ -277,6 +277,63 @@ def test_verify_cross_granularity_stops_on_tamper(tmp_path: Path) -> None:
         verify_cross_granularity(pool_dir, p5_dir)
 
 
+def test_empty_pool_partition_roundtrip_preserves_dtypes(tmp_path: Path) -> None:
+    """空池分区（全 static_only）写出 parquet 再读回必须保留 dtype。
+
+    回归：空分区曾以全 object dtype 写出 → 与正常分区 concat 后整表 upcast 成
+    object → 5min 聚合 n_active 为 object，而 parquet 读回为 float64，
+    `lv.equals(rv)` 仅因 dtype 差异即判 False → 跨粒度校验误 STOP。
+    """
+    sd = tmp_path / "session_response_1min"
+    # 分区1：有 matched 行 → 非空池分区
+    d1 = sd / "site=caltech" / "year=2018" / "month=05"
+    d1.mkdir(parents=True)
+    _mini_session_partition().to_parquet(d1 / "data.parquet", index=False)
+    # 分区2：全 static_only → 空池分区
+    d2 = sd / "site=jpl" / "year=2019" / "month=01"
+    d2.mkdir(parents=True)
+    static_only = pd.DataFrame(
+        {
+            "session_id": ["s9", "s9"],
+            "site": ["jpl", "jpl"],
+            "garage": ["Arroyo_Garage_01", "Arroyo_Garage_01"],
+            "match_status": ["static_only", "static_only"],
+            "timestamp_utc": pd.to_datetime(
+                ["2019-01-01T08:00:00Z", "2019-01-01T08:01:00Z"], utc=True
+            ),
+            "actual_power_kw": [2.0, 2.0],
+            "power_source": ["measured", "measured"],
+            "pilot_available": [True, True],
+            "pilot_power_kw": [5.0, 5.0],
+            "current_a": [9.0, 9.0],
+            "state_available": [True, True],
+            "state_norm": ["charging", "charging"],
+        }
+    )
+    static_only.to_parquet(d2 / "data.parquet", index=False)
+
+    pool_dir = tmp_path / "pool_state_1min"
+    write_pool_1min_partitions(sd, _mini_cfg(), pool_dir)
+    # 读回 concat 后 dtype 必须仍是数值/datetime，而非 object
+    p1 = pd.concat(
+        [
+            pd.read_parquet(pool_dir / "site=caltech" / "year=2018" / "month=05" / "data.parquet"),
+            pd.read_parquet(pool_dir / "site=jpl" / "year=2019" / "month=01" / "data.parquet"),
+        ],
+        ignore_index=True,
+    )
+    assert p1["n_active"].dtype.kind in "iu"
+    assert p1["timestamp_utc"].dtype.kind == "M"
+    assert p1["measured_kwh"].dtype.kind == "f"
+
+    p5_dir = tmp_path / "pool_state_5min"
+    write_pool_5min(pool_dir, p5_dir)
+    ok = verify_cross_granularity(pool_dir, p5_dir)
+    assert ok["cross_granularity"] is True
+    src = verify_session_source(sd, pool_dir)
+    assert src["session_source_consistent"] is True
+
+
 def _write_gold(tmp_path: Path, caltech_scale: float, jpl_scale: float) -> None:
     gd = tmp_path / "gold" / "benchmark_5min"
     gd.mkdir(parents=True, exist_ok=True)
