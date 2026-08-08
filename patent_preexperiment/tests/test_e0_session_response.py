@@ -29,6 +29,7 @@ from patent_preexperiment.e0_full.session_response import (
     aggregate_session_minutes,
     build_session_response,
     exact_dup_extras,
+    finalize_existing_partitions,
     parse_session_lines,
     session_energy_audit,
 )
@@ -55,6 +56,10 @@ def _write_static(tmp_path: Path, rel: str, rows: list[str], header: str = _HEAD
 def _iso(minutes: int, sec: int = 0) -> str:
     base = pd.Timestamp("2018-05-01 17:00:00", tz="UTC")
     return (base + pd.Timedelta(minutes=minutes, seconds=sec)).isoformat()
+
+
+def _iso_abs(iso_str: str) -> str:
+    return pd.Timestamp(iso_str, tz="UTC").isoformat()
 
 
 def _meta(session_id: str = "s1", **overrides: object) -> dict[str, object]:
@@ -296,7 +301,7 @@ def test_session_energy_audit() -> None:
         }
     )
     out = aggregate_session_minutes(rows, _meta(), {})
-    a = session_energy_audit(out, rows, _meta())
+    a = session_energy_audit(out, _meta())
     assert a["integral_kwh"] == pytest.approx((2.4 + 2.4) / 60.0)
     assert a["energy_first"] == pytest.approx(0.0)
     assert a["energy_last"] == pytest.approx(0.08)
@@ -319,7 +324,7 @@ def test_session_energy_audit_ignores_trailing_meter_reset() -> None:
         }
     )
     out = aggregate_session_minutes(rows, _meta(), {})
-    a = session_energy_audit(out, rows, _meta())
+    a = session_energy_audit(out, _meta())
     assert a["energy_last"] == pytest.approx(0.08)
     assert a["energy_first"] == pytest.approx(0.0)
     assert a["integral_kwh"] == pytest.approx((2.4 + 2.4) / 60.0)
@@ -514,6 +519,140 @@ def test_build_empty_session_stops(tmp_path: Path) -> None:
             out_dir=tmp_path / "out2",
             partition_registry_out=tmp_path / "out2" / "partitions.json",
             max_workers=2,
+        )
+
+
+def test_build_coverage_counts_session_once_across_month_boundary(tmp_path: Path) -> None:
+    # 回归：会话分钟跨 year/month 边界时，分区会话数求和会虚高（每个分区计一次），
+    # 覆盖校验必须按去重会话集合比较。此会话分布在 2018-05 与 2018-06 两个分区，
+    # 旧实现（求和=2 != registry 1）会误报，新实现（集合=1）通过。
+    rows = [
+        _iso_abs("2018-05-31T23:58:00") + ",0.0,0.0,240.0,CONNECTED,0.00,0.0",
+        _iso_abs("2018-05-31T23:59:00") + ",10.0,20.0,240.0,CHARGING,0.04,2.4",
+        _iso_abs("2018-06-01T00:00:00") + ",10.0,20.0,240.0,CHARGING,0.08,2.4",
+        _iso_abs("2018-06-01T00:01:00") + ",10.0,20.0,240.0,CHARGING,0.12,2.4",
+    ]
+    _write_static(tmp_path, "caltech/bound.csv.gz", rows)
+    reg = pd.DataFrame({
+        "session_id": ["bound"],
+        "site": ["caltech"],
+        "garage": ["California_Garage_01"],
+        "station": ["CA-01"],
+        "split": ["train"],
+        "role": ["main"],
+        "sample_layer": ["L1_strict_matched"],
+        "field_mode": ["measured_pilot"],
+        "match_status": ["matched"],
+        "external": [False],
+        "stress": [False],
+        "connection_time": pd.to_datetime(["2018-05-31 23:58:00+00:00"], utc=True),
+        "disconnect_time": pd.to_datetime(["2018-06-01 00:02:00+00:00"], utc=True),
+        "source_file": ["caltech/bound.csv.gz"],
+    })
+    manifest = pd.DataFrame({
+        "logical_path": ["caltech/bound.csv.gz"],
+        "has_energy": [True], "has_current": [True], "has_power": [True],
+        "has_voltage": [True], "has_pilot": [True], "has_state": [True],
+    })
+    api_meta = pd.DataFrame({
+        "sessionID": ["bound"],
+        "doneChargingTime": ["2018-06-01 00:02:00+00:00"],
+        "kWhDelivered": ["0.12"],
+    })
+    summary = build_session_response(
+        registry=reg,
+        manifest=manifest,
+        api_meta=api_meta,
+        cfg=CFG,
+        static_root=tmp_path,
+        out_dir=tmp_path / "out_bound",
+        partition_registry_out=tmp_path / "out_bound" / "partitions.json",
+        max_workers=2,
+    )
+    assert summary["n_sessions"] == 1
+    assert summary["n_partitions"] == 2
+    assert summary["n_rows"] == 4
+    assert summary["n_failed_sessions"] == 0
+    # 分区注册表里该会话被两个分区分别计数（sessions 求和=2），覆盖校验仍按集合=1
+    assert sum(p["sessions"] for p in summary["partitions"]) == 2
+    assert {p["year"] for p in summary["partitions"]} == {2018}
+    assert {p["month"] for p in summary["partitions"]} == {5, 6}
+
+
+def test_finalize_existing_matches_build(tmp_path: Path) -> None:
+    _seed_files(tmp_path)
+    out_dir = tmp_path / "out" / "session_response_1min"
+    registry = _mini_registry()
+    manifest = _mini_manifest()
+    api_meta = _mini_api_meta()
+    part_reg = tmp_path / "out" / "partitions.json"
+    summary = build_session_response(
+        registry=registry,
+        manifest=manifest,
+        api_meta=api_meta,
+        cfg=CFG,
+        static_root=tmp_path,
+        out_dir=out_dir,
+        partition_registry_out=part_reg,
+        max_workers=2,
+    )
+    part_reg2 = tmp_path / "out" / "partitions2.json"
+    summary2 = finalize_existing_partitions(
+        registry=registry,
+        cfg=CFG,
+        out_dir=out_dir,
+        partition_registry_out=part_reg2,
+    )
+    assert summary2["n_sessions"] == summary["n_sessions"] == 3
+    assert summary2["n_rows"] == summary["n_rows"]
+    assert summary2["n_partitions"] == summary["n_partitions"] == 2
+    assert summary2["n_failed_sessions"] == summary["n_failed_sessions"] == 0
+    assert summary2["partitions"] == summary["partitions"]
+    assert summary2["merged_stats"] == summary["merged_stats"]
+    assert summary2["energy_consistency"] == summary["energy_consistency"]
+
+
+def test_finalize_no_partitions_stops(tmp_path: Path) -> None:
+    with pytest.raises(RuntimeError, match="无最终分区"):
+        finalize_existing_partitions(
+            registry=_mini_registry(),
+            cfg=CFG,
+            out_dir=tmp_path / "nope",
+            partition_registry_out=tmp_path / "nope" / "partitions.json",
+        )
+
+
+def test_finalize_coverage_missing_session_stops(tmp_path: Path) -> None:
+    _seed_files(tmp_path)
+    out_dir = tmp_path / "out" / "session_response_1min"
+    build_session_response(
+        registry=_mini_registry(),
+        manifest=_mini_manifest(),
+        api_meta=_mini_api_meta(),
+        cfg=CFG,
+        static_root=tmp_path,
+        out_dir=out_dir,
+        partition_registry_out=tmp_path / "out" / "partitions.json",
+        max_workers=2,
+    )
+    extra = _mini_registry()
+    extra = pd.concat(
+        [extra, pd.DataFrame([{
+            "session_id": "ghost", "site": "caltech", "garage": "California_Garage_01",
+            "station": "CA-09", "split": "train", "role": "main",
+            "sample_layer": "L1_strict_matched", "field_mode": "measured_pilot",
+            "match_status": "matched", "external": False, "stress": False,
+            "connection_time": pd.Timestamp("2018-05-01 17:00:00", tz="UTC"),
+            "disconnect_time": pd.NaT, "source_file": "caltech/ghost.csv.gz",
+        }])],
+        ignore_index=True,
+    )
+    with pytest.raises(RuntimeError, match="覆盖不完整"):
+        finalize_existing_partitions(
+            registry=extra,
+            cfg=CFG,
+            out_dir=out_dir,
+            partition_registry_out=tmp_path / "out" / "partitions2.json",
         )
 
 

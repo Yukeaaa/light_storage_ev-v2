@@ -301,16 +301,18 @@ def _cast_dtypes(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def session_energy_audit(
-    out: pd.DataFrame, rows: pd.DataFrame, meta: dict[str, Any]
+    out: pd.DataFrame, meta: dict[str, Any]
 ) -> dict[str, Any]:
     """会话级能量审计行（能量一致性校验基准，只作审计不作特征）。
 
-    原始能量列为累计计量（会话内单调非降）；会话末尾常出现 UNPLUGGED 复位行
-    （仪表 re-arm 到 0.0），属已知伪影。故 energy_first 取首条非空原始读数、
-    energy_last 取会话内峰值读数（累计计量单调非降，峰值即最终有效读数），
-    不使用聚合末值，避免复位行污染能量跨度。
+    能量跨度基于 canonical 分钟表的 energy_cum_kwh（原始累计计量逐分钟前向保持，
+    会话内单调非降）。会话末尾常出现 UNPLUGGED 复位行（仪表 re-arm 到 0.0），
+    属已知伪影。energy_first 取分钟表首条非空累计读数、energy_last 取分钟表峰值
+    （累计计量单调非降，峰值即最终有效读数，复位到 0.0 不会成为峰值），
+    不使用分钟末值，避免复位行污染能量跨度。
+    口径与 build/finalize 两条路径完全一致（只依赖 canonical 分钟表列）。
     """
-    e = rows["energy_kwh"].dropna()
+    e = out["energy_cum_kwh"].dropna()
     return {
         "session_id": str(meta["session_id"]),
         "site": str(meta["site"]),
@@ -353,7 +355,7 @@ def _session_worker(args: dict[str, Any]) -> tuple[pd.DataFrame, dict[str, Any] 
     if rows.empty:
         return _error_frame(args["session_id"], "no_parseable_rows"), None
     out = aggregate_session_minutes(rows, args, n_extra)
-    return out, session_energy_audit(out, rows, args)
+    return out, session_energy_audit(out, args)
 
 
 def _sha256_file(path: Path) -> str:
@@ -437,10 +439,11 @@ def _energy_consistency_summary(
     audits: list[dict[str, Any]],
     cfg: dict[str, Any],
 ) -> dict[str, Any]:
-    """能量一致性：分钟积分 vs 原始能量跨度（has_energy 会话）与 API kWhDelivered（matched）。
+    """能量一致性：分钟积分 vs canonical 分钟表能量跨度（has_energy 会话）与
+    API kWhDelivered（matched）。
 
-    原始能量为累计计量；会话末尾 UNPLUGGED 复位行（仪表 re-arm 到 0.0）为已知伪影，
-    能量跨度按 峰值(energy_last) - 首条非空原始读数(energy_first) 计算。
+    能量为累计计量；会话末尾 UNPLUGGED 复位行（仪表 re-arm 到 0.0）为已知伪影，
+    能量跨度按 峰值(energy_cum_kwh) - 首条非空分钟读数(energy_cum_kwh) 计算。
     caltech/office001 中位 |dev| > tolerance_median_dev 触发硬 STOP；jpl 聚合可用，
     会话级离群另报不做 STOP。
     """
@@ -527,6 +530,7 @@ def build_session_response(
     part_files: dict[tuple[str, int, int], list[Path]] = {}
     audits: list[dict[str, Any]] = []
     fails: list[tuple[str, str]] = []
+    covered: set[str] = set()
     buffer_rows = 0
     flush_rows = int(cfg.get("session_response", {}).get("buffer_flush_rows", 300_000))
 
@@ -551,6 +555,7 @@ def build_session_response(
                 if not _frame_ok(frame):
                     fails.append((sid, frame["parse_error"].iloc[0]))
                     continue
+                covered.add(sid)
                 audits.append(audit or {})
                 s_arr = frame["site"].to_numpy()
                 y_arr = frame["timestamp_utc"].dt.year.to_numpy()
@@ -606,20 +611,57 @@ def build_session_response(
             }
         )
         stats = _partition_stats(df)
-        for k, v in stats.items():
-            if k == "power_source":
-                for pk, pv in v.items():
-                    merged_stats.setdefault("power_source", {})
-                    merged_stats["power_source"][pk] = merged_stats["power_source"].get(pk, 0) + pv
-            else:
-                merged_stats[k] = merged_stats.get(k, 0) + v
+        _merge_stats(merged_stats, stats)
         del frames, df
 
-    sessions_covered = sum(p["sessions"] for p in partitions)
     n_registry = int(len(registry))
-    if sessions_covered != n_registry:
+    summary = _build_final_registry(
+        partitions=partitions,
+        merged_stats=merged_stats,
+        covered=covered,
+        audits=audits,
+        cfg=cfg,
+        n_registry=n_registry,
+        partition_registry_out=partition_registry_out,
+        n_failed=len(fails),
+    )
+    # 清理临时目录
+    if tmp_dir.exists():
+        for leftover in tmp_dir.iterdir():
+            leftover.unlink(missing_ok=True)
+        tmp_dir.rmdir()
+    return summary
+
+
+def _merge_stats(merged: dict[str, Any], stats: dict[str, Any]) -> None:
+    """分区统计合并（power_source 按键累加，其余直接求和）。build 与 finalize 共用。"""
+    for k, v in stats.items():
+        if k == "power_source":
+            for pk, pv in v.items():
+                merged.setdefault("power_source", {})
+                merged["power_source"][pk] = merged["power_source"].get(pk, 0) + pv
+        else:
+            merged[k] = merged.get(k, 0) + v
+
+
+def _build_final_registry(
+    partitions: list[dict[str, Any]],
+    merged_stats: dict[str, Any],
+    covered: set[str],
+    audits: list[dict[str, Any]],
+    cfg: dict[str, Any],
+    n_registry: int,
+    partition_registry_out: str | Path,
+    n_failed: int,
+) -> dict[str, Any]:
+    """覆盖校验 → 能量审计 → 分区注册表写出 → summary。build 与 finalize 共用。
+
+    覆盖校验按去重会话集合比较：registry 中每条会话必须有分钟数据。禁止用
+    分区会话数求和——跨 year/month 边界的会话会在多个分区被计数，求和会虚高。
+    """
+    if len(covered) != n_registry:
         raise RuntimeError(
-            f"E0F-03 停止（覆盖不完整）：分区会话总数 {sessions_covered} != registry {n_registry}"
+            f"E0F-03 停止（覆盖不完整）：已建会话 {len(covered)} != registry {n_registry}"
         )
 
     energy = _energy_consistency_summary(audits, cfg)
@@ -637,21 +679,96 @@ def build_session_response(
     Path(partition_registry_out).write_text(
         json.dumps(part_registry, ensure_ascii=False, indent=2), encoding="utf-8"
     )
-    # 清理临时目录
-    if tmp_dir.exists():
-        for leftover in tmp_dir.iterdir():
-            leftover.unlink(missing_ok=True)
-        tmp_dir.rmdir()
-
     return {
         "n_sessions": n_registry,
         "n_rows": part_registry["n_rows"],
         "n_partitions": len(partitions),
         "merged_stats": merged_stats,
         "energy_consistency": energy,
-        "n_failed_sessions": len(fails),
+        "n_failed_sessions": n_failed,
         "partitions": part_registry["partitions"],
     }
+
+
+def finalize_existing_partitions(
+    registry: pd.DataFrame,
+    cfg: dict[str, Any],
+    out_dir: str | Path,
+    partition_registry_out: str | Path,
+) -> dict[str, Any]:
+    """从已写出的 site/year/month 最终分区重建注册表/覆盖/统计/能量审计。
+
+    用于 E0F-03 构建中断后免重建收尾。最终分区与全新构建完全一致，本函数只做
+    canonical 分钟表上的确定性二次核算（主键唯一、分区统计、去重会话覆盖、能量
+    一致性），能量口径与 build 路径一致（基于 energy_cum_kwh 的分钟表峰值跨度）。
+    """
+    out_dir = Path(out_dir)
+    files = sorted(out_dir.glob("site=*/year=*/month=*/data.parquet"))
+    if not files:
+        raise RuntimeError(f"E0F-03 finalize 停止：{out_dir} 下无最终分区")
+    partitions: list[dict[str, Any]] = []
+    merged_stats: dict[str, Any] = {}
+    covered: set[str] = set()
+    accs: dict[str, dict[str, Any]] = {}
+
+    for f in files:
+        rel = f.relative_to(out_dir)
+        site = rel.parts[0].split("=", 1)[1]
+        year = int(rel.parts[1].split("=", 1)[1])
+        month = int(rel.parts[2].split("=", 1)[1])
+        df = pd.read_parquet(f)
+        if df.duplicated(subset=["session_id", "timestamp_utc"]).any():
+            raise RuntimeError(
+                f"E0F-03 finalize 停止（主键非法重复）：{f} 内 "
+                "[session_id, timestamp_utc] 不唯一"
+            )
+        partitions.append(
+            {
+                "site": site,
+                "year": year,
+                "month": month,
+                "rows": int(len(df)),
+                "sessions": int(df["session_id"].nunique()),
+                "sha256": _sha256_file(f),
+            }
+        )
+        _merge_stats(merged_stats, _partition_stats(df))
+        covered.update(df["session_id"].astype(str).to_numpy())
+        for sid, g in df.groupby("session_id", sort=False):
+            a = accs.setdefault(
+                str(sid),
+                {
+                    "session_id": str(sid),
+                    "site": str(g["site"].iloc[0]),
+                    "match_status": str(g["match_status"].iloc[0]),
+                    "has_energy": str(g["energy_source"].iloc[0]) == "raw",
+                    "n_minutes": 0,
+                    "integral_kwh": 0.0,
+                    "energy_first": None,
+                    "energy_last": None,
+                    "ref_api_kwh": _to_float(g["kwh_delivered"].iloc[0]),
+                },
+            )
+            a["n_minutes"] += int(len(g))
+            a["integral_kwh"] += float(g["actual_power_kw"].sum() / 60.0)
+            e = g["energy_cum_kwh"].dropna()
+            if not e.empty:
+                if a["energy_first"] is None:
+                    a["energy_first"] = float(e.iloc[0])
+                m = float(e.max())
+                a["energy_last"] = m if a["energy_last"] is None else max(a["energy_last"], m)
+
+    audits = [accs[sid] for sid in sorted(accs)]
+    return _build_final_registry(
+        partitions=partitions,
+        merged_stats=merged_stats,
+        covered=covered,
+        audits=audits,
+        cfg=cfg,
+        n_registry=int(len(registry)),
+        partition_registry_out=partition_registry_out,
+        n_failed=0,
+    )
 
 
 def _flush_part(
@@ -727,7 +844,8 @@ def _build_report(summary: dict[str, Any], cfg: dict[str, Any]) -> str:
     )
     lines.append(
         "能量跨度口径：原始能量为累计计量，会话末尾 UNPLUGGED 复位行（仪表 re-arm 到 0.0）"
-        "为已知伪影，energy_last 取峰值读数、energy_first 取首条非空原始读数。"
+        "为已知伪影；基于 canonical 分钟表 energy_cum_kwh 计算，energy_last 取分钟峰值、"
+        "energy_first 取首条非空分钟读数（口径与 build/finalize 两条路径一致）。"
     )
     lines.append("")
     lines += ["## 分区清单（行数/会话数，sha256 见 partition registry）", ""]
@@ -773,6 +891,7 @@ def run_e0f03(
     static_root: str | Path | None = None,
     acn_project: str | Path | None = None,
     max_workers: int | None = None,
+    finalize_only: bool = False,
 ) -> dict[str, Any]:
     """E0F-03 全量执行：session_response_1min 分区 → 分区注册表 → 报告 → 质量摘要 → baseline。
 
@@ -782,6 +901,9 @@ def run_e0f03(
     - reports/E0_Full_session_response_audit.md
     - data_registry/e0_full_quality_summary.json（追加 session_response_1min 节）
     - data_registry/e0_full_baseline.json（追加 session_response_registry 节）
+
+    finalize_only=True：跳过并行构建，直接对已写出的最终分区做确定性二次核算
+    （注册表/覆盖/统计/能量审计），用于构建中断后的免重建收尾。
     """
     impl_root = Path(__file__).resolve().parents[3]
     cfg = load_yaml(cfg_path or (impl_root / "configs" / "e0_full.yaml"))
@@ -807,16 +929,24 @@ def run_e0f03(
 
     out_dir = impl_root / cfg["outputs"]["session_minute_1min"]
     part_registry_out = impl_root / "data_registry" / "e0_full_session_response_partitions.json"
-    summary = build_session_response(
-        registry=registry,
-        manifest=manifest,
-        api_meta=api_meta,
-        cfg=cfg,
-        static_root=root,
-        out_dir=out_dir,
-        partition_registry_out=part_registry_out,
-        max_workers=max_workers,
-    )
+    if finalize_only:
+        summary = finalize_existing_partitions(
+            registry=registry,
+            cfg=cfg,
+            out_dir=out_dir,
+            partition_registry_out=part_registry_out,
+        )
+    else:
+        summary = build_session_response(
+            registry=registry,
+            manifest=manifest,
+            api_meta=api_meta,
+            cfg=cfg,
+            static_root=root,
+            out_dir=out_dir,
+            partition_registry_out=part_registry_out,
+            max_workers=max_workers,
+        )
 
     report = _build_report(summary, cfg)
     report_out = impl_root / "reports" / "E0_Full_session_response_audit.md"

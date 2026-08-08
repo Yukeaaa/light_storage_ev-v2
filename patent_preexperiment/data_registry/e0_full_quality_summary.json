@@ -1190,5 +1190,51 @@
     },
     "stop": null,
     "rebuild_failed_sessions": []
+  },
+  "session_response_1min": {
+    "sessions_total": 85877,
+    "rows_total": 28301657,
+    "n_partitions": 81,
+    "n_failed_sessions": 0,
+    "uniqueness_ok": true,
+    "energy_consistency": {
+      "by_site": {
+        "caltech": {
+          "sessions": 51884,
+          "median_abs_dev": 0.009748,
+          "p95_abs_dev": 0.166746,
+          "n_outliers_gt_20pct": 2210
+        },
+        "jpl": {
+          "sessions": 2815,
+          "median_abs_dev": 0.00778,
+          "p95_abs_dev": 0.025257,
+          "n_outliers_gt_20pct": 17
+        },
+        "office001": {
+          "sessions": 1451,
+          "median_abs_dev": 0.008672,
+          "p95_abs_dev": 0.059744,
+          "n_outliers_gt_20pct": 28
+        }
+      },
+      "api_kwh": {
+        "caltech": {
+          "sessions": 14796,
+          "median_abs_dev": 0.006356,
+          "p95_abs_dev": 0.032281
+        },
+        "jpl": {
+          "sessions": 837,
+          "median_abs_dev": 0.006301,
+          "p95_abs_dev": 0.011575
+        },
+        "office001": {
+          "sessions": 1300,
+          "median_abs_dev": 0.006644,
+          "p95_abs_dev": 0.021579
+        }
+      }
+    }
   }
 }
