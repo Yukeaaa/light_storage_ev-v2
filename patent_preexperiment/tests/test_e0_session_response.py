@@ -734,6 +734,66 @@ def test_finalize_coverage_missing_session_stops(tmp_path: Path) -> None:
         )
 
 
+def test_finalize_cross_site_stale_duplicate_stops(tmp_path: Path) -> None:
+    # E0F-03.2 回归（审查结论19）：同一 session+timestamp 复制到错误 site 分区，并把
+    # 行内 site 改写成目标 site 使 path consistency 成立——现有三个 gate（分区内唯一/
+    # 路径一致/covered 集合）全会漏过；必须由「行治理列 == E0F-02 registry 会话级值」
+    # 抓住。复制 m1（caltech）→ jpl 分区并改写 site=jpl。
+    _seed_files(tmp_path)
+    out_dir = tmp_path / "out" / "session_response_1min"
+    build_session_response(
+        registry=_mini_registry(),
+        manifest=_mini_manifest(),
+        api_meta=_mini_api_meta(),
+        cfg=CFG,
+        static_root=tmp_path,
+        out_dir=out_dir,
+        partition_registry_out=tmp_path / "out" / "partitions.json",
+        max_workers=2,
+    )
+    p_cal = out_dir / "site=caltech" / "year=2018" / "month=05" / "data.parquet"
+    p_jpl = out_dir / "site=jpl" / "year=2018" / "month=05" / "data.parquet"
+    stale = pd.read_parquet(p_cal)
+    stale = stale[stale["session_id"] == "m1"].copy()
+    stale["site"] = "jpl"
+    jpl = pd.concat([pd.read_parquet(p_jpl), stale], ignore_index=True)
+    jpl.to_parquet(p_jpl, index=False)
+    with pytest.raises(RuntimeError, match="治理列与 E0F-02 registry 不一致") as exc:
+        finalize_existing_partitions(
+            registry=_mini_registry(),
+            cfg=CFG,
+            out_dir=out_dir,
+            partition_registry_out=tmp_path / "out" / "partitions2.json",
+        )
+    assert "m1.site" in str(exc.value)
+    assert "registry=caltech" in str(exc.value)
+    assert "行内=jpl" in str(exc.value)
+
+
+def test_finalize_registry_duplicate_session_stops(tmp_path: Path) -> None:
+    # E0F-03.2：E0F-02 registry 本身 session_id 必须唯一，否则治理索引对齐无意义。
+    _seed_files(tmp_path)
+    out_dir = tmp_path / "out" / "session_response_1min"
+    build_session_response(
+        registry=_mini_registry(),
+        manifest=_mini_manifest(),
+        api_meta=_mini_api_meta(),
+        cfg=CFG,
+        static_root=tmp_path,
+        out_dir=out_dir,
+        partition_registry_out=tmp_path / "out" / "partitions.json",
+        max_workers=2,
+    )
+    dup = pd.concat([_mini_registry(), _mini_registry()], ignore_index=True)
+    with pytest.raises(RuntimeError, match="session_id 必须唯一"):
+        finalize_existing_partitions(
+            registry=dup,
+            cfg=CFG,
+            out_dir=out_dir,
+            partition_registry_out=tmp_path / "out" / "partitions2.json",
+        )
+
+
 def test_energy_consistency_stop(tmp_path: Path) -> None:
     # m1 能量跨度 2.0 而 integral 0.4 → 中位 |dev|>1% → 硬 STOP
     rows1 = [_iso(0) + ",0.0,0.0,240.0,CONNECTED,0.00,0.0"]

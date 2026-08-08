@@ -19,9 +19,19 @@
 6. disconnect_time / done_charging_time / kwh_delivered 只作离线标签与能量审计基准，
    禁止进入在线特征（configs/e0_full.yaml session_response.offline_labels）。
 
-输出：datasets/session_response_1min/site=<site>/year=YYYY/month=MM/data.parquet
-按 (site, year, month) 分区；分区注册表 e0_full_session_response_partitions.json 登记
-每分区行数/会话数/sha256。分区间合并后 [session_id, timestamp_utc] 唯一由校验强制。
+ 输出：datasets/session_response_1min/site=<site>/year=YYYY/month=MM/data.parquet
+ 按 (site, year, month) 分区；分区注册表 e0_full_session_response_partitions.json 登记
+ 每分区行数/会话数/sha256。
+
+ 全局唯一证明（E0F-03.2，审查结论19）：三腿合成，无 28.3M 全局 key 集合：
+ - 每行治理列（site/split/role/sample_layer/field_mode/match_status/external/stress）
+   必须等于 E0F-02 registry 中该 session_id 的值（继承来源冻结，禁止重推导）→
+   session_id 唯一决定 canonical site；
+ - 每行 timestamp_utc 的 year/month 必须等于所在分区路径 → timestamp 唯一决定
+   year/month 分区；
+ - 每个 site/year/month 分区内 [session_id, timestamp_utc] 唯一。
+ 三条合取 ⇒ 一个 [session_id, timestamp_utc] 只能落进唯一一个 site/year/month 分区，
+ 从而全局唯一。孤儿会话（在 parquet 但不在 registry）由 covered 集合校验按 extra 报。
 """
 
 from __future__ import annotations
@@ -57,6 +67,12 @@ _OUTPUT_COLUMNS = [
 ]
 
 _DATETIME_COLS = {"connection_time", "disconnect_time", "done_charging_time", "timestamp_utc"}
+
+# E0F-02 治理列（冻结继承来源，禁止重推导；finalize 逐行对齐校验，审查结论19）。
+_GOVERNANCE_COLUMNS = (
+    "site", "split", "role", "sample_layer", "field_mode", "match_status", "external", "stress"
+)
+
 _BOOL_COLS = {
     "external", "stress", "timezone_valid", "pilot_available", "state_available",
     "gap_flag", "severe_gap_before",
@@ -521,6 +537,79 @@ def _assert_partition_path_consistent(
         )
 
 
+def _gov_cmp(value: Any) -> str:
+    """治理列比较用 canonical 字符串：bool → true/false，NaN/None → 空串。"""
+    if isinstance(value, (bool, np.bool_)):
+        return "true" if value else "false"
+    if value is None:
+        return ""
+    if isinstance(value, float) and np.isnan(value):
+        return ""
+    if value is pd.NA or value is pd.NaT:
+        return ""
+    return str(value).strip()
+
+
+def _session_governance_index(registry: pd.DataFrame) -> pd.DataFrame:
+    """E0F-02 治理列逐会话索引（session_id → site/split/role/sample_layer/field_mode/
+    match_status/external/stress）。字段继承来源冻结，禁止重推导（审查结论19）。
+    registry session_id 必须唯一，否则索引对齐无意义。
+    """
+    dup = registry["session_id"][registry["session_id"].duplicated()]
+    if not dup.empty:
+        raise RuntimeError(
+            "E0F-03.2 停止：E0F-02 registry session_id 必须唯一，"
+            f"发现 {len(dup)} 个重复，首例：{dup.iloc[0]}"
+        )
+    missing = [c for c in _GOVERNANCE_COLUMNS if c not in registry.columns]
+    if missing:
+        raise RuntimeError(
+            f"E0F-03.2 停止：E0F-02 registry 缺少治理列 {sorted(missing)}"
+        )
+    return registry.set_index("session_id")[list(_GOVERNANCE_COLUMNS)]
+
+
+def _assert_session_governance(
+    df: pd.DataFrame,
+    gov: pd.DataFrame,
+    path: str | Path,
+    label: str,
+) -> None:
+    """每行治理列必须等于 E0F-02 registry 中该 session_id 的值（禁止重推导）。
+
+    这是 E0F-03.2 的最后一腿：分区路径一致性只保证"行 site == 路径 site"，
+    若 stale 行被改写成错误路径的 site，路径一致性会成立但 session 的 canonical
+    site（registry）已被违背——因此必须再校验行内治理列 == registry 会话级值。
+    孤儿会话（在 parquet 但不在 registry）跳过，由 covered 集合校验按 extra 报，
+    避免两种错误口径重复。
+    """
+    sids = df["session_id"].astype(str)
+    known = sids.isin(gov.index)
+    if not known.all():
+        df = df[known.to_numpy()]
+        if df.empty:
+            return
+        sids = df["session_id"].astype(str)
+    mism: list[str] = []
+    for col in gov.columns:
+        expected = sids.map(gov[col]).map(_gov_cmp)
+        actual = df[col].map(_gov_cmp)
+        bad = actual.ne(expected)
+        if bad.any():
+            for sid in df.loc[bad.to_numpy(), "session_id"].drop_duplicates().astype(str):
+                exp_v = _gov_cmp(gov.at[sid, col])
+                act_v = df.loc[df["session_id"].astype(str).eq(sid), col].iloc[0]
+                mism.append(f"{sid}.{col}: registry={exp_v} 行内={_gov_cmp(act_v)}")
+    if mism:
+        shown = mism[:8]
+        suffix = f"；…共 {len(mism)} 处" if len(mism) > 8 else ""
+        raise RuntimeError(
+            f"E0F-03.2 {label} 停止（治理列与 E0F-02 registry 不一致）：{path}；"
+            + "；".join(shown)
+            + suffix
+        )
+
+
 def _partition_stats(df: pd.DataFrame) -> dict[str, Any]:
     return {
         "rows": int(len(df)),
@@ -548,6 +637,7 @@ def build_session_response(
     api_meta：api_metadata_index.csv（matched 的 doneChargingTime/kWhDelivered）。
     """
     metas = _build_meta(registry, manifest, api_meta, cfg, static_root)
+    gov = _session_governance_index(registry)
     out_dir = Path(out_dir)
     tmp_dir = out_dir / ".tmp"
     tmp_dir.mkdir(parents=True, exist_ok=True)
@@ -615,6 +705,12 @@ def build_session_response(
             ["session_id", "timestamp_utc"], kind="mergesort"
         ).reset_index(drop=True)
         _assert_partition_path_consistent(df, *key, "build")
+        _assert_session_governance(
+            df,
+            gov,
+            f"site={key[0]}/year={key[1]}/month={key[2]:02d}",
+            "build",
+        )
         if df.duplicated(subset=["session_id", "timestamp_utc"]).any():
             raise RuntimeError(
                 "E0F-03 停止（主键非法重复）：partition "
@@ -704,8 +800,9 @@ def _build_final_registry(
         "n_partitions": len(partitions),
         "n_sessions": len(expected),
         "n_rows": sum(p["rows"] for p in partitions),
-        "uniqueness_check": "per-partition [session_id, timestamp_utc] unique enforced + "
-        "partition path ↔ row site/year/month 一致性",
+        "uniqueness_check": "per-partition [session_id, timestamp_utc] unique + partition "
+        "path ↔ row site/year/month 一致性 + 行治理列 == E0F-02 registry 会话级值"
+        "（三腿合成全局唯一）",
         "partitions": sorted(partitions, key=lambda p: (p["site"], p["year"], p["month"])),
     }
     Path(partition_registry_out).parent.mkdir(parents=True, exist_ok=True)
@@ -739,6 +836,7 @@ def finalize_existing_partitions(
     files = sorted(out_dir.glob("site=*/year=*/month=*/data.parquet"))
     if not files:
         raise RuntimeError(f"E0F-03 finalize 停止：{out_dir} 下无最终分区")
+    gov = _session_governance_index(registry)
     partitions: list[dict[str, Any]] = []
     merged_stats: dict[str, Any] = {}
     covered: set[str] = set()
@@ -751,6 +849,7 @@ def finalize_existing_partitions(
         month = int(rel.parts[2].split("=", 1)[1])
         df = pd.read_parquet(f)
         _assert_partition_path_consistent(df, site, year, month, "finalize")
+        _assert_session_governance(df, gov, f, "finalize")
         if df.duplicated(subset=["session_id", "timestamp_utc"]).any():
             raise RuntimeError(
                 f"E0F-03 finalize 停止（主键非法重复）：{f} 内 "
@@ -839,6 +938,10 @@ def _build_report(summary: dict[str, Any], cfg: dict[str, Any]) -> str:
         "- actual_power_kw 冻结优先级 measured→computed→estimated（rated："
         "jpl=192.7/caltech=240/office001=240）。",
         "- 主键 [session_id, timestamp_utc(1min)] 唯一，非法重复 hard STOP。",
+        "- 全局唯一证明（E0F-03.2 三腿合成）：每行治理列（site/split/role/sample_layer/"
+        "field_mode/match_status/external/stress）必须等于 E0F-02 registry 该会话值"
+        "（session_id → 唯一 canonical site）+ timestamp → 唯一 year/month 分区 + 分区内"
+        " key unique，无需维护 28.3M key 的全局集合。",
         "- disconnect_time/done_charging_time/kwh_delivered 只作离线标签与能量审计基准，"
         "禁止在线特征。",
         f"- 分区：site/year/month，共 {summary['n_partitions']} 个分区，"
