@@ -1151,7 +1151,7 @@
     },
     "consistency": {
       "population_identity_preserved": true,
-      "nonaffected_sessions_unchanged": false,
+      "nonaffected_sessions_unchanged": true,
       "no_extra_or_missing_minutes": true,
       "site_garage_unchanged": true,
       "nonaffected_actual_power_zero_diff": true,
@@ -1162,9 +1162,13 @@
     },
     "flips": {
       "candidate_flips": 0,
-      "n_candidate_rows": 36842,
+      "n_candidate_rows": 36683,
       "eligible_cycle_flips": 0,
-      "active_flips": 0
+      "active_flips": 0,
+      "candidate_key_unique_keep": false,
+      "candidate_key_unique_collapse": false,
+      "n_unique_candidate_cycles_keep": 36683,
+      "n_unique_candidate_cycles_collapse": 36683
     },
     "gate": {
       "rule": "日等权候选率日 cluster bootstrap 95%CI 下界 >= 0.01 且 日候选能量占比中位数 >= 0.005（与 e0_full.yaml e3 停止线同值）",
@@ -1179,12 +1183,12 @@
     "acceptance": {
       "keep_reproduces_frozen_baseline": true,
       "population_identity_preserved": true,
-      "nonaffected_sessions_unchanged": false,
+      "nonaffected_sessions_unchanged": true,
       "keep_gate": true,
       "collapse_gate": true,
       "gate_flipped": false
     },
-    "stop": "NONAFFECTED_SESSIONS_CHANGED",
+    "stop": null,
     "rebuild_failed_sessions": []
   }
 }

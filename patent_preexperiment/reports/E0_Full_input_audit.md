@@ -82,11 +82,10 @@
 - Keep：n_cycles=36736 A2=0.392612 日率=0.3623694692507855 CI=[0.32995762618758384, 0.395798678130819] 能量占比中位=0.038929
 - Keep 复现冻结基线：True
 - Collapse：n_cycles=36736 A2=0.392612 日率=0.3623694692507855 CI=[0.32995762618758384, 0.395798678130819] 能量占比中位=0.038929
-- 一致性：population_identity=True，nonaffected_unchanged=False，no_extra_minutes=True，site_garage=True，nonaffected_apk_zero_diff=True
-- 翻转：候选 0/36842，eligible_cycle=0，活跃 0
+- 一致性：population_identity=True，nonaffected_unchanged=True，no_extra_minutes=True，site_garage=True，nonaffected_apk_zero_diff=True
+- 翻转：候选 0/36683，eligible_cycle=0，活跃 0
 - 门：keep_gate=True collapse_gate=True gate_flipped=False
-- 验收：{'keep_reproduces_frozen_baseline': True, 'population_identity_preserved': True, 'nonaffected_sessions_unchanged': False, 'keep_gate': True, 'collapse_gate': True, 'gate_flipped': False}
-- STOP 原因：NONAFFECTED_SESSIONS_CHANGED
+- 验收：{'keep_reproduces_frozen_baseline': True, 'population_identity_preserved': True, 'nonaffected_sessions_unchanged': True, 'keep_gate': True, 'collapse_gate': True, 'gate_flipped': False}
 
 ## 站点 raw→canonical 映射（审查结论10 P1，E0F-02 前冻结）
 
