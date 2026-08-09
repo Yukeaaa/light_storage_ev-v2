@@ -1,5 +1,5 @@
 {
-  "created_at_utc": "2026-08-09T00:25:34.649032+00:00",
+  "created_at_utc": "2026-08-09T01:06:40.643800+00:00",
   "protocol_version": "V2.0",
   "landing_version": "V2.1",
   "experiment_id": "E0_full_preregister_v1",
@@ -8,7 +8,7 @@
     "path": "patent_preexperiment/data_registry/design_baseline.json",
     "commit": "41dd1dd038ebce13b28a76c3254f08e61569dabe"
   },
-  "code_sha": "ff583b978cab981a0c62aefd874e6848613842ea",
+  "code_sha": "1809f2ee4db60c9470e3949a1816744bca1a58f4",
   "git_status": {
     "code_dirty_files": [],
     "code_clean": true,
@@ -82,11 +82,11 @@
   },
   "d0": {
     "schema": "e0_full_d0_registry",
-    "created_at_utc": "2026-08-09T00:25:07.253324+00:00",
+    "created_at_utc": "2026-08-09T01:06:40.319799+00:00",
     "protocol_version": "V2.0",
     "experiment_id": "E0_full_preregister_v1",
     "baseline_path": "data_registry/e0_full_baseline.json",
-    "baseline_code_sha": "42823a9506f03c9b768983277d4e15e92b767834",
+    "baseline_code_sha": "ff583b978cab981a0c62aefd874e6848613842ea",
     "gates": {
       "input_traceability": {
         "manifest_hashes": {
@@ -105,8 +105,8 @@
         },
         "source_manifest_sha256": "f1a5fd036ed6901bf5b89af9e935b99b071b32b67812f7dff1810f76506bd17a",
         "source_manifest_matches_baseline": true,
-        "code_sha": "ff583b978cab981a0c62aefd874e6848613842ea",
-        "baseline_code_sha": "42823a9506f03c9b768983277d4e15e92b767834",
+        "code_sha": "1809f2ee4db60c9470e3949a1816744bca1a58f4",
+        "baseline_code_sha": "ff583b978cab981a0c62aefd874e6848613842ea",
         "code_sha_matches_baseline": false,
         "code_sha_note": "provenance only; artifact integrity gated by determinism",
         "pass": true
@@ -133,6 +133,12 @@
           "files_total": 85877,
           "rows_total": 448817084,
           "read_fail": 0
+        },
+        "expected_derived_from": {
+          "files_total": 85877,
+          "rows_total": 448817084,
+          "session_response_n_rows": 28301657,
+          "session_response_n_sessions": 85877
         },
         "session_partitions": {
           "n_files": 81,
@@ -1207,7 +1213,8 @@
             ],
             "worst_month": "2020-07",
             "worst_abs_rel_dev": 0.023891,
-            "total_rel_dev": -0.003888,
+            "total_rel_dev": -0.004478,
+            "monthly_mean_rel_dev": -0.003888,
             "total_gold_kwh": 130549.415,
             "total_ours_kwh": 129964.852
           },
@@ -1384,7 +1391,8 @@
             ],
             "worst_month": "2020-05",
             "worst_abs_rel_dev": 0.110514,
-            "total_rel_dev": -0.053407,
+            "total_rel_dev": -0.063271,
+            "monthly_mean_rel_dev": -0.053407,
             "total_gold_kwh": 353914.909,
             "total_ours_kwh": 331522.398
           },
@@ -1547,7 +1555,8 @@
             ],
             "worst_month": "2020-11",
             "worst_abs_rel_dev": 0.004276,
-            "total_rel_dev": -0.000117,
+            "total_rel_dev": 0.000392,
+            "monthly_mean_rel_dev": -0.000117,
             "total_gold_kwh": 21732.158,
             "total_ours_kwh": 21740.666
           }
@@ -1601,6 +1610,12 @@
         },
         "n_main": 77773,
         "n_external_stress": 8104,
+        "recomputed_split": {
+          "n_recomputed": 85877,
+          "split_assignment_mismatch": 0,
+          "rule": "站点内按 session connection_time 排序：前 60% train / 中 20% validation / 后 20% test",
+          "rule_version": "e0_full_split_v1"
+        },
         "pass": true
       },
       "leak_safety": {
@@ -1617,10 +1632,28 @@
         "artifact_sha_all_match": true,
         "session_partition_sha_match": 81,
         "n_session_partitions": 81,
+        "pool_state": {
+          "pool_state_1min": {
+            "expected_partitions": 81,
+            "actual_partitions": 81,
+            "missing_partitions": 0,
+            "extra_partitions": 0,
+            "sha_mismatch": 0,
+            "rows_mismatch": 0,
+            "n_rows_matches_frozen": true
+          },
+          "pool_state_5min": {
+            "exists": true,
+            "frozen_sha256": "b978780883c7ada6b8d1c6c16d0bc82cad510c9b47f030272b2326b923dbc66d",
+            "frozen_n_rows": 293122,
+            "actual_sha256": "b978780883c7ada6b8d1c6c16d0bc82cad510c9b47f030272b2326b923dbc66d",
+            "actual_n_rows": 293122
+          }
+        },
         "e0_full_yaml_sha256": "bb51d2e6800f342f8c3ac66726b0115f79f5724d5f7acdf248acb51c78288cfa",
         "yaml_sha_matches_baseline": true,
-        "code_sha": "ff583b978cab981a0c62aefd874e6848613842ea",
-        "baseline_code_sha": "42823a9506f03c9b768983277d4e15e92b767834",
+        "code_sha": "1809f2ee4db60c9470e3949a1816744bca1a58f4",
+        "baseline_code_sha": "ff583b978cab981a0c62aefd874e6848613842ea",
         "code_sha_matches_baseline": false,
         "provenance_note": "code_sha/yaml_sha 为 provenance，不入门线；产物 sha 才是完整性证明",
         "pass": true
@@ -1657,7 +1690,9 @@
           "jpl__Arroyo_Garage_01": 1335,
           "office001__Parking_Lot_01": 609
         },
-        "n_pool_5min_rows": 293122
+        "n_pool_5min_rows": 293122,
+        "pass": true,
+        "hard": false
       },
       "pilot_zero": {
         "n_pilot_coverage_zero_rows": 105524,
@@ -1666,7 +1701,9 @@
         "by_pool": {
           "caltech__California_Garage_01": 587,
           "jpl__Arroyo_Garage_01": 104937
-        }
+        },
+        "pass": true,
+        "hard": true
       }
     },
     "report": "reports/E0_Full_D0_acceptance_audit.md",
