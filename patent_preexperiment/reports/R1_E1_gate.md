@@ -143,8 +143,9 @@ test 的"证据面不足"说明（供评审参考，**非豁免理由**，不作
 
 ## 7. 工件、溯源与复现
 
-- 摘要：`results/raw/E1F/e1_full_summary.json`（per_split 全字段、negative_controls、seeds、stop_lines、r1_verdict_on_test、provenance）
-- **溯源（审查结论26 P1）**：`results/raw/E1F/e1_full_provenance.json` —— `evidence_commit=44fa88c`、`formal_test_exposure=44fa88c`、`runtime_code_clean=not independently provable from Git history`（44fa88c 代码与 evidence 同次提交，Git 历史无法独立证明 test 暴露前实现已冻结；阈值/人口/seeds/K1 fidelity 均已冻结且 test 为负面结果，故不因此作废）。**未倒填**为 "formal run code_sha=44fa88c clean"。`e1_full_summary.json` 中 provenance 字段记录的是治理修复后的运行时状态，非 44fa88c 原始运行。
+- 摘要（**44fa88c 原始 formal evidence，永久冻结**）：`results/raw/E1F/e1_full_summary.json` —— per_split 全字段、negative_controls、seeds、stop_lines、r1_verdict_on_test；**不含 provenance 字段**（原始 runner 未写）。
+- **溯源（审查结论26/27 后补治理记录，非原始运行产物）**：`results/raw/E1F/e1_full_provenance.json` —— `evidence_commit=44fa88c`、`formal_test_exposure=44fa88c`、`runtime_code_clean=not independently provable from Git history`（44fa88c 代码与 evidence 同次提交，Git 历史无法独立证明 test 暴露前实现已冻结；阈值/人口/seeds/K1 fidelity 均已冻结且 test 为负面结果，故不因此作废）。**未倒填**为 "formal run code_sha=44fa88c clean"。
+  - 证据层次：`e1_full_summary.json` = 44fa88c 原始 formal evidence（永久冻结，不含后补 provenance）；`e1_full_provenance.json` = 审查结论26/27 后补治理记录（明确原始 test exposure 与不可证明 clean 的历史事实）。两者分开，不再把治理状态混写进科学结果。
 - **fidelity machine check（审查结论26/27 P1）**：`experiments/e1_full/fidelity_check.py` + `tests/test_e1_full_fidelity.py` 锁定 `results/raw/E1F/R1_E1_fidelity.json`（core_denom=2,941、rate=11.866712%、median=1.2794 kW、置换 CI=[3.524878, 5.757679]pp 全部逐位一致；另锁冻结样本合格会话=5,961 与 session_id identity hash=`29517fcc…349d`）。任何 `e1_stats.py` 改动跑测试即炸。
 - 明细：`results/raw/E1F/{train,validation,test}_event_table.parquet`、`{split}_fail_cases.csv`、`{split}_month_summary.csv`、`{split}_phase_summary.csv`、`{split}_session_summary.csv`
 - 代码：`src/patent_preexperiment/e1_full/loader.py`、`src/patent_preexperiment/e1_full/gate.py`（正式门退出码 + 溯源 + 重跑锁）、`experiments/e1_full/run.py`、`src/patent_preexperiment/response/e1_stats.py`（共享冻结统计）
@@ -160,3 +161,4 @@ test 的"证据面不足"说明（供评审参考，**非豁免理由**，不作
 - 2021 全年与低覆盖/异常月份（2019-12、2020-02、2020-04、2020-12）只作 stress/敏感性，未进入主切分（已校验 main universe 不含异常月份）。
 - **治理记录**：本报告已按审查结论26 修订——删除"随机抽样特征""不是机制缺失"过强措辞；结论定版为 Formal FAIL / 情况二 / Conditional Continue within R1；E1-Full/E2/E4 保持 NOT APPROVED；E3 只能补全信息面不能救 E1。
 - **治理记录（审查结论27 收口）**：① 加正式 test 重跑锁（P0）——`run.py` 第一行 `assert_formal_test_not_exposed`，`e1_full_provenance.json` 含 exposure 即硬拒，任何输出都不产生；② pre-run/post-run provenance 拆分（P1）——E3 起 code-only commit 后先记录 `pre_run.code_sha`+`worktree_clean`，test 后另记 `post_run` 并 runner 自封存，E1 冻结版不重写；③ fidelity 加 `n_main_sessions=5,961` 与 `session_id_set_sha256=29517fcc…349d` identity hash（P1）——数对但集合换人也炸门；④ §4 单位统一为百分比/pp（P2，纯文本，不重跑 E1）。**未重跑 E1 正式 test；未改动 44fa88c 冻结 evidence。**
+- **治理记录（审查结论28 证据同步）**：`R1_E1_fidelity.json` 重新生成（只跑 K1 冻结 5,961 样本，不碰 E1 formal test），`frozen/actual` 同步 `n_main_sessions=5,961` 与 `session_id_set_sha256=29517fcc…349d`，`pass=true`；§7 溯源文案修正——`e1_full_summary.json` 为 44fa88c 原始 evidence（无 provenance 字段、不后补），`e1_full_provenance.json` 为后补治理记录（两者分开，治理状态不混进科学结果）。E1 仍永久只读，重跑锁不变。

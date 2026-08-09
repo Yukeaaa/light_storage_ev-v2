@@ -20,6 +20,8 @@
     "pilot_active_min_a": 1.0
   },
   "frozen": {
+    "n_main_sessions": 5961,
+    "session_id_set_sha256": "29517fcc615aa0b6bc718ebaa13dfd799f41de862e1cbc24a3a5b3cb490f349d",
     "denominator_sessions_with_core_run": 2941,
     "event_session_rate": 0.11866712002720163,
     "median_gap_kw": 1.2793999999999999,
@@ -28,6 +30,7 @@
   },
   "actual": {
     "n_main_sessions": 5961,
+    "session_id_set_sha256": "29517fcc615aa0b6bc718ebaa13dfd799f41de862e1cbc24a3a5b3cb490f349d",
     "denominator_sessions_with_core_run": 2941,
     "event_session_rate": 0.11866712002720163,
     "median_gap_kw": 1.2793999999999999,
