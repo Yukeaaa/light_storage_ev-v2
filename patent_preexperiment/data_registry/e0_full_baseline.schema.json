@@ -21,7 +21,8 @@
     "data_roots_resolved",
     "split_rule_version",
     "output_manifest",
-    "source_manifest_sha256"
+    "source_manifest_sha256",
+    "d0"
   ],
   "properties": {
     "created_at_utc": { "type": "string", "format": "date-time" },
@@ -81,8 +82,31 @@
       "additionalProperties": { "type": "string" }
     },
     "split_rule_version": { "type": "string", "enum": ["e0_full_split_v1"] },
+    "split_registry": {
+      "description": "E0F-02 产物哈希（split/field_mode registry sha256 + 行数）",
+      "type": "object"
+    },
+    "session_response": {
+      "description": "E0F-03 产物哈希（session_response 分区注册表 sha256 + 行数）",
+      "type": "object"
+    },
+    "pool_state": {
+      "description": "E0F-04 产物哈希（pool_registry + pool_state_registry sha256 + 行数）",
+      "type": "object"
+    },
+    "d0": {
+      "description": "E0F-05 D0 数据链验收审计结果（d0_pass + 十门判定；审查结论14）",
+      "type": "object",
+      "required": ["d0_pass", "gates", "baseline_code_sha", "report"],
+      "properties": {
+        "d0_pass": { "type": "boolean" },
+        "gates": { "type": "object" },
+        "baseline_code_sha": { "type": "string", "pattern": "^[0-9a-f]{40}$" },
+        "report": { "type": "string" }
+      }
+    },
     "output_manifest": {
-      "description": "输出产物位置（E0F-01..04 生成物相对路径）",
+      "description": "输出产物位置（E0F-01..05 生成物相对路径）",
       "type": "array",
       "items": { "type": "string" }
     },

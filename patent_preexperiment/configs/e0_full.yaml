@@ -179,6 +179,8 @@ outputs:
   input_audit_report: "reports/E0_Full_input_audit.md"
   split_audit_report: "reports/E0_Full_split_audit.md"
   baseline: "data_registry/e0_full_baseline.json"
+  d0_report: "reports/E0_Full_D0_acceptance_audit.md"
+  d0_registry: "data_registry/e0_full_d0_registry.json"
 
 # --- E0F-03 session_response_1min 构建口径（审查结论17 授权；issue #14 验收）---
 # 只做原始响应→canonical 分钟观测的可追溯转换；不定义可执行能力/吸收余量/D1-R 判断。
