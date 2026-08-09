@@ -428,6 +428,11 @@ def _cycle_observables(tm: pd.DataFrame) -> pd.DataFrame:
     tm["active"] = (tm["actual_power_kw"] >= 0.5).astype(float)
     tm["has_pilot"] = tm["pilot_power_kw"].notna().astype(float)
 
+    # P0-2: stable 时间排序，保证 groupby().first() 是时间上的 first
+    tm = tm.sort_values(
+        ["site", "session_id", "timestamp_utc"], kind="stable"
+    )
+
     # 1) 先聚合到 session×cycle 级
     sess_cycle = tm.groupby(
         ["site", "session_id", "cycle"], sort=False
@@ -436,11 +441,14 @@ def _cycle_observables(tm: pd.DataFrame) -> pd.DataFrame:
         pilot_mean=("pilot_power_kw", "mean"),
         pilot_available_first=("has_pilot", "first"),
         elapsed_min=("connected_elapsed_min", "min"),
+        # P0-1: severe_gap_at_start = cycle 首分钟的 severe_gap_before
+        # （不用 current-cycle max，避免未来信息泄漏）
+        severe_gap_at_start=("severe_gap_before", "first"),
         severe_gap_any=("severe_gap_before", "max"),
         n_active_min=("active", "sum"),
     ).reset_index()
 
-    # 2) session×run 组内 shift(1) + rolling（B3: 不跨 run/gap/severe_gap）
+    # 2) session×run 组内 shift(1) + rolling
     sess_cycle = sess_cycle.sort_values(["session_id", "cycle"])
     sess_cycle["_gap"] = sess_cycle["actual_mean"].isna()
     sess_cycle["_prev_cycle"] = sess_cycle.groupby(
@@ -448,11 +456,12 @@ def _cycle_observables(tm: pd.DataFrame) -> pd.DataFrame:
     sess_cycle["_cycle_gap"] = (
         sess_cycle["cycle"] - sess_cycle["_prev_cycle"]
     ).dt.total_seconds() / 60.0
-    # B3: break = actual NaN | cycle gap > 5min | severe_gap_before（E3 continuous-run 语义）
+    # P0-1: break = actual NaN | cycle gap > 5min | severe_gap_at_start
+    # （用 cycle 首分钟 severe_gap，不用 current-cycle max）
     sess_cycle["_break"] = (
         sess_cycle["_gap"].fillna(True)
         | (sess_cycle["_cycle_gap"] > 5.0).fillna(True)
-        | sess_cycle["severe_gap_any"].fillna(True)
+        | sess_cycle["severe_gap_at_start"].fillna(True)
     )
     sess_cycle["_run"] = sess_cycle.groupby(
         "session_id", sort=False)["_break"].cumsum()
@@ -478,9 +487,9 @@ def _cycle_observables(tm: pd.DataFrame) -> pd.DataFrame:
         sess_cycle["pilot_lag1"]
         / sess_cycle["actual_lag1"].clip(lower=1e-6)
     )
-    # B4: lagged severe_gap_rate（上一周期 severe_gap，pre-action）
+    # B4: lagged severe_gap_rate（上一周期 severe_gap_at_start，pre-action）
     sess_cycle["severe_gap_lag1"] = sess_cycle.groupby(
-        run_key, sort=False)["severe_gap_any"].shift(1)
+        run_key, sort=False)["severe_gap_at_start"].shift(1)
     sess_cycle["history_supported"] = sess_cycle[
         "recent_actual_q90"].notna()
 
@@ -565,12 +574,24 @@ def run_a4(
             merged["is_e3_candidate_A2"] = merged["is_candidate"]
             # S1 ∩ S2, S1 ∩ S3 都允许存在
             n_s1_mapped = int(merged["is_e1_core"].sum())
-            # C2: n_mapped_to_minute + mapping_rate
+            # C2/P0-4: n_mapped_to_minute + mapping_rate（从 obs 独立判断）
             n_unique_start = int(len(s1_cycle_set))
+            if n_unique_start and len(obs):
+                s1_df_tmp = pd.DataFrame(
+                    [{"site": s, "cycle": c} for s, c in s1_cycle_set])
+                n_mapped_minute = int(
+                    s1_df_tmp.merge(
+                        obs[["site", "cycle"]], on=["site", "cycle"],
+                        how="inner").shape[0])
+            else:
+                n_mapped_minute = 0
             e1_mapping[f"{pool}_{split}"] = {
                 "n_e1_core_events": n_e1_core,
                 "n_e1_core_sessions": n_e1_core_sessions,
                 "n_unique_event_start_cycles": n_unique_start,
+                "n_mapped_to_minute_observable": n_mapped_minute,
+                "mapping_rate_to_minute": round(
+                    n_mapped_minute / max(n_unique_start, 1), 6),
                 "n_mapped_to_e3_valid": n_s1_mapped,
                 "mapping_rate_to_e3_valid": round(
                     n_s1_mapped / max(n_unique_start, 1), 6),
@@ -582,13 +603,46 @@ def run_a4(
                      & ~merged["is_e3_candidate_A2"]).sum()),
             }
 
-            # ---- B5: S1/S2/S3 状态 observable comparison ----
-            # 非互斥 mask，分别报告 n / concurrency_bucket / observable median + overlap
+            # ---- B5/P0-4: S1/S2/S3 状态 observable comparison ----
+            # P0-4: S1 从 E1 event-start → obs 独立构建（不从 E3-valid merged）
+            # S2/S3 仍来自 E3-valid merged
+            # S1∩S2/S1∩S3 是 cross-universe overlap
+            s1_independent = pd.DataFrame()
+            if s1_cycle_set:
+                s1_rows_list = [
+                    {"site": s, "cycle": c, "is_e1_core": True}
+                    for s, c in s1_cycle_set
+                ]
+                s1_independent = pd.DataFrame(s1_rows_list).merge(
+                    obs, on=["site", "cycle"], how="left")
+
             state_rows: list[dict[str, Any]] = []
+            # S1: E1 universe（独立构建）
+            if len(s1_independent):
+                row_s1: dict[str, Any] = {
+                    "pool": pool, "split": split,
+                    "state": "S1_e1_core_independent",
+                    "n_cycles": int(len(s1_independent)),
+                    "n_mapped_to_minute_observable": int(
+                        s1_independent["median_elapsed"].notna().sum()),
+                    "mapping_rate_to_minute": round(
+                        s1_independent["median_elapsed"].notna().sum()
+                        / max(len(s1_independent), 1), 6),
+                    "insufficient": bool(len(s1_independent) < 5),
+                }
+                for col in OBS_COLS:
+                    if col in s1_independent.columns:
+                        val = s1_independent[col].median()
+                        row_s1[f"median_{col}"] = (
+                            round(float(val), 6)
+                            if pd.notna(val) else None)
+                state_rows.append(row_s1)
+
+            # S2/S3: E3 valid universe（从 merged）
             for state_name, mask in [
-                ("S1_e1_core", merged["is_e1_core"]),
                 ("S2_e3_opp", merged["is_e3_candidate_A2"]),
                 ("S3_valid_no_opp", ~merged["is_e3_candidate_A2"]),
+                # cross-universe overlap（仍从 merged）
                 ("S1_and_S2",
                  merged["is_e1_core"] & merged["is_e3_candidate_A2"]),
                 ("S1_and_S3",
@@ -635,6 +689,9 @@ def run_a4(
                         continue
                     t_med = true_g[col].median()
                     f_med = false_g[col].median()
+                    # P0-3: observable-specific non-null counts
+                    n_t_nonnull = int(true_g[col].notna().sum())
+                    n_f_nonnull = int(false_g[col].notna().sum())
                     t_val = (
                         round(float(t_med), 6)
                         if len(true_g) and pd.notna(t_med) else None)
@@ -643,6 +700,8 @@ def run_a4(
                         if len(false_g) and pd.notna(f_med) else None)
                     row[f"median_{col}_true"] = t_val
                     row[f"median_{col}_false"] = f_val
+                    row[f"n_{col}_true_nonnull"] = n_t_nonnull
+                    row[f"n_{col}_false_nonnull"] = n_f_nonnull
                     if t_val is not None and f_val is not None:
                         if t_med > f_med:
                             row[f"direction_{col}"] = "true>false"
@@ -737,16 +796,19 @@ def run_a4(
                 pre_action = OBS_CLASS.get(
                     col, {}).get("pre_action", "unknown")
 
-                # B7: 先算 sample_sufficient，再一次性生成 a5_eligible
+                # P0-3: observable-specific non-null sample sufficiency
+                # 不看 bucket 总数，看该 observable 的 non-null counts
+                nt_col = f"n_{col}_true_nonnull"
+                nf_col = f"n_{col}_false_nonnull"
                 sample_sufficient = True
                 for sp in SPLITS:
                     sub = bucket_df[
                         (bucket_df["pool"] == pool)
                         & (bucket_df["split"] == sp)
                         & (bucket_df["concurrency_bucket"] == bucket)]
-                    if len(sub):
-                        n_t = int(sub["n_candidate_true"].iloc[0])
-                        n_f = int(sub["n_candidate_false"].iloc[0])
+                    if len(sub) and nt_col in sub.columns:
+                        n_t = int(sub[nt_col].iloc[0])
+                        n_f = int(sub[nf_col].iloc[0])
                         if n_t < 5 or n_f < 5:
                             sample_sufficient = False
                     else:
