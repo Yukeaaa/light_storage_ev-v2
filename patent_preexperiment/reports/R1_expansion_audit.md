@@ -41,28 +41,38 @@ station × retained/dropped / temporal-test → strict-L1 retention rate（每�
 
 **Caltech temporal-test main 10,528 → L1_strict_matched test 155（retention 1.47%）。**
 
-收缩主因是 **strict-match 要求**（API×static matched），不是后期运营域变化本身：
-10,528 = 155 L1_strict_matched + 10,373 L0_static_extension(static_only)。
+人口收缩直接发生在 sample-layer/match-status 层：10,528 = 155 L1_strict_matched +
+10,373 L0_static_extension(static_only)。**仅凭 A1 无法判定运营域是否同时发生变化。**
 
-155 sessions 组成：
+**完整 funnel**：
+
+| stage | n | unit |
+|---|---|---|
+| temporal_test_main | 10,528 | session |
+| l1_strict_matched | 155 | session |
+| valid_cycles | 4,920 | cycle |
+| candidate_cycles_A2 | 63 | cycle |
+
+candidate/valid cycle rate = 63/4,920 = 1.28%。
+
+155 sessions 仅分布在 2020-05、06、07、08、11 五个月：
 | 月份 | n | field_mode |
 |---|---|---|
 | 2020-05 | 9 | measured_pilot |
-| 2020-06 | 35 | measured_pilot |
+| 2020-06 | 35 | measured_pilot(34) + current_only(1) |
 | 2020-07 | 35 | measured_pilot |
 | 2020-08 | 7 | measured_pilot |
-| 2020-11 | 69 | measured_pilot(68) + current_only(1) |
+| 2020-11 | 69 | measured_pilot |
 
-- 154 measured_pilot + 1 current_only；全落在 2020 下半年。
+- 154 measured_pilot + 1 current_only（current_only 在 2020-06，非 11）。
 - top stations：2-39-81-4550(23) / 2-39-139-28(22) / 2-39-125-21(14) / 2-39-131-30(13)。
-- E1 core-eligible 在 155 上再收缩到 40 会话（E1 frozen summary：core 母体 40）；
-  E3 valid-cycle-eligible 在 155 上得 63 opp cycles（A2）。
+- E1 core-eligible 在 155 上再收缩到 40 会话；E3 valid cycles 4,920 → A2 candidate 63。
 
-**解读**：155 是真实后期 matched 域，但母体极小（1.47% retention）；E1/E3 失败的"样本小"
-背景是 strict-match 选择效应 + 后期时间窗口共同作用。这不是"数据被不当删除"，
-而是 strict matched 会话在后期本身就稀疏。A2 需判断失败是否落在 155 内的更窄子集。
+**解读**：155 是真实后期 matched 域，但母体极小（1.47% retention）；收缩主因是 strict-match
+要求（API×static matched availability），不是数据被不当删除。**结果与 support-domain limitation
+假设一致，并增强了继续检查该假设的必要性；尚不足以证明存在可由在线可观测量识别的 support domain。**
 
-输出文件：`results/raw/E3F_expansion/a1_*.csv` + `a1_population_bridge.json`
+输出文件：`results/raw/E3F_expansion/a1_*.csv` + `a1_population_bridge.csv` + `a1_population_bridge.json`
 
 ---
 
@@ -75,7 +85,7 @@ station × retained/dropped / temporal-test → strict-L1 retention rate（每�
 
 ### A2 结果
 
-**E1 与 E3 在 test 域失败的原因不同，时段不重合。**
+**E1 与 E3 主导集中时段不同，但存在部分时间/站点/会话重叠。**
 
 #### E1 核心 11 事件
 
@@ -84,7 +94,6 @@ station × retained/dropped / temporal-test → strict-L1 retention rate（每�
 | 2020-06 | 11 | 3.224 |
 
 - **100% 集中在 2020-06**，10/11 在单桩 `2-39-79-382`，1/11 在 `2-39-89-25`。
-- 这是 pilot-actual response difference 的极端单月单桩集中。
 
 #### E3 Caltech test opp（A2 主基线）
 
@@ -97,22 +106,28 @@ station × retained/dropped / temporal-test → strict-L1 retention rate（每�
 | **2020-11** | **36** | **10.268** | **79.5%** |
 
 - opp energy **79.5% 集中在 2020-11**（36 周期 / 10.27 kWh）。
-- 但 M2 daily energy share median = 0.0：63 opp cycles 分布在多个 day，多数 day 的
-  candidate energy 仍为 0 或极小，中位数为 0（evaluable-day K1 exact 口径真实零）。
+- M2 daily energy share median = 0.0：63 opp cycles 分布在多 day，多数 day candidate energy
+  为 0 或极小，中位数为 0（evaluable-day K1 exact 口径真实零）。
 
-#### E1/E3 重叠
+#### E1/E3 overlap（month + station + session）
 
-- E1 核心月份 = {2020-06}；E3 opp 月份 = {2020-05,06,07,08,11}；shared = {2020-06}。
-- **但 E1 gap energy 100% 在 2020-06，E3 opp energy 仅 5.3% 在 2020-06**——两者主峰不重合。
-- E1 是 pilot-actual response 在 2020-06 单桩（2-39-79-382）；
-  E3 是 A2 历史基线在 2020-11 仍残留预算差值但日中位 energy share=0。
+| 维度 | E1 核心 | E3 opp | shared |
+|---|---|---|---|
+| months | {2020-06} | {2020-05,06,07,08,11} | {2020-06} |
+| stations | {2-39-79-382, 2-39-89-25} | 含 2-39-79-382, 2-39-89-25 | **{2-39-79-382, 2-39-89-25}** |
+| sessions | 11 core sessions | E3 opp cycle 时段 sessions | **1 shared session**（`2_39_79_382_2020-06-08`）|
 
-**解读**：E1 和 E3 两项独立失败发生在同一 155-会话 test 域的**不同时段**，
-共同背景是 L1 strict matched test 母体极小（155）。这强烈支持"support-domain 限制"
-而非"broad 机制不存在"——但也表明 155 域内机会/response 都高度时域集中，
-不适合支撑广义主动预算修正。A3-A5 需进一步判断这种集中是否可由在线可观测变量预测。
+- E1 核心桩 `2-39-79-382` **确实贡献 E3 opportunity**（in_e3_opp=True）。
+- E1 核心与 E3 opp 共享 **1 个 session**（2020-06-08 的会话同时出现在 E1 核心事件和 E3 opp 周期时段）。
 
-输出文件：`results/raw/E3F_expansion/a2_*.csv` + `a2_overlap.json`
+**解读**：E1 核心事件主导峰在 2020-06（gap energy 100%），E3 opp energy 主导峰在 2020-11
+（79.5%）；两者主导集中时段不同，但存在部分时间重叠（shared 2020-06）、共享站点（2-39-79-382）、
+甚至 1 个 shared session。**目前不能声称统计独立或成因独立。** 结果与 support-domain
+limitation 假设一致，并增强了继续检查该假设的必要性；**尚不足以证明存在可由在线可观测变量
+识别的 support domain**（那是 A4/A5 的任务）。
+
+输出文件：`results/raw/E3F_expansion/a2_e1_decomposition.csv` + `a2_e3_decomposition.csv`
++ `a2_overlap.json` + `a2_e3_opp_by_{month,day,concurrency,elapsed}.csv`
 
 ---
 

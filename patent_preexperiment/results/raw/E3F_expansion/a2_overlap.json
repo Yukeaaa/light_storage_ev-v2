@@ -1,51 +1,29 @@
 {
-  "module": "A2_frozen_test_decomposition",
-  "E1_core": {
-    "n_events": 11,
-    "by_month": {
-      "2020-06": 11
-    },
-    "by_station": {
-      "2-39-79-382": 10,
-      "2-39-89-25": 1
-    },
-    "top_month_share_of_gap_energy": 1.0,
-    "note": "E1 核心 11 事件全在 2020-06，10/11 在单桩 2-39-79-382"
-  },
-  "E3_caltech_test_opp": {
-    "n_opp_cycles": 63,
-    "by_month_n_cycles": {
-      "2020-05": 3,
-      "2020-06": 8,
-      "2020-07": 13,
-      "2020-08": 3,
-      "2020-11": 36
-    },
-    "by_month_energy": {
-      "2020-05": 0.32,
-      "2020-06": 0.686,
-      "2020-07": 1.44,
-      "2020-08": 0.199,
-      "2020-11": 10.268
-    },
-    "top_month_share_of_opp_energy": 0.7952,
-    "top_month": "2020-11",
-    "note": "E3 opp energy 79.5% 集中在 2020-11（36 周期/10.27kWh）"
-  },
-  "overlap": {
-    "E1_core_months": [
-      "2020-06"
-    ],
-    "E3_opp_months": [
-      "2020-05",
-      "2020-06",
-      "2020-07",
-      "2020-08",
-      "2020-11"
-    ],
-    "shared_months": [
-      "2020-06"
-    ],
-    "interpretation": "E1 核心事件集中在 2020-06（gap energy 100%），E3 opp energy 集中在 2020-11（79.5%）——两者 NOT 重合。E1 与 E3 在 test 域失败的原因不同：E1 是 pilot-actual response 在 2020-06 单桩；E3 是 A2 历史基线在 2020-11 仍残留预算差值但日中位 energy share=0（多数 evaluable day 真实零）。两项独立失败发生在同一 155-会话 test 域的不同时段，共同背景是 L1 strict matched test 母体极小。"
-  }
+  "shared_months": [
+    "2020-06"
+  ],
+  "e1_core_months": [
+    "2020-06"
+  ],
+  "e3_opp_months": [
+    "2020-05",
+    "2020-06",
+    "2020-07",
+    "2020-08",
+    "2020-11"
+  ],
+  "shared_stations": [
+    "2-39-79-382",
+    "2-39-89-25"
+  ],
+  "e1_core_top_station": "2-39-79-382",
+  "e1_core_top_station_in_e3_opp": true,
+  "shared_sessions_e1_core_x_e3_opp": [
+    "2_39_79_382_2020-06-08 16:47:28.606245"
+  ],
+  "n_shared_sessions": 1,
+  "e1_core_top_month_share": 1.0,
+  "e3_opp_top_month_share": 0.7951783948546783,
+  "e3_opp_top_month": "2020-11",
+  "interpretation": "E1 核心事件主导峰在 2020-06（gap energy 100%），E3 opp energy 主导峰在 2020-11（79.5%）；两者主导集中时段不同，但存在部分时间重叠（shared 2020-06）。 E1 核心桩 2-39-79-382 是否贡献 E3 opp：True； E1 核心 session 与 E3 opp cycle 时段共享 session 数：1。 目前不能声称统计独立或成因独立；结果与 support-domain limitation 假设一致，并增强了继续检查该假设的必要性；尚不足以证明存在可由在线可观测量识别的 support domain。"
 }

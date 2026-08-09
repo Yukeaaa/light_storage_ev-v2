@@ -1,0 +1,161 @@
+{
+  "batch": "batch_1_1",
+  "preregister": "configs/r1_expansion_audit.yaml",
+  "analysis_code_sha": "26b60fff17b5140b98812f874947de7e1f871e9f",
+  "worktree_clean": false,
+  "inputs": {
+    "split_registry": {
+      "path": "data_registry\\e0_full_split_registry.parquet",
+      "sha256": "5cb0710240a570764dfac5421c3e834008c33629b6525313b6ab6e7b88c64e53",
+      "rows": 85877
+    },
+    "e1_events": {
+      "path": "results\\raw\\E1F\\e1_full_test_event_table.parquet",
+      "sha256": "ce3ce905b243affb2308b711bbb0a2ad034bcc9b7bac3149b899820256c8b4e4",
+      "rows": 101
+    },
+    "e3_caltech_candidate": {
+      "path": "results\\raw\\E3F\\e3_full_test_caltech_candidate.parquet",
+      "sha256": "c551a92770797d7feb17091a951a0d5dba5b566ac672741220c741059656810b",
+      "rows": 4920
+    },
+    "test_minutes_rows": 33140,
+    "test_minutes_sessions": 155
+  },
+  "outputs": {
+    "results\\raw\\E3F_expansion\\a1_l1_field_mode_summary.csv": {
+      "sha256": "547325ab13b0c67df701b23e7b2f55a5c36db19c2671496735702bd498229731",
+      "rows": 2
+    },
+    "results\\raw\\E3F_expansion\\a1_l1_month_x_field_mode.csv": {
+      "sha256": "509e3d2a6936d61752f743197182570090f784dd291354c08a70b8ef91204b75",
+      "rows": 6
+    },
+    "results\\raw\\E3F_expansion\\a1_l1_month_x_station.csv": {
+      "sha256": "bd3be57547522e0c5bfb10ac2bc24c864976227f4536b912da283689e3df2512",
+      "rows": 60
+    },
+    "results\\raw\\E3F_expansion\\a1_month_x_match_status.csv": {
+      "sha256": "2f5f01fc7cc41b9e6b6545a360470103d95f20e6a3e5eae4578262e64c96579f",
+      "rows": 12
+    },
+    "results\\raw\\E3F_expansion\\a1_month_x_sample_layer.csv": {
+      "sha256": "18a516696406a81c780be1f8619c31ab98fde5453603814ece9d41048b270f99",
+      "rows": 12
+    },
+    "results\\raw\\E3F_expansion\\a1_monthly_retention.csv": {
+      "sha256": "ef2d0c9d748afbd78305e1aa98d5d44fa21b5941b4cda47393c291f12d053613",
+      "rows": 7
+    },
+    "results\\raw\\E3F_expansion\\a1_population_bridge.csv": {
+      "sha256": "9578a21ea36ca79704ff1fbbbe8ed2e817319a2c98e817c0750e5e55bd7fbcbc",
+      "rows": 4
+    },
+    "results\\raw\\E3F_expansion\\a1_station_x_layer.csv": {
+      "sha256": "aafb78f1b4a71c01a2ea2ff00760c305f04beeab36cf17f38539f7fb0eaa681e",
+      "rows": 154
+    },
+    "results\\raw\\E3F_expansion\\a2_e1_core_by_day.csv": {
+      "sha256": "24861d2be600e2ae12f285eb382b4e5c74f2785f9ac97d802f345cd1e549fae8",
+      "rows": 3
+    },
+    "results\\raw\\E3F_expansion\\a2_e1_core_by_month.csv": {
+      "sha256": "8a380e4cad3a929f0198a19f4d88f19190e494e9352527e2455cb1099fd09078",
+      "rows": 1
+    },
+    "results\\raw\\E3F_expansion\\a2_e1_core_by_station.csv": {
+      "sha256": "d87b2c040003c9eec089b1f376fd53a3b81a01bfa021ffff0e2acf386ae49fe9",
+      "rows": 2
+    },
+    "results\\raw\\E3F_expansion\\a2_e1_decomposition.csv": {
+      "sha256": "22a8e0b8d6420e7a00ff4b37803506b66b180d1d99e13c47e184f6238b4e64d2",
+      "rows": 11
+    },
+    "results\\raw\\E3F_expansion\\a2_e3_decomposition.csv": {
+      "sha256": "2e2fb30eab1717215c07b10ee80c19f45bb5e5ea391e4ed10e9148cc4693122b",
+      "rows": 63
+    },
+    "results\\raw\\E3F_expansion\\a2_e3_opp_by_concurrency.csv": {
+      "sha256": "cf2e97ed0c3ba78436cf9daa688a4d4db83ef1c57bcaa8112aadfa2d838acaec",
+      "rows": 1
+    },
+    "results\\raw\\E3F_expansion\\a2_e3_opp_by_day.csv": {
+      "sha256": "a1fddd4478e9180218584d74b8f8af32bf19d47cf02c30bf44770734d034b00d",
+      "rows": 21
+    },
+    "results\\raw\\E3F_expansion\\a2_e3_opp_by_elapsed.csv": {
+      "sha256": "84e10d2aebc90cd17a044df0741579af96a2e67270a5c0f6b4ce85a4381fc021",
+      "rows": 5
+    },
+    "results\\raw\\E3F_expansion\\a2_e3_opp_by_month.csv": {
+      "sha256": "dca9d42d89060eb64eba2ac809d86bbe3d3691203c6da86714bd1fae3e5c0e5c",
+      "rows": 5
+    },
+    "results\\raw\\E3F_expansion\\a1_population_bridge.json": {
+      "sha256": "f7605ddcafaad135345f856ce7f0443e2bf959bf656621890674cd11b9797dee"
+    },
+    "results\\raw\\E3F_expansion\\a2_overlap.json": {
+      "sha256": "918fd4460bdb9d12bf89275c91c55be80864d5ef0bb233cf14dda9d3609845af"
+    }
+  },
+  "a1_summary": {
+    "module": "A1_population_bridge",
+    "n_temporal_test_main": 10528,
+    "n_l1_strict_test": 155,
+    "retention_rate": 0.014723,
+    "n_valid_cycles": 4920,
+    "n_candidate_cycles_A2": 63,
+    "candidate_to_valid_cycle_rate": 0.012805,
+    "contraction": "10528 → 155（98.5% 为 L0_static_extension/static_only）",
+    "l1_by_month": {
+      "2020-05": 9,
+      "2020-06": 35,
+      "2020-07": 35,
+      "2020-08": 7,
+      "2020-11": 69
+    },
+    "l1_by_month_field_mode": {
+      "2020-05|measured_pilot": 9,
+      "2020-06|current_only": 1,
+      "2020-06|measured_pilot": 34,
+      "2020-07|measured_pilot": 35,
+      "2020-08|measured_pilot": 7,
+      "2020-11|measured_pilot": 69
+    },
+    "l1_by_field_mode": {
+      "current_only": 1,
+      "measured_pilot": 154
+    },
+    "interpretation_note": "10528 temporal-test main = 155 L1_strict_matched + 10373 L0_static_extension(static_only)。人口收缩直接发生在 sample-layer/match-status 层；仅凭 A1 无法判定运营域是否同时发生变化。 funnel：155 sessions → 4920 valid cycles → 63 A2 candidate cycles。"
+  },
+  "a2_overlap": {
+    "shared_months": [
+      "2020-06"
+    ],
+    "e1_core_months": [
+      "2020-06"
+    ],
+    "e3_opp_months": [
+      "2020-05",
+      "2020-06",
+      "2020-07",
+      "2020-08",
+      "2020-11"
+    ],
+    "shared_stations": [
+      "2-39-79-382",
+      "2-39-89-25"
+    ],
+    "e1_core_top_station": "2-39-79-382",
+    "e1_core_top_station_in_e3_opp": true,
+    "shared_sessions_e1_core_x_e3_opp": [
+      "2_39_79_382_2020-06-08 16:47:28.606245"
+    ],
+    "n_shared_sessions": 1,
+    "e1_core_top_month_share": 1.0,
+    "e3_opp_top_month_share": 0.7951783948546783,
+    "e3_opp_top_month": "2020-11",
+    "interpretation": "E1 核心事件主导峰在 2020-06（gap energy 100%），E3 opp energy 主导峰在 2020-11（79.5%）；两者主导集中时段不同，但存在部分时间重叠（shared 2020-06）。 E1 核心桩 2-39-79-382 是否贡献 E3 opp：True； E1 核心 session 与 E3 opp cycle 时段共享 session 数：1。 目前不能声称统计独立或成因独立；结果与 support-domain limitation 假设一致，并增强了继续检查该假设的必要性；尚不足以证明存在可由在线可观测量识别的 support domain。"
+  },
+  "discipline": "只读 frozen evidence + registry + minute table；不重跑 formal；不调参；deterministic"
+}
