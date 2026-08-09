@@ -329,17 +329,32 @@ def test_split_safety_recomputes_time_order(tmp_path: Path) -> None:
     assert recomputed["split_assignment_mismatch"] == 0
 
 
-def test_split_safety_fails_when_future_session_forced_into_train() -> None:
+def test_split_safety_fails_on_train_test_swap_same_counts() -> None:
+    """交换 s0(train)↔s29(test)：60/20/20 严格不变，只有时间顺序错。
+
+    对应"same counts, wrong assignment"攻击：比例检查必然漏判，重算必须命中。
+    """
     reg = _synth_registry(30)
+    reg.loc[0, "split"] = "test"
     reg.loc[29, "split"] = "train"
+    evidence = d0.audit_split_safety(reg, {})["evidence"]
+    assert evidence["per_site_602020"]["caltech"]["ratios"] == {
+        "train": 0.6, "validation": 0.2, "test": 0.2,
+    }
     res = d0.audit_split_safety(reg, {})
     assert not res["pass"]
     assert res["evidence"]["recomputed_split"]["split_assignment_mismatch"] > 0
 
 
-def test_split_safety_fails_when_early_session_forced_into_test() -> None:
+def test_split_safety_fails_on_val_test_swap_same_counts() -> None:
+    """交换 s17(train,最末)↔s23(validation,最末)：18/6/6 不变，时间顺序仍错。"""
     reg = _synth_registry(30)
-    reg.loc[0, "split"] = "test"
+    reg.loc[17, "split"] = "validation"
+    reg.loc[23, "split"] = "train"
+    evidence = d0.audit_split_safety(reg, {})["evidence"]
+    assert evidence["per_site_602020"]["caltech"]["ratios"] == {
+        "train": 0.6, "validation": 0.2, "test": 0.2,
+    }
     res = d0.audit_split_safety(reg, {})
     assert not res["pass"]
     assert res["evidence"]["recomputed_split"]["split_assignment_mismatch"] > 0
@@ -565,6 +580,7 @@ def test_determinism_stops_on_mutated_pool_1min_partition(tmp_path: Path) -> Non
 
 def test_determinism_stops_on_mutated_pool_5min(tmp_path: Path) -> None:
     frozen, pool_dir, five_file = _pool_state_fixture(tmp_path)
+    frozen["pool_state_5min"]["sha256"] = d0._sha256_file(five_file)
     pd.DataFrame({"pool_id": ["p1"] * 7}).to_parquet(five_file, index=False)
     ev, problems = d0._verify_pool_state_files(frozen, pool_dir, five_file)
     assert any("pool_state_5min" in p and "sha256" in p and "不一致" in p for p in problems)
