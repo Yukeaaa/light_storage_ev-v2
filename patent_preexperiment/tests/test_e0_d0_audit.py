@@ -454,6 +454,19 @@ def test_report_contains_all_gates() -> None:
         assert f"| {name} |" in report
 
 
+def test_registry_gates_carry_per_gate_pass() -> None:
+    gates = {name: {"pass": name != "leak_safety", "evidence": {"k": "v"}}
+             for name in d0.GATE_NAMES}
+    d0_export = {
+        "gates": {n: {**gates[n]["evidence"], "pass": gates[n]["pass"]}
+                  for n in d0.GATE_NAMES},
+    }
+    for name in d0.GATE_NAMES:
+        assert "pass" in d0_export["gates"][name]
+        assert d0_export["gates"][name]["pass"] == (name != "leak_safety")
+        assert d0_export["gates"][name]["k"] == "v"
+
+
 def test_d0_outputs_registered_in_config() -> None:
     cfg = load_yaml(_CONFIG)
     assert cfg["outputs"]["d0_report"] == "reports/E0_Full_D0_acceptance_audit.md"

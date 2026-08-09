@@ -864,7 +864,8 @@ def _build_report(
     lines.append("## 冻结产物时点")
     lines.append("")
     lines.append(f"- created_at_utc：{frozen_artifacts['created_at_utc']}")
-    lines.append(f"- 冻结时点 code_sha（provenance，E0F-04 冻结提交）：`{frozen_artifacts['code_sha']}`")
+    code_sha = frozen_artifacts["code_sha"]
+    lines.append(f"- 冻结时点 code_sha（provenance，E0F-04 冻结提交）：`{code_sha}`")
     sr = frozen_artifacts.get("session_response", {}).get("partition_registry", {})
     if sr:
         lines.append(f"- E0F-03 分区：{sr.get('n_partitions')} 个分区，"
@@ -946,7 +947,9 @@ def run_e0f05(
         "experiment_id": cfg["experiment_id"],
         "baseline_path": _REGISTRY_PATHS["baseline"],
         "baseline_code_sha": baseline["code_sha"],
-        "gates": {name: gates[name]["evidence"] for name in GATE_NAMES},
+        "gates": {
+            name: {**gates[name]["evidence"], "pass": gates[name]["pass"]} for name in GATE_NAMES
+        },
         "semantic_guards": {k: v["evidence"] for k, v in semantic.items()},
         "report": _D0_REPORT,
         "d0_pass": True,
