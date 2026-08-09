@@ -1,7 +1,8 @@
 # R1-E3 Gate（候选预算修正窗口 / 机会审计）
 
-> 审查结论28/29 定稿。本报告方法/门/决策矩阵在正式 test 暴露前冻结；结果区域 TBD，
-> 待 `--formal-test` 执行后填入（test 只跑一次，冻结后只读）。
+> 审查结论28–33 定稿。方法/门/决策矩阵在正式 test 暴露前冻结；结果区域已填入冻结
+> formal test 数值（evidence-only commit `310cbdb`，formal test 只跑一次已永久封存，
+> 审查结论33 冻结；重跑被 `assert_formal_test_not_started_or_exposed` 硬拒）。
 >
 > 预注册配置：`configs/r1_e3.yaml`（独立，不修改已被 D0 冻结的 `e0_full.yaml`；
 > 停止线/种子引用 `e0_full.yaml#k1_replication_stop_lines.e3` / `#seeds`）。
@@ -74,23 +75,25 @@ caltech 能量占比 ∧ jpl 能量占比各自 ≥ 0.5%。
 - 报告：`n_operating_days` / `n_evaluable_days` / `n_non_evaluable_days` / `evaluable_day_coverage`。
 - 与 K1 E3-Lite `e3_lite/run.py` daily energy section exact 同源（`cd.groupby(["pool","day"])[col].sum()`，`cd` 含 `candidate=False` 行）。
 
-## 6. runner 治理（审查结论29 P0-1/P0-2/P0-3）
+## 6. runner 治理（审查结论29/30 P0）
 
 ```
---pretest              train+validation → results/work/E3F_pretest/（禁加载 test）
---formal-test          验证 pretest manifest
-  --expected-code-sha <最终 code-only SHA>
-  [--require-clean]    默认 true
-                       → clean/SHA hard gate
-                       → 写 started sentinel（读取任何 test outcome 之前）
-                       → Caltech test + JPL test 一次
-                       → results/raw/E3F/
-                       → seal completed
+--pretest --expected-code-sha <SHA>
+                        HEAD==SHA ∧ clean=true → 只读 train/validation（predicate-pushdown，
+                        不读 test）→ results/work/E3F_pretest/ → 人工审阅
+--formal-test --expected-code-sha <SHA>
+                        assert no previous exposure
+                        → load+validate pretest manifest（mode/splits/code_sha/contract）
+                        → HEAD==SHA ∧ clean=true（formal 永久强制 clean，无 CLI bypass）
+                        → 写 started sentinel（读取任何 test outcome 之前）
+                        → 只读 test（不重算 train/val，嵌入 frozen pretest）
+                        → results/raw/E3F/ → seal completed
 --read-frozen          只读冻结门（不重算/写盘）
 ```
 
 - once-only 状态机：absent → started → completed；`started` 后即使崩溃也不自动获第二次 test。
-- clean/SHA hard gate：`code_sha != unknown ∧ == expected ∧ worktree_clean`。
+- clean/SHA hard gate：`code_sha != unknown ∧ == expected ∧ worktree_clean`（formal 永远 `require_clean=True`，CLI 无 `--no-require-clean`）。
+- pretest summary SHA256 绑定：formal sentinel 含 `pretest_summary_sha256`，证明"审阅的那份 train/val evidence = formal 实际绑定的那份"。
 
 ## 7. fail-case 规则（审查结论29 NB-3）
 
