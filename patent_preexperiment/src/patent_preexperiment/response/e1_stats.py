@@ -145,8 +145,9 @@ def negative_controls(
     anch = done_anchored_summary(events)
     anch["interpretation"] = (
         "特征化：响应差事件在 done 前 120 分钟内占多数（车辆满充/降流机制），post_done=0 "
-        "排除'停车占位'伪影（事件要求 charging_active）。核心运行段事件独立满足停止线，"
-        "问题在正常充电段仍成立；近完成段浓度在 E2 可执行区间生成中须单独建模。"
+        "排除'停车占位'伪影（事件要求 charging_active）。核心运行段事件结果需结合该 split "
+        "的正式 stop-line gate 独立判定，不能由本字段推断；近完成段浓度在 E2 可执行区间"
+        "生成中须单独建模。"
     )
     neg["done_anchored_events"] = anch
 

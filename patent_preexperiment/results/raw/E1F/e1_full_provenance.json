@@ -1,0 +1,27 @@
+{
+  "experiment_id": "E1_Full_R1_replication",
+  "record_type": "post_hoc_provenance",
+  "registered_at": "2026-08-09",
+  "registered_by": "审查结论26",
+  "evidence_commit": "44fa88c",
+  "formal_test_exposure": "44fa88c",
+  "runtime_code_clean": "not independently provable from Git history",
+  "reason": "44fa88c 代码与正式 train/validation/test evidence 同次提交，无法从 Git 历史独立证明 test 暴露前实现已冻结；阈值/人口/seeds/统计方法此前均已冻结，K1 fidelity 逐位一致，test 结果为负面（FAIL），未做任何'修漂亮'调整，故不因此作废该次结果。",
+  "not_approved": ["E1-Full", "E2", "E4"],
+  "gate_status": "Formal FAIL → 情况二 → 新门评审 → Conditional Continue within R1 only",
+  "r1_verdict_on_test": "FAIL",
+  "train_validation_verdict": "PASS",
+  "e3_allowed": true,
+  "e3_cannot_rescue_e1": true,
+  "next_commit_strategy": "E3 起按 code-only commit → 冻结 SHA → clean worktree → train/validation → 确认无阈值改动 → test 一次 → evidence-only commit",
+  "committed_artifacts": [
+    "results/raw/E1F/e1_full_summary.json",
+    "results/raw/E1F/e1_full_{train,validation,test}_event_table.parquet",
+    "results/raw/E1F/e1_full_{train,validation,test}_fail_cases.csv",
+    "results/raw/E1F/e1_full_{train,validation,test}_month_summary.csv",
+    "results/raw/E1F/e1_full_{train,validation,test}_phase_summary.csv",
+    "results/raw/E1F/e1_full_{train,validation,test}_session_summary.csv",
+    "results/raw/E1F/R1_E1_fidelity.json",
+    "reports/R1_E1_gate.md"
+  ]
+}

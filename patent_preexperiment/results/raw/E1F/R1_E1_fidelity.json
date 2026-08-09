@@ -1,0 +1,39 @@
+{
+  "experiment": "R1_E1_fidelity",
+  "frozen_source": "results/raw/E1L/e1_lite_summary.json (K1.2.2 最终冻结版)",
+  "seeds": {
+    "permutation": [
+      42,
+      2024,
+      777
+    ],
+    "bootstrap_seed": 42,
+    "n_boot": 2000
+  },
+  "threshold": {
+    "p_on_kw": 0.5,
+    "delta_r": 0.25,
+    "delta_p_kw": 0.5,
+    "t_event_min": 5,
+    "initial_exclusion_min": 5,
+    "tail_exclusion_min": 10,
+    "pilot_active_min_a": 1.0
+  },
+  "frozen": {
+    "denominator_sessions_with_core_run": 2941,
+    "event_session_rate": 0.11866712002720163,
+    "median_gap_kw": 1.2793999999999999,
+    "diff_bootstrap_ci95_lower": 0.03524878159356229,
+    "diff_bootstrap_ci95_upper": 0.057576787940609775
+  },
+  "actual": {
+    "n_main_sessions": 5961,
+    "denominator_sessions_with_core_run": 2941,
+    "event_session_rate": 0.11866712002720163,
+    "median_gap_kw": 1.2793999999999999,
+    "diff_bootstrap_ci95_lower": 0.03524878159356229,
+    "diff_bootstrap_ci95_upper": 0.057576787940609775
+  },
+  "pass": true,
+  "mismatches": []
+}

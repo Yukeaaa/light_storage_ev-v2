@@ -20,13 +20,12 @@ from pathlib import Path
 import pandas as pd
 
 from patent_preexperiment.config.yamlutil import load_yaml
+from patent_preexperiment.e1_full.gate import formal_exit_code, git_provenance
 from patent_preexperiment.e1_full.loader import load_main_evidence_minutes, split_df
-from patent_preexperiment.metrics.permutation import permutation_negative_control
 from patent_preexperiment.response.done import PHASE_CORE
 from patent_preexperiment.response.e1_stats import (
     build_fail_cases,
     core_stats,
-    events_with_phase,
     negative_controls,
     phase_summary,
     process,
@@ -35,6 +34,7 @@ from patent_preexperiment.response.e1_stats import (
 from patent_preexperiment.response.events import GapThresholds
 
 IMPL = Path(__file__).resolve().parents[2]  # patent_preexperiment 实现区
+REPO = IMPL.parent  # 仓库根（git 溯源用）
 MINUTE_ROOT = IMPL / "datasets" / "session_response_1min"
 REGISTRY = IMPL / "data_registry" / "e0_full_split_registry.parquet"
 E0_CFG = load_yaml(IMPL / "configs" / "e0_full.yaml")
@@ -65,9 +65,6 @@ def _per_split(
     session_summary.to_csv(OUT / f"e1_full_{split}_session_summary.csv", index=False)
     phase_summary(events, labeled).to_csv(OUT / f"e1_full_{split}_phase_summary.csv", index=False)
 
-    core_denom = labeled[
-        (labeled["phase"] == PHASE_CORE) & labeled["charging_active"] & labeled["pilot_available"]
-    ]["session_id"].nunique()
     core_events = events[events["event_phase"] == PHASE_CORE]
     core = core_stats(events, labeled, thr)
 
@@ -155,6 +152,15 @@ def run_e1_full() -> dict:
         },
         "seeds": {"bootstrap": BOOT_SEED, "n_boot": N_BOOT, "permutation": PERM_SEEDS},
         "stop_lines": STOP,
+        "provenance": {
+            **git_provenance(REPO),
+            "formal_test_exposure": "test split 只正式运行一次（E0F-02 冻结 test，禁止回看调参）",
+            "evidence_note": (
+                "审查结论26：44fa88c 代码与正式 evidence 同次提交，runtime_code_clean "
+                "无法从 Git 历史独立证明；本字段仅记录本次运行时状态，E3 起按"
+                " code-only commit → clean → test → evidence-only commit 分步。"
+            ),
+        },
         "per_split": per_split,
         "r1_verdict_on_test": {
             "test_n_sessions": test["n_valid_sessions"],
@@ -166,7 +172,8 @@ def run_e1_full() -> dict:
         },
         "caveat": (
             "test split 只有 2020-05/06/07/08/11 五个月、155 个主集会话（154 measured_pilot）；"
-            "若 test 事件量过小需按 evaluable 规则单列报告，不得静默当零。"
+            "test 核心母体仅 40 会话且事件全部落在 2020-06（单桩 2-39-79-382 占 10/11），"
+            "停止线按冻结规则判定，不以样本不足为由豁免。"
         ),
     }
     (OUT / "e1_full_summary.json").write_text(
@@ -177,4 +184,4 @@ def run_e1_full() -> dict:
 
 
 if __name__ == "__main__":
-    sys.exit(0 if run_e1_full() else 1)
+    sys.exit(formal_exit_code(run_e1_full()))
