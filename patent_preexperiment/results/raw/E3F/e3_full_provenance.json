@@ -1,0 +1,21 @@
+{
+  "experiment_id": "E3_Full_R1_replication",
+  "record_type": "formal_exposure",
+  "state": "completed",
+  "expected_code_sha": "c1436f43e0feba8ac072beac0cb03c851eda2c05",
+  "pre_run": {
+    "code_sha": "c1436f43e0feba8ac072beac0cb03c851eda2c05",
+    "worktree_clean": true
+  },
+  "pretest_summary_sha256": "0aeb340f4cba80324ebc2d463433de16efffd1e55e48694e5da2e1f9942ab56e",
+  "subjects": [
+    "caltech.California_Garage_01",
+    "jpl.Arroyo_Garage_01.current_only"
+  ],
+  "note": "runner 自封存：正式 test 已执行一次（state=completed）；此后任何重跑被硬拒。test 冻结结论以本文件与 e3_full_summary.json 为准。",
+  "formal_test_exposure": "c1436f43e0feba8ac072beac0cb03c851eda2c05",
+  "post_run": {
+    "code_sha": "c1436f43e0feba8ac072beac0cb03c851eda2c05",
+    "worktree_clean": false
+  }
+}

@@ -1,0 +1,650 @@
+{
+  "experiment_id": "E3_Full_R1_replication",
+  "mode": "formal-test",
+  "protocol": "R1 E3 正式 test（test 只跑一次，审查结论30 P0 治理）",
+  "splits_run": [
+    "train",
+    "validation",
+    "test"
+  ],
+  "train_val_source": "frozen pretest manifest（embedded，not recomputed）",
+  "pretest_summary_sha256": "0aeb340f4cba80324ebc2d463433de16efffd1e55e48694e5da2e1f9942ab56e",
+  "proxies": {
+    "caltech": [
+      "A0_avg",
+      "A2_prev_actual",
+      "A3_rolling_quantile"
+    ],
+    "jpl_current_only": [
+      "A2_prev_actual",
+      "A3_rolling_quantile"
+    ],
+    "main_baseline": "A2_prev_actual"
+  },
+  "seeds": {
+    "bootstrap": 42,
+    "n_boot": 2000
+  },
+  "stop_lines": {
+    "caltech_a2_daily_ci_lower_rate": 0.01,
+    "daily_energy_share_each_pool": 0.005,
+    "max_baseline_elimination": 0.8,
+    "not_single_month_or_outlier": true
+  },
+  "populations": {
+    "E3_M_caltech_main": "L1_strict_matched ∧ role==main",
+    "E3_X_jpl_current_only": "L1_strict_matched ∧ role==current_only_fallback ∧ field_mode==current_only"
+  },
+  "method": "连续时间历史：每会话补齐 5min 网格，组内(session,run) shift(1)/rolling，5min 网格断档冷启动；指标A=并发候选修正窗口（预算差值，无吸收假设）；主门基线=A2_prev_actual；精确配对 eligible_mask；evaluable-day K1 exact 口径",
+  "terminology": "仅'预算差值/并发候选修正窗口'，不称'可回收能力'",
+  "provenance": {
+    "pre_run": {
+      "code_sha": "c1436f43e0feba8ac072beac0cb03c851eda2c05",
+      "worktree_clean": true
+    },
+    "post_run": {
+      "code_sha": "c1436f43e0feba8ac072beac0cb03c851eda2c05",
+      "worktree_clean": false
+    },
+    "formal_test_exposure": "c1436f43e0feba8ac072beac0cb03c851eda2c05"
+  },
+  "per_split": [
+    {
+      "split": "train",
+      "caltech": {
+        "pool": "caltech.California_Garage_01",
+        "n_sessions": 9426,
+        "n_rows": 3540777,
+        "n_valid_cycles": 79816,
+        "n_dup_cycles": 0,
+        "n_pool_months": 10,
+        "n_days": 297,
+        "cycle_weighted_rate": {
+          "A0_avg": 0.46098526611205776,
+          "A2_prev_actual": 0.21171193745614914,
+          "A3_rolling_quantile": 0.3427257692693194
+        },
+        "day_equal_rate": {
+          "A0_avg": 0.466910733020502,
+          "A2_prev_actual": 0.21521509700474178,
+          "A3_rolling_quantile": 0.3482748277966069
+        },
+        "day_cluster_ci95": {
+          "A0_avg": {
+            "n_days": 297,
+            "day_rate": 0.466910733020502,
+            "ci95": [
+              0.44658126820194277,
+              0.48772561178988005
+            ]
+          },
+          "A2_prev_actual": {
+            "n_days": 297,
+            "day_rate": 0.21521509700474178,
+            "ci95": [
+              0.20176580102053485,
+              0.22952917132602066
+            ]
+          },
+          "A3_rolling_quantile": {
+            "n_days": 297,
+            "day_rate": 0.3482748277966069,
+            "ci95": [
+              0.32930351003206815,
+              0.36901480032669154
+            ]
+          }
+        },
+        "elimination_vs_A0": {
+          "A2_prev_actual": {
+            "point": 0.5407403380986031,
+            "ratio_ci95": {
+              "point": 0.5390658603787296,
+              "day_bootstrap_ci95": [
+                0.5224513282562809,
+                0.5567769995013584
+              ],
+              "n_days": 297
+            }
+          },
+          "A3_rolling_quantile": {
+            "point": 0.25653639180301147,
+            "ratio_ci95": {
+              "point": 0.25408690962494074,
+              "day_bootstrap_ci95": [
+                0.23607534319842718,
+                0.27391096988204916
+              ],
+              "n_days": 297
+            }
+          }
+        },
+        "daily_energy_share_median": 0.041346,
+        "daily_energy_share_mean": 0.038381,
+        "evaluable_days": {
+          "n_operating_days": 298,
+          "n_evaluable_days": 297,
+          "n_non_evaluable_days": 1,
+          "evaluable_day_coverage": 0.996644
+        },
+        "candidate_energy_total_kwh": 3730.462361,
+        "concentration": {
+          "n_months_with_opp": 10,
+          "top_month_share_of_opp_energy": 0.15109215672127735,
+          "top_day_share_of_opp_energy": 0.012020498776209008,
+          "n_pools": 1
+        },
+        "opportunity_duration_min": {
+          "n_runs": 4731,
+          "duration_median_min": 10.0,
+          "duration_p95_min": 55.0,
+          "duration_max_min": 280.0
+        },
+        "concurrency": {
+          "candidate_cycles": 16898,
+          "median_n_active": 7.0
+        },
+        "gate": {
+          "m1_a2_daily_ci_lower_rate": true,
+          "m2_caltech_energy_share": true,
+          "m3_baseline_not_eliminated": true,
+          "m3_elim_max": 0.5407403380986031,
+          "m4_not_single_month": true,
+          "m4_concentration_diagnostic": {
+            "top_month_share": 0.15109215672127735,
+            "top_day_share": 0.012020498776209008
+          },
+          "all_pass": true
+        },
+        "fail_cases_report": {
+          "n_fail_cases": 20,
+          "n_positive_candidates": 20,
+          "n_no_candidate_supplement": 0,
+          "insufficient_failure_cases": false
+        }
+      },
+      "jpl_current_only": {
+        "pool": "jpl.Arroyo_Garage_01.current_only",
+        "n_sessions": 13908,
+        "n_rows": 5993773,
+        "n_valid_cycles": 56429,
+        "n_dup_cycles": 0,
+        "n_pool_months": 10,
+        "n_days": 300,
+        "cycle_weighted_rate": {
+          "A2_prev_actual": 0.3933438480214074,
+          "A3_rolling_quantile": 0.5440110581438622
+        },
+        "day_equal_rate": {
+          "A2_prev_actual": 0.35784052766682833,
+          "A3_rolling_quantile": 0.4965366587573067
+        },
+        "day_cluster_ci95": {
+          "A2_prev_actual": {
+            "n_days": 300,
+            "day_rate": 0.35784052766682833,
+            "ci95": [
+              0.33196362944771846,
+              0.38435460229270074
+            ]
+          },
+          "A3_rolling_quantile": {
+            "n_days": 300,
+            "day_rate": 0.4965366587573067,
+            "ci95": [
+              0.46357328999707037,
+              0.5290205282770918
+            ]
+          }
+        },
+        "elimination_vs_A0": {},
+        "daily_energy_share_median": 0.037816,
+        "daily_energy_share_mean": 0.031855,
+        "evaluable_days": {
+          "n_operating_days": 299,
+          "n_evaluable_days": 300,
+          "n_non_evaluable_days": 0,
+          "evaluable_day_coverage": 1.003344
+        },
+        "candidate_energy_total_kwh": 7654.010962,
+        "concentration": {
+          "n_months_with_opp": 10,
+          "top_month_share_of_opp_energy": 0.1311339206703214,
+          "top_day_share_of_opp_energy": 0.008970586680950889,
+          "n_pools": 1
+        },
+        "opportunity_duration_min": {
+          "n_runs": 4116,
+          "duration_median_min": 15.0,
+          "duration_p95_min": 90.0,
+          "duration_max_min": 325.0
+        },
+        "concurrency": {
+          "candidate_cycles": 22196,
+          "median_n_active": 17.0
+        },
+        "gate": {
+          "x1_energy_share": true,
+          "x2_not_single_month": true,
+          "x3_uniqueness": true,
+          "x2_concentration_diagnostic": {
+            "top_month_share": 0.1311339206703214,
+            "top_day_share": 0.008970586680950889
+          },
+          "all_pass": true
+        },
+        "fail_cases_report": {
+          "n_fail_cases": 20,
+          "n_positive_candidates": 20,
+          "n_no_candidate_supplement": 0,
+          "insufficient_failure_cases": false
+        }
+      },
+      "cross_pool": {
+        "energy_share_each_pool_pass": true
+      }
+    },
+    {
+      "split": "validation",
+      "caltech": {
+        "pool": "caltech.California_Garage_01",
+        "n_sessions": 3896,
+        "n_rows": 1328198,
+        "n_valid_cycles": 33003,
+        "n_dup_cycles": 0,
+        "n_pool_months": 10,
+        "n_days": 161,
+        "cycle_weighted_rate": {
+          "A0_avg": 0.41305335878556493,
+          "A2_prev_actual": 0.1986789079780626,
+          "A3_rolling_quantile": 0.3235766445474654
+        },
+        "day_equal_rate": {
+          "A0_avg": 0.39558340056026836,
+          "A2_prev_actual": 0.18790572135424408,
+          "A3_rolling_quantile": 0.3072781323743284
+        },
+        "day_cluster_ci95": {
+          "A0_avg": {
+            "n_days": 161,
+            "day_rate": 0.39558340056026836,
+            "ci95": [
+              0.3603395839439269,
+              0.429553125271759
+            ]
+          },
+          "A2_prev_actual": {
+            "n_days": 161,
+            "day_rate": 0.18790572135424408,
+            "ci95": [
+              0.16801863609183879,
+              0.20922054713677132
+            ]
+          },
+          "A3_rolling_quantile": {
+            "n_days": 161,
+            "day_rate": 0.3072781323743284,
+            "ci95": [
+              0.2752957215960327,
+              0.33926356757856485
+            ]
+          }
+        },
+        "elimination_vs_A0": {
+          "A2_prev_actual": {
+            "point": 0.5189994131455399,
+            "ratio_ci95": {
+              "point": 0.5249908841268074,
+              "day_bootstrap_ci95": [
+                0.5012423298502412,
+                0.5488476180961422
+              ],
+              "n_days": 161
+            }
+          },
+          "A3_rolling_quantile": {
+            "point": 0.21662265258215962,
+            "ratio_ci95": {
+              "point": 0.22322794146789882,
+              "day_bootstrap_ci95": [
+                0.19614346505929947,
+                0.25182084827608303
+              ],
+              "n_days": 161
+            }
+          }
+        },
+        "daily_energy_share_median": 0.037781,
+        "daily_energy_share_mean": 0.031838,
+        "evaluable_days": {
+          "n_operating_days": 157,
+          "n_evaluable_days": 161,
+          "n_non_evaluable_days": 0,
+          "evaluable_day_coverage": 1.025478
+        },
+        "candidate_energy_total_kwh": 1364.225494,
+        "concentration": {
+          "n_months_with_opp": 6,
+          "top_month_share_of_opp_energy": 0.24687158234244147,
+          "top_day_share_of_opp_energy": 0.015210361959231315,
+          "n_pools": 1
+        },
+        "opportunity_duration_min": {
+          "n_runs": 1852,
+          "duration_median_min": 10.0,
+          "duration_p95_min": 55.0,
+          "duration_max_min": 140.0
+        },
+        "concurrency": {
+          "candidate_cycles": 6557,
+          "median_n_active": 7.0
+        },
+        "gate": {
+          "m1_a2_daily_ci_lower_rate": true,
+          "m2_caltech_energy_share": true,
+          "m3_baseline_not_eliminated": true,
+          "m3_elim_max": 0.5189994131455399,
+          "m4_not_single_month": true,
+          "m4_concentration_diagnostic": {
+            "top_month_share": 0.24687158234244147,
+            "top_day_share": 0.015210361959231315
+          },
+          "all_pass": true
+        },
+        "fail_cases_report": {
+          "n_fail_cases": 20,
+          "n_positive_candidates": 20,
+          "n_no_candidate_supplement": 0,
+          "insufficient_failure_cases": false
+        }
+      },
+      "jpl_current_only": {
+        "pool": "jpl.Arroyo_Garage_01.current_only",
+        "n_sessions": 5026,
+        "n_rows": 2090012,
+        "n_valid_cycles": 21340,
+        "n_dup_cycles": 0,
+        "n_pool_months": 5,
+        "n_days": 107,
+        "cycle_weighted_rate": {
+          "A2_prev_actual": 0.3607310215557638,
+          "A3_rolling_quantile": 0.5133083411433927
+        },
+        "day_equal_rate": {
+          "A2_prev_actual": 0.32794646918379616,
+          "A3_rolling_quantile": 0.470348643509517
+        },
+        "day_cluster_ci95": {
+          "A2_prev_actual": {
+            "n_days": 107,
+            "day_rate": 0.32794646918379616,
+            "ci95": [
+              0.2843804297675776,
+              0.3673684514499251
+            ]
+          },
+          "A3_rolling_quantile": {
+            "n_days": 107,
+            "day_rate": 0.470348643509517,
+            "ci95": [
+              0.4163613436092528,
+              0.5204881433013068
+            ]
+          }
+        },
+        "elimination_vs_A0": {},
+        "daily_energy_share_median": 0.037153,
+        "daily_energy_share_mean": 0.031252,
+        "evaluable_days": {
+          "n_operating_days": 107,
+          "n_evaluable_days": 107,
+          "n_non_evaluable_days": 0,
+          "evaluable_day_coverage": 1.0
+        },
+        "candidate_energy_total_kwh": 2731.133672,
+        "concentration": {
+          "n_months_with_opp": 5,
+          "top_month_share_of_opp_energy": 0.3171528607969524,
+          "top_day_share_of_opp_energy": 0.022361828637796455,
+          "n_pools": 1
+        },
+        "opportunity_duration_min": {
+          "n_runs": 1527,
+          "duration_median_min": 15.0,
+          "duration_p95_min": 90.0,
+          "duration_max_min": 275.0
+        },
+        "concurrency": {
+          "candidate_cycles": 7698,
+          "median_n_active": 16.0
+        },
+        "gate": {
+          "x1_energy_share": true,
+          "x2_not_single_month": true,
+          "x3_uniqueness": true,
+          "x2_concentration_diagnostic": {
+            "top_month_share": 0.3171528607969524,
+            "top_day_share": 0.022361828637796455
+          },
+          "all_pass": true
+        },
+        "fail_cases_report": {
+          "n_fail_cases": 20,
+          "n_positive_candidates": 20,
+          "n_no_candidate_supplement": 0,
+          "insufficient_failure_cases": false
+        }
+      },
+      "cross_pool": {
+        "energy_share_each_pool_pass": true
+      }
+    },
+    {
+      "split": "test",
+      "caltech": {
+        "pool": "caltech.California_Garage_01",
+        "n_sessions": 155,
+        "n_rows": 33140,
+        "n_valid_cycles": 4920,
+        "n_dup_cycles": 0,
+        "n_pool_months": 6,
+        "n_days": 60,
+        "cycle_weighted_rate": {
+          "A0_avg": 0.05569105691056911,
+          "A2_prev_actual": 0.012804878048780487,
+          "A3_rolling_quantile": 0.020528455284552844
+        },
+        "day_equal_rate": {
+          "A0_avg": 0.045189328718870346,
+          "A2_prev_actual": 0.00978238440267661,
+          "A3_rolling_quantile": 0.015580215508235426
+        },
+        "day_cluster_ci95": {
+          "A0_avg": {
+            "n_days": 60,
+            "day_rate": 0.045189328718870346,
+            "ci95": [
+              0.024602243535159447,
+              0.06963523001720948
+            ]
+          },
+          "A2_prev_actual": {
+            "n_days": 60,
+            "day_rate": 0.00978238440267661,
+            "ci95": [
+              0.005207176537905207,
+              0.015623539081160553
+            ]
+          },
+          "A3_rolling_quantile": {
+            "n_days": 60,
+            "day_rate": 0.015580215508235426,
+            "ci95": [
+              0.007745068046342065,
+              0.02598261116188548
+            ]
+          }
+        },
+        "elimination_vs_A0": {
+          "A2_prev_actual": {
+            "point": 0.7700729927007299,
+            "ratio_ci95": {
+              "point": 0.7835244585389992,
+              "day_bootstrap_ci95": [
+                0.6842600984690757,
+                0.8600874115516767
+              ],
+              "n_days": 60
+            }
+          },
+          "A3_rolling_quantile": {
+            "point": 0.6313868613138687,
+            "ratio_ci95": {
+              "point": 0.6552235682640407,
+              "day_bootstrap_ci95": [
+                0.4888527805203234,
+                0.789362391946757
+              ],
+              "n_days": 60
+            }
+          }
+        },
+        "daily_energy_share_median": 0.0,
+        "daily_energy_share_mean": 0.00445,
+        "evaluable_days": {
+          "n_operating_days": 59,
+          "n_evaluable_days": 60,
+          "n_non_evaluable_days": 0,
+          "evaluable_day_coverage": 1.016949
+        },
+        "candidate_energy_total_kwh": 12.913122,
+        "concentration": {
+          "n_months_with_opp": 5,
+          "top_month_share_of_opp_energy": 0.7951783948546783,
+          "top_day_share_of_opp_energy": 0.27396755590141514,
+          "n_pools": 1
+        },
+        "opportunity_duration_min": {
+          "n_runs": 30,
+          "duration_median_min": 10.0,
+          "duration_p95_min": 22.749999999999986,
+          "duration_max_min": 35.0
+        },
+        "concurrency": {
+          "candidate_cycles": 63,
+          "median_n_active": 2.0
+        },
+        "gate": {
+          "m1_a2_daily_ci_lower_rate": false,
+          "m2_caltech_energy_share": false,
+          "m3_baseline_not_eliminated": true,
+          "m3_elim_max": 0.7700729927007299,
+          "m4_not_single_month": true,
+          "m4_concentration_diagnostic": {
+            "top_month_share": 0.7951783948546783,
+            "top_day_share": 0.27396755590141514
+          },
+          "all_pass": false
+        },
+        "fail_cases_report": {
+          "n_fail_cases": 20,
+          "n_positive_candidates": 20,
+          "n_no_candidate_supplement": 0,
+          "insufficient_failure_cases": false
+        }
+      },
+      "jpl_current_only": {
+        "pool": "jpl.Arroyo_Garage_01.current_only",
+        "n_sessions": 1991,
+        "n_rows": 825269,
+        "n_valid_cycles": 12722,
+        "n_dup_cycles": 0,
+        "n_pool_months": 5,
+        "n_days": 76,
+        "cycle_weighted_rate": {
+          "A2_prev_actual": 0.2776293035686213,
+          "A3_rolling_quantile": 0.46030498349316146
+        },
+        "day_equal_rate": {
+          "A2_prev_actual": 0.22855832294106423,
+          "A3_rolling_quantile": 0.3894949475771683
+        },
+        "day_cluster_ci95": {
+          "A2_prev_actual": {
+            "n_days": 76,
+            "day_rate": 0.22855832294106423,
+            "ci95": [
+              0.1820901264966053,
+              0.2779059572532337
+            ]
+          },
+          "A3_rolling_quantile": {
+            "n_days": 76,
+            "day_rate": 0.3894949475771683,
+            "ci95": [
+              0.32654037427686033,
+              0.44916367183908207
+            ]
+          }
+        },
+        "elimination_vs_A0": {},
+        "daily_energy_share_median": 0.027001,
+        "daily_energy_share_mean": 0.026058,
+        "evaluable_days": {
+          "n_operating_days": 72,
+          "n_evaluable_days": 76,
+          "n_non_evaluable_days": 0,
+          "evaluable_day_coverage": 1.055556
+        },
+        "candidate_energy_total_kwh": 1077.655876,
+        "concentration": {
+          "n_months_with_opp": 4,
+          "top_month_share_of_opp_energy": 0.47217357909344737,
+          "top_day_share_of_opp_energy": 0.048466709533445416,
+          "n_pools": 1
+        },
+        "opportunity_duration_min": {
+          "n_runs": 889,
+          "duration_median_min": 10.0,
+          "duration_p95_min": 65.0,
+          "duration_max_min": 240.0
+        },
+        "concurrency": {
+          "candidate_cycles": 3532,
+          "median_n_active": 12.0
+        },
+        "gate": {
+          "x1_energy_share": true,
+          "x2_not_single_month": true,
+          "x3_uniqueness": true,
+          "x2_concentration_diagnostic": {
+            "top_month_share": 0.47217357909344737,
+            "top_day_share": 0.048466709533445416
+          },
+          "all_pass": true
+        },
+        "fail_cases_report": {
+          "n_fail_cases": 20,
+          "n_positive_candidates": 20,
+          "n_no_candidate_supplement": 0,
+          "insufficient_failure_cases": false
+        }
+      },
+      "cross_pool": {
+        "energy_share_each_pool_pass": false
+      }
+    }
+  ],
+  "r1_verdict_on_test": {
+    "primary": "FORMAL_FAIL_MAIN",
+    "main_review_required": true,
+    "cross_pool_review_required": true,
+    "review_required": true,
+    "reasons": [
+      "Caltech test 主门失败（JPL 不得 rescue）",
+      "Caltech train/val PASS 而 test 主门 FAIL → 情况二 main review",
+      "train/val 双轨 + cross-pool 全 PASS 而 test FAIL → 情况二 cross-pool review"
+    ],
+    "exit_code": 1
+  }
+}
