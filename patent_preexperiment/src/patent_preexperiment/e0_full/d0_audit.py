@@ -1,24 +1,26 @@
 """E0F-05 数据链验收审计器（D0）：对 E0F-01..04 冻结产物做只读验收审计。
 
-审查结论 14（E0F-05）：在测试集冻结后、进入 E1 前，对所有已冻结产物运行
-10 个验收门，任何一门不通过则 STOP（不更新 baseline、不得进入 E1）：
+审查结论 14（E0F-05）：在测试集冻结后、进入 E0F-06/R1 前，对所有已冻结产物
+运行 10 个验收门，任何一门不通过则 STOP（不更新 baseline、不得进入 E0F-06/R1）：
 
   1. input_traceability    输入可追溯（manifest/源码哈希与 baseline 一致）
   2. output_traceability   输出可追溯（baseline output_manifest 全部存在）
   3. uniqueness            会话分钟主键全局唯一（分区路径/治理/覆盖三腿）
-  4. completeness          数据覆盖与字段覆盖完整（quality_summary 不变式）
+  4. completeness          数据覆盖与字段覆盖完整（期望值由 sha 冻结的 manifest/
+                           baseline 推导，不写死 magic number）
   5. energy_consistency    能量一致性分层审计（site×月×split×field_mode）
-  6. gold_consistency      gold 池一致性（per-pool gate + 月度集中度）
-  7. split_safety          切分安全（值域/单会话单 split/外部应力隔离/60-20-20）
+  6. gold_consistency      gold 池一致性（per-pool gate + 月度集中度 + 加权 total）
+  7. split_safety          切分安全（值域/单会话单 split/外部应力隔离/60-20-20 +
+                           复用 E0F-02 assign_split 重算会话级分配，mismatch=0）
   8. leak_safety           泄漏安全（实际产物列不得命中在线禁止特征）
-  9. determinism           确定性（冻结产物哈希逐位可复现）
+  9. determinism           确定性（含 pool_state_1min/5min 实际 parquet 逐位核验）
  10. evaluable_aggregation evaluable 机制核查（不发明样本量数值门限）
 
-语义护栏（随报告输出，供 E1/E2/R1 消费）：
+语义护栏：
   - pilot_coverage==0 行：pilot_upper_kw_total 必须为 0，且 0 不得解释为
-    "真实 pilot=0"（无导引可用 ≠ 允许电流为 0）。
+    "真实 pilot=0"（无导引可用 ≠ 允许电流为 0）。硬护栏（FAIL 即 STOP）。
   - 5min 池表：报告每桶 n_minutes_observed / complete_5min 审计，R1 不得把
-    不完整桶当作完整控制周期。
+    不完整桶当作完整控制周期。仅报告（不完整桶是自然边界状态）。
 
 数据口径（AGENTS.md / V2.0 §4.3）：
   - 门线用原始中位，round 只用于显示；caltech/office001 中位 |dev| >=
@@ -44,6 +46,7 @@ import yaml
 from patent_preexperiment.e0_full import pool_state, session_response
 from patent_preexperiment.e0_full.baseline import _git_commit, _git_dirty_code, _sha256
 from patent_preexperiment.e0_full.input_audit import manifest_hash
+from patent_preexperiment.e0_full.split import assign_split
 from patent_preexperiment.io.paths import acn_project_dir
 
 _REPO_ROOT = Path(__file__).resolve().parents[4]
@@ -76,6 +79,20 @@ _REGISTRY_PATHS = {
 
 _D0_REPORT = "reports/E0_Full_D0_acceptance_audit.md"
 _D0_REGISTRY = "data_registry/e0_full_d0_registry.json"
+
+# 语义护栏中：FAIL 必须导致 D0 STOP 的硬护栏。pilot_zero 违背会污染 E2/R1
+# 的"无导引可用 vs 真实 pilot=0"语义，必须 STOP；cycle 的不完整桶是自然边界
+# 状态（2026-08 真实数据约 0.99%），只报告不 STOP。
+HARD_SEMANTIC_GUARDS = ("pilot_zero",)
+
+
+def _hard_semantic_failed(semantic: dict[str, Any]) -> list[str]:
+    """硬语义护栏中 FAIL 的名单（审查结论23 P0-2：护栏 FAIL 必须让 D0 STOP）。"""
+    return [
+        name
+        for name, g in semantic.items()
+        if not g["pass"] and name in HARD_SEMANTIC_GUARDS
+    ]
 
 
 def _load_cfg() -> dict[str, Any]:
@@ -499,7 +516,10 @@ def audit_gold_layered(
             "months": months_rows,
             "worst_month": str(worst),
             "worst_abs_rel_dev": round(float(dev.abs().loc[worst]), 6),
-            "total_rel_dev": round(float(dev.sum() / len(dev)), 6),
+            "total_rel_dev": round(
+                float((m["ours"].sum() - m["gold"].sum()) / m["gold"].sum()), 6
+            ),
+            "monthly_mean_rel_dev": round(float(dev.mean()), 6),
             "total_gold_kwh": round(float(m["gold"].sum()), 3),
             "total_ours_kwh": round(float(m["ours"].sum()), 3),
         }
@@ -522,40 +542,65 @@ def audit_completeness(
     quality: dict[str, Any],
     scan: dict[str, Any],
     cfg: dict[str, Any],
+    baseline: dict[str, Any],
+    manifest: pd.DataFrame,
 ) -> dict[str, Any]:
-    """数据/字段覆盖完整性：quality_summary 关键不变式 + 分区统计 + 覆盖口径。"""
+    """数据/字段覆盖完整性：quality_summary 关键不变式 + 分区统计 + 覆盖口径。
+
+    期望值一律由 sha 冻结的 source manifest（determinism 门已核验其 sha 与
+    baseline.source_manifest_sha256 一致）与 baseline 推导，不写死 magic number，
+    避免"数据版本更新、代码常量忘改"。
+    """
     problems: list[str] = []
-    expected_files = 85877
-    expected_rows = 448817084
+    expected_files = int(len(manifest))
+    expected_rows = int(manifest["rows"].sum())
     if quality.get("files_total") != expected_files:
-        problems.append(f"files_total={quality.get('files_total')} != {expected_files}")
+        problems.append(f"files_total={quality.get('files_total')} != manifest {expected_files}")
     if quality.get("rows_total") != expected_rows:
-        problems.append(f"rows_total={quality.get('rows_total')} != {expected_rows}")
+        problems.append(f"rows_total={quality.get('rows_total')} != manifest Σrows {expected_rows}")
     if quality.get("read_fail", 0) != 0:
         problems.append(f"read_fail={quality.get('read_fail')} != 0")
     coverage = quality.get("coverage", {})
-    for field, ratio in (
-        ("current", 1.0), ("pilot", 0.5377), ("state", 0.6714), ("power", 0.7021)
-    ):
+    for field in ("current", "pilot", "state", "power"):
+        n = int(manifest[f"has_{field}"].sum())
+        expected_ratio = round(n / max(expected_files, 1), 4)
         got = coverage.get(field, {}).get("ratio")
-        if got is None or abs(float(got) - ratio) > 1e-4:
-            problems.append(f"coverage.{field}.ratio={got} 偏离冻结值 {ratio}")
+        if got is None or abs(float(got) - expected_ratio) > 1e-4:
+            problems.append(
+                f"coverage.{field}.ratio={got} 偏离 manifest 推导值 {expected_ratio}"
+            )
     by_site = quality.get("by_site", {})
+    jpl = manifest[manifest["site"] == "jpl"]
+    expected_jpl_est = int((jpl["has_current"] & ~jpl["has_voltage"]).sum())
     jpl_est = by_site.get("jpl", {}).get("estimated_current_only")
-    if jpl_est != 24871:
+    if jpl_est != expected_jpl_est:
         problems.append(
-            f"jpl estimated_current_only={jpl_est} != 24871（current-only 回退必备路径）"
+            f"jpl estimated_current_only={jpl_est} != manifest 推导 {expected_jpl_est}"
+            "（current-only 回退必备路径）"
         )
-    if scan["n_rows"] != 28301657:
-        problems.append(f"session_response n_rows={scan['n_rows']} != 28301657")
-    if scan["n_sessions_covered"] != 85877:
-        problems.append(f"covered 会话数={scan['n_sessions_covered']} != 85877")
+    sr = baseline.get("session_response", {}).get("partition_registry", {})
+    expected_sr_rows = sr.get("n_rows")
+    expected_sr_sessions = sr.get("n_sessions")
+    if expected_sr_rows is not None and scan["n_rows"] != expected_sr_rows:
+        problems.append(
+            f"session_response n_rows={scan['n_rows']} != baseline {expected_sr_rows}"
+        )
+    if expected_sr_sessions is not None and scan["n_sessions_covered"] != expected_sr_sessions:
+        problems.append(
+            f"covered 会话数={scan['n_sessions_covered']} != baseline {expected_sr_sessions}"
+        )
     return {
         "pass": not problems,
         "evidence": {
             "quality_summary": {
                 k: quality[k] for k in ("files_total", "rows_total", "read_fail")
                 if k in quality
+            },
+            "expected_derived_from": {
+                "files_total": expected_files,
+                "rows_total": expected_rows,
+                "session_response_n_rows": expected_sr_rows,
+                "session_response_n_sessions": expected_sr_sessions,
             },
             "session_partitions": {
                 "n_files": scan["n_files"],
@@ -567,8 +612,37 @@ def audit_completeness(
     }
 
 
+def _recompute_split_assignment(registry: pd.DataFrame) -> tuple[pd.DataFrame, int]:
+    """复用 E0F-02 生产切分实现 assign_split，重算会话级 split 并与冻结 registry 比对。
+
+    返回 (expected, mismatch_count)。用 registry 的 site_canonical /
+    connection_time_canonical / external / stress 重建 assign_split 输入，
+    assign_split 内部按 (connection_time, session_id) 排序后 60/20/20。
+    只查比例不查顺序会漏掉"未来会话进 train / 早期会话进 test"的造假，
+    mismatch=0 才证明冻结切分正是时间顺序切出来的。
+    """
+    sessions = pd.DataFrame(
+        {
+            "session_id": registry["session_id"],
+            "site": registry["site_canonical"]
+            if "site_canonical" in registry.columns
+            else registry["site"],
+            "connection_time": registry["connection_time_canonical"]
+            if "connection_time_canonical" in registry.columns
+            else registry["connection_time"],
+            "is_external": registry["external"].astype(bool),
+            "is_stress": registry["stress"].astype(bool),
+        }
+    )
+    expected = assign_split(sessions)
+    expected_split = cast(pd.Series, expected["split"]).reset_index(drop=True)
+    actual = cast(pd.Series, registry["split"]).reset_index(drop=True)
+    mismatch = int((expected_split != actual).sum())
+    return expected, mismatch
+
+
 def audit_split_safety(registry: pd.DataFrame, cfg: dict[str, Any]) -> dict[str, Any]:
-    """切分安全：值域约束、单会话单 split、外部/应力隔离、每站点 60/20/20。"""
+    """切分安全：值域、单会话单 split、外部/应力隔离、60/20/20、时间顺序重算。"""
     problems: list[str] = []
     evid: dict[str, Any] = {}
     for col, allowed in (
@@ -613,9 +687,27 @@ def audit_split_safety(registry: pd.DataFrame, cfg: dict[str, Any]) -> dict[str,
         by_site[site] = {"n": n, "ratios": ratios}
         if not (0.55 <= ratios["train"] <= 0.65):
             problems.append(f"{site} train 占比 {ratios['train']} 偏离 60%±5%")
+        if not (0.18 <= ratios["validation"] <= 0.22):
+            problems.append(f"{site} validation 占比 {ratios['validation']} 偏离 20%±2%")
+        if not (0.18 <= ratios["test"] <= 0.22):
+            problems.append(f"{site} test 占比 {ratios['test']} 偏离 20%±2%")
     evid["per_site_602020"] = by_site
     evid["n_main"] = int(len(main))
     evid["n_external_stress"] = int(len(ext_stress))
+
+    expected, mismatch = _recompute_split_assignment(registry)
+    split_rule = cfg.get("split", {})
+    if mismatch:
+        problems.append(
+            f"冻结 split 与时间顺序重算不一致 {mismatch} 个会话"
+            "（未来会话进 train / 早期会话进 test 等造假如有，此处必命中）"
+        )
+    evid["recomputed_split"] = {
+        "n_recomputed": int(len(registry)),
+        "split_assignment_mismatch": int(mismatch),
+        "rule": split_rule.get("rule", ""),
+        "rule_version": split_rule.get("rule_version", ""),
+    }
 
     return {
         "pass": not problems,
@@ -655,14 +747,132 @@ def audit_leak_safety(
     }
 
 
-def audit_determinism(baseline: dict[str, Any], scan: dict[str, Any]) -> dict[str, Any]:
+def _verify_pool_state_files(
+    frozen: dict[str, Any],
+    pool_1min_dir: Path,
+    pool_5min_file: Path,
+) -> tuple[dict[str, Any], list[str]]:
+    """对 E0F-04 冻结 pool_state registry 与实际 parquet 做逐位核验（审查结论23 P0-1）。
+
+    返回 (evidence, problems)。registry 只哈希了 e0_full_pool_state_registry.json 本身，
+    必须同时核验 registry 指向的实际 parquet，否则"registry hash 对、数据已改"会漏判：
+    - pool_state_1min：期望分区路径集合 == 实际集合（缺/多分区均拦）；
+      每个实际分区 sha256 == 冻结 sha256、rows == 冻结 rows；总行数 == 冻结 n_rows。
+    - pool_state_5min：文件存在、sha256 == 冻结 sha256、n_rows == 冻结 n_rows。
+    """
+    problems: list[str] = []
+    frozen_1min = frozen.get("pool_state_1min", {}) or {}
+    frozen_parts = frozen_1min.get("partitions", []) or []
+    frozen_map: dict[tuple[str, int, int], dict[str, Any]] = {
+        (p["site"], int(p["year"]), int(p["month"])): p for p in frozen_parts
+    }
+    expected_set = set(frozen_map)
+
+    actual_files = sorted(pool_1min_dir.glob("site=*/year=*/month=*/data.parquet"))
+    actual_keys: set[tuple[str, int, int]] = set()
+    actual_rows = 0
+    for f in actual_files:
+        rel = f.relative_to(pool_1min_dir)
+        key = (
+            rel.parts[0].split("=", 1)[1],
+            int(rel.parts[1].split("=", 1)[1]),
+            int(rel.parts[2].split("=", 1)[1]),
+        )
+        actual_keys.add(key)
+        n = len(pd.read_parquet(f, columns=["pool_id"]))
+        actual_rows += n
+
+    missing = expected_set - actual_keys
+    extra = actual_keys - expected_set
+    if missing:
+        problems.append(f"pool_state_1min 缺 {len(missing)} 个冻结分区：{sorted(missing)[:5]}")
+    if extra:
+        problems.append(f"pool_state_1min 多出 {len(extra)} 个未冻结分区：{sorted(extra)[:5]}")
+
+    sha_mismatch: list[str] = []
+    rows_mismatch: list[str] = []
+    for f in actual_files:
+        rel = f.relative_to(pool_1min_dir)
+        key = (
+            rel.parts[0].split("=", 1)[1],
+            int(rel.parts[1].split("=", 1)[1]),
+            int(rel.parts[2].split("=", 1)[1]),
+        )
+        frozen_p = frozen_map.get(key)
+        if frozen_p is None:
+            continue
+        label = f"{key[0]}/y={key[1]}/m={key[2]:02d}"
+        if _sha256_file(f) != frozen_p["sha256"]:
+            sha_mismatch.append(label)
+        n = len(pd.read_parquet(f, columns=["pool_id"]))
+        if n != frozen_p["rows"]:
+            rows_mismatch.append(f"{label}: rows={n} != 冻结 {frozen_p['rows']}")
+    if sha_mismatch:
+        problems.append(
+            f"pool_state_1min 分区 sha 不一致 {len(sha_mismatch)} 个：{sha_mismatch[:5]}"
+        )
+    if rows_mismatch:
+        problems.append(
+            f"pool_state_1min 分区行数不一致 {len(rows_mismatch)} 个：{rows_mismatch[:3]}"
+        )
+
+    frozen_total_rows = frozen_1min.get("n_rows")
+    if frozen_total_rows is not None and actual_rows != frozen_total_rows:
+        problems.append(f"pool_state_1min 总行数 {actual_rows} != 冻结 {frozen_total_rows}")
+
+    frozen_5 = frozen.get("pool_state_5min", {}) or {}
+    five_ev: dict[str, Any] = {
+        "exists": pool_5min_file.exists(),
+        "frozen_sha256": frozen_5.get("sha256"),
+        "frozen_n_rows": frozen_5.get("n_rows"),
+    }
+    if not pool_5min_file.exists():
+        problems.append(f"pool_state_5min 文件缺失：{pool_5min_file}")
+    else:
+        five_ev["actual_sha256"] = _sha256_file(pool_5min_file)
+        five_ev["actual_n_rows"] = len(pd.read_parquet(pool_5min_file))
+        if not frozen_5.get("sha256"):
+            problems.append("pool_state_5min：冻结 registry 未记录 sha256")
+        elif five_ev["actual_sha256"] != frozen_5["sha256"]:
+            problems.append("pool_state_5min sha256 与冻结 registry 不一致")
+        if frozen_5.get("n_rows") is not None and five_ev["actual_n_rows"] != frozen_5["n_rows"]:
+            problems.append(
+                f"pool_state_5min n_rows={five_ev['actual_n_rows']} != 冻结 {frozen_5['n_rows']}"
+            )
+
+    evidence = {
+        "pool_state_1min": {
+            "expected_partitions": len(frozen_parts),
+            "actual_partitions": len(actual_files),
+            "missing_partitions": len(missing),
+            "extra_partitions": len(extra),
+            "sha_mismatch": len(sha_mismatch),
+            "rows_mismatch": len(rows_mismatch),
+            "n_rows_matches_frozen": (
+                actual_rows == frozen_total_rows if frozen_total_rows is not None else None
+            ),
+        },
+        "pool_state_5min": five_ev,
+    }
+    return evidence, problems
+
+
+def audit_determinism(
+    baseline: dict[str, Any],
+    scan: dict[str, Any],
+    cfg: dict[str, Any] | None = None,
+    pool_state_registry: dict[str, Any] | None = None,
+) -> dict[str, Any]:
     """确定性：冻结产物哈希逐位复现（E0F-03/04 已冻结结果在 D0 时点仍成立）。
 
-    门线只看数据产物 sha（split/field_mode/pool registry、source manifest、session
-    分区）；code_sha 与 e0_full.yaml sha 记录为 provenance 证据，不入门线——D0 在
+    门线只看数据产物 sha：split/field_mode/pool registry、source manifest、session
+    分区，以及 E0F-04 pool_state_1min/5min 实际 parquet（审查结论23 P0-1）。
+    code_sha 与 e0_full.yaml sha 记录为 provenance 证据，不入门线——D0 在
     E0F-04 之后的提交上运行、且 E0F-05 会向 yaml 增配 d0 输出路径，二者与 baseline
     不同属正常，不影响已冻结数据产物的完整性。
     """
+    if cfg is None:
+        cfg = _load_cfg()
     problems: list[str] = []
 
     def check(name: str, expected: str | None, actual: str) -> None:
@@ -684,6 +894,17 @@ def audit_determinism(baseline: dict[str, Any], scan: dict[str, Any]) -> dict[st
           baseline.get("pool_state", {}).get("pool_state_registry", {}).get("sha256"),
           _sha256_file(_IMPL_ROOT / _REGISTRY_PATHS["pool_state_registry"]))
 
+    if pool_state_registry is None:
+        pool_state_registry = json.loads(
+            (_IMPL_ROOT / _REGISTRY_PATHS["pool_state_registry"]).read_text(encoding="utf-8")
+        )
+    pool_ev, pool_problems = _verify_pool_state_files(
+        pool_state_registry,
+        _IMPL_ROOT / cfg["outputs"]["pool_state_1min"],
+        _IMPL_ROOT / cfg["outputs"]["pool_state_5min"] / "pool_state_5min.parquet",
+    )
+    problems.extend(pool_problems)
+
     src_hash = manifest_hash(pd.read_parquet(_IMPL_ROOT / _REGISTRY_PATHS["source_manifest"]))
     if src_hash != baseline.get("source_manifest_sha256"):
         problems.append("source_manifest 确定性哈希与 baseline 不一致")
@@ -700,6 +921,7 @@ def audit_determinism(baseline: dict[str, Any], scan: dict[str, Any]) -> dict[st
             "artifact_sha_all_match": not problems,
             "session_partition_sha_match": len(scan["per_partition"]) - len(mismatched),
             "n_session_partitions": len(scan["per_partition"]),
+            "pool_state": pool_ev,
             "e0_full_yaml_sha256": yaml_sha,
             "yaml_sha_matches_baseline": yaml_sha == baseline.get("e0_full_yaml_sha256"),
             "code_sha": code_sha,
@@ -812,7 +1034,7 @@ def _build_report(
         "## 口径声明",
         "",
         "D0 是对 E0F-01..04 冻结产物的只读验收审计：任何门不通过即 STOP，"
-        "不更新 baseline、不得进入 E1。门线用原始中位，round 只用于显示；"
+        "不更新 baseline、不得进入 E0F-06/R1。门线用原始中位，round 只用于显示；"
         "测试集冻结后不逐图调参。",
         "",
         "## 十门判定",
@@ -846,11 +1068,13 @@ def _build_report(
     lines.append(
         "- pilot_coverage==0 行：pilot_upper_kw_total 必须为 0，且 0 只表示"
         "\"无导引可用\"，不得解释为真实 pilot=0（供 E2/R1 消费）。"
+        "  [硬护栏：FAIL 即 STOP]"
     )
     pz = semantic["pilot_zero"]["evidence"]
     lines.append(
         f"  - 命中行数：{pz['n_pilot_coverage_zero_rows']}，"
         f"其中 pilot_upper 非 0 行：{pz['rows_pilot_zero_but_upper_nonzero']}"
+        f"（护栏判定：{'PASS' if semantic['pilot_zero']['pass'] else 'FAIL'}）"
     )
     cyc = semantic["cycle"]["evidence"]
     lines.append(
@@ -858,7 +1082,7 @@ def _build_report(
         f" {json.dumps(cyc['minutes_distribution'], ensure_ascii=False)}，"
         f"完整桶 {cyc['n_complete_5min']}，"
         f"不完整桶占比 {cyc['share_incomplete']}；"
-        "R1 不得把不完整桶当完整控制周期。"
+        "R1 不得把不完整桶当完整控制周期。[仅报告：不完整桶为自然边界状态]"
     )
     lines.append("")
     lines.append("## 冻结产物时点")
@@ -900,6 +1124,10 @@ def run_e0f05(
     quality = json.loads(
         (_IMPL_ROOT / _REGISTRY_PATHS["quality_summary"]).read_text(encoding="utf-8")
     )
+    manifest = pd.read_parquet(_IMPL_ROOT / _REGISTRY_PATHS["source_manifest"])
+    pool_state_registry = json.loads(
+        (_IMPL_ROOT / _REGISTRY_PATHS["pool_state_registry"]).read_text(encoding="utf-8")
+    )
     out_dir = _IMPL_ROOT / cfg["outputs"]["session_minute_1min"]
     pool_1min = pd.concat(
         [pd.read_parquet(p) for p in sorted(
@@ -917,12 +1145,12 @@ def run_e0f05(
         "input_traceability": audit_input_traceability(cfg, baseline),
         "output_traceability": audit_output_traceability(baseline),
         "uniqueness": audit_uniqueness(scan, frozen_parts),
-        "completeness": audit_completeness(quality, scan, cfg),
+        "completeness": audit_completeness(quality, scan, cfg, baseline, manifest),
         "energy_consistency": audit_energy_layered(scan, reg, cfg),
         "gold_consistency": audit_gold_layered(pool_registry, pool_5min, cfg),
         "split_safety": audit_split_safety(reg, cfg),
         "leak_safety": audit_leak_safety(scan, pool_1min, pool_5min, cfg),
-        "determinism": audit_determinism(baseline, scan),
+        "determinism": audit_determinism(baseline, scan, cfg, pool_state_registry),
         "evaluable_aggregation": audit_evaluable_aggregation(cfg),
     }
     semantic = {
@@ -931,14 +1159,18 @@ def run_e0f05(
     }
 
     failed = [name for name, g in gates.items() if not g["pass"]]
-    if failed:
+    hard_semantic_failed = _hard_semantic_failed(semantic)
+    if failed or hard_semantic_failed:
         report = _build_report(gates, semantic, baseline)
         (_IMPL_ROOT / _D0_REPORT).parent.mkdir(parents=True, exist_ok=True)
         (_IMPL_ROOT / _D0_REPORT).write_text(report, encoding="utf-8")
-        raise RuntimeError(
-            "E0F-05 D0 STOP：下列门未通过，不更新 baseline、不得进入 E1："
+        msg = (
+            "E0F-05 D0 STOP：下列门未通过，不更新 baseline、不得进入 E0F-06/R1："
             f"{failed}"
         )
+        if hard_semantic_failed:
+            msg += f"；硬语义护栏未通过：{hard_semantic_failed}"
+        raise RuntimeError(msg)
 
     d0 = {
         "schema": "e0_full_d0_registry",
@@ -950,7 +1182,14 @@ def run_e0f05(
         "gates": {
             name: {**gates[name]["evidence"], "pass": gates[name]["pass"]} for name in GATE_NAMES
         },
-        "semantic_guards": {k: v["evidence"] for k, v in semantic.items()},
+        "semantic_guards": {
+            k: {
+                **v["evidence"],
+                "pass": v["pass"],
+                "hard": k in HARD_SEMANTIC_GUARDS,
+            }
+            for k, v in semantic.items()
+        },
         "report": _D0_REPORT,
         "d0_pass": True,
     }

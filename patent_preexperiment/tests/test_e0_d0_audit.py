@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 import pytest
@@ -321,6 +322,29 @@ def test_split_safety_fails_on_bad_value() -> None:
     assert not d0.audit_split_safety(reg, {})["pass"]
 
 
+def test_split_safety_recomputes_time_order(tmp_path: Path) -> None:
+    reg = _synth_registry(30)
+    assert d0.audit_split_safety(reg, {})["pass"]
+    recomputed = d0.audit_split_safety(reg, {})["evidence"]["recomputed_split"]
+    assert recomputed["split_assignment_mismatch"] == 0
+
+
+def test_split_safety_fails_when_future_session_forced_into_train() -> None:
+    reg = _synth_registry(30)
+    reg.loc[29, "split"] = "train"
+    res = d0.audit_split_safety(reg, {})
+    assert not res["pass"]
+    assert res["evidence"]["recomputed_split"]["split_assignment_mismatch"] > 0
+
+
+def test_split_safety_fails_when_early_session_forced_into_test() -> None:
+    reg = _synth_registry(30)
+    reg.loc[0, "split"] = "test"
+    res = d0.audit_split_safety(reg, {})
+    assert not res["pass"]
+    assert res["evidence"]["recomputed_split"]["split_assignment_mismatch"] > 0
+
+
 # --- audit_evaluable_aggregation ---
 
 def test_evaluable_mechanism_not_invented_gate() -> None:
@@ -429,6 +453,171 @@ def test_gold_layered_monthly_aggregation(tmp_path: Path) -> None:
     assert per_pool["total_gold_kwh"] == pytest.approx(6.0, abs=1e-6)
 
 
+def test_gold_total_rel_dev_is_energy_weighted(tmp_path: Path) -> None:
+    gold_dir = tmp_path / "gold"
+    (gold_dir / "benchmark_5min").mkdir(parents=True)
+    t_a = pd.date_range("2018-11-01 00:00:00", periods=2, freq="5min", tz="UTC")
+    t_b = pd.date_range("2018-12-01 00:00:00", periods=1, freq="5min", tz="UTC")
+    gold = pd.DataFrame({
+        "timestamp": list(t_a) + list(t_b),
+        "energy_kwh": [500.0, 500.0, 1.0],
+    })
+    gold.to_csv(gold_dir / "benchmark_5min" / "st1.csv", index=False)
+    pool_registry = pd.DataFrame({
+        "pool_id": ["caltech__California_Garage_01"],
+        "station": ["st1"],
+    })
+    pool5 = pd.DataFrame({
+        "pool_id": ["caltech__California_Garage_01"] * 3,
+        "timestamp_utc": list(t_a) + list(t_b),
+        "measured_kwh": [495.0, 495.0, 0.5],
+        "estimated_kwh": [0.0, 0.0, 0.0],
+    })
+    cfg = {
+        "pool": {
+            "gold": {
+                "pools": [{"site": "caltech", "garage": "California_Garage_01"}],
+                "tolerance_median_rel_dev": 0.02,
+            }
+        }
+    }
+    res = d0.audit_gold_layered(pool_registry, pool5, cfg, gold_dir=gold_dir)
+    per_pool = res["evidence"]["monthly_per_pool"]["caltech__California_Garage_01"]
+    assert per_pool["total_rel_dev"] == pytest.approx(-10.5 / 1001, abs=1e-5)
+    assert per_pool["monthly_mean_rel_dev"] == pytest.approx(-0.255, abs=1e-3)
+    assert per_pool["total_rel_dev"] != per_pool["monthly_mean_rel_dev"]
+
+
+def test_hard_semantic_guard_pilot_zero_stops() -> None:
+    semantic = {
+        "cycle": {"pass": True},
+        "pilot_zero": {"pass": False},
+    }
+    assert d0._hard_semantic_failed(semantic) == ["pilot_zero"]
+
+
+def test_cycle_guard_not_hard() -> None:
+    semantic = {"cycle": {"pass": False}, "pilot_zero": {"pass": True}}
+    assert d0._hard_semantic_failed(semantic) == []
+
+
+# --- pool_state determinism（审查结论23 P0-1） ---
+
+def _pool_state_frozen(partitions: list[dict], n_rows: int) -> dict:
+    return {
+        "pool_state_1min": {
+            "n_rows": n_rows,
+            "n_partitions": len(partitions),
+            "partitions": partitions,
+        },
+        "pool_state_5min": {
+            "file": "datasets/pool_state_5min/pool_state_5min.parquet",
+            "n_rows": 5,
+            "n_pools": 1,
+            "sha256": "f" * 64,
+        },
+    }
+
+
+def _pool_state_fixture(tmp_path: Path) -> tuple[dict, Path, Path]:
+    pool_dir = tmp_path / "pool_state_1min"
+    part_dir = pool_dir / "site=caltech" / "year=2018" / "month=11"
+    part_dir.mkdir(parents=True)
+    df = pd.DataFrame({"pool_id": ["p1", "p1", "p1"]})
+    part_file = part_dir / "data.parquet"
+    df.to_parquet(part_file, index=False)
+    five_dir = tmp_path / "pool_state_5min"
+    five_dir.mkdir(parents=True)
+    five_file = five_dir / "pool_state_5min.parquet"
+    pd.DataFrame({"pool_id": ["p1", "p1", "p1", "p1", "p1"]}).to_parquet(
+        five_file, index=False
+    )
+    frozen = _pool_state_frozen(
+        partitions=[{
+            "site": "caltech", "year": 2018, "month": 11,
+            "rows": 3, "pools": 1, "sha256": d0._sha256_file(part_file),
+        }],
+        n_rows=3,
+    )
+    return frozen, pool_dir, five_file
+
+
+def test_pool_state_determinism_pass(tmp_path: Path) -> None:
+    frozen, pool_dir, five_file = _pool_state_fixture(tmp_path)
+    frozen["pool_state_5min"]["sha256"] = d0._sha256_file(five_file)
+    ev, problems = d0._verify_pool_state_files(frozen, pool_dir, five_file)
+    assert problems == []
+    assert ev["pool_state_1min"]["missing_partitions"] == 0
+    assert ev["pool_state_1min"]["sha_mismatch"] == 0
+    assert ev["pool_state_5min"]["exists"] is True
+
+
+def test_determinism_stops_on_mutated_pool_1min_partition(tmp_path: Path) -> None:
+    frozen, pool_dir, five_file = _pool_state_fixture(tmp_path)
+    frozen["pool_state_5min"]["sha256"] = d0._sha256_file(five_file)
+    part_file = pool_dir / "site=caltech" / "year=2018" / "month=11" / "data.parquet"
+    pd.DataFrame({"pool_id": ["p1", "p1", "p1", "p1"]}).to_parquet(
+        part_file, index=False
+    )
+    ev, problems = d0._verify_pool_state_files(frozen, pool_dir, five_file)
+    assert any("sha" in p and "不一致" in p for p in problems)
+
+
+def test_determinism_stops_on_mutated_pool_5min(tmp_path: Path) -> None:
+    frozen, pool_dir, five_file = _pool_state_fixture(tmp_path)
+    pd.DataFrame({"pool_id": ["p1"] * 7}).to_parquet(five_file, index=False)
+    ev, problems = d0._verify_pool_state_files(frozen, pool_dir, five_file)
+    assert any("pool_state_5min" in p and "sha256" in p and "不一致" in p for p in problems)
+
+
+def test_determinism_stops_on_missing_pool_1min_partition(tmp_path: Path) -> None:
+    frozen, pool_dir, five_file = _pool_state_fixture(tmp_path)
+    frozen["pool_state_5min"]["sha256"] = d0._sha256_file(five_file)
+    (pool_dir / "site=caltech" / "year=2018" / "month=11" / "data.parquet").unlink()
+    ev, problems = d0._verify_pool_state_files(frozen, pool_dir, five_file)
+    assert any("缺" in p and "冻结分区" in p for p in problems)
+
+
+# --- audit_completeness 期望值来自冻结 manifest/baseline（审查结论23 P1） ---
+
+def test_completeness_derives_expectations_from_manifest_and_baseline() -> None:
+    manifest = pd.DataFrame({
+        "site": ["caltech", "caltech", "jpl"],
+        "rows": [10, 20, 30],
+        "has_current": [True, True, True],
+        "has_voltage": [False, False, False],
+        "has_pilot": [True, True, False],
+        "has_state": [False, True, True],
+        "has_power": [False, True, True],
+    })
+    quality: dict[str, Any] = {
+        "files_total": 3,
+        "rows_total": 60,
+        "read_fail": 0,
+        "coverage": {
+            "current": {"ratio": 1.0},
+            "pilot": {"ratio": round(2 / 3, 4)},
+            "state": {"ratio": round(2 / 3, 4)},
+            "power": {"ratio": round(2 / 3, 4)},
+        },
+        "by_site": {"jpl": {"estimated_current_only": 1}},
+    }
+    scan = {"n_files": 1, "n_rows": 100, "n_sessions_covered": 2}
+    baseline = {"session_response": {"partition_registry": {"n_rows": 100, "n_sessions": 2}}}
+    res = d0.audit_completeness(quality, scan, {}, baseline, manifest)
+    assert res["pass"]
+    assert res["evidence"]["expected_derived_from"]["rows_total"] == 60
+
+    bad_power: dict[str, Any] = dict(quality)
+    bad_power["coverage"] = dict(quality["coverage"])
+    bad_power["coverage"]["power"] = {"ratio": 0.9}
+    assert not d0.audit_completeness(bad_power, scan, {}, baseline, manifest)["pass"]
+
+    bad_jpl: dict[str, Any] = dict(quality)
+    bad_jpl["by_site"] = {"jpl": {"estimated_current_only": 0}}
+    assert not d0.audit_completeness(bad_jpl, scan, {}, baseline, manifest)["pass"]
+
+
 # --- 报告与契约 ---
 
 def test_gate_names_match_acceptance_config() -> None:
@@ -439,10 +628,11 @@ def test_gate_names_match_acceptance_config() -> None:
 def test_report_contains_all_gates() -> None:
     gates = {name: {"pass": True, "evidence": {"k": "v"}} for name in d0.GATE_NAMES}
     semantic = {
-        "cycle": {"evidence": {"n_complete_5min": 1, "n_incomplete": 0,
-                               "share_incomplete": 0.0, "minutes_distribution": {5: 1}}},
-        "pilot_zero": {"evidence": {"n_pilot_coverage_zero_rows": 0,
-                                    "rows_pilot_zero_but_upper_nonzero": 0}},
+        "cycle": {"pass": True, "evidence": {"n_complete_5min": 1, "n_incomplete": 0,
+                                             "share_incomplete": 0.0,
+                                             "minutes_distribution": {5: 1}}},
+        "pilot_zero": {"pass": True, "evidence": {"n_pilot_coverage_zero_rows": 0,
+                                                  "rows_pilot_zero_but_upper_nonzero": 0}},
     }
     report = d0._build_report(gates, semantic, {
         "created_at_utc": "2026-01-01T00:00:00+00:00",
@@ -452,11 +642,15 @@ def test_report_contains_all_gates() -> None:
     assert report.startswith("# E0F-05")
     for name in d0.GATE_NAMES:
         assert f"| {name} |" in report
+    assert "硬护栏" in report
+    assert "仅报告" in report
 
 
 def test_registry_gates_carry_per_gate_pass() -> None:
-    gates = {name: {"pass": name != "leak_safety", "evidence": {"k": "v"}}
-             for name in d0.GATE_NAMES}
+    gates: dict[str, Any] = {
+        name: {"pass": name != "leak_safety", "evidence": {"k": "v"}}
+        for name in d0.GATE_NAMES
+    }
     d0_export = {
         "gates": {n: {**gates[n]["evidence"], "pass": gates[n]["pass"]}
                   for n in d0.GATE_NAMES},
