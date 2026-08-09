@@ -62,26 +62,37 @@ FROZEN_DAILY_SHARE = {
     ("jpl", "validation"): 0.037153,
     ("jpl", "test"): 0.027001,
 }
-FIDELITY_TOL = 0.001  # 允许 round(6) 精度误差
+FIDELITY_TOL = 5e-6  # round(6) 精度容差（审查结论40 B1 收紧）
 
-# A4 observable 三类（审查结论39 §7）
-OBS_CLASS = {
-    # Class I: definitional — 与 candidate 定义代数相关，不单独进 A5
-    "median_actual_kw": "definitional",
-    # Class II: baseline_related_history — 与 A2 基线相近，更可能强化 D1-P
-    "median_recent_actual_q90": "baseline_related_history",
-    "median_recent_actual_var": "baseline_related_history",
-    "median_lagged_pilot_actual_ratio": "baseline_related_history",
+# A4 observable 分类 + pre_action 标记（审查结论40 B4）
+# pre_action=True: 仅使用 t-1 及以前信息（动作前可获得）
+# pre_action=False: 含当前 cycle 信息（不可单独进 A5）
+OBS_CLASS: dict[str, dict[str, str]] = {
+    # Class I: definitional — 与 candidate 定义代数相关
+    "median_actual_kw": {"class": "definitional", "pre_action": "false"},
+    # Class II: baseline_related_history — 与 A2 基线相近
+    "median_recent_actual_q90": {
+        "class": "baseline_related_history", "pre_action": "true"},
+    "median_recent_actual_var": {
+        "class": "baseline_related_history", "pre_action": "true"},
+    "median_lagged_pilot_actual_ratio": {
+        "class": "baseline_related_history", "pre_action": "true"},
+    "std_actual_kw": {
+        "class": "baseline_related_history", "pre_action": "false"},
     # Class III: independent_operational — 最值得关注
-    "median_elapsed": "independent_operational",
-    "pilot_coverage": "independent_operational",
-    "median_response_persistence": "independent_operational",
-    "severe_gap_fraction": "independent_operational",
-    # std_actual_kw 介于 I/II 之间，标 baseline_related
-    "std_actual_kw": "baseline_related_history",
+    "median_elapsed": {
+        "class": "independent_operational", "pre_action": "true"},
+    "pilot_available_at_start": {
+        "class": "independent_operational", "pre_action": "true"},
+    "median_response_persistence_lagged": {
+        "class": "independent_operational", "pre_action": "true"},
+    "lagged_severe_gap_rate": {
+        "class": "independent_operational", "pre_action": "true"},
+    "history_coverage": {
+        "class": "independent_operational", "pre_action": "true"},
 }
 TAUTOLOGICAL_OBS = {
-    k for k, v in OBS_CLASS.items() if v == "definitional"
+    k for k, v in OBS_CLASS.items() if v["class"] == "definitional"
 }
 A5_ELIGIBLE_CLASSES = {"baseline_related_history", "independent_operational"}
 
@@ -260,6 +271,10 @@ def run_a3(
                             row[f"elimination_{p}_vs_A0"] = (
                                 round(elim, 6) if elim is not None else None)
                             row[f"elimination_{p}_evaluable"] = evaluable
+                # C1: month-level daily_candidate_energy_share
+                month_daily = _daily_energy_share(gm, minutes[pool][split])
+                row["daily_candidate_energy_share_median"] = (
+                    month_daily["median"])
                 month_rows.append(row)
             month_df = pd.DataFrame(month_rows)
             month_df.to_csv(
@@ -357,16 +372,27 @@ def run_a3(
     pd.DataFrame(all_rows).to_csv(
         OUT / "a3_baseline_pressure.csv", index=False)
 
-    all_fid_pass = all(
-        v["pass"] for v in fidelity_results.values()
-        if v["pass"] is not None)
+    # 审查结论40 B1: daily-share fidelity fail-closed
+    # 6 frozen split 全部存在且全部 PASS，否则 RuntimeError（在任何 evidence 被接受前）
+    if len(fidelity_results) != 6:
+        raise RuntimeError(
+            f"daily-share fidelity FAIL：期望 6 个 split，实际 "
+            f"{len(fidelity_results)}（{sorted(fidelity_results.keys())}）"
+        )
+    failed = [k for k, v in fidelity_results.items() if not v["pass"]]
+    if failed:
+        raise RuntimeError(
+            f"daily-share fidelity FAIL：以下 split recomputed daily-share "
+            f"与 frozen E3 truth 不一致（容差 {FIDELITY_TOL}）："
+            f"{failed}；详情：{fidelity_results}"
+        )
 
     a3_summary = {
         "module": "A3_baseline_pressure",
         "stop_line_unchanged": (
             "max(A2,A3) elimination > 80% → STOP_COMPLEX_MODEL（不改）"),
         "daily_share_fidelity": fidelity_results,
-        "daily_share_fidelity_all_pass": bool(all_fid_pass),
+        "daily_share_fidelity_all_pass": True,  # fail-closed 已确保
         "splits": all_rows,
         "note": (
             "station exposure = set membership diagnostic，不报可加总 "
@@ -391,10 +417,11 @@ def _check_s1(row: pd.Series, s1_set: set) -> bool:
 def _cycle_observables(tm: pd.DataFrame) -> pd.DataFrame:
     """pool×cycle 级在线可观测量。
 
-    审查结论39 §5: 先聚合到 5min cycle，再 session×run 组内 shift(1)+rolling。
-    审查结论39 §6: rolling 不跨 run/gap（冷启动）。
-    审查结论39 §8: 用 severe_gap_before（pre-action 可知），不用 gap_flag。
-    审查结论39 §9: pilot_actual_ratio → lagged。
+    审查结论40 B2: response_persistence 用 actual_lag1 - actual_lag2（不含当前 cycle）。
+    审查结论40 B3: rolling run-boundary 纳入 severe_gap_before（复用 E3 continuous-run 语义）。
+    审查结论40 B4: pre-action observables 只用 t-1 及以前；
+      pilot_available_at_start（cycle 首分钟 pilot 可用，pre-action）；
+      lagged_severe_gap_rate（上一周期 severe_gap，pre-action）。
     """
     tm = tm.copy()
     tm["cycle"] = tm["timestamp_utc"].dt.floor("5min")
@@ -407,25 +434,25 @@ def _cycle_observables(tm: pd.DataFrame) -> pd.DataFrame:
     ).agg(
         actual_mean=("actual_power_kw", "mean"),
         pilot_mean=("pilot_power_kw", "mean"),
-        pilot_available_frac=("has_pilot", "mean"),
+        pilot_available_first=("has_pilot", "first"),
         elapsed_min=("connected_elapsed_min", "min"),
         severe_gap_any=("severe_gap_before", "max"),
-        gap_any=("gap_flag", "max"),
         n_active_min=("active", "sum"),
     ).reset_index()
 
-    # 2) session×run 组内 shift(1) + rolling（不跨 run/gap）
+    # 2) session×run 组内 shift(1) + rolling（B3: 不跨 run/gap/severe_gap）
     sess_cycle = sess_cycle.sort_values(["session_id", "cycle"])
-    # run boundary: actual_mean NaN 或 cycle gap > 5min → 冷启动
     sess_cycle["_gap"] = sess_cycle["actual_mean"].isna()
     sess_cycle["_prev_cycle"] = sess_cycle.groupby(
         "session_id", sort=False)["cycle"].shift(1)
     sess_cycle["_cycle_gap"] = (
         sess_cycle["cycle"] - sess_cycle["_prev_cycle"]
     ).dt.total_seconds() / 60.0
+    # B3: break = actual NaN | cycle gap > 5min | severe_gap_before（E3 continuous-run 语义）
     sess_cycle["_break"] = (
         sess_cycle["_gap"].fillna(True)
         | (sess_cycle["_cycle_gap"] > 5.0).fillna(True)
+        | sess_cycle["severe_gap_any"].fillna(True)
     )
     sess_cycle["_run"] = sess_cycle.groupby(
         "session_id", sort=False)["_break"].cumsum()
@@ -433,6 +460,8 @@ def _cycle_observables(tm: pd.DataFrame) -> pd.DataFrame:
 
     sess_cycle["actual_lag1"] = sess_cycle.groupby(
         run_key, sort=False)["actual_mean"].shift(1)
+    sess_cycle["actual_lag2"] = sess_cycle.groupby(
+        run_key, sort=False)["actual_mean"].shift(2)
     sess_cycle["pilot_lag1"] = sess_cycle.groupby(
         run_key, sort=False)["pilot_mean"].shift(1)
     sess_cycle["recent_actual_q90"] = sess_cycle.groupby(
@@ -441,13 +470,17 @@ def _cycle_observables(tm: pd.DataFrame) -> pd.DataFrame:
     sess_cycle["recent_actual_var"] = sess_cycle.groupby(
         run_key, sort=False)["actual_mean"].transform(
         lambda s: s.shift(1).rolling(12, min_periods=2).var())
-    sess_cycle["response_change"] = (
-        sess_cycle["actual_mean"] - sess_cycle["actual_lag1"]
+    # B2: response_persistence = |actual_lag1 - actual_lag2|（不含当前 cycle）
+    sess_cycle["response_persistence_lagged"] = (
+        sess_cycle["actual_lag1"] - sess_cycle["actual_lag2"]
     ).abs()
     sess_cycle["lagged_pilot_actual_ratio"] = (
         sess_cycle["pilot_lag1"]
         / sess_cycle["actual_lag1"].clip(lower=1e-6)
     )
+    # B4: lagged severe_gap_rate（上一周期 severe_gap，pre-action）
+    sess_cycle["severe_gap_lag1"] = sess_cycle.groupby(
+        run_key, sort=False)["severe_gap_any"].shift(1)
     sess_cycle["history_supported"] = sess_cycle[
         "recent_actual_q90"].notna()
 
@@ -462,19 +495,17 @@ def _cycle_observables(tm: pd.DataFrame) -> pd.DataFrame:
         median_elapsed=("elapsed_min", "median"),
         median_actual_kw=("actual_mean", "median"),
         std_actual_kw=("actual_mean", "std"),
-        pilot_coverage=("pilot_available_frac", "mean"),
+        pilot_available_at_start=("pilot_available_first", "mean"),
         median_pilot_kw=("pilot_mean", "median"),
         median_recent_actual_q90=("recent_actual_q90", "median"),
         median_recent_actual_var=("recent_actual_var", "median"),
-        median_response_persistence=("response_change", "median"),
+        median_response_persistence_lagged=(
+            "response_persistence_lagged", "median"),
         median_lagged_pilot_actual_ratio=(
             "lagged_pilot_actual_ratio", "median"),
-        severe_gap_fraction=("severe_gap_any", "mean"),
+        lagged_severe_gap_rate=("severe_gap_lag1", "mean"),
         history_coverage=("history_supported", "mean"),
     ).reset_index()
-    obs["pilot_actual_ratio"] = (
-        obs["median_pilot_kw"]
-        / obs["median_actual_kw"].clip(lower=1e-6))
     return obs
 
 
@@ -533,16 +564,58 @@ def run_a4(
             merged["is_e3_valid"] = True  # candidate table 行都是 valid
             merged["is_e3_candidate_A2"] = merged["is_candidate"]
             # S1 ∩ S2, S1 ∩ S3 都允许存在
+            n_s1_mapped = int(merged["is_e1_core"].sum())
+            # C2: n_mapped_to_minute + mapping_rate
+            n_unique_start = int(len(s1_cycle_set))
             e1_mapping[f"{pool}_{split}"] = {
                 "n_e1_core_events": n_e1_core,
                 "n_e1_core_sessions": n_e1_core_sessions,
-                "n_unique_event_start_cycles": int(len(s1_cycle_set)),
-                "n_mapped_to_e3_valid": int(merged["is_e1_core"].sum()),
+                "n_unique_event_start_cycles": n_unique_start,
+                "n_mapped_to_e3_valid": n_s1_mapped,
+                "mapping_rate_to_e3_valid": round(
+                    n_s1_mapped / max(n_unique_start, 1), 6),
                 "n_S1_and_S2": int(
-                    (merged["is_e1_core"] & merged["is_e3_candidate_A2"]).sum()),
+                    (merged["is_e1_core"]
+                     & merged["is_e3_candidate_A2"]).sum()),
                 "n_S1_and_S3": int(
-                    (merged["is_e1_core"] & ~merged["is_e3_candidate_A2"]).sum()),
+                    (merged["is_e1_core"]
+                     & ~merged["is_e3_candidate_A2"]).sum()),
             }
+
+            # ---- B5: S1/S2/S3 状态 observable comparison ----
+            # 非互斥 mask，分别报告 n / concurrency_bucket / observable median + overlap
+            state_rows: list[dict[str, Any]] = []
+            for state_name, mask in [
+                ("S1_e1_core", merged["is_e1_core"]),
+                ("S2_e3_opp", merged["is_e3_candidate_A2"]),
+                ("S3_valid_no_opp", ~merged["is_e3_candidate_A2"]),
+                ("S1_and_S2",
+                 merged["is_e1_core"] & merged["is_e3_candidate_A2"]),
+                ("S1_and_S3",
+                 merged["is_e1_core"] & ~merged["is_e3_candidate_A2"]),
+            ]:
+                sub = merged[mask]
+                row_s: dict[str, Any] = {
+                    "pool": pool, "split": split, "state": state_name,
+                    "n_cycles": int(len(sub)),
+                    "insufficient": bool(len(sub) < 5),
+                }
+                if len(sub):
+                    row_s["median_concurrency_bucket"] = str(
+                        sub["concurrency_bucket"].mode().iloc[0]
+                        if len(sub["concurrency_bucket"].mode())
+                        else "n/a")
+                    for col in OBS_COLS:
+                        if col in sub.columns:
+                            val = sub[col].median()
+                            row_s[f"median_{col}"] = (
+                                round(float(val), 6)
+                                if pd.notna(val) else None)
+                state_rows.append(row_s)
+            state_df = pd.DataFrame(state_rows)
+            state_df.to_csv(
+                OUT / f"a4_state_observables_{pool}_{split}.csv",
+                index=False)
 
             # ---- 同 concurrency bucket candidate=True vs False ----
             for bucket in CONCURRENCY_LABELS:
@@ -579,7 +652,10 @@ def run_a4(
                             row[f"direction_{col}"] = "equal"
                     else:
                         row[f"direction_{col}"] = "nan"
-                    row[f"obs_class_{col}"] = OBS_CLASS.get(col, "unknown")
+                    row[f"obs_class_{col}"] = OBS_CLASS.get(
+                        col, {}).get("class", "unknown")
+                    row[f"pre_action_{col}"] = OBS_CLASS.get(
+                        col, {}).get("pre_action", "unknown")
                 all_bucket_rows.append(row)
             results[pool][split] = {
                 "n_valid_cycles": int(len(merged)),
@@ -625,7 +701,7 @@ def run_a4(
                     else:
                         dirs_by_split[split] = "missing"
 
-                # train+val consistent（审查结论39 §12）
+                # 审查结论40 B6: train/val 必须同一 VALID_DIRECTION
                 tv_dirs = [dirs_by_split.get("train", "missing"),
                            dirs_by_split.get("validation", "missing")]
                 tv_consistent = (
@@ -633,71 +709,89 @@ def run_a4(
                     and tv_dirs[0] in VALID_DIRECTIONS)
                 # test direction
                 test_dir = dirs_by_split.get("test", "missing")
-                test_not_reversed = True
-                if tv_consistent and test_dir in VALID_DIRECTIONS:
+
+                # B6: test nan/missing/equal → 不准入（不是 unresolved）
+                # test 反向 → reject
+                # test 同方向 → supportive
+                if not tv_consistent:
+                    test_not_reversed = False
+                    is_consistent = False
+                elif test_dir in ("missing", "nan", "equal"):
+                    # test 不可评估 → 不准入
+                    test_not_reversed = False
+                    is_consistent = False
+                elif test_dir in VALID_DIRECTIONS:
                     tv_dir = tv_dirs[0]
-                    # reversed = test 方向与 train/val 相反
-                    test_not_reversed = (
-                        test_dir == tv_dir
-                        or test_dir == "missing")
-                    # 如果 test 方向相反 → not_reversed = False
                     opposite = (
                         "true<false" if tv_dir == "true>false"
                         else "true>false")
-                    if test_dir == opposite:
-                        test_not_reversed = False
-                elif tv_consistent and test_dir in ("missing", "nan"):
-                    test_not_reversed = True  # unresolved
-                elif not tv_consistent:
+                    test_not_reversed = bool(test_dir != opposite)
+                    # B6: consistent 只能在三 split 都合法且同方向
+                    is_consistent = bool(
+                        test_not_reversed and test_dir == tv_dir)
+                else:
                     test_not_reversed = False
+                    is_consistent = False
 
-                is_consistent = bool(
-                    tv_consistent and test_not_reversed)
-                obs_cls = OBS_CLASS.get(col, "unknown")
-                # A5 准入（审查结论39 §13）
+                obs_cls = OBS_CLASS.get(col, {}).get("class", "unknown")
+                pre_action = OBS_CLASS.get(
+                    col, {}).get("pre_action", "unknown")
+
+                # B7: 先算 sample_sufficient，再一次性生成 a5_eligible
+                sample_sufficient = True
+                for sp in SPLITS:
+                    sub = bucket_df[
+                        (bucket_df["pool"] == pool)
+                        & (bucket_df["split"] == sp)
+                        & (bucket_df["concurrency_bucket"] == bucket)]
+                    if len(sub):
+                        n_t = int(sub["n_candidate_true"].iloc[0])
+                        n_f = int(sub["n_candidate_false"].iloc[0])
+                        if n_t < 5 or n_f < 5:
+                            sample_sufficient = False
+                    else:
+                        sample_sufficient = False
+
+                # B6/B7: 一次性生成最终 a5_eligible
                 a5_eligible = bool(
                     is_consistent
                     and obs_cls in A5_ELIGIBLE_CLASSES
-                    and test_dir != "missing")
+                    and pre_action == "true"
+                    and sample_sufficient)
                 row_info = {
                     "direction_train": dirs_by_split.get("train"),
-                    "direction_validation": dirs_by_split.get("validation"),
+                    "direction_validation": dirs_by_split.get(
+                        "validation"),
                     "direction_test": test_dir,
                     "train_validation_consistent": bool(tv_consistent),
                     "test_not_reversed": bool(test_not_reversed),
                     "consistent_across_splits": is_consistent,
                     "obs_class": obs_cls,
+                    "pre_action": pre_action,
+                    "sample_sufficient": sample_sufficient,
                     "a5_eligible": a5_eligible,
                 }
                 consistency[pool][bucket][col] = row_info
                 if a5_eligible:
-                    # 检查样本充足
-                    for split in SPLITS:
-                        sub = bucket_df[
-                            (bucket_df["pool"] == pool)
-                            & (bucket_df["split"] == split)
-                            & (bucket_df["concurrency_bucket"] == bucket)]
-                        if len(sub):
-                            n_t = int(sub["n_candidate_true"].iloc[0])
-                            n_f = int(sub["n_candidate_false"].iloc[0])
-                            if n_t < 5 or n_f < 5:
-                                a5_eligible = False
-                    if a5_eligible:
-                        a5_candidates.append({
-                            "pool": pool, "bucket": bucket,
-                            "observable": col,
-                            "obs_class": obs_cls,
-                            "direction": dirs_by_split["train"],
-                            **row_info,
-                        })
+                    a5_candidates.append({
+                        "pool": pool, "bucket": bucket,
+                        "observable": col,
+                        "obs_class": obs_cls,
+                        "pre_action": pre_action,
+                        "direction": dirs_by_split["train"],
+                        **row_info,
+                    })
 
     a4_summary = {
         "module": "A4_cross_domain_localization",
         "design": (
             "concurrency = frozen candidate table n_active（EV nunique）；"
-            "S1/S2/S3 非互斥；lagged observables（cycle-level shift+rolling，"
-            "不跨 run/gap）；observable 三类；NaN→consistent=False；"
-            "train+val consistent + test_not_reversed 分开报告"),
+            "S1/S2/S3 非互斥 + state observable comparison；"
+            "lagged observables（cycle-level shift+rolling，不跨 run/gap/"
+            "severe_gap）；observable 三类 + pre_action 标记；"
+            "NaN/missing/equal→不准入；"
+            "train+val consistent + test_not_reversed + sample_sufficient"
+            " 一次性生成 a5_eligible"),
         "e1_cycle_mapping": e1_mapping,
         "by_pool_split": results,
         "direction_consistency": consistency,
