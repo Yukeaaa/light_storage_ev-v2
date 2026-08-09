@@ -128,10 +128,10 @@ def run_a1(registry: pd.DataFrame, e3_cand: pd.DataFrame) -> dict:
     }
     # 主输出 CSV（预注册契约 a1_population_bridge.csv）
     bridge_rows = [
-        {"stage": "temporal_test_main", "n_sessions": n_temporal},
-        {"stage": "l1_strict_matched", "n_sessions": n_l1},
-        {"stage": "valid_cycles", "n_sessions": n_valid_cycles, "unit": "cycle"},
-        {"stage": "candidate_cycles_A2", "n_sessions": n_candidate_cycles, "unit": "cycle"},
+        {"stage": "temporal_test_main", "n": n_temporal, "unit": "session"},
+        {"stage": "l1_strict_matched", "n": n_l1, "unit": "session"},
+        {"stage": "valid_cycles", "n": n_valid_cycles, "unit": "cycle"},
+        {"stage": "candidate_cycles_A2", "n": n_candidate_cycles, "unit": "cycle"},
     ]
     pd.DataFrame(bridge_rows).to_csv(OUT / "a1_population_bridge.csv", index=False)
 
@@ -165,51 +165,89 @@ def run_a2(
     registry: pd.DataFrame, e1_events: pd.DataFrame, e3_cand: pd.DataFrame,
     test_minutes: pd.DataFrame,
 ) -> dict:
-    """A2 E1+E3 frozen-test decomposition（补齐 slices + overlap）。"""
+    """A2 E1+E3 frozen-test decomposition（补齐全部预注册 slices + overlap）。"""
     core = e1_events[e1_events["event_phase"] == "core_run_segment"].copy()
     opp = e3_cand[e3_cand["candidate_A2_prev_actual"]].copy()
+
+    tm = test_minutes.copy()
+    tm["cycle"] = tm["timestamp_utc"].dt.floor("5min")
+
+    # registry 提供 field_mode（session 级）
+    reg_fm = registry[["session_id", "field_mode"]].drop_duplicates("session_id")
 
     # ---- E1 decomposition（month/station/day/field_mode/concurrency/elapsed）----
     e1_core = core.copy()
     e1_core["day"] = e1_core["start_utc"].astype(str).str[:10]
-    # E1 事件表无 field_mode/concurrency/elapsed → join session summary
-    e1_sess = pd.read_csv(E1_SESSION) if E1_SESSION.exists() else pd.DataFrame()
-    if "session_id" in e1_sess.columns:
-        join_cols = [c for c in [
-            "field_mode", "n_active_max", "connected_elapsed_max", "pilot_available"
-        ] if c in e1_sess.columns]
-        e1_core = e1_core.merge(
-            e1_sess[["session_id"] + join_cols],
-            on="session_id", how="left", suffixes=("", "_sess"))
-    e1_core_by_month = e1_core.groupby("month").agg(
-        n_events=("session_id", "size"), gap_energy_kwh=("gap_energy_kwh", "sum"),
-        median_gap_kw=("median_gap_kw", "median")).reset_index()
-    e1_core_by_station = e1_core.groupby("station_id").agg(
-        n_events=("session_id", "size"), gap_energy_kwh=("gap_energy_kwh", "sum")).reset_index()
-    e1_core_by_day = e1_core.groupby("day").agg(
-        n_events=("session_id", "size"), gap_energy_kwh=("gap_energy_kwh", "sum")).reset_index()
-    e1_decomp = e1_core[["session_id", "station_id", "month", "day", "gap_energy_kwh",
-                          "median_gap_kw"]].copy()
+    e1_core = e1_core.merge(reg_fm, on="session_id", how="left")
+    # event-start cycle 的 connected_elapsed（从分钟表取 event start 时刻的 elapsed）
+    e1_start_cycle = e1_core[["session_id", "start_utc"]].copy()
+    e1_start_cycle["cycle"] = pd.to_datetime(e1_start_cycle["start_utc"]).dt.floor("5min")
+    e1_elapsed = tm.groupby(["session_id", "cycle"])["connected_elapsed_min"].first().reset_index()
+    e1_start_cycle = e1_start_cycle.merge(
+        e1_elapsed, on=["session_id", "cycle"], how="left")
+    e1_core["elapsed_at_start"] = e1_start_cycle["connected_elapsed_min"].values
+    # event-start cycle 的 n_active（同 site+cycle 活跃会话数，从分钟表）
+    active_mask = tm["actual_power_kw"] >= 0.5
+    cycle_n_active = (
+        tm[active_mask].groupby(["site", "cycle"])["session_id"].nunique()
+        .reset_index(name="n_active_at_start")
+    )
+    e1_core["event_cycle"] = pd.to_datetime(e1_core["start_utc"]).dt.floor("5min")
+    e1_core = e1_core.merge(
+        cycle_n_active, left_on=["site", "event_cycle"], right_on=["site", "cycle"],
+        how="left", suffixes=("", "_na"))
+    e1_core["concurrency_bucket"] = _bucketize(
+        e1_core["n_active_at_start"], CONCURRENCY_BUCKETS, CONCURRENCY_LABELS)
+    e1_core["elapsed_bucket"] = _bucketize(
+        e1_core["elapsed_at_start"], ELAPSED_BUCKETS, ELAPSED_LABELS)
+
+    e1_decomp = e1_core[[
+        "session_id", "station_id", "month", "day", "field_mode",
+        "n_active_at_start", "elapsed_at_start", "concurrency_bucket", "elapsed_bucket",
+        "gap_energy_kwh", "median_gap_kw",
+    ]].copy()
     e1_decomp.to_csv(OUT / "a2_e1_decomposition.csv", index=False)
-    e1_core_by_month.to_csv(OUT / "a2_e1_core_by_month.csv", index=False)
-    e1_core_by_station.to_csv(OUT / "a2_e1_core_by_station.csv", index=False)
-    e1_core_by_day.to_csv(OUT / "a2_e1_core_by_day.csv", index=False)
+    e1_core.groupby("month").agg(
+        n_events=("session_id", "size"),
+        gap_energy_kwh=("gap_energy_kwh", "sum"),
+    ).reset_index().to_csv(OUT / "a2_e1_core_by_month.csv", index=False)
+    e1_core.groupby("station_id").agg(
+        n_events=("session_id", "size"),
+        gap_energy_kwh=("gap_energy_kwh", "sum"),
+    ).reset_index().to_csv(OUT / "a2_e1_core_by_station.csv", index=False)
+    e1_core.groupby("day").agg(
+        n_events=("session_id", "size"),
+        gap_energy_kwh=("gap_energy_kwh", "sum"),
+    ).reset_index().to_csv(OUT / "a2_e1_core_by_day.csv", index=False)
+    e1_core.groupby("field_mode").agg(
+        n_events=("session_id", "size"),
+        gap_energy_kwh=("gap_energy_kwh", "sum"),
+    ).reset_index().to_csv(OUT / "a2_e1_core_by_field_mode.csv", index=False)
+    e1_core.groupby("concurrency_bucket").agg(
+        n_events=("session_id", "size"),
+        gap_energy_kwh=("gap_energy_kwh", "sum"),
+    ).reset_index().to_csv(OUT / "a2_e1_core_by_concurrency.csv", index=False)
+    e1_core.groupby("elapsed_bucket").agg(
+        n_events=("session_id", "size"),
+        gap_energy_kwh=("gap_energy_kwh", "sum"),
+    ).reset_index().to_csv(OUT / "a2_e1_core_by_elapsed.csv", index=False)
 
     # ---- E3 decomposition（month/station/day/field_mode/concurrency/elapsed）----
-    # E3 candidate table 是 pool×cycle，有 n_active（并发）但无 station/elapsed/field_mode
-    # → 用分钟表按 cycle 回溯会话级属性
-    tm = test_minutes.copy()
-    tm["cycle"] = tm["timestamp_utc"].dt.floor("5min")
-    cycle_session_attr = tm.groupby(["site", "cycle"]).agg(
-        n_stations=("station_id", "nunique"),
+    # cycle 内 contributing sessions 展开（station/field_mode）
+    cycle_sess = tm.groupby(["site", "cycle"]).agg(
+        stations_set=("station_id", lambda s: sorted(set(s))),
+        field_modes_set=("field_mode", lambda s: sorted(set(s))),
         n_sessions=("session_id", "nunique"),
         median_elapsed=("connected_elapsed_min", "median"),
     ).reset_index()
-    opp_full = opp.merge(cycle_session_attr, on=["site", "cycle"], how="left")
+    opp_full = opp.merge(cycle_sess, on=["site", "cycle"], how="left")
     opp_full["concurrency_bucket"] = _bucketize(
         opp_full["n_active"], CONCURRENCY_BUCKETS, CONCURRENCY_LABELS)
     opp_full["elapsed_bucket"] = _bucketize(
         opp_full["median_elapsed"], ELAPSED_BUCKETS, ELAPSED_LABELS)
+    opp_full["stations_str"] = opp_full["stations_set"].apply(lambda x: ",".join(x) if x else "")
+    opp_full["field_modes_str"] = opp_full["field_modes_set"].apply(
+        lambda x: ",".join(x) if x else "")
 
     e3_opp_by_month = opp_full.groupby("month").agg(
         n_opp_cycles=("cycle", "size"),
@@ -227,55 +265,80 @@ def run_a2(
     )
     e3_opp_by_concurrency = opp_full.groupby("concurrency_bucket").agg(
         n_opp_cycles=("cycle", "size"),
-        opp_energy_kwh=("candidate_energy_A2_prev_actual_kwh", "sum")).reset_index()
+        opp_energy_kwh=("candidate_energy_A2_prev_actual_kwh", "sum"),
+    ).reset_index()
     e3_opp_by_elapsed = opp_full.groupby("elapsed_bucket").agg(
         n_opp_cycles=("cycle", "size"),
-        opp_energy_kwh=("candidate_energy_A2_prev_actual_kwh", "sum")).reset_index()
-    e3_decomp = opp_full[["site", "cycle", "month", "day", "n_active", "n_sessions",
-                           "median_elapsed", "concurrency_bucket", "elapsed_bucket",
-                           "candidate_energy_A2_prev_actual_kwh"]].copy()
+        opp_energy_kwh=("candidate_energy_A2_prev_actual_kwh", "sum"),
+    ).reset_index()
+    e3_opp_by_station = opp_full.explode("stations_set").groupby("stations_set").agg(
+        n_opp_cycles=("cycle", "size"),
+        opp_energy_kwh=("candidate_energy_A2_prev_actual_kwh", "sum"),
+    ).reset_index()
+    e3_opp_by_field_mode = opp_full.explode("field_modes_set").groupby(
+        "field_modes_set").agg(
+        n_opp_cycles=("cycle", "size"),
+        opp_energy_kwh=("candidate_energy_A2_prev_actual_kwh", "sum"),
+    ).reset_index()
+
+    e3_decomp = opp_full[[
+        "site", "cycle", "month", "day", "n_active", "n_sessions",
+        "median_elapsed", "concurrency_bucket", "elapsed_bucket",
+        "stations_str", "field_modes_str",
+        "candidate_energy_A2_prev_actual_kwh",
+    ]].copy()
     e3_decomp.to_csv(OUT / "a2_e3_decomposition.csv", index=False)
     e3_opp_by_month.to_csv(OUT / "a2_e3_opp_by_month.csv", index=False)
     e3_opp_by_day.to_csv(OUT / "a2_e3_opp_by_day.csv", index=False)
     e3_opp_by_concurrency.to_csv(OUT / "a2_e3_opp_by_concurrency.csv", index=False)
     e3_opp_by_elapsed.to_csv(OUT / "a2_e3_opp_by_elapsed.csv", index=False)
+    e3_opp_by_station.to_csv(OUT / "a2_e3_opp_by_station.csv", index=False)
+    e3_opp_by_field_mode.to_csv(OUT / "a2_e3_opp_by_field_mode.csv", index=False)
 
-    # ---- overlap：month + station + concurrency + elapsed ----
+    # ---- overlap：month + station + concurrency + elapsed + field_mode + session ----
     e1_months = set(core["month"].unique())
     e3_months = set(opp["month"].unique())
     e1_stations = set(core["station_id"].unique())
-    # E3 无 station 列 → 用 cycle 回溯的 n_stations > 0 的会话站集合
-    e3_cycle_stations = tm.groupby(["site", "cycle"])["station_id"].apply(
-        lambda s: set(s)).reset_index(name="stations")
-    e3_opp_stations: set[str] = set()
-    opp_stations_df = opp[["site", "cycle"]].merge(
-        e3_cycle_stations, on=["site", "cycle"], how="left")
-    for _, r in opp_stations_df.iterrows():
-        if r["stations"]:
-            e3_opp_stations.update(r["stations"])
-    # E1 核心桩 2-39-79-382 是否贡献 E3 opportunity？
-    e1_core_top_station = "2-39-79-382"
-    e1_core_station_in_e3_opp = e1_core_top_station in e3_opp_stations
-    # E1 核心事件的具体 session 是否在 E3 opp 周期时段内？
+    e3_opp_stations = set(e3_opp_by_station["stations_set"].dropna())
     e1_core_sessions = set(core["session_id"].unique())
-    # E3 opp cycle 时段内的 sessions
-    e3_opp_cycles = opp[["site", "cycle"]].merge(
-        tm.groupby(["site", "cycle"])["session_id"].apply(list).reset_index(),
-        on=["site", "cycle"], how="left")
     e3_opp_sessions = set()
-    for lst in e3_opp_cycles["session_id"].dropna():
-        e3_opp_sessions.update(lst)
+    e3_opp_sess_map = tm.groupby(["site", "cycle"])["session_id"].apply(list).reset_index()
+    for _, r in opp[["site", "cycle"]].merge(
+        e3_opp_sess_map, on=["site", "cycle"], how="left").iterrows():
+        if r["session_id"]:
+            e3_opp_sessions.update(r["session_id"])
     shared_sessions = e1_core_sessions & e3_opp_sessions
 
+    e1_concurrency = set(e1_core["concurrency_bucket"].dropna().unique())
+    e3_concurrency = set(opp_full["concurrency_bucket"].dropna().unique())
+    e1_elapsed = set(e1_core["elapsed_bucket"].dropna().unique())
+    e3_elapsed = set(opp_full["elapsed_bucket"].dropna().unique())
+    e1_field_modes = set(e1_core["field_mode"].dropna().unique())
+    e3_field_modes = set(opp_full["field_modes_str"].dropna().unique())
+    e3_field_modes_flat = set()
+    for fm in e3_field_modes:
+        e3_field_modes_flat.update(fm.split(","))
+
+    e1_core_top_station = "2-39-79-382"
     overlap = {
         "shared_months": sorted(e1_months & e3_months),
         "e1_core_months": sorted(e1_months),
         "e3_opp_months": sorted(e3_months),
         "shared_stations": sorted(e1_stations & e3_opp_stations),
         "e1_core_top_station": e1_core_top_station,
-        "e1_core_top_station_in_e3_opp": bool(e1_core_station_in_e3_opp),
+        "e1_core_top_station_in_e3_opp": bool(e1_core_top_station in e3_opp_stations),
         "shared_sessions_e1_core_x_e3_opp": sorted(shared_sessions),
         "n_shared_sessions": int(len(shared_sessions)),
+        "shared_concurrency_buckets": sorted(e1_concurrency & e3_concurrency),
+        "e1_concurrency_distribution": e1_core.groupby("concurrency_bucket").size().to_dict(),
+        "e3_concurrency_distribution": opp_full.groupby("concurrency_bucket").size().to_dict(),
+        "shared_elapsed_buckets": sorted(e1_elapsed & e3_elapsed),
+        "e1_elapsed_distribution": e1_core.groupby("elapsed_bucket").size().to_dict(),
+        "e3_elapsed_distribution": opp_full.groupby("elapsed_bucket").size().to_dict(),
+        "shared_field_modes": sorted(e1_field_modes & e3_field_modes_flat),
+        "e1_field_mode_distribution": e1_core.groupby("field_mode").size().to_dict(),
+        "e3_field_mode_distribution": e3_opp_by_field_mode.set_index(
+            "field_modes_set")["n_opp_cycles"].to_dict(),
         "e1_core_top_month_share": float(
             core.groupby("month")["gap_energy_kwh"].sum().max()
             / max(core["gap_energy_kwh"].sum(), 1e-9)),
@@ -290,8 +353,10 @@ def run_a2(
             "E1 核心事件主导峰在 2020-06（gap energy 100%），"
             "E3 opp energy 主导峰在 2020-11（79.5%）；"
             "两者主导集中时段不同，但存在部分时间重叠（shared 2020-06）。"
-            f" E1 核心桩 {e1_core_top_station} 是否贡献 E3 opp：{e1_core_station_in_e3_opp}；"
-            f" E1 核心 session 与 E3 opp cycle 时段共享 session 数：{len(shared_sessions)}。"
+            f" E1 核心桩 {e1_core_top_station} 是否贡献 E3 opp："
+            f"{e1_core_top_station in e3_opp_stations}；"
+            f" E1 核心 session 与 E3 opp cycle 时段共享 session 数："
+            f"{len(shared_sessions)}。"
             " 目前不能声称统计独立或成因独立；结果与 support-domain limitation 假设一致，"
             "并增强了继续检查该假设的必要性；"
             "尚不足以证明存在可由在线可观测量识别的 support domain。"
@@ -300,6 +365,9 @@ def run_a2(
     (OUT / "a2_overlap.json").write_text(
         json.dumps(overlap, ensure_ascii=False, indent=2), encoding="utf-8")
     return overlap
+
+
+PREREG = IMPL / "configs" / "r1_expansion_audit.yaml"
 
 
 def run_batch1() -> dict:
@@ -312,15 +380,20 @@ def run_batch1() -> dict:
     a1 = run_a1(registry, e3_cand)
     a2 = run_a2(registry, e1_events, e3_cand, test_minutes)
 
-    # ---- manifest ----
+    # ---- manifest（P0-2 排除 self-hash；P0-3 补 prereg/e1_session/minute provenance）----
     outputs = {}
     for p in sorted(OUT.glob("*.csv")):
-        outputs[str(p.relative_to(IMPL))] = {"sha256": _sha256_file(p), "rows": _row_count(p)}
+        outputs[str(p.relative_to(IMPL))] = {"sha256": _sha256_file(p),
+                                             "rows": _row_count(p)}
     for p in sorted(OUT.glob("*.json")):
+        if p.name == "batch1_manifest.json":
+            continue  # P0-2：不登记 manifest 自身（避免 self-hash 假自引用）
         outputs[str(p.relative_to(IMPL))] = {"sha256": _sha256_file(p)}
+
     manifest = {
-        "batch": "batch_1_1",
-        "preregister": "configs/r1_expansion_audit.yaml",
+        "batch": "batch_1_2",
+        "preregister": str(PREREG.relative_to(IMPL)),
+        "preregister_sha256": _sha256_file(PREREG),
         "analysis_code_sha": prov["code_sha"],
         "worktree_clean": prov["worktree_clean"],
         "inputs": {
@@ -334,13 +407,25 @@ def run_batch1() -> dict:
                 "sha256": _sha256_file(E1_EVENTS),
                 "rows": int(len(e1_events)),
             },
+            "e1_session_summary": {
+                "path": str(E1_SESSION.relative_to(IMPL)),
+                "sha256": _sha256_file(E1_SESSION) if E1_SESSION.exists() else None,
+                "rows": int(len(pd.read_csv(E1_SESSION))) if E1_SESSION.exists() else 0,
+            },
             "e3_caltech_candidate": {
                 "path": str(E3_CAL.relative_to(IMPL)),
                 "sha256": _sha256_file(E3_CAL),
                 "rows": int(len(e3_cand)),
             },
-            "test_minutes_rows": int(len(test_minutes)),
-            "test_minutes_sessions": int(test_minutes["session_id"].nunique()),
+            "minute_table": {
+                "source": "datasets/session_response_1min (E0F-03 frozen partitions)",
+                "predicate": (
+                    "site=caltech ∧ sample_layer=L1_strict_matched "
+                    "∧ role=main ∧ split=test"
+                ),
+                "rows": int(len(test_minutes)),
+                "sessions": int(test_minutes["session_id"].nunique()),
+            },
         },
         "outputs": outputs,
         "a1_summary": a1,
@@ -353,7 +438,15 @@ def run_batch1() -> dict:
     (OUT / "batch1_manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(
-        {"a1": a1, "a2": a2, "manifest_written": True}, ensure_ascii=False, indent=2))
+        {"a1_funnel": {k: a1[k] for k in (
+            "n_temporal_test_main", "n_l1_strict_test", "n_valid_cycles",
+            "n_candidate_cycles_A2")},
+         "a2_overlap_keys": {k: a2[k] for k in (
+             "shared_months", "shared_stations", "n_shared_sessions",
+             "shared_concurrency_buckets", "shared_elapsed_buckets",
+             "shared_field_modes")},
+         "manifest_written": True},
+        ensure_ascii=False, indent=2))
     return manifest
 
 
