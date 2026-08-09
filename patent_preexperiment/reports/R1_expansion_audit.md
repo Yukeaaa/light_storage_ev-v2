@@ -137,9 +137,42 @@ limitation 假设一致，并增强了继续检查该假设的必要性；**尚�
 
 **禁止**：不改 80% 止损线；不因 test=77% 新造 78%/75% 等新线。
 
-### A3 结果（TBD）
+### A3 结果
 
-TBD
+**问题**：A2/A3 elimination 77%（test）是孤立值，还是后期/某类场景普遍逼近或超过 80%？
+
+**结论**：test 域 A2/A3 elimination 确实从 train/val 的 ~52-54%/~22-26% 大幅上升到
+77%/63%，但 **未越过冻结的 80% STOP_COMPLEX_MODEL 线**。test 的上升伴随 top_month_share
+从 train 15% → val 25% → **test 79.5%**，说明基线压力上升与机会高度集中同步。
+JPL 无 A0 参照（current-only 无 pilot），但 top_month_share 也从 train 13% → test 47%。
+
+#### Caltech (E3-M)
+
+| split | n_valid | n_cand_A2 | elim_A2_vs_A0 | elim_A3_vs_A0 | top_month_share |
+|---|---|---|---|---|---|
+| train | 79,816 | 16,898 | 54.1% | 25.7% | 15.1% |
+| validation | 33,003 | 6,557 | 51.9% | 21.7% | 24.7% |
+| **test** | **4,920** | **63** | **77.0%** | **63.1%** | **79.5%** |
+
+#### JPL current-only (E3-X)
+
+| split | n_valid | n_cand_A2 | top_month_share |
+|---|---|---|---|
+| train | 56,429 | 22,196 | 13.1% |
+| validation | 21,340 | 7,698 | 31.7% |
+| test | 12,722 | 3,532 | 47.2% |
+
+- A2 candidate rate（cand/valid）：caltech train 21.2% → test **1.28%**；
+  jpl train 39.3% → test 27.8%（JPL 衰退温和）。
+- station exposure（仅 caltech，diagnostic 不可加总 energy）：输出 `a3_caltech_*_station_exposure.csv`。
+
+**解读**：复杂 executable-interval 模型价值空间在 test 域确实大幅收缩（A2 elimination 77%
+逼近 80% 止损线，A3 elimination 63%），但尚未越过冻结线。test 域同时存在极端集中
+（79.5% opp energy 在单月）。这不改变"broad active D1-R 不应恢复"的判断，但为
+A4 support-domain 检查提供了基线压力背景。
+
+输出文件：`results/raw/E3F_expansion/a3_*_by_month.csv` + `a3_*_station_exposure.csv`
++ `a3_baseline_pressure.json`
 
 ---
 
@@ -150,9 +183,58 @@ TBD
 **纪律**：Caltech measured-pilot main ≠ JPL current-only（分开报告，不平均）；
 office001 仅 descriptive external-only，不参与调规则。
 
-### A4 结果（TBD）
+### A4 结果
 
-TBD
+**设计**：同 n_active bucket 内 candidate=True vs candidate=False 对照（不把 candidate
+定义的结构条件误当 support predictor）；在线可观测量 n_active / median_elapsed /
+median_actual_kw / std_actual_kw / pilot_coverage / pilot_actual_ratio；
+train/val/test 方向一致性检查（仅 consistent 的才值得进 A5）。
+
+#### 方向一致（train/val/test 同 bucket 同 observable）的在线可观测量
+
+**Caltech**：
+
+| concurrency bucket | consistent observables |
+|---|---|
+| 4-7 | n_active: true>false；median_elapsed: true<false |
+| 8-15 | median_elapsed: true>false；median_actual_kw: true<false；pilot_actual_ratio: true>false |
+| 16+ | n_active: true>false；median_actual_kw: true<false；std_actual_kw: true<false；pilot_actual_ratio: true>false |
+
+**JPL current-only**：
+
+| concurrency bucket | consistent observables |
+|---|---|
+| 4-7 | n_active: true>false；std_actual_kw: true>false |
+| 8-15 | median_elapsed: true>false；median_actual_kw: true<false；std_actual_kw: true>false |
+| 16+ | n_active: true>false |
+
+#### 关键发现
+
+1. **median_actual_kw: true<false** 在 caltech 8-15/16+ 和 jpl 8-15 **跨域一致**：
+   candidate=True 的周期 median actual power **低于** candidate=False。
+   方向合理：低 actual → budget gap (slack) 大 → candidate 成立。
+   这是 candidate 定义的自然推论（slack = budget - actual），但跨域一致值得记录。
+
+2. **median_elapsed: true<false** 在 caltech 8-15 + jpl 8-15 一致：
+   candidate=True 的周期 connected-elapsed 更短（早期充电阶段）。
+
+3. **pilot_actual_ratio: true>false** 在 caltech 8-15/16+ 一致但 JPL 无此变量
+   （current-only 无 pilot）→ 仅 measured-pilot 域可用。
+
+4. **bucket=1（n_active=1）全 nan**：candidate 定义要求 n_active≥2，bucket=1 无
+   candidate=True → 无法对照（符合预期，验证对照组设计正确）。
+
+5. **bucket=2-3 无 consistent**：63 个 test candidate cycles 全在 2-3，但 train/val/test
+   方向在此 bucket 不一致 → **2-3 并发本身不能直接当 support-domain predictor**。
+
+**解读**：存在少量跨域方向一致的在线可观测量（median_actual_kw、median_elapsed），
+但它们大多直接源于 candidate 定义（slack = budget - actual → 低 actual → candidate）。
+**目前不足以构成独立的 support-domain hypothesis**——需要 A5 进一步检查这些变量在
+"train 强 + val 强 + test 也与失败域不同"的条件下是否仍有选择性。
+test 只产假设，不训练 classifier，不宣称已验证。
+
+输出文件：`results/raw/E3F_expansion/a4_*_bucket_comparison.csv`
++ `a4_cross_domain.json`
 
 ---
 

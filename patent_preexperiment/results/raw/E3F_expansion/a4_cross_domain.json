@@ -1,0 +1,1280 @@
+{
+  "module": "A4_cross_domain_localization",
+  "design": "同 n_active bucket 内 candidate=True vs candidate=False 对照（不把 candidate 定义的结构条件误当 support predictor）",
+  "by_pool_split": {
+    "caltech": {
+      "train": {
+        "n_valid_cycles": 79816,
+        "n_candidate_true": 16898,
+        "n_candidate_false": 62918,
+        "bucket_summary": [
+          {
+            "concurrency_bucket": "1",
+            "n_candidate_true": 0,
+            "n_candidate_false": 21249,
+            "median_n_active_true": NaN,
+            "median_n_active_false": 0.0,
+            "median_median_elapsed_true": NaN,
+            "median_median_elapsed_false": 589.883333,
+            "median_median_actual_kw_true": NaN,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": NaN,
+            "median_std_actual_kw_false": 0.0,
+            "median_pilot_coverage_true": NaN,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": 1920000.0,
+            "direction_n_active": NaN,
+            "direction_median_elapsed": NaN,
+            "direction_median_actual_kw": NaN,
+            "direction_std_actual_kw": NaN,
+            "direction_pilot_coverage": NaN,
+            "direction_pilot_actual_ratio": NaN
+          },
+          {
+            "concurrency_bucket": "2-3",
+            "n_candidate_true": 2,
+            "n_candidate_false": 627,
+            "median_n_active_true": 3.0,
+            "median_n_active_false": 0.0,
+            "median_median_elapsed_true": 84.654167,
+            "median_median_elapsed_false": 467.533333,
+            "median_median_actual_kw_true": 1.400625,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": 1.892266,
+            "median_std_actual_kw_false": 0.722169,
+            "median_pilot_coverage_true": 1.0,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": 1.43462,
+            "median_pilot_actual_ratio_false": 1920000.0,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true<false",
+            "direction_median_actual_kw": "true>false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "true<false"
+          },
+          {
+            "concurrency_bucket": "4-7",
+            "n_candidate_true": 79,
+            "n_candidate_false": 19398,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 1.0,
+            "median_median_elapsed_true": 301.616667,
+            "median_median_elapsed_false": 394.470833,
+            "median_median_actual_kw_true": 0.0,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": 1.67465,
+            "median_std_actual_kw_false": 1.752457,
+            "median_pilot_coverage_true": 1.0,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": 1920000.0,
+            "median_pilot_actual_ratio_false": 1920000.0,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true<false",
+            "direction_median_actual_kw": "equal",
+            "direction_std_actual_kw": "true<false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          },
+          {
+            "concurrency_bucket": "8-15",
+            "n_candidate_true": 3525,
+            "n_candidate_false": 13713,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 2.0,
+            "median_median_elapsed_true": 273.383333,
+            "median_median_elapsed_false": 224.458333,
+            "median_median_actual_kw_true": 0.0,
+            "median_median_actual_kw_false": 1.625367,
+            "median_std_actual_kw_true": 1.831575,
+            "median_std_actual_kw_false": 2.429485,
+            "median_pilot_coverage_true": 1.0,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": 1920000.0,
+            "median_pilot_actual_ratio_false": 2.129544,
+            "direction_n_active": "equal",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true<false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "true>false"
+          },
+          {
+            "concurrency_bucket": "16+",
+            "n_candidate_true": 13292,
+            "n_candidate_false": 7931,
+            "median_n_active_true": 8.0,
+            "median_n_active_false": 5.0,
+            "median_median_elapsed_true": 154.375,
+            "median_median_elapsed_false": 161.183333,
+            "median_median_actual_kw_true": 0.0,
+            "median_median_actual_kw_false": 0.599067,
+            "median_std_actual_kw_true": 2.18319,
+            "median_std_actual_kw_false": 2.262454,
+            "median_pilot_coverage_true": 1.0,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": 1920000.0,
+            "median_pilot_actual_ratio_false": 3.833859,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true<false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true<false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "true>false"
+          }
+        ]
+      },
+      "validation": {
+        "n_valid_cycles": 33003,
+        "n_candidate_true": 6557,
+        "n_candidate_false": 26446,
+        "bucket_summary": [
+          {
+            "concurrency_bucket": "1",
+            "n_candidate_true": 0,
+            "n_candidate_false": 10132,
+            "median_n_active_true": NaN,
+            "median_n_active_false": 0.0,
+            "median_median_elapsed_true": NaN,
+            "median_median_elapsed_false": 582.308333,
+            "median_median_actual_kw_true": NaN,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": NaN,
+            "median_std_actual_kw_false": 0.0,
+            "median_pilot_coverage_true": NaN,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": 1920000.0,
+            "direction_n_active": NaN,
+            "direction_median_elapsed": NaN,
+            "direction_median_actual_kw": NaN,
+            "direction_std_actual_kw": NaN,
+            "direction_pilot_coverage": NaN,
+            "direction_pilot_actual_ratio": NaN
+          },
+          {
+            "concurrency_bucket": "2-3",
+            "n_candidate_true": 0,
+            "n_candidate_false": 272,
+            "median_n_active_true": NaN,
+            "median_n_active_false": 0.0,
+            "median_median_elapsed_true": NaN,
+            "median_median_elapsed_false": 343.704167,
+            "median_median_actual_kw_true": NaN,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": NaN,
+            "median_std_actual_kw_false": 0.618396,
+            "median_pilot_coverage_true": NaN,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": 1920000.0,
+            "direction_n_active": NaN,
+            "direction_median_elapsed": NaN,
+            "direction_median_actual_kw": NaN,
+            "direction_std_actual_kw": NaN,
+            "direction_pilot_coverage": NaN,
+            "direction_pilot_actual_ratio": NaN
+          },
+          {
+            "concurrency_bucket": "4-7",
+            "n_candidate_true": 40,
+            "n_candidate_false": 8221,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 1.0,
+            "median_median_elapsed_true": 204.725,
+            "median_median_elapsed_false": 274.0,
+            "median_median_actual_kw_true": 0.597167,
+            "median_median_actual_kw_false": 2.050667,
+            "median_std_actual_kw_true": 1.528763,
+            "median_std_actual_kw_false": 1.327625,
+            "median_pilot_coverage_true": 1.0,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": 960001.33966,
+            "median_pilot_actual_ratio_false": 1.556689,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true<false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "true>false"
+          },
+          {
+            "concurrency_bucket": "8-15",
+            "n_candidate_true": 1299,
+            "n_candidate_false": 4779,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 2.0,
+            "median_median_elapsed_true": 279.683333,
+            "median_median_elapsed_false": 189.533333,
+            "median_median_actual_kw_true": 0.0,
+            "median_median_actual_kw_false": 1.726367,
+            "median_std_actual_kw_true": 1.735944,
+            "median_std_actual_kw_false": 1.952972,
+            "median_pilot_coverage_true": 1.0,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": 1920000.0,
+            "median_pilot_actual_ratio_false": 1.826506,
+            "direction_n_active": "equal",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true<false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "true>false"
+          },
+          {
+            "concurrency_bucket": "16+",
+            "n_candidate_true": 5218,
+            "n_candidate_false": 3042,
+            "median_n_active_true": 8.0,
+            "median_n_active_false": 6.0,
+            "median_median_elapsed_true": 142.458333,
+            "median_median_elapsed_false": 140.875,
+            "median_median_actual_kw_true": 0.0,
+            "median_median_actual_kw_false": 0.733657,
+            "median_std_actual_kw_true": 2.319042,
+            "median_std_actual_kw_false": 2.335161,
+            "median_pilot_coverage_true": 1.0,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": 1920000.0,
+            "median_pilot_actual_ratio_false": 3.250168,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true<false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "true>false"
+          }
+        ]
+      },
+      "test": {
+        "n_valid_cycles": 4920,
+        "n_candidate_true": 63,
+        "n_candidate_false": 4857,
+        "bucket_summary": [
+          {
+            "concurrency_bucket": "1",
+            "n_candidate_true": 0,
+            "n_candidate_false": 2209,
+            "median_n_active_true": NaN,
+            "median_n_active_false": 0.0,
+            "median_median_elapsed_true": NaN,
+            "median_median_elapsed_false": 310.016667,
+            "median_median_actual_kw_true": NaN,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": NaN,
+            "median_std_actual_kw_false": 0.0,
+            "median_pilot_coverage_true": NaN,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": 1920000.0,
+            "direction_n_active": NaN,
+            "direction_median_elapsed": NaN,
+            "direction_median_actual_kw": NaN,
+            "direction_std_actual_kw": NaN,
+            "direction_pilot_coverage": NaN,
+            "direction_pilot_actual_ratio": NaN
+          },
+          {
+            "concurrency_bucket": "2-3",
+            "n_candidate_true": 1,
+            "n_candidate_false": 72,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 1.0,
+            "median_median_elapsed_true": 110.6,
+            "median_median_elapsed_false": 128.375,
+            "median_median_actual_kw_true": 1.371125,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": 13.737598,
+            "median_std_actual_kw_false": 1.085323,
+            "median_pilot_coverage_true": 1.0,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": 3.500775,
+            "median_pilot_actual_ratio_false": 3.076262,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true<false",
+            "direction_median_actual_kw": "true>false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "true>false"
+          },
+          {
+            "concurrency_bucket": "4-7",
+            "n_candidate_true": 3,
+            "n_candidate_false": 2324,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 1.0,
+            "median_median_elapsed_true": 109.6,
+            "median_median_elapsed_false": 122.466667,
+            "median_median_actual_kw_true": 3.484812,
+            "median_median_actual_kw_false": 3.734092,
+            "median_std_actual_kw_true": 2.080521,
+            "median_std_actual_kw_false": 0.083588,
+            "median_pilot_coverage_true": 1.0,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": 1.308686,
+            "median_pilot_actual_ratio_false": 1.145761,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true<false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "true>false"
+          },
+          {
+            "concurrency_bucket": "8-15",
+            "n_candidate_true": 59,
+            "n_candidate_false": 252,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 2.0,
+            "median_median_elapsed_true": 94.566667,
+            "median_median_elapsed_false": 65.65,
+            "median_median_actual_kw_true": 3.550667,
+            "median_median_actual_kw_false": 4.962969,
+            "median_std_actual_kw_true": 2.730247,
+            "median_std_actual_kw_false": 1.715904,
+            "median_pilot_coverage_true": 1.0,
+            "median_pilot_coverage_false": 1.0,
+            "median_pilot_actual_ratio_true": 1.510743,
+            "median_pilot_actual_ratio_false": 1.196345,
+            "direction_n_active": "equal",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "true>false"
+          }
+        ]
+      }
+    },
+    "jpl": {
+      "train": {
+        "n_valid_cycles": 56429,
+        "n_candidate_true": 22196,
+        "n_candidate_false": 34233,
+        "bucket_summary": [
+          {
+            "concurrency_bucket": "1",
+            "n_candidate_true": 0,
+            "n_candidate_false": 10293,
+            "median_n_active_true": NaN,
+            "median_n_active_false": 0.0,
+            "median_median_elapsed_true": NaN,
+            "median_median_elapsed_false": 341.45,
+            "median_median_actual_kw_true": NaN,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": NaN,
+            "median_std_actual_kw_false": 0.0,
+            "median_pilot_coverage_true": NaN,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": NaN,
+            "direction_median_elapsed": NaN,
+            "direction_median_actual_kw": NaN,
+            "direction_std_actual_kw": NaN,
+            "direction_pilot_coverage": NaN,
+            "direction_pilot_actual_ratio": NaN
+          },
+          {
+            "concurrency_bucket": "2-3",
+            "n_candidate_true": 3,
+            "n_candidate_false": 303,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 1.0,
+            "median_median_elapsed_true": 394.25,
+            "median_median_elapsed_false": 228.85,
+            "median_median_actual_kw_true": 0.0,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": 0.692954,
+            "median_std_actual_kw_false": 0.587834,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "equal",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          },
+          {
+            "concurrency_bucket": "4-7",
+            "n_candidate_true": 36,
+            "n_candidate_false": 10335,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 1.0,
+            "median_median_elapsed_true": 318.491667,
+            "median_median_elapsed_false": 155.133333,
+            "median_median_actual_kw_true": 0.0,
+            "median_median_actual_kw_false": 2.909128,
+            "median_std_actual_kw_true": 1.60261,
+            "median_std_actual_kw_false": 0.389423,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          },
+          {
+            "concurrency_bucket": "8-15",
+            "n_candidate_true": 917,
+            "n_candidate_false": 4857,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 2.0,
+            "median_median_elapsed_true": 223.916667,
+            "median_median_elapsed_false": 158.041667,
+            "median_median_actual_kw_true": 0.61664,
+            "median_median_actual_kw_false": 2.995281,
+            "median_std_actual_kw_true": 2.015909,
+            "median_std_actual_kw_false": 1.87794,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "equal",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          },
+          {
+            "concurrency_bucket": "16+",
+            "n_candidate_true": 21240,
+            "n_candidate_false": 8445,
+            "median_n_active_true": 17.0,
+            "median_n_active_false": 8.0,
+            "median_median_elapsed_true": 238.008333,
+            "median_median_elapsed_false": 293.433333,
+            "median_median_actual_kw_true": 1.143979,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": 2.069953,
+            "median_std_actual_kw_false": 2.053479,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true<false",
+            "direction_median_actual_kw": "true>false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          }
+        ]
+      },
+      "validation": {
+        "n_valid_cycles": 21340,
+        "n_candidate_true": 7698,
+        "n_candidate_false": 13642,
+        "bucket_summary": [
+          {
+            "concurrency_bucket": "1",
+            "n_candidate_true": 0,
+            "n_candidate_false": 3368,
+            "median_n_active_true": NaN,
+            "median_n_active_false": 0.0,
+            "median_median_elapsed_true": NaN,
+            "median_median_elapsed_false": 318.2875,
+            "median_median_actual_kw_true": NaN,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": NaN,
+            "median_std_actual_kw_false": 0.0,
+            "median_pilot_coverage_true": NaN,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": NaN,
+            "direction_median_elapsed": NaN,
+            "direction_median_actual_kw": NaN,
+            "direction_std_actual_kw": NaN,
+            "direction_pilot_coverage": NaN,
+            "direction_pilot_actual_ratio": NaN
+          },
+          {
+            "concurrency_bucket": "2-3",
+            "n_candidate_true": 1,
+            "n_candidate_false": 101,
+            "median_n_active_true": 3.0,
+            "median_n_active_false": 0.0,
+            "median_median_elapsed_true": 216.133333,
+            "median_median_elapsed_false": 156.466667,
+            "median_median_actual_kw_true": 1.377805,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": 2.653809,
+            "median_std_actual_kw_false": 0.738135,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true>false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          },
+          {
+            "concurrency_bucket": "4-7",
+            "n_candidate_true": 3,
+            "n_candidate_false": 4359,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 1.0,
+            "median_median_elapsed_true": 168.9,
+            "median_median_elapsed_false": 124.958333,
+            "median_median_actual_kw_true": 3.118528,
+            "median_median_actual_kw_false": 3.015755,
+            "median_std_actual_kw_true": 2.01208,
+            "median_std_actual_kw_false": 0.147275,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true>false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          },
+          {
+            "concurrency_bucket": "8-15",
+            "n_candidate_true": 346,
+            "n_candidate_false": 2542,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 2.0,
+            "median_median_elapsed_true": 173.608333,
+            "median_median_elapsed_false": 133.4125,
+            "median_median_actual_kw_true": 2.205191,
+            "median_median_actual_kw_false": 3.070153,
+            "median_std_actual_kw_true": 2.370028,
+            "median_std_actual_kw_false": 2.201636,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "equal",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          },
+          {
+            "concurrency_bucket": "16+",
+            "n_candidate_true": 7348,
+            "n_candidate_false": 3272,
+            "median_n_active_true": 17.0,
+            "median_n_active_false": 8.0,
+            "median_median_elapsed_true": 233.733333,
+            "median_median_elapsed_false": 213.508333,
+            "median_median_actual_kw_true": 1.399584,
+            "median_median_actual_kw_false": 1.586162,
+            "median_std_actual_kw_true": 2.149227,
+            "median_std_actual_kw_false": 2.221678,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true<false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          }
+        ]
+      },
+      "test": {
+        "n_valid_cycles": 12722,
+        "n_candidate_true": 3532,
+        "n_candidate_false": 9190,
+        "bucket_summary": [
+          {
+            "concurrency_bucket": "1",
+            "n_candidate_true": 0,
+            "n_candidate_false": 2700,
+            "median_n_active_true": NaN,
+            "median_n_active_false": 0.0,
+            "median_median_elapsed_true": NaN,
+            "median_median_elapsed_false": 405.95,
+            "median_median_actual_kw_true": NaN,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": NaN,
+            "median_std_actual_kw_false": 0.0,
+            "median_pilot_coverage_true": NaN,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": NaN,
+            "direction_median_elapsed": NaN,
+            "direction_median_actual_kw": NaN,
+            "direction_std_actual_kw": NaN,
+            "direction_pilot_coverage": NaN,
+            "direction_pilot_actual_ratio": NaN
+          },
+          {
+            "concurrency_bucket": "2-3",
+            "n_candidate_true": 0,
+            "n_candidate_false": 61,
+            "median_n_active_true": NaN,
+            "median_n_active_false": 1.0,
+            "median_median_elapsed_true": NaN,
+            "median_median_elapsed_false": 276.016667,
+            "median_median_actual_kw_true": NaN,
+            "median_median_actual_kw_false": 0.0,
+            "median_std_actual_kw_true": NaN,
+            "median_std_actual_kw_false": 0.752515,
+            "median_pilot_coverage_true": NaN,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": NaN,
+            "direction_median_elapsed": NaN,
+            "direction_median_actual_kw": NaN,
+            "direction_std_actual_kw": NaN,
+            "direction_pilot_coverage": NaN,
+            "direction_pilot_actual_ratio": NaN
+          },
+          {
+            "concurrency_bucket": "4-7",
+            "n_candidate_true": 3,
+            "n_candidate_false": 2443,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 1.0,
+            "median_median_elapsed_true": 118.35,
+            "median_median_elapsed_false": 221.633333,
+            "median_median_actual_kw_true": 0.09635,
+            "median_median_actual_kw_false": 2.930244,
+            "median_std_actual_kw_true": 2.443799,
+            "median_std_actual_kw_false": 1.246775,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true<false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          },
+          {
+            "concurrency_bucket": "8-15",
+            "n_candidate_true": 332,
+            "n_candidate_false": 1774,
+            "median_n_active_true": 2.0,
+            "median_n_active_false": 2.0,
+            "median_median_elapsed_true": 259.85,
+            "median_median_elapsed_false": 180.566667,
+            "median_median_actual_kw_true": 0.0,
+            "median_median_actual_kw_false": 2.864807,
+            "median_std_actual_kw_true": 2.377212,
+            "median_std_actual_kw_false": 2.365944,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "equal",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true>false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          },
+          {
+            "concurrency_bucket": "16+",
+            "n_candidate_true": 3197,
+            "n_candidate_false": 2212,
+            "median_n_active_true": 13.0,
+            "median_n_active_false": 6.0,
+            "median_median_elapsed_true": 212.95,
+            "median_median_elapsed_false": 155.3125,
+            "median_median_actual_kw_true": 1.596841,
+            "median_median_actual_kw_false": 2.88215,
+            "median_std_actual_kw_true": 2.170007,
+            "median_std_actual_kw_false": 2.209994,
+            "median_pilot_coverage_true": 0.0,
+            "median_pilot_coverage_false": 0.0,
+            "median_pilot_actual_ratio_true": NaN,
+            "median_pilot_actual_ratio_false": NaN,
+            "direction_n_active": "true>false",
+            "direction_median_elapsed": "true>false",
+            "direction_median_actual_kw": "true<false",
+            "direction_std_actual_kw": "true<false",
+            "direction_pilot_coverage": "equal",
+            "direction_pilot_actual_ratio": "equal"
+          }
+        ]
+      }
+    }
+  },
+  "direction_consistency": {
+    "caltech": {
+      "1": {
+        "n_active": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        },
+        "median_elapsed": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        },
+        "median_actual_kw": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        },
+        "std_actual_kw": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        },
+        "pilot_coverage": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        },
+        "pilot_actual_ratio": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        }
+      },
+      "2-3": {
+        "n_active": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true>false",
+            "nan",
+            "true>false"
+          ]
+        },
+        "median_elapsed": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true<false",
+            "nan",
+            "true<false"
+          ]
+        },
+        "median_actual_kw": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true>false",
+            "nan",
+            "true>false"
+          ]
+        },
+        "std_actual_kw": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true>false",
+            "nan",
+            "true>false"
+          ]
+        },
+        "pilot_coverage": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "nan",
+            "equal"
+          ]
+        },
+        "pilot_actual_ratio": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true<false",
+            "nan",
+            "true>false"
+          ]
+        }
+      },
+      "4-7": {
+        "n_active": {
+          "direction": "true>false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true>false",
+            "true>false",
+            "true>false"
+          ]
+        },
+        "median_elapsed": {
+          "direction": "true<false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true<false",
+            "true<false",
+            "true<false"
+          ]
+        },
+        "median_actual_kw": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "true<false",
+            "true<false"
+          ]
+        },
+        "std_actual_kw": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true<false",
+            "true>false",
+            "true>false"
+          ]
+        },
+        "pilot_coverage": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "equal"
+          ]
+        },
+        "pilot_actual_ratio": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "true>false",
+            "true>false"
+          ]
+        }
+      },
+      "8-15": {
+        "n_active": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "equal"
+          ]
+        },
+        "median_elapsed": {
+          "direction": "true>false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true>false",
+            "true>false",
+            "true>false"
+          ]
+        },
+        "median_actual_kw": {
+          "direction": "true<false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true<false",
+            "true<false",
+            "true<false"
+          ]
+        },
+        "std_actual_kw": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true<false",
+            "true<false",
+            "true>false"
+          ]
+        },
+        "pilot_coverage": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "equal"
+          ]
+        },
+        "pilot_actual_ratio": {
+          "direction": "true>false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true>false",
+            "true>false",
+            "true>false"
+          ]
+        }
+      },
+      "16+": {
+        "n_active": {
+          "direction": "true>false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true>false",
+            "true>false"
+          ]
+        },
+        "median_elapsed": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true<false",
+            "true>false"
+          ]
+        },
+        "median_actual_kw": {
+          "direction": "true<false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true<false",
+            "true<false"
+          ]
+        },
+        "std_actual_kw": {
+          "direction": "true<false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true<false",
+            "true<false"
+          ]
+        },
+        "pilot_coverage": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal"
+          ]
+        },
+        "pilot_actual_ratio": {
+          "direction": "true>false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true>false",
+            "true>false"
+          ]
+        }
+      }
+    },
+    "jpl": {
+      "1": {
+        "n_active": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        },
+        "median_elapsed": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        },
+        "median_actual_kw": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        },
+        "std_actual_kw": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        },
+        "pilot_coverage": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        },
+        "pilot_actual_ratio": {
+          "direction": "nan",
+          "consistent_across_splits": true,
+          "splits": [
+            "nan",
+            "nan",
+            "nan"
+          ]
+        }
+      },
+      "2-3": {
+        "n_active": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true>false",
+            "true>false",
+            "nan"
+          ]
+        },
+        "median_elapsed": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true>false",
+            "true>false",
+            "nan"
+          ]
+        },
+        "median_actual_kw": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "true>false",
+            "nan"
+          ]
+        },
+        "std_actual_kw": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true>false",
+            "true>false",
+            "nan"
+          ]
+        },
+        "pilot_coverage": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "nan"
+          ]
+        },
+        "pilot_actual_ratio": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "nan"
+          ]
+        }
+      },
+      "4-7": {
+        "n_active": {
+          "direction": "true>false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true>false",
+            "true>false",
+            "true>false"
+          ]
+        },
+        "median_elapsed": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true>false",
+            "true>false",
+            "true<false"
+          ]
+        },
+        "median_actual_kw": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true<false",
+            "true>false",
+            "true<false"
+          ]
+        },
+        "std_actual_kw": {
+          "direction": "true>false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true>false",
+            "true>false",
+            "true>false"
+          ]
+        },
+        "pilot_coverage": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "equal"
+          ]
+        },
+        "pilot_actual_ratio": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "equal"
+          ]
+        }
+      },
+      "8-15": {
+        "n_active": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "equal"
+          ]
+        },
+        "median_elapsed": {
+          "direction": "true>false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true>false",
+            "true>false",
+            "true>false"
+          ]
+        },
+        "median_actual_kw": {
+          "direction": "true<false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true<false",
+            "true<false",
+            "true<false"
+          ]
+        },
+        "std_actual_kw": {
+          "direction": "true>false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true>false",
+            "true>false",
+            "true>false"
+          ]
+        },
+        "pilot_coverage": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "equal"
+          ]
+        },
+        "pilot_actual_ratio": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "equal"
+          ]
+        }
+      },
+      "16+": {
+        "n_active": {
+          "direction": "true>false",
+          "consistent_across_splits": true,
+          "splits": [
+            "true>false",
+            "true>false",
+            "true>false"
+          ]
+        },
+        "median_elapsed": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true<false",
+            "true>false",
+            "true>false"
+          ]
+        },
+        "median_actual_kw": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true>false",
+            "true<false",
+            "true<false"
+          ]
+        },
+        "std_actual_kw": {
+          "direction": "mixed",
+          "consistent_across_splits": false,
+          "splits": [
+            "true>false",
+            "true<false",
+            "true<false"
+          ]
+        },
+        "pilot_coverage": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "equal"
+          ]
+        },
+        "pilot_actual_ratio": {
+          "direction": "n/a",
+          "consistent_across_splits": false,
+          "splits": [
+            "equal",
+            "equal",
+            "equal"
+          ]
+        }
+      }
+    }
+  },
+  "note": "direction consistent = train/val/test 同 bucket 同 observable 方向一致；仅 consistent 的 observable 才值得进入 A5 support-domain hypothesis。test 只产假设，不训练 classifier，不宣称已验证。"
+}

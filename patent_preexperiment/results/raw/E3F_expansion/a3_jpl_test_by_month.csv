@@ -1,0 +1,6 @@
+month,n_valid_cycles,rate_A2_prev_actual,n_candidate_A2_prev_actual,energy_A2_prev_actual_kwh,rate_A3_rolling_quantile,n_candidate_A3_rolling_quantile,energy_A3_rolling_quantile_kwh
+2020-01,3554,0.414744,1474,508.840632,0.568655,2021,3753.936257
+2020-02,54,0.111111,6,2.120584,0.185185,10,2.728
+2020-03,5289,0.276801,1464,461.25088,0.429382,2271,3227.624512
+2020-04,24,0.0,0,0.0,0.0,0,0.0
+2020-05,3801,0.154696,588,105.44378,0.40884,1554,889.44694

@@ -1,0 +1,6 @@
+concurrency_bucket,n_candidate_true,n_candidate_false,median_n_active_true,median_n_active_false,median_median_elapsed_true,median_median_elapsed_false,median_median_actual_kw_true,median_median_actual_kw_false,median_std_actual_kw_true,median_std_actual_kw_false,median_pilot_coverage_true,median_pilot_coverage_false,median_pilot_actual_ratio_true,median_pilot_actual_ratio_false,direction_n_active,direction_median_elapsed,direction_median_actual_kw,direction_std_actual_kw,direction_pilot_coverage,direction_pilot_actual_ratio
+1,0,2700,,0.0,,405.95,,0.0,,0.0,,0.0,,,,,,,,
+2-3,0,61,,1.0,,276.016667,,0.0,,0.752515,,0.0,,,,,,,,
+4-7,3,2443,2.0,1.0,118.35,221.633333,0.09635,2.930244,2.443799,1.246775,0.0,0.0,,,true>false,true<false,true<false,true>false,equal,equal
+8-15,332,1774,2.0,2.0,259.85,180.566667,0.0,2.864807,2.377212,2.365944,0.0,0.0,,,equal,true>false,true<false,true>false,equal,equal
+16+,3197,2212,13.0,6.0,212.95,155.3125,1.596841,2.88215,2.170007,2.209994,0.0,0.0,,,true>false,true>false,true<false,true<false,equal,equal

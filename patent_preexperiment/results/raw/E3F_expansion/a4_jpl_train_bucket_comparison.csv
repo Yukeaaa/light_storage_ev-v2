@@ -1,0 +1,6 @@
+concurrency_bucket,n_candidate_true,n_candidate_false,median_n_active_true,median_n_active_false,median_median_elapsed_true,median_median_elapsed_false,median_median_actual_kw_true,median_median_actual_kw_false,median_std_actual_kw_true,median_std_actual_kw_false,median_pilot_coverage_true,median_pilot_coverage_false,median_pilot_actual_ratio_true,median_pilot_actual_ratio_false,direction_n_active,direction_median_elapsed,direction_median_actual_kw,direction_std_actual_kw,direction_pilot_coverage,direction_pilot_actual_ratio
+1,0,10293,,0.0,,341.45,,0.0,,0.0,,0.0,,,,,,,,
+2-3,3,303,2.0,1.0,394.25,228.85,0.0,0.0,0.692954,0.587834,0.0,0.0,,,true>false,true>false,equal,true>false,equal,equal
+4-7,36,10335,2.0,1.0,318.491667,155.133333,0.0,2.909128,1.60261,0.389423,0.0,0.0,,,true>false,true>false,true<false,true>false,equal,equal
+8-15,917,4857,2.0,2.0,223.916667,158.041667,0.61664,2.995281,2.015909,1.87794,0.0,0.0,,,equal,true>false,true<false,true>false,equal,equal
+16+,21240,8445,17.0,8.0,238.008333,293.433333,1.143979,0.0,2.069953,2.053479,0.0,0.0,,,true>false,true<false,true>false,true>false,equal,equal
