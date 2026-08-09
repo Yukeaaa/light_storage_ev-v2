@@ -1,0 +1,6 @@
+phase,n_events,n_event_sessions,event_share,energy_kwh
+post_done,0,0,0.0,0.0
+pre_done_tail,62,56,0.6138613861386139,29.69052839671776
+pre_done_mid,28,14,0.27722772277227725,9.278170793916981
+core_run_segment,11,3,0.10891089108910891,3.2236212894880176
+done_missing,0,0,0.0,0.0
