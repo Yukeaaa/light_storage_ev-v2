@@ -1,0 +1,31 @@
+{
+  "module": "A1_population_bridge",
+  "caltech_temporal_test_main": 10528,
+  "caltech_l1_strict_test": 155,
+  "retention_rate": 0.014723,
+  "contraction": "10528 → 155（98.5% 被 L0_static_extension/static_only 占据）",
+  "l1_by_month": {
+    "2020-05": 9,
+    "2020-06": 35,
+    "2020-07": 35,
+    "2020-08": 7,
+    "2020-11": 69
+  },
+  "l1_by_field_mode": {
+    "current_only": 1,
+    "measured_pilot": 154
+  },
+  "l1_by_station_top": {
+    "2-39-81-4550": 23,
+    "2-39-139-28": 22,
+    "2-39-125-21": 14,
+    "2-39-131-30": 13,
+    "2-39-78-365": 10,
+    "2-39-138-29": 7,
+    "2-39-79-379": 7,
+    "2-39-79-380": 7,
+    "2-39-130-31": 7,
+    "2-39-89-25": 7
+  },
+  "interpretation_note": "10,528 temporal-test main = 155 L1_strict_matched + 10,373 L0_static_extension(static_only)。收缩主因是 strict-match 要求（API×static matched），不是后期运营域变化本身——但 155 全落在 2020 下半年且 154 measured_pilot + 1 current_only，是真实后期 matched 域。需 A2 判断 E1/E3 失败是否落在 155 内的更窄子集。"
+}

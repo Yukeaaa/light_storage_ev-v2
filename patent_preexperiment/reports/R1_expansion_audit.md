@@ -37,9 +37,32 @@ final:   最终 R1 Gate Review → A / B / C
 station × retained/dropped / temporal-test → strict-L1 retention rate（每月）/
 155 sessions 月份站点组成 / E1 core-eligible / E3 valid-cycle-eligible 在 155 上再损失多少。
 
-### A1 结果（TBD）
+### A1 结果
 
-TBD
+**Caltech temporal-test main 10,528 → L1_strict_matched test 155（retention 1.47%）。**
+
+收缩主因是 **strict-match 要求**（API×static matched），不是后期运营域变化本身：
+10,528 = 155 L1_strict_matched + 10,373 L0_static_extension(static_only)。
+
+155 sessions 组成：
+| 月份 | n | field_mode |
+|---|---|---|
+| 2020-05 | 9 | measured_pilot |
+| 2020-06 | 35 | measured_pilot |
+| 2020-07 | 35 | measured_pilot |
+| 2020-08 | 7 | measured_pilot |
+| 2020-11 | 69 | measured_pilot(68) + current_only(1) |
+
+- 154 measured_pilot + 1 current_only；全落在 2020 下半年。
+- top stations：2-39-81-4550(23) / 2-39-139-28(22) / 2-39-125-21(14) / 2-39-131-30(13)。
+- E1 core-eligible 在 155 上再收缩到 40 会话（E1 frozen summary：core 母体 40）；
+  E3 valid-cycle-eligible 在 155 上得 63 opp cycles（A2）。
+
+**解读**：155 是真实后期 matched 域，但母体极小（1.47% retention）；E1/E3 失败的"样本小"
+背景是 strict-match 选择效应 + 后期时间窗口共同作用。这不是"数据被不当删除"，
+而是 strict matched 会话在后期本身就稀疏。A2 需判断失败是否落在 155 内的更窄子集。
+
+输出文件：`results/raw/E3F_expansion/a1_*.csv` + `a1_population_bridge.json`
 
 ---
 
@@ -50,9 +73,46 @@ TBD
 **切片**：month / station / day / field_mode / concurrency_bucket / connected_elapsed_bucket
 （只切片已冻结结果，不重跑、不调参、不改事件/candidate 定义）
 
-### A2 结果（TBD）
+### A2 结果
 
-TBD
+**E1 与 E3 在 test 域失败的原因不同，时段不重合。**
+
+#### E1 核心 11 事件
+
+| 月份 | n_events | gap_energy_kwh |
+|---|---|---|
+| 2020-06 | 11 | 3.224 |
+
+- **100% 集中在 2020-06**，10/11 在单桩 `2-39-79-382`，1/11 在 `2-39-89-25`。
+- 这是 pilot-actual response difference 的极端单月单桩集中。
+
+#### E3 Caltech test opp（A2 主基线）
+
+| 月份 | n_opp_cycles | opp_energy_kwh | energy_share |
+|---|---|---|---|
+| 2020-05 | 3 | 0.320 | 2.5% |
+| 2020-06 | 8 | 0.686 | 5.3% |
+| 2020-07 | 13 | 1.440 | 11.1% |
+| 2020-08 | 3 | 0.199 | 1.5% |
+| **2020-11** | **36** | **10.268** | **79.5%** |
+
+- opp energy **79.5% 集中在 2020-11**（36 周期 / 10.27 kWh）。
+- 但 M2 daily energy share median = 0.0：63 opp cycles 分布在多个 day，多数 day 的
+  candidate energy 仍为 0 或极小，中位数为 0（evaluable-day K1 exact 口径真实零）。
+
+#### E1/E3 重叠
+
+- E1 核心月份 = {2020-06}；E3 opp 月份 = {2020-05,06,07,08,11}；shared = {2020-06}。
+- **但 E1 gap energy 100% 在 2020-06，E3 opp energy 仅 5.3% 在 2020-06**——两者主峰不重合。
+- E1 是 pilot-actual response 在 2020-06 单桩（2-39-79-382）；
+  E3 是 A2 历史基线在 2020-11 仍残留预算差值但日中位 energy share=0。
+
+**解读**：E1 和 E3 两项独立失败发生在同一 155-会话 test 域的**不同时段**，
+共同背景是 L1 strict matched test 母体极小（155）。这强烈支持"support-domain 限制"
+而非"broad 机制不存在"——但也表明 155 域内机会/response 都高度时域集中，
+不适合支撑广义主动预算修正。A3-A5 需进一步判断这种集中是否可由在线可观测变量预测。
+
+输出文件：`results/raw/E3F_expansion/a2_*.csv` + `a2_overlap.json`
 
 ---
 

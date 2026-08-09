@@ -1,0 +1,13 @@
+month,match_status,n
+2020-05,matched,9
+2020-05,static_only,470
+2020-06,matched,35
+2020-06,static_only,894
+2020-07,matched,35
+2020-07,static_only,1274
+2020-08,matched,7
+2020-08,static_only,1433
+2020-09,static_only,2198
+2020-10,static_only,2014
+2020-11,matched,69
+2020-11,static_only,2090
