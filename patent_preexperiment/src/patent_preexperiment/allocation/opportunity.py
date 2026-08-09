@@ -200,12 +200,25 @@ def available_mask(cand: pd.DataFrame, pool: str, prox_list: list[str]) -> pd.Se
 
 
 def build_cycle_table(df: pd.DataFrame) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """分钟表 → (池×周期 候选窗口表, 会话×周期 预算代理表)。无 eligible 限制（默认全集）。"""
+    """分钟表 → (池×周期 候选窗口表, 会话×周期 预算代理表)。无 eligible 限制（默认全集）。
+
+    池×周期 meta 只携带 cycle 的纯函数字段（month/day）——month_conn 是会话级属性，
+    同一池×周期桶内不同会话可能不同连接月（跨月桶/异月会话），合入候选表必然 fan-out
+    （审查结论28：month_conn meta merge fan-out 债务根因）。候选表因此 [site,garage,cycle]
+    唯一，任何重复即 STOP。
+    """
     cyc = build_cycles(df)
     pool = compute_pool_stats(cyc)
     prox = compute_proxies(cyc, pool)
     cyc_level = candidate_windows(prox)
     cyc_level["pool"] = cyc_level["site"] + "." + cyc_level["garage"]
-    meta = prox[["site", "garage", "cycle", "month", "month_conn"]].drop_duplicates()
+    meta = prox[["site", "garage", "cycle", "month", "day"]].drop_duplicates()
+    if len(meta):
+        assert not meta.duplicated(subset=["site", "garage", "cycle"]).any(), (
+            "meta fan-out：month/day 是 cycle 纯函数，[site,garage,cycle] 必须唯一"
+        )
     cyc_level = cyc_level.merge(meta, on=["site", "garage", "cycle"], how="left")
+    assert not cyc_level.duplicated(subset=["site", "garage", "cycle"]).any(), (
+        "candidate table fan-out：month_conn 等会话级属性不得合入池×周期候选表"
+    )
     return cyc_level, prox

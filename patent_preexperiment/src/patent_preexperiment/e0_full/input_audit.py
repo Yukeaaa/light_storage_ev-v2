@@ -1413,11 +1413,14 @@ def current_only_sensitivity(
 
 
 # 审查结论12 冻结 E3-Lite JPL current-only 池复现基线（来自 e3_lite_summary.json / E3_Lite_gate.md）
+# 审查结论28 修正：month_conn meta merge fan-out 修根因后，n_cycles 由 36,736（含 53 重复）
+# 修正为 36,683（唯一），A2/日率/CI 相应更新；历史值 36,736/0.392612/0.362369/[0.329958,0.395799]
+# 保留为 before 参考（results/raw/E3R/month_conn_fanout_fix.json）。
 _FROZEN_JPL_CURRENT_ONLY = {
-    "n_cycles": 36736,
-    "a2_cycle_weighted_rate": 0.39261215156794427,
-    "a2_day_rate": 0.3623694692507855,
-    "a2_day_rate_ci95": [0.32995762618758384, 0.395798678130819],
+    "n_cycles": 36683,
+    "a2_cycle_weighted_rate": 0.39249788730474605,
+    "a2_day_rate": 0.3624651753223283,
+    "a2_day_rate_ci95": [0.3301476253270257, 0.3958943842023618],
     "daily_energy_share_median": 0.038928678037374986,
     "gate": "PASS",
 }
@@ -1432,10 +1435,14 @@ def _run_jpl_current_only_e3(
     """完整 JPL current-only 分钟母体 → 冻结 E3-Lite 管线（A2_prev_actual 主基线）。
 
     直接复用 E3-Lite 同一组函数（build_cycles→compute_pool_stats→compute_proxies
-    →eligible_mask→candidate_windows），月过滤按冻结 cycle_month，meta 含 month_conn
-    防止 merge fan-out。能量分母按 timestamp month ∈ frozen_months（与 e3_lite.run 同口径）。
+    →eligible_mask→candidate_windows），月过滤按冻结 cycle_month，能量分母按
+    timestamp month ∈ frozen_months（与 e3_lite.run 同口径）。
+
+    审查结论28（month_conn fan-out 根因修复）：meta 只合并 cycle 纯函数字段
+    [site,garage,cycle,day,month]——month_conn 是会话级属性，合入池×周期候选表会
+    fan-out（历史 53 重复周期）。修复后候选表 [site,garage,cycle] 唯一。
     """
-    prox_m_meta = ["site", "garage", "cycle", "day", "month", "month_conn"]
+    prox_m_meta = ["site", "garage", "cycle", "day", "month"]
     cyc = build_cycles(minute_df)
     pool = compute_pool_stats(cyc)
     prox = compute_proxies(cyc, pool)
@@ -1443,8 +1450,16 @@ def _run_jpl_current_only_e3(
     elig = eligible_mask(prox_m, list(_CURRENT_ONLY_PROXIES))
     cand = candidate_windows(prox_m[elig])
     meta = prox_m[prox_m_meta].drop_duplicates()
+    if len(meta):
+        assert not meta.duplicated(subset=["site", "garage", "cycle"]).any()
     if len(cand):
         cand = cand.merge(meta, on=["site", "garage", "cycle"], how="left")
+        assert not cand.duplicated(subset=["site", "garage", "cycle"]).any(), (
+            "candidate table fan-out：禁止 month_conn 等会话级属性合入池×周期候选表"
+        )
+    n_dup_cycles = (
+        int(cand.duplicated(subset=["site", "garage", "cycle"]).sum()) if len(cand) else 0
+    )
     ci = _day_rate_ci(cand, _CURRENT_ONLY_MAIN, seed, n_boot)
     ev = minute_df.copy()
     ev = ev[ev["timestamp_utc"].astype(str).str[:7].isin(frozen_months)]
@@ -1456,6 +1471,10 @@ def _run_jpl_current_only_e3(
     ).fillna(0.0)
     return {
         "n_cycles": int(len(cand)),
+        "n_unique_cycles": int(cand.drop_duplicates(subset=["site", "garage", "cycle"]).shape[0])
+        if len(cand)
+        else 0,
+        "n_dup_cycles": n_dup_cycles,
         "n_days": int(cand["day"].nunique()) if len(cand) else 0,
         "n_pool_months": int(cand["month"].nunique()) if len(cand) else 0,
         "a2_cycle_weighted_rate": float(cand[f"candidate_{_CURRENT_ONLY_MAIN}"].mean())
@@ -1530,9 +1549,10 @@ def current_only_full_pool_sensitivity(
 
     以冻结 K1 的完整 JPL current-only 分钟母体（lite_session_minute.parquet JPL 部分，
     即 E3-Lite 正式池构造用的同一母体）为基准。Keep 臂原样跑冻结 E3-Lite 管线，必须先
-    复现历史冻结值（n_cycles=36736、A2≈39.3%、日率≈36.2%、CI≈[33.0,39.6]、能量占比≈3.9%、
-    gate=PASS）；复现失败立即 STOP。Collapse 臂只替换真正属于冻结母体且含 exact-duplicate
-    的会话分钟，其余数千会话逐字节与 Keep 一致，再跑同一完整池管线。比较两臂 gate verdict。
+    复现修正后冻结基线（审查结论28 修根因后：n_cycles=36683、A2≈39.25%、日率≈36.25%、
+    CI≈[33.01,39.59]、能量占比≈3.89%、gate=PASS）；复现失败立即 STOP。Collapse 臂只替换
+    真正属于冻结母体且含 exact-duplicate 的会话分钟，其余数千会话逐字节与 Keep 一致，
+    再跑同一完整池管线。比较两臂 gate verdict。
 
     不得用 54-file 子池代替完整冻结池；eligibility 以冻结 K1 sample 母体成员身份为准，
     窗口（jpl_current_only_window）只作定位辅助。只读输入，永不修改原始文件。

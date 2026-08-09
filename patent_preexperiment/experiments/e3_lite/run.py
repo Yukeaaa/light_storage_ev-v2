@@ -66,11 +66,20 @@ def _pool_prox(df: pd.DataFrame, months: set[str]) -> pd.DataFrame:
 
 
 def _pool_cand(prox: pd.DataFrame, pool: str, prox_list: list[str]) -> pd.DataFrame:
-    """精确配对：eligible_mask 会话×周期 交集 → 池×周期 候选窗口表。"""
+    """精确配对：eligible_mask 会话×周期 交集 → 池×周期 候选窗口表。
+
+    meta 只带 cycle 纯函数字段（month/day），不合并 month_conn（会话级属性，跨月桶/异月
+    会话会导致池×周期表 fan-out，审查结论28 债务根因）；候选表 [site,garage,cycle] 唯一。
+    """
     eligible = eligible_mask(prox, prox_list)
     cand = candidate_windows(prox[eligible])
-    meta = prox[["site", "garage", "cycle", "day", "month", "month_conn"]].drop_duplicates()
+    meta = prox[["site", "garage", "cycle", "day", "month"]].drop_duplicates()
+    if len(meta):
+        assert not meta.duplicated(subset=["site", "garage", "cycle"]).any()
     cand = cand.merge(meta, on=["site", "garage", "cycle"], how="left")
+    assert not cand.duplicated(subset=["site", "garage", "cycle"]).any(), (
+        "candidate table fan-out：禁止 month_conn 等会话级属性合入池×周期候选表"
+    )
     cand["pool"] = pool
     return cand
 

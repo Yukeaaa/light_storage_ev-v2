@@ -19,6 +19,7 @@ import pandas as pd
 import pytest
 
 from patent_preexperiment.allocation.opportunity import (
+    build_cycle_table,
     build_cycles,
     compute_pool_stats,
     compute_proxies,
@@ -333,6 +334,38 @@ def test_done_anchored_energy_split() -> None:
 
 
 # ---------- K1.2.2（审查结论4） ----------
+
+
+def test_pool_cycle_table_no_fanout_across_month_boundary() -> None:
+    """审查结论28：跨月连接会话共享 cycle 桶不得使池×周期候选表 fan-out。
+
+    会话 B 连接于 2018-09-30 23:55（month_conn=2018-09），会话 A 连接于
+    2018-10-01 00:00（month_conn=2018-10），两者共享 cycle=2018-10-01 00:00 桶。
+    若把 month_conn（会话级属性）合入池×周期候选表，该桶会产生 2 行重复
+    （历史 53 重复周期根因）。build_cycle_table 修复后只带 cycle 纯函数字段
+    （month/day），[site,garage,cycle] 必须唯一且不得含 month_conn 列。
+    """
+    a = _minutes("A", "2018-10-01 00:00", [3.0] * 15, pilot=[6.0] * 15)
+    b = _minutes("B", "2018-09-30 23:55", [2.0] * 20, pilot=[4.0] * 20)
+    df = pd.concat([a, b], ignore_index=True)
+
+    cyc_level, prox = build_cycle_table(df)
+
+    shared = pd.Timestamp("2018-10-01 00:00")
+    shared_meta = prox[prox["cycle"] == shared]
+    assert shared_meta["session_id"].nunique() == 2, "前置：两会话共享同一 cycle 桶"
+    assert shared_meta["month_conn"].nunique() == 2, "前置：两会话连接月不同"
+
+    bad_meta = shared_meta[["site", "garage", "cycle", "month_conn"]].drop_duplicates()
+    assert bad_meta.duplicated(subset=["site", "garage", "cycle"]).any(), (
+        "前置失效：month_conn 合并必须产生 fan-out 才算触发根因场景"
+    )
+
+    assert not cyc_level.duplicated(subset=["site", "garage", "cycle"]).any(), (
+        "candidate table fan-out：池×周期表 [site,garage,cycle] 必须唯一"
+    )
+    assert "month_conn" not in cyc_level.columns, "month_conn 是会话级属性，不得进候选表"
+    assert cyc_level["cycle"].nunique() == len(cyc_level)
 
 
 def _core_hot_session(sess: str, start: str, hours: int) -> pd.DataFrame:
