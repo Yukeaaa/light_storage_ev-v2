@@ -1,7 +1,7 @@
 # R1 E1 门报告：K1 全量硬切分复现——问题强度（E1）停止线判定
 
 实验编号：E0F-06 / R1（E1 部分；E3 部分另行报告）
-日期：2026-08-09（审查结论26 复核修订）
+日期：2026-08-09（审查结论26/27 复核修订）
 协议：`review/审查结论7.md` §10.1（冻结主复现）+ §11（失败止损，情况二）
 预注册：`configs/k1_preregister.yaml`（K1_preregister_v1 + k1_1/1_2/1_2_2 corrections）、`configs/e0_full.yaml`（seeds + 停止线）
 门判定：**train = PASS、validation = PASS、test = FORMAL FAIL（2/5 停止线未过）→ 情况二触发 → 新门评审 = Conditional Continue within R1 only**
@@ -80,12 +80,14 @@ train/val 的 diff 点估计与 CI 均与 E1-Lite 冻结值（+4.64pp，[3.52, 5
 
 | 冻结值 | K1（E1_Lite_gate.md §4/§5 / e1_lite_summary.json） | R1 复现（e1_stats） | 差异 |
 |---|---|---|---|
+| 合格会话数 | 5,961 | 5,961 | 0 |
+| session_id 集合 identity hash | `29517fcc…349d` | 同左（逐会话比对） | 0 |
 | core_denom | 2,941 | 2,941 | 0 |
-| 核心事件会话率 | 11.8667% | 0.11866712002720163 | 0 |
+| 核心事件会话率 | 11.8667% | 11.866712% | 0 |
 | 中位功率差 | 1.2794 kW | 1.2794 kW | 0 |
-| 置换 CI（pp） | [3.5249, 5.7577] | [0.03524878, 0.05757679] | 0 |
+| 置换 CI（pp） | [3.5249, 5.7577] | [3.524878, 5.757679] | 0 |
 
-→ R1 统计实现与 K1 同源、逐位一致；train/val/test 的差异完全来自宇宙与切分定义，实现无漂移。机器门确保任何人修改 `e1_stats.py` 立即炸测试（对 K1 冻结数值逐位比对，ATOL=1e-6，且锁定冻结样本合格会话数=5,961）。
+→ R1 统计实现与 K1 同源、逐位一致；train/val/test 的差异完全来自宇宙与切分定义，实现无漂移。机器门确保任何人修改 `e1_stats.py` 立即炸测试（对 K1 冻结数值逐位比对，ATOL=1e-6；另锁冻结样本合格会话数=5,961 及 `sha256("\n".join(sorted(session_id)))` identity hash=`29517fcc615aa0b6bc718ebaa13dfd799f41de862e1cbc24a3a5b3cb490f349d`，数对但集合换人也失败）。单位统一为百分比 / pp，逐位精度见冻结 JSON。
 
 ## 5. 停止线判定汇总（§10.1 E1 停止线）
 
@@ -143,12 +145,13 @@ test 的"证据面不足"说明（供评审参考，**非豁免理由**，不作
 
 - 摘要：`results/raw/E1F/e1_full_summary.json`（per_split 全字段、negative_controls、seeds、stop_lines、r1_verdict_on_test、provenance）
 - **溯源（审查结论26 P1）**：`results/raw/E1F/e1_full_provenance.json` —— `evidence_commit=44fa88c`、`formal_test_exposure=44fa88c`、`runtime_code_clean=not independently provable from Git history`（44fa88c 代码与 evidence 同次提交，Git 历史无法独立证明 test 暴露前实现已冻结；阈值/人口/seeds/K1 fidelity 均已冻结且 test 为负面结果，故不因此作废）。**未倒填**为 "formal run code_sha=44fa88c clean"。`e1_full_summary.json` 中 provenance 字段记录的是治理修复后的运行时状态，非 44fa88c 原始运行。
-- **fidelity machine check（审查结论26 P1）**：`experiments/e1_full/fidelity_check.py` + `tests/test_e1_full_fidelity.py` 锁定 `results/raw/E1F/R1_E1_fidelity.json`（core_denom=2,941、rate=0.118667、median=1.2794、置换 CI=[3.5249, 5.7577]pp，全部逐位一致；另锁定冻结样本合格会话=5,961）。任何 `e1_stats.py` 改动跑测试即炸。
+- **fidelity machine check（审查结论26/27 P1）**：`experiments/e1_full/fidelity_check.py` + `tests/test_e1_full_fidelity.py` 锁定 `results/raw/E1F/R1_E1_fidelity.json`（core_denom=2,941、rate=11.866712%、median=1.2794 kW、置换 CI=[3.524878, 5.757679]pp 全部逐位一致；另锁冻结样本合格会话=5,961 与 session_id identity hash=`29517fcc…349d`）。任何 `e1_stats.py` 改动跑测试即炸。
 - 明细：`results/raw/E1F/{train,validation,test}_event_table.parquet`、`{split}_fail_cases.csv`、`{split}_month_summary.csv`、`{split}_phase_summary.csv`、`{split}_session_summary.csv`
-- 代码：`src/patent_preexperiment/e1_full/loader.py`、`src/patent_preexperiment/e1_full/gate.py`（正式门退出码 + 溯源）、`experiments/e1_full/run.py`、`src/patent_preexperiment/response/e1_stats.py`（共享冻结统计）
+- 代码：`src/patent_preexperiment/e1_full/loader.py`、`src/patent_preexperiment/e1_full/gate.py`（正式门退出码 + 溯源 + 重跑锁）、`experiments/e1_full/run.py`、`src/patent_preexperiment/response/e1_stats.py`（共享冻结统计）
 - **正式门退出码（审查结论26 P0）**：`formal_exit_code(summary)` 读 `r1_verdict_on_test.verdict`，PASS → 0、FAIL → 1；合成 summary 单测覆盖 PASS/FAIL/缺字段。**不再**用 `bool(summary)` 恒真导致的 "FAIL 也返回 0"。`e1_full_summary.json`（44fa88c 冻结版）不含此字段，不重跑正式 test。
-- 复现（**不重跑正式 test**）：`..\venv\Scripts\python.exe experiments/e1_full/run.py` 会重写 `e1_full_summary.json` 并输出 provenance；44fa88c 的正式 evidence 保持冻结，只在未来按治理顺序的 evidence-only commit 时更新。原 44fa88c 运行 SHA256 `80D863BF14E62013BC570132B2A2D1D9FAC54B3C530B38A00F3ABBF4A9886CF2`。
-- 测试：`tests/test_e1_full_loader.py`（10）、`tests/test_e1_full_runner_gate.py`（6）、`tests/test_e1_full_fidelity.py`（2，锁 K1 冻结值）；全仓 211+18 = 229 passed（本地记录，非 GitHub Actions 独立证明）。
+- **正式 test 重跑锁（审查结论27 P0）**：`assert_formal_test_not_exposed(provenance_path)` 在 `run_e1_full()` 第一行执行；`results/raw/E1F/e1_full_provenance.json` 含 `formal_test_exposure=44fa88c`，任何 `run.py` 调用（含 `python experiments/e1_full/run.py`）立即 RuntimeError，**不产生任何输出**，冻结结论不可覆盖。只读确认当前 gate 状态用 `python experiments/e1_full/run.py --read-frozen`（读冻结 summary 返回退出码，不重算不写盘）。
+- 复现（**不重跑正式 test**）：E1 正式结果永久冻结于 44fa88c；原 44fa88c 运行 SHA256 `80D863BF14E62013BC570132B2A2D1D9FAC54B3C530B38A00F3ABBF4A9886CF2`。E3 起按治理顺序（code-only commit → clean → test → evidence-only commit）在独立输出目录执行，不再触碰 E1F 目录。
+- 测试：`tests/test_e1_full_loader.py`（10）、`tests/test_e1_full_runner_gate.py`（13 函数 / 17 用例，含重跑锁与 read-frozen）、`tests/test_e1_full_fidelity.py`（2，锁 K1 冻结值 + identity hash）；全仓 **230 passed**（本地记录，非 GitHub Actions 独立证明）。
 
 ## 8. 局限、已登记技术债与治理记录
 
@@ -156,3 +159,4 @@ test 的"证据面不足"说明（供评审参考，**非豁免理由**，不作
 - `month_conn` fan-out P1 技术债已登记（`reports/E0F_raw_duplicate_gate_amendment.md:56-59`），**须在 E3 冻结主复现前修复**，并在 R1 E3 报告中同时报 K1-E3 修复前后数值（n_cycles 36,736 / unique 36,683 / duplicate 53 / A2 rate 39.261215% / daily energy share 3.892868% 为历史冻结值）。
 - 2021 全年与低覆盖/异常月份（2019-12、2020-02、2020-04、2020-12）只作 stress/敏感性，未进入主切分（已校验 main universe 不含异常月份）。
 - **治理记录**：本报告已按审查结论26 修订——删除"随机抽样特征""不是机制缺失"过强措辞；结论定版为 Formal FAIL / 情况二 / Conditional Continue within R1；E1-Full/E2/E4 保持 NOT APPROVED；E3 只能补全信息面不能救 E1。
+- **治理记录（审查结论27 收口）**：① 加正式 test 重跑锁（P0）——`run.py` 第一行 `assert_formal_test_not_exposed`，`e1_full_provenance.json` 含 exposure 即硬拒，任何输出都不产生；② pre-run/post-run provenance 拆分（P1）——E3 起 code-only commit 后先记录 `pre_run.code_sha`+`worktree_clean`，test 后另记 `post_run` 并 runner 自封存，E1 冻结版不重写；③ fidelity 加 `n_main_sessions=5,961` 与 `session_id_set_sha256=29517fcc…349d` identity hash（P1）——数对但集合换人也炸门；④ §4 单位统一为百分比/pp（P2，纯文本，不重跑 E1）。**未重跑 E1 正式 test；未改动 44fa88c 冻结 evidence。**

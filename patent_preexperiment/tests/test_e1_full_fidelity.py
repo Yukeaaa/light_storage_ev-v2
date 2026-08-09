@@ -1,8 +1,9 @@
-"""R1 E1 fidelity 机器门（审查结论26 P1）：锁定 e1_stats 对 K1 冻结样本的复现。
+"""R1 E1 fidelity 机器门（审查结论26/27 P1）：锁定 e1_stats 对 K1 冻结样本的复现。
 
 任何人修改 src/patent_preexperiment/response/e1_stats.py 后运行本测试，
 若 K1 冻结数值（core_denom 2941 / rate 0.118667 / median 1.2794 /
 置换 CI [0.035249, 0.057577]）漂移则测试失败。
+另锁 session_id 集合 identity hash（审查结论27 P1）：数对但集合不对也失败。
 
 依赖 datasets/lite_session_minute.parquet（仓库外，gitignored）；缺失则跳过，
 与本仓库其他真实数据审计测试口径一致。绝不触碰 E1 test 数据。
@@ -10,6 +11,7 @@
 
 from __future__ import annotations
 
+import hashlib
 from pathlib import Path
 
 import pandas as pd
@@ -28,6 +30,8 @@ BOOT_SEED = 42
 N_BOOT = 2000
 
 FROZEN = {
+    "n_main_sessions": 5961,
+    "session_id_set_sha256": "29517fcc615aa0b6bc718ebaa13dfd799f41de862e1cbc24a3a5b3cb490f349d",
     "denominator_sessions_with_core_run": 2941,
     "event_session_rate": 0.11866712002720163,
     "median_gap_kw": 1.2793999999999999,
@@ -47,6 +51,11 @@ def _frozen_main() -> pd.DataFrame:
     return df[df["session_id"].isin(pilot_sess)].copy()
 
 
+def _session_id_set_sha256(df: pd.DataFrame) -> str:
+    ids = sorted(df["session_id"].unique().astype(str))
+    return hashlib.sha256("\n".join(ids).encode()).hexdigest()
+
+
 def _actual() -> dict:
     cfg = load_yaml(K1_CFG_YAML)
     thr = GapThresholds.from_cfg(cfg)
@@ -60,6 +69,8 @@ def _actual() -> dict:
     )
     perm = neg["time_permutation_core"]
     return {
+        "n_main_sessions": int(labeled["session_id"].nunique()),
+        "session_id_set_sha256": _session_id_set_sha256(labeled),
         "denominator_sessions_with_core_run": core["denominator_sessions_with_core_run"],
         "event_session_rate": core["event_session_rate"],
         "median_gap_kw": core["median_gap_kw"],
@@ -75,10 +86,15 @@ def test_e1_stats_fidelity_to_frozen_k1() -> None:
     """e1_stats 必须逐位复现 K1 冻结样本（审查结论4 K1.2.2 最终版）。"""
     actual = _actual()
     for key, frozen_val in FROZEN.items():
-        assert abs(actual[key] - frozen_val) <= ATOL, (
-            f"e1_stats 漂移：{key} frozen={frozen_val!r} actual={actual[key]!r} "
-            f"（差 {abs(actual[key] - frozen_val):.2e}）"
-        )
+        if isinstance(frozen_val, str):
+            assert actual[key] == frozen_val, (
+                f"e1_stats 漂移：{key} frozen={frozen_val!r} actual={actual[key]!r}"
+            )
+        else:
+            assert abs(actual[key] - frozen_val) <= ATOL, (
+                f"e1_stats 漂移：{key} frozen={frozen_val!r} actual={actual[key]!r} "
+                f"（差 {abs(actual[key] - frozen_val):.2e}）"
+            )
 
 
 @pytest.mark.skipif(

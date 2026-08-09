@@ -20,7 +20,12 @@ from pathlib import Path
 import pandas as pd
 
 from patent_preexperiment.config.yamlutil import load_yaml
-from patent_preexperiment.e1_full.gate import formal_exit_code, git_provenance
+from patent_preexperiment.e1_full.gate import (
+    assert_formal_test_not_exposed,
+    formal_exit_code,
+    frozen_gate_exit_code,
+    git_provenance,
+)
 from patent_preexperiment.e1_full.loader import load_main_evidence_minutes, split_df
 from patent_preexperiment.response.done import PHASE_CORE
 from patent_preexperiment.response.e1_stats import (
@@ -40,6 +45,7 @@ REGISTRY = IMPL / "data_registry" / "e0_full_split_registry.parquet"
 E0_CFG = load_yaml(IMPL / "configs" / "e0_full.yaml")
 K1_CFG = load_yaml(IMPL / "configs" / "k1_preregister.yaml")
 OUT = IMPL / "results" / "raw" / "E1F"
+PROVENANCE = OUT / "e1_full_provenance.json"
 SEEDS = E0_CFG["seeds"]
 PERM_SEEDS: list[int] = SEEDS["permutation"]
 BOOT_SEED: int = SEEDS["bootstrap"]
@@ -126,7 +132,9 @@ def _per_split(
     }
 
 
-def run_e1_full() -> dict:
+def run_e1_full(provenance_path: Path = PROVENANCE) -> dict:
+    assert_formal_test_not_exposed(provenance_path)
+    pre_run = git_provenance(REPO)
     thr = GapThresholds.from_cfg(K1_CFG)
     OUT.mkdir(parents=True, exist_ok=True)
 
@@ -153,7 +161,8 @@ def run_e1_full() -> dict:
         "seeds": {"bootstrap": BOOT_SEED, "n_boot": N_BOOT, "permutation": PERM_SEEDS},
         "stop_lines": STOP,
         "provenance": {
-            **git_provenance(REPO),
+            "pre_run": pre_run,
+            "post_run": None,
             "formal_test_exposure": "test split 只正式运行一次（E0F-02 冻结 test，禁止回看调参）",
             "evidence_note": (
                 "审查结论26：44fa88c 代码与正式 evidence 同次提交，runtime_code_clean "
@@ -179,9 +188,25 @@ def run_e1_full() -> dict:
     (OUT / "e1_full_summary.json").write_text(
         json.dumps(summary, ensure_ascii=False, indent=2), encoding="utf-8"
     )
+    post_run = git_provenance(REPO)
+    summary["provenance"]["post_run"] = post_run
+    seal = {
+        "experiment_id": "E1_Full_R1_replication",
+        "record_type": "formal_exposure",
+        "formal_test_exposure": pre_run["code_sha"],
+        "pre_run": pre_run,
+        "post_run": post_run,
+        "note": (
+            "runner 自封存：正式 test 已执行一次，此后 assert_formal_test_not_exposed "
+            "将拒绝任何重跑；test 冻结结论以本文件与 e1_full_summary.json 为准。"
+        ),
+    }
+    PROVENANCE.write_text(json.dumps(seal, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(summary, ensure_ascii=False, indent=2))
     return summary
 
 
 if __name__ == "__main__":
+    if "--read-frozen" in sys.argv:
+        sys.exit(frozen_gate_exit_code(OUT / "e1_full_summary.json"))
     sys.exit(formal_exit_code(run_e1_full()))
