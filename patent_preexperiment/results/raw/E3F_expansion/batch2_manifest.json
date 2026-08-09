@@ -1,8 +1,8 @@
 {
-  "batch": "batch_2",
+  "batch": "batch_2_1",
   "preregister": "configs\\r1_expansion_audit.yaml",
   "preregister_sha256": "c6329d06ec49c0bf6c9307151d60eadaa56fdde1ca4e846ceb15bddbf5f401b9",
-  "analysis_code_sha": "c9aeddc646e4277e15ced20fe872ffc724ff71c1",
+  "analysis_code_sha": "0d1a65a44d0e126d957503eeca0933b06a1fdae0",
   "worktree_clean": true,
   "inputs": {
     "split_registry": {
@@ -81,8 +81,12 @@
     }
   },
   "outputs": {
+    "results\\raw\\E3F_expansion\\a3_baseline_pressure.csv": {
+      "sha256": "a9f32f4e4d664ac1b70c67c4cc4254daa7d1915313a14a2aa6871aedf5b914b0",
+      "rows": 6
+    },
     "results\\raw\\E3F_expansion\\a3_caltech_test_by_month.csv": {
-      "sha256": "13a6c63bfa95e1a5d4f6f6bc0b5498ec7f0c696c21568236205bb78b675f1b62",
+      "sha256": "88c6d8dd31e73a56bd121bc86806291c0ee7ec13efc525e5fd72bcfe6eb9f07e",
       "rows": 6
     },
     "results\\raw\\E3F_expansion\\a3_caltech_test_station_exposure.csv": {
@@ -90,7 +94,7 @@
       "rows": 26
     },
     "results\\raw\\E3F_expansion\\a3_caltech_train_by_month.csv": {
-      "sha256": "e74f346e32e4341267b3413a49acaad6eb4a65080f5f70925d872cb7291c0090",
+      "sha256": "f3ee5a99187453867bf5e52a24f4fb762fb4a8a0f9b96ab28edf5f02cf40bfdf",
       "rows": 10
     },
     "results\\raw\\E3F_expansion\\a3_caltech_train_station_exposure.csv": {
@@ -98,7 +102,7 @@
       "rows": 54
     },
     "results\\raw\\E3F_expansion\\a3_caltech_validation_by_month.csv": {
-      "sha256": "6856c552a966e7557ad2a0c6b47af3048a3aa04632dc13607d8aa8028cb5361b",
+      "sha256": "49ebb0c921889a300d258e7bbb42c8c857f118c8696dd10e1ef20487186e30ef",
       "rows": 10
     },
     "results\\raw\\E3F_expansion\\a3_caltech_validation_station_exposure.csv": {
@@ -106,478 +110,373 @@
       "rows": 52
     },
     "results\\raw\\E3F_expansion\\a3_jpl_test_by_month.csv": {
-      "sha256": "acc7fbeb8804d72ea2ecb24e710bb250a3848e962b9c374edec83cca374a449c",
+      "sha256": "99de681ea6beed93cf35f9580f5e4d7ee6d600bdc69ac5872d83427834af88cc",
       "rows": 5
     },
     "results\\raw\\E3F_expansion\\a3_jpl_train_by_month.csv": {
-      "sha256": "64e59beb3105caf14d3dc5f710d4475e80d1a99d8711ca9163ece52cf6349f7d",
+      "sha256": "b0da9279daeae08c501843d87f97b42ce8cfa97abbde175d9322ae4c7b1e9a6a",
       "rows": 10
     },
     "results\\raw\\E3F_expansion\\a3_jpl_validation_by_month.csv": {
-      "sha256": "ad5cb2b4a45b666709c2f2f1be35f4df607d381f70adfcf33ae95cdd5c3d5462",
+      "sha256": "6bceecfd19da8c179de978371288f839350b13bc051f116b930d86f05d973029",
       "rows": 5
     },
     "results\\raw\\E3F_expansion\\a4_caltech_test_bucket_comparison.csv": {
-      "sha256": "c5f266eeeaf65bdb3bd4b18901644b1459134a71d01c972a2523d9c4adb9aea1",
-      "rows": 4
+      "sha256": "31ba7c2602fd7de5455a362cce3493851e3236a848a90c379120f0a48e91086b",
+      "rows": 2
     },
     "results\\raw\\E3F_expansion\\a4_caltech_train_bucket_comparison.csv": {
-      "sha256": "f5e27dd8655579a601d98ebef5f13cd7e0d875a0879dd1a8eb3a945bc71920b8",
+      "sha256": "8d2629ed28f9ced92b41da0d0a927cfdccc76cce7110ce831506a982378111f1",
       "rows": 5
     },
     "results\\raw\\E3F_expansion\\a4_caltech_validation_bucket_comparison.csv": {
-      "sha256": "df7f5ffeeb3c568348d4d29fcaae1202730a0b0a8bc7e452db0e7d8f595deeab",
+      "sha256": "ec7883e8d59853a79a5b6a214a1a06e2011119d9e8b53645a34f962c39530408",
       "rows": 5
     },
+    "results\\raw\\E3F_expansion\\a4_cross_domain.csv": {
+      "sha256": "b9fa341c5650d17955ecafe32aa311603e960c6e7205cc304a844460831a8151",
+      "rows": 27
+    },
     "results\\raw\\E3F_expansion\\a4_jpl_test_bucket_comparison.csv": {
-      "sha256": "52da5b3985360ae9892fea6f4bafeeca1d2adfc79c9eee96a8e49ee79d23107b",
+      "sha256": "f44e9f92927152822074005a7446305e28e442489e8e81e88bbaee481a17d2e3",
       "rows": 5
     },
     "results\\raw\\E3F_expansion\\a4_jpl_train_bucket_comparison.csv": {
-      "sha256": "1fe42230d80934530252b620215dee13a7c5bb4ccc726c4100a816fbf79f15ed",
+      "sha256": "5078019e699474fb908e42348d090dee6cef226035b105fe10b215255dd90cc2",
       "rows": 5
     },
     "results\\raw\\E3F_expansion\\a4_jpl_validation_bucket_comparison.csv": {
-      "sha256": "c060069a9ab8b1aa26753f8b20cb48bed7d04ca93c8d8e6f22b126a5c4990d63",
+      "sha256": "8f4c0b7feebcdc98faeb6ce2d49fa4ca812668006bf5f2d19eae2a02cfe53ead",
       "rows": 5
     },
+    "results\\raw\\E3F_expansion\\a4_state_observables_caltech_test.csv": {
+      "sha256": "e6920f855c841fcd1d3b55c88dde87d2c18cb58fce2fc384042dae8770e93faa",
+      "rows": 5
+    },
+    "results\\raw\\E3F_expansion\\a4_state_observables_caltech_train.csv": {
+      "sha256": "78ee4e16f4dab95e0f7b1273fb61d8003d5c03f3c46e765bb784714599e79c8f",
+      "rows": 5
+    },
+    "results\\raw\\E3F_expansion\\a4_state_observables_caltech_validation.csv": {
+      "sha256": "eb740f58771055ef65a0e0ce7cbb23d1e5dd04209ff7b7cc7dab94b716cee228",
+      "rows": 5
+    },
+    "results\\raw\\E3F_expansion\\a4_state_observables_jpl_test.csv": {
+      "sha256": "187544269423d26943796fa507fbb4ad14e95aaaa29edd88b71998e7da80a3b4",
+      "rows": 4
+    },
+    "results\\raw\\E3F_expansion\\a4_state_observables_jpl_train.csv": {
+      "sha256": "09de37b4df74c7fc5fea1a9713a557527e3b973102bef50901f782705bbf2ff3",
+      "rows": 4
+    },
+    "results\\raw\\E3F_expansion\\a4_state_observables_jpl_validation.csv": {
+      "sha256": "41f441f3a67dc4ebfba12eb03edb09fb0c44e83d1b53d1f8d68ecd877f197075",
+      "rows": 4
+    },
     "results\\raw\\E3F_expansion\\a3_baseline_pressure.json": {
-      "sha256": "6c12ba7954e4936adf0df0bc1fa22f2f3ad7e0f7449a99b466794e68c7131802"
+      "sha256": "80463fbf5cd13ce265dac7c98d01c2a6616b8c8190cb7c7ddf2844a7c105b1c1"
     },
     "results\\raw\\E3F_expansion\\a4_cross_domain.json": {
-      "sha256": "7e8a5d140e6de9dcfb1407393215c4eb18f0edd4151e7ec9053b6d9d7be2479e"
+      "sha256": "1ec6b5e4da08c09943073e72016f62c482334c5a84097f4ca3dc1e0736944923"
     }
   },
   "a3_summary": {
     "module": "A3_baseline_pressure",
     "stop_line_unchanged": "max(A2,A3) elimination > 80% → STOP_COMPLEX_MODEL（不改）",
-    "by_pool_split": {
-      "caltech": {
-        "train": {
-          "n_valid_cycles": 79816,
-          "n_months": 10,
-          "rate_A0_avg": 0.460985,
-          "n_candidate_A0_avg": 36794,
-          "rate_A2_prev_actual": 0.211712,
-          "n_candidate_A2_prev_actual": 16898,
-          "rate_A3_rolling_quantile": 0.342726,
-          "n_candidate_A3_rolling_quantile": 27355,
-          "elimination_A2_prev_actual_vs_A0": 0.54074,
-          "elimination_A3_rolling_quantile_vs_A0": 0.256535,
-          "top_month_share_opp_energy": 0.151092,
-          "top_month": "2019-01"
-        },
-        "validation": {
-          "n_valid_cycles": 33003,
-          "n_months": 10,
-          "rate_A0_avg": 0.413053,
-          "n_candidate_A0_avg": 13632,
-          "rate_A2_prev_actual": 0.198679,
-          "n_candidate_A2_prev_actual": 6557,
-          "rate_A3_rolling_quantile": 0.323577,
-          "n_candidate_A3_rolling_quantile": 10679,
-          "elimination_A2_prev_actual_vs_A0": 0.518999,
-          "elimination_A3_rolling_quantile_vs_A0": 0.216621,
-          "top_month_share_opp_energy": 0.246872,
-          "top_month": "2019-10"
-        },
-        "test": {
-          "n_valid_cycles": 4920,
-          "n_months": 6,
-          "rate_A0_avg": 0.055691,
-          "n_candidate_A0_avg": 274,
-          "rate_A2_prev_actual": 0.012805,
-          "n_candidate_A2_prev_actual": 63,
-          "rate_A3_rolling_quantile": 0.020528,
-          "n_candidate_A3_rolling_quantile": 101,
-          "elimination_A2_prev_actual_vs_A0": 0.770071,
-          "elimination_A3_rolling_quantile_vs_A0": 0.631395,
-          "top_month_share_opp_energy": 0.795178,
-          "top_month": "2020-11"
-        }
+    "daily_share_fidelity": {
+      "caltech_train": {
+        "frozen": 0.041346,
+        "recomputed": 0.041346,
+        "pass": true,
+        "diff": 0.0
       },
-      "jpl": {
-        "train": {
-          "n_valid_cycles": 56429,
-          "n_months": 10,
-          "rate_A2_prev_actual": 0.393344,
-          "n_candidate_A2_prev_actual": 22196,
-          "rate_A3_rolling_quantile": 0.544011,
-          "n_candidate_A3_rolling_quantile": 30698,
-          "top_month_share_opp_energy": 0.131134,
-          "top_month": "2019-04"
-        },
-        "validation": {
-          "n_valid_cycles": 21340,
-          "n_months": 5,
-          "rate_A2_prev_actual": 0.360731,
-          "n_candidate_A2_prev_actual": 7698,
-          "rate_A3_rolling_quantile": 0.513308,
-          "n_candidate_A3_rolling_quantile": 10954,
-          "top_month_share_opp_energy": 0.317153,
-          "top_month": "2019-10"
-        },
-        "test": {
-          "n_valid_cycles": 12722,
-          "n_months": 5,
-          "rate_A2_prev_actual": 0.277629,
-          "n_candidate_A2_prev_actual": 3532,
-          "rate_A3_rolling_quantile": 0.460305,
-          "n_candidate_A3_rolling_quantile": 5856,
-          "top_month_share_opp_energy": 0.472174,
-          "top_month": "2020-01"
-        }
+      "caltech_validation": {
+        "frozen": 0.037781,
+        "recomputed": 0.037781,
+        "pass": true,
+        "diff": 0.0
+      },
+      "caltech_test": {
+        "frozen": 0.0,
+        "recomputed": 0.0,
+        "pass": true,
+        "diff": 0.0
+      },
+      "jpl_train": {
+        "frozen": 0.037816,
+        "recomputed": 0.037816,
+        "pass": true,
+        "diff": 0.0
+      },
+      "jpl_validation": {
+        "frozen": 0.037153,
+        "recomputed": 0.037153,
+        "pass": true,
+        "diff": 0.0
+      },
+      "jpl_test": {
+        "frozen": 0.027001,
+        "recomputed": 0.027001,
+        "pass": true,
+        "diff": 0.0
       }
     },
-    "note": "station exposure = set membership diagnostic，不报可加总 station opportunity energy（审查结论37 P1）"
+    "daily_share_fidelity_all_pass": true,
+    "splits": [
+      {
+        "pool": "caltech",
+        "split": "train",
+        "n_valid_cycles": 79816,
+        "n_months": 10,
+        "rate_A0_avg": 0.460985,
+        "n_candidate_A0_avg": 36794,
+        "rate_A2_prev_actual": 0.211712,
+        "n_candidate_A2_prev_actual": 16898,
+        "rate_A3_rolling_quantile": 0.342726,
+        "n_candidate_A3_rolling_quantile": 27355,
+        "elimination_A2_prev_actual_vs_A0": 0.54074,
+        "elimination_A3_rolling_quantile_vs_A0": 0.256535,
+        "daily_candidate_energy_share_median": 0.041346,
+        "daily_candidate_energy_share_mean": 0.038381,
+        "daily_share_fidelity": {
+          "frozen": 0.041346,
+          "recomputed": 0.041346,
+          "pass": true,
+          "diff": 0.0
+        },
+        "top_month_share_opp_energy": 0.151092,
+        "top_month": "2019-01",
+        "n_months_evaluable_A2_prev_actual": 10,
+        "n_months_A2_prev_actual_elim_gt_80": 0,
+        "months_A2_prev_actual_elim_gt_80": [],
+        "n_months_evaluable_A3_rolling_quantile": 10,
+        "n_months_A3_rolling_quantile_elim_gt_80": 0,
+        "months_A3_rolling_quantile_elim_gt_80": []
+      },
+      {
+        "pool": "caltech",
+        "split": "validation",
+        "n_valid_cycles": 33003,
+        "n_months": 10,
+        "rate_A0_avg": 0.413053,
+        "n_candidate_A0_avg": 13632,
+        "rate_A2_prev_actual": 0.198679,
+        "n_candidate_A2_prev_actual": 6557,
+        "rate_A3_rolling_quantile": 0.323577,
+        "n_candidate_A3_rolling_quantile": 10679,
+        "elimination_A2_prev_actual_vs_A0": 0.518999,
+        "elimination_A3_rolling_quantile_vs_A0": 0.216621,
+        "daily_candidate_energy_share_median": 0.037781,
+        "daily_candidate_energy_share_mean": 0.031838,
+        "daily_share_fidelity": {
+          "frozen": 0.037781,
+          "recomputed": 0.037781,
+          "pass": true,
+          "diff": 0.0
+        },
+        "top_month_share_opp_energy": 0.246872,
+        "top_month": "2019-10",
+        "n_months_evaluable_A2_prev_actual": 6,
+        "n_months_A2_prev_actual_elim_gt_80": 0,
+        "months_A2_prev_actual_elim_gt_80": [],
+        "n_months_evaluable_A3_rolling_quantile": 6,
+        "n_months_A3_rolling_quantile_elim_gt_80": 0,
+        "months_A3_rolling_quantile_elim_gt_80": []
+      },
+      {
+        "pool": "caltech",
+        "split": "test",
+        "n_valid_cycles": 4920,
+        "n_months": 6,
+        "rate_A0_avg": 0.055691,
+        "n_candidate_A0_avg": 274,
+        "rate_A2_prev_actual": 0.012805,
+        "n_candidate_A2_prev_actual": 63,
+        "rate_A3_rolling_quantile": 0.020528,
+        "n_candidate_A3_rolling_quantile": 101,
+        "elimination_A2_prev_actual_vs_A0": 0.770071,
+        "elimination_A3_rolling_quantile_vs_A0": 0.631395,
+        "daily_candidate_energy_share_median": 0.0,
+        "daily_candidate_energy_share_mean": 0.00445,
+        "daily_share_fidelity": {
+          "frozen": 0.0,
+          "recomputed": 0.0,
+          "pass": true,
+          "diff": 0.0
+        },
+        "top_month_share_opp_energy": 0.795178,
+        "top_month": "2020-11",
+        "n_months_evaluable_A2_prev_actual": 5,
+        "n_months_A2_prev_actual_elim_gt_80": 2,
+        "months_A2_prev_actual_elim_gt_80": [
+          "2020-06",
+          "2020-07"
+        ],
+        "n_months_evaluable_A3_rolling_quantile": 5,
+        "n_months_A3_rolling_quantile_elim_gt_80": 1,
+        "months_A3_rolling_quantile_elim_gt_80": [
+          "2020-06"
+        ]
+      },
+      {
+        "pool": "jpl",
+        "split": "train",
+        "n_valid_cycles": 56429,
+        "n_months": 10,
+        "rate_A2_prev_actual": 0.393344,
+        "n_candidate_A2_prev_actual": 22196,
+        "rate_A3_rolling_quantile": 0.544011,
+        "n_candidate_A3_rolling_quantile": 30698,
+        "daily_candidate_energy_share_median": 0.037816,
+        "daily_candidate_energy_share_mean": 0.031855,
+        "daily_share_fidelity": {
+          "frozen": 0.037816,
+          "recomputed": 0.037816,
+          "pass": true,
+          "diff": 0.0
+        },
+        "top_month_share_opp_energy": 0.131134,
+        "top_month": "2019-04"
+      },
+      {
+        "pool": "jpl",
+        "split": "validation",
+        "n_valid_cycles": 21340,
+        "n_months": 5,
+        "rate_A2_prev_actual": 0.360731,
+        "n_candidate_A2_prev_actual": 7698,
+        "rate_A3_rolling_quantile": 0.513308,
+        "n_candidate_A3_rolling_quantile": 10954,
+        "daily_candidate_energy_share_median": 0.037153,
+        "daily_candidate_energy_share_mean": 0.031252,
+        "daily_share_fidelity": {
+          "frozen": 0.037153,
+          "recomputed": 0.037153,
+          "pass": true,
+          "diff": 0.0
+        },
+        "top_month_share_opp_energy": 0.317153,
+        "top_month": "2019-10"
+      },
+      {
+        "pool": "jpl",
+        "split": "test",
+        "n_valid_cycles": 12722,
+        "n_months": 5,
+        "rate_A2_prev_actual": 0.277629,
+        "n_candidate_A2_prev_actual": 3532,
+        "rate_A3_rolling_quantile": 0.460305,
+        "n_candidate_A3_rolling_quantile": 5856,
+        "daily_candidate_energy_share_median": 0.027001,
+        "daily_candidate_energy_share_mean": 0.026058,
+        "daily_share_fidelity": {
+          "frozen": 0.027001,
+          "recomputed": 0.027001,
+          "pass": true,
+          "diff": 0.0
+        },
+        "top_month_share_opp_energy": 0.472174,
+        "top_month": "2020-01"
+      }
+    ],
+    "note": "station exposure = set membership diagnostic，不报可加总 station energy。A0=0 → NA + evaluable=False。daily_candidate_energy_share 用 E3/K1 exact evaluable-day 口径。post-hoc month >80% ≠ formal STOP_COMPLEX_MODEL triggered。"
   },
   "a4_summary": {
     "module": "A4_cross_domain_localization",
-    "design": "同 n_active bucket 内 candidate=True vs candidate=False 对照（不把 candidate 定义的结构条件误当 support predictor）",
+    "design": "concurrency = frozen candidate table n_active（EV nunique）；S1/S2/S3 非互斥 + state observable comparison；lagged observables（cycle-level shift+rolling，不跨 run/gap/severe_gap）；observable 三类 + pre_action 标记；NaN/missing/equal→不准入；train+val consistent + test_not_reversed + sample_sufficient 一次性生成 a5_eligible",
+    "e1_cycle_mapping": {
+      "caltech_train": {
+        "n_e1_core_events": 1106,
+        "n_e1_core_sessions": 530,
+        "n_unique_event_start_cycles": 1066,
+        "n_mapped_to_minute_observable": 1066,
+        "mapping_rate_to_minute": 1.0,
+        "n_mapped_to_e3_valid": 1061,
+        "mapping_rate_to_e3_valid": 0.99531,
+        "n_S1_and_S2": 606,
+        "n_S1_and_S3": 455
+      },
+      "caltech_validation": {
+        "n_e1_core_events": 564,
+        "n_e1_core_sessions": 255,
+        "n_unique_event_start_cycles": 547,
+        "n_mapped_to_minute_observable": 547,
+        "mapping_rate_to_minute": 1.0,
+        "n_mapped_to_e3_valid": 545,
+        "mapping_rate_to_e3_valid": 0.996344,
+        "n_S1_and_S2": 258,
+        "n_S1_and_S3": 287
+      },
+      "caltech_test": {
+        "n_e1_core_events": 11,
+        "n_e1_core_sessions": 3,
+        "n_unique_event_start_cycles": 11,
+        "n_mapped_to_minute_observable": 11,
+        "mapping_rate_to_minute": 1.0,
+        "n_mapped_to_e3_valid": 11,
+        "mapping_rate_to_e3_valid": 1.0,
+        "n_S1_and_S2": 0,
+        "n_S1_and_S3": 11
+      },
+      "jpl_train": {
+        "n_e1_core_events": 0,
+        "n_e1_core_sessions": 0,
+        "n_unique_event_start_cycles": 0,
+        "n_mapped_to_minute_observable": 0,
+        "mapping_rate_to_minute": 0.0,
+        "n_mapped_to_e3_valid": 0,
+        "mapping_rate_to_e3_valid": 0.0,
+        "n_S1_and_S2": 0,
+        "n_S1_and_S3": 0
+      },
+      "jpl_validation": {
+        "n_e1_core_events": 0,
+        "n_e1_core_sessions": 0,
+        "n_unique_event_start_cycles": 0,
+        "n_mapped_to_minute_observable": 0,
+        "mapping_rate_to_minute": 0.0,
+        "n_mapped_to_e3_valid": 0,
+        "mapping_rate_to_e3_valid": 0.0,
+        "n_S1_and_S2": 0,
+        "n_S1_and_S3": 0
+      },
+      "jpl_test": {
+        "n_e1_core_events": 0,
+        "n_e1_core_sessions": 0,
+        "n_unique_event_start_cycles": 0,
+        "n_mapped_to_minute_observable": 0,
+        "mapping_rate_to_minute": 0.0,
+        "n_mapped_to_e3_valid": 0,
+        "mapping_rate_to_e3_valid": 0.0,
+        "n_S1_and_S2": 0,
+        "n_S1_and_S3": 0
+      }
+    },
     "by_pool_split": {
       "caltech": {
         "train": {
           "n_valid_cycles": 79816,
           "n_candidate_true": 16898,
           "n_candidate_false": 62918,
-          "bucket_summary": [
-            {
-              "concurrency_bucket": "1",
-              "n_candidate_true": 0,
-              "n_candidate_false": 21249,
-              "median_n_active_true": NaN,
-              "median_n_active_false": 0.0,
-              "median_median_elapsed_true": NaN,
-              "median_median_elapsed_false": 589.883333,
-              "median_median_actual_kw_true": NaN,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": NaN,
-              "median_std_actual_kw_false": 0.0,
-              "median_pilot_coverage_true": NaN,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": 1920000.0,
-              "direction_n_active": NaN,
-              "direction_median_elapsed": NaN,
-              "direction_median_actual_kw": NaN,
-              "direction_std_actual_kw": NaN,
-              "direction_pilot_coverage": NaN,
-              "direction_pilot_actual_ratio": NaN
-            },
-            {
-              "concurrency_bucket": "2-3",
-              "n_candidate_true": 2,
-              "n_candidate_false": 627,
-              "median_n_active_true": 3.0,
-              "median_n_active_false": 0.0,
-              "median_median_elapsed_true": 84.654167,
-              "median_median_elapsed_false": 467.533333,
-              "median_median_actual_kw_true": 1.400625,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": 1.892266,
-              "median_std_actual_kw_false": 0.722169,
-              "median_pilot_coverage_true": 1.0,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": 1.43462,
-              "median_pilot_actual_ratio_false": 1920000.0,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true<false",
-              "direction_median_actual_kw": "true>false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "true<false"
-            },
-            {
-              "concurrency_bucket": "4-7",
-              "n_candidate_true": 79,
-              "n_candidate_false": 19398,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 1.0,
-              "median_median_elapsed_true": 301.616667,
-              "median_median_elapsed_false": 394.470833,
-              "median_median_actual_kw_true": 0.0,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": 1.67465,
-              "median_std_actual_kw_false": 1.752457,
-              "median_pilot_coverage_true": 1.0,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": 1920000.0,
-              "median_pilot_actual_ratio_false": 1920000.0,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true<false",
-              "direction_median_actual_kw": "equal",
-              "direction_std_actual_kw": "true<false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            },
-            {
-              "concurrency_bucket": "8-15",
-              "n_candidate_true": 3525,
-              "n_candidate_false": 13713,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 2.0,
-              "median_median_elapsed_true": 273.383333,
-              "median_median_elapsed_false": 224.458333,
-              "median_median_actual_kw_true": 0.0,
-              "median_median_actual_kw_false": 1.625367,
-              "median_std_actual_kw_true": 1.831575,
-              "median_std_actual_kw_false": 2.429485,
-              "median_pilot_coverage_true": 1.0,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": 1920000.0,
-              "median_pilot_actual_ratio_false": 2.129544,
-              "direction_n_active": "equal",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true<false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "true>false"
-            },
-            {
-              "concurrency_bucket": "16+",
-              "n_candidate_true": 13292,
-              "n_candidate_false": 7931,
-              "median_n_active_true": 8.0,
-              "median_n_active_false": 5.0,
-              "median_median_elapsed_true": 154.375,
-              "median_median_elapsed_false": 161.183333,
-              "median_median_actual_kw_true": 0.0,
-              "median_median_actual_kw_false": 0.599067,
-              "median_std_actual_kw_true": 2.18319,
-              "median_std_actual_kw_false": 2.262454,
-              "median_pilot_coverage_true": 1.0,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": 1920000.0,
-              "median_pilot_actual_ratio_false": 3.833859,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true<false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true<false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "true>false"
-            }
-          ]
+          "n_S1_e1_core": 1061,
+          "n_S2_e3_opp": 16898,
+          "n_S3_valid_no_opp": 62918
         },
         "validation": {
           "n_valid_cycles": 33003,
           "n_candidate_true": 6557,
           "n_candidate_false": 26446,
-          "bucket_summary": [
-            {
-              "concurrency_bucket": "1",
-              "n_candidate_true": 0,
-              "n_candidate_false": 10132,
-              "median_n_active_true": NaN,
-              "median_n_active_false": 0.0,
-              "median_median_elapsed_true": NaN,
-              "median_median_elapsed_false": 582.308333,
-              "median_median_actual_kw_true": NaN,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": NaN,
-              "median_std_actual_kw_false": 0.0,
-              "median_pilot_coverage_true": NaN,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": 1920000.0,
-              "direction_n_active": NaN,
-              "direction_median_elapsed": NaN,
-              "direction_median_actual_kw": NaN,
-              "direction_std_actual_kw": NaN,
-              "direction_pilot_coverage": NaN,
-              "direction_pilot_actual_ratio": NaN
-            },
-            {
-              "concurrency_bucket": "2-3",
-              "n_candidate_true": 0,
-              "n_candidate_false": 272,
-              "median_n_active_true": NaN,
-              "median_n_active_false": 0.0,
-              "median_median_elapsed_true": NaN,
-              "median_median_elapsed_false": 343.704167,
-              "median_median_actual_kw_true": NaN,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": NaN,
-              "median_std_actual_kw_false": 0.618396,
-              "median_pilot_coverage_true": NaN,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": 1920000.0,
-              "direction_n_active": NaN,
-              "direction_median_elapsed": NaN,
-              "direction_median_actual_kw": NaN,
-              "direction_std_actual_kw": NaN,
-              "direction_pilot_coverage": NaN,
-              "direction_pilot_actual_ratio": NaN
-            },
-            {
-              "concurrency_bucket": "4-7",
-              "n_candidate_true": 40,
-              "n_candidate_false": 8221,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 1.0,
-              "median_median_elapsed_true": 204.725,
-              "median_median_elapsed_false": 274.0,
-              "median_median_actual_kw_true": 0.597167,
-              "median_median_actual_kw_false": 2.050667,
-              "median_std_actual_kw_true": 1.528763,
-              "median_std_actual_kw_false": 1.327625,
-              "median_pilot_coverage_true": 1.0,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": 960001.33966,
-              "median_pilot_actual_ratio_false": 1.556689,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true<false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "true>false"
-            },
-            {
-              "concurrency_bucket": "8-15",
-              "n_candidate_true": 1299,
-              "n_candidate_false": 4779,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 2.0,
-              "median_median_elapsed_true": 279.683333,
-              "median_median_elapsed_false": 189.533333,
-              "median_median_actual_kw_true": 0.0,
-              "median_median_actual_kw_false": 1.726367,
-              "median_std_actual_kw_true": 1.735944,
-              "median_std_actual_kw_false": 1.952972,
-              "median_pilot_coverage_true": 1.0,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": 1920000.0,
-              "median_pilot_actual_ratio_false": 1.826506,
-              "direction_n_active": "equal",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true<false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "true>false"
-            },
-            {
-              "concurrency_bucket": "16+",
-              "n_candidate_true": 5218,
-              "n_candidate_false": 3042,
-              "median_n_active_true": 8.0,
-              "median_n_active_false": 6.0,
-              "median_median_elapsed_true": 142.458333,
-              "median_median_elapsed_false": 140.875,
-              "median_median_actual_kw_true": 0.0,
-              "median_median_actual_kw_false": 0.733657,
-              "median_std_actual_kw_true": 2.319042,
-              "median_std_actual_kw_false": 2.335161,
-              "median_pilot_coverage_true": 1.0,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": 1920000.0,
-              "median_pilot_actual_ratio_false": 3.250168,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true<false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "true>false"
-            }
-          ]
+          "n_S1_e1_core": 545,
+          "n_S2_e3_opp": 6557,
+          "n_S3_valid_no_opp": 26446
         },
         "test": {
           "n_valid_cycles": 4920,
           "n_candidate_true": 63,
           "n_candidate_false": 4857,
-          "bucket_summary": [
-            {
-              "concurrency_bucket": "1",
-              "n_candidate_true": 0,
-              "n_candidate_false": 2209,
-              "median_n_active_true": NaN,
-              "median_n_active_false": 0.0,
-              "median_median_elapsed_true": NaN,
-              "median_median_elapsed_false": 310.016667,
-              "median_median_actual_kw_true": NaN,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": NaN,
-              "median_std_actual_kw_false": 0.0,
-              "median_pilot_coverage_true": NaN,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": 1920000.0,
-              "direction_n_active": NaN,
-              "direction_median_elapsed": NaN,
-              "direction_median_actual_kw": NaN,
-              "direction_std_actual_kw": NaN,
-              "direction_pilot_coverage": NaN,
-              "direction_pilot_actual_ratio": NaN
-            },
-            {
-              "concurrency_bucket": "2-3",
-              "n_candidate_true": 1,
-              "n_candidate_false": 72,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 1.0,
-              "median_median_elapsed_true": 110.6,
-              "median_median_elapsed_false": 128.375,
-              "median_median_actual_kw_true": 1.371125,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": 13.737598,
-              "median_std_actual_kw_false": 1.085323,
-              "median_pilot_coverage_true": 1.0,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": 3.500775,
-              "median_pilot_actual_ratio_false": 3.076262,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true<false",
-              "direction_median_actual_kw": "true>false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "true>false"
-            },
-            {
-              "concurrency_bucket": "4-7",
-              "n_candidate_true": 3,
-              "n_candidate_false": 2324,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 1.0,
-              "median_median_elapsed_true": 109.6,
-              "median_median_elapsed_false": 122.466667,
-              "median_median_actual_kw_true": 3.484812,
-              "median_median_actual_kw_false": 3.734092,
-              "median_std_actual_kw_true": 2.080521,
-              "median_std_actual_kw_false": 0.083588,
-              "median_pilot_coverage_true": 1.0,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": 1.308686,
-              "median_pilot_actual_ratio_false": 1.145761,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true<false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "true>false"
-            },
-            {
-              "concurrency_bucket": "8-15",
-              "n_candidate_true": 59,
-              "n_candidate_false": 252,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 2.0,
-              "median_median_elapsed_true": 94.566667,
-              "median_median_elapsed_false": 65.65,
-              "median_median_actual_kw_true": 3.550667,
-              "median_median_actual_kw_false": 4.962969,
-              "median_std_actual_kw_true": 2.730247,
-              "median_std_actual_kw_false": 1.715904,
-              "median_pilot_coverage_true": 1.0,
-              "median_pilot_coverage_false": 1.0,
-              "median_pilot_actual_ratio_true": 1.510743,
-              "median_pilot_actual_ratio_false": 1.196345,
-              "direction_n_active": "equal",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "true>false"
-            }
-          ]
+          "n_S1_e1_core": 11,
+          "n_S2_e3_opp": 63,
+          "n_S3_valid_no_opp": 4857
         }
       },
       "jpl": {
@@ -585,931 +484,1423 @@
           "n_valid_cycles": 56429,
           "n_candidate_true": 22196,
           "n_candidate_false": 34233,
-          "bucket_summary": [
-            {
-              "concurrency_bucket": "1",
-              "n_candidate_true": 0,
-              "n_candidate_false": 10293,
-              "median_n_active_true": NaN,
-              "median_n_active_false": 0.0,
-              "median_median_elapsed_true": NaN,
-              "median_median_elapsed_false": 341.45,
-              "median_median_actual_kw_true": NaN,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": NaN,
-              "median_std_actual_kw_false": 0.0,
-              "median_pilot_coverage_true": NaN,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": NaN,
-              "direction_median_elapsed": NaN,
-              "direction_median_actual_kw": NaN,
-              "direction_std_actual_kw": NaN,
-              "direction_pilot_coverage": NaN,
-              "direction_pilot_actual_ratio": NaN
-            },
-            {
-              "concurrency_bucket": "2-3",
-              "n_candidate_true": 3,
-              "n_candidate_false": 303,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 1.0,
-              "median_median_elapsed_true": 394.25,
-              "median_median_elapsed_false": 228.85,
-              "median_median_actual_kw_true": 0.0,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": 0.692954,
-              "median_std_actual_kw_false": 0.587834,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "equal",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            },
-            {
-              "concurrency_bucket": "4-7",
-              "n_candidate_true": 36,
-              "n_candidate_false": 10335,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 1.0,
-              "median_median_elapsed_true": 318.491667,
-              "median_median_elapsed_false": 155.133333,
-              "median_median_actual_kw_true": 0.0,
-              "median_median_actual_kw_false": 2.909128,
-              "median_std_actual_kw_true": 1.60261,
-              "median_std_actual_kw_false": 0.389423,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            },
-            {
-              "concurrency_bucket": "8-15",
-              "n_candidate_true": 917,
-              "n_candidate_false": 4857,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 2.0,
-              "median_median_elapsed_true": 223.916667,
-              "median_median_elapsed_false": 158.041667,
-              "median_median_actual_kw_true": 0.61664,
-              "median_median_actual_kw_false": 2.995281,
-              "median_std_actual_kw_true": 2.015909,
-              "median_std_actual_kw_false": 1.87794,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "equal",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            },
-            {
-              "concurrency_bucket": "16+",
-              "n_candidate_true": 21240,
-              "n_candidate_false": 8445,
-              "median_n_active_true": 17.0,
-              "median_n_active_false": 8.0,
-              "median_median_elapsed_true": 238.008333,
-              "median_median_elapsed_false": 293.433333,
-              "median_median_actual_kw_true": 1.143979,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": 2.069953,
-              "median_std_actual_kw_false": 2.053479,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true<false",
-              "direction_median_actual_kw": "true>false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            }
-          ]
+          "n_S1_e1_core": 0,
+          "n_S2_e3_opp": 22196,
+          "n_S3_valid_no_opp": 34233
         },
         "validation": {
           "n_valid_cycles": 21340,
           "n_candidate_true": 7698,
           "n_candidate_false": 13642,
-          "bucket_summary": [
-            {
-              "concurrency_bucket": "1",
-              "n_candidate_true": 0,
-              "n_candidate_false": 3368,
-              "median_n_active_true": NaN,
-              "median_n_active_false": 0.0,
-              "median_median_elapsed_true": NaN,
-              "median_median_elapsed_false": 318.2875,
-              "median_median_actual_kw_true": NaN,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": NaN,
-              "median_std_actual_kw_false": 0.0,
-              "median_pilot_coverage_true": NaN,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": NaN,
-              "direction_median_elapsed": NaN,
-              "direction_median_actual_kw": NaN,
-              "direction_std_actual_kw": NaN,
-              "direction_pilot_coverage": NaN,
-              "direction_pilot_actual_ratio": NaN
-            },
-            {
-              "concurrency_bucket": "2-3",
-              "n_candidate_true": 1,
-              "n_candidate_false": 101,
-              "median_n_active_true": 3.0,
-              "median_n_active_false": 0.0,
-              "median_median_elapsed_true": 216.133333,
-              "median_median_elapsed_false": 156.466667,
-              "median_median_actual_kw_true": 1.377805,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": 2.653809,
-              "median_std_actual_kw_false": 0.738135,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true>false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            },
-            {
-              "concurrency_bucket": "4-7",
-              "n_candidate_true": 3,
-              "n_candidate_false": 4359,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 1.0,
-              "median_median_elapsed_true": 168.9,
-              "median_median_elapsed_false": 124.958333,
-              "median_median_actual_kw_true": 3.118528,
-              "median_median_actual_kw_false": 3.015755,
-              "median_std_actual_kw_true": 2.01208,
-              "median_std_actual_kw_false": 0.147275,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true>false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            },
-            {
-              "concurrency_bucket": "8-15",
-              "n_candidate_true": 346,
-              "n_candidate_false": 2542,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 2.0,
-              "median_median_elapsed_true": 173.608333,
-              "median_median_elapsed_false": 133.4125,
-              "median_median_actual_kw_true": 2.205191,
-              "median_median_actual_kw_false": 3.070153,
-              "median_std_actual_kw_true": 2.370028,
-              "median_std_actual_kw_false": 2.201636,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "equal",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            },
-            {
-              "concurrency_bucket": "16+",
-              "n_candidate_true": 7348,
-              "n_candidate_false": 3272,
-              "median_n_active_true": 17.0,
-              "median_n_active_false": 8.0,
-              "median_median_elapsed_true": 233.733333,
-              "median_median_elapsed_false": 213.508333,
-              "median_median_actual_kw_true": 1.399584,
-              "median_median_actual_kw_false": 1.586162,
-              "median_std_actual_kw_true": 2.149227,
-              "median_std_actual_kw_false": 2.221678,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true<false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            }
-          ]
+          "n_S1_e1_core": 0,
+          "n_S2_e3_opp": 7698,
+          "n_S3_valid_no_opp": 13642
         },
         "test": {
           "n_valid_cycles": 12722,
           "n_candidate_true": 3532,
           "n_candidate_false": 9190,
-          "bucket_summary": [
-            {
-              "concurrency_bucket": "1",
-              "n_candidate_true": 0,
-              "n_candidate_false": 2700,
-              "median_n_active_true": NaN,
-              "median_n_active_false": 0.0,
-              "median_median_elapsed_true": NaN,
-              "median_median_elapsed_false": 405.95,
-              "median_median_actual_kw_true": NaN,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": NaN,
-              "median_std_actual_kw_false": 0.0,
-              "median_pilot_coverage_true": NaN,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": NaN,
-              "direction_median_elapsed": NaN,
-              "direction_median_actual_kw": NaN,
-              "direction_std_actual_kw": NaN,
-              "direction_pilot_coverage": NaN,
-              "direction_pilot_actual_ratio": NaN
-            },
-            {
-              "concurrency_bucket": "2-3",
-              "n_candidate_true": 0,
-              "n_candidate_false": 61,
-              "median_n_active_true": NaN,
-              "median_n_active_false": 1.0,
-              "median_median_elapsed_true": NaN,
-              "median_median_elapsed_false": 276.016667,
-              "median_median_actual_kw_true": NaN,
-              "median_median_actual_kw_false": 0.0,
-              "median_std_actual_kw_true": NaN,
-              "median_std_actual_kw_false": 0.752515,
-              "median_pilot_coverage_true": NaN,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": NaN,
-              "direction_median_elapsed": NaN,
-              "direction_median_actual_kw": NaN,
-              "direction_std_actual_kw": NaN,
-              "direction_pilot_coverage": NaN,
-              "direction_pilot_actual_ratio": NaN
-            },
-            {
-              "concurrency_bucket": "4-7",
-              "n_candidate_true": 3,
-              "n_candidate_false": 2443,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 1.0,
-              "median_median_elapsed_true": 118.35,
-              "median_median_elapsed_false": 221.633333,
-              "median_median_actual_kw_true": 0.09635,
-              "median_median_actual_kw_false": 2.930244,
-              "median_std_actual_kw_true": 2.443799,
-              "median_std_actual_kw_false": 1.246775,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true<false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            },
-            {
-              "concurrency_bucket": "8-15",
-              "n_candidate_true": 332,
-              "n_candidate_false": 1774,
-              "median_n_active_true": 2.0,
-              "median_n_active_false": 2.0,
-              "median_median_elapsed_true": 259.85,
-              "median_median_elapsed_false": 180.566667,
-              "median_median_actual_kw_true": 0.0,
-              "median_median_actual_kw_false": 2.864807,
-              "median_std_actual_kw_true": 2.377212,
-              "median_std_actual_kw_false": 2.365944,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "equal",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true>false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            },
-            {
-              "concurrency_bucket": "16+",
-              "n_candidate_true": 3197,
-              "n_candidate_false": 2212,
-              "median_n_active_true": 13.0,
-              "median_n_active_false": 6.0,
-              "median_median_elapsed_true": 212.95,
-              "median_median_elapsed_false": 155.3125,
-              "median_median_actual_kw_true": 1.596841,
-              "median_median_actual_kw_false": 2.88215,
-              "median_std_actual_kw_true": 2.170007,
-              "median_std_actual_kw_false": 2.209994,
-              "median_pilot_coverage_true": 0.0,
-              "median_pilot_coverage_false": 0.0,
-              "median_pilot_actual_ratio_true": NaN,
-              "median_pilot_actual_ratio_false": NaN,
-              "direction_n_active": "true>false",
-              "direction_median_elapsed": "true>false",
-              "direction_median_actual_kw": "true<false",
-              "direction_std_actual_kw": "true<false",
-              "direction_pilot_coverage": "equal",
-              "direction_pilot_actual_ratio": "equal"
-            }
-          ]
+          "n_S1_e1_core": 0,
+          "n_S2_e3_opp": 3532,
+          "n_S3_valid_no_opp": 9190
         }
       }
     },
     "direction_consistency": {
       "caltech": {
         "1": {
-          "n_active": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
-          },
-          "median_elapsed": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
-          },
           "median_actual_kw": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "definitional",
+            "pre_action": "false",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_recent_actual_q90": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_recent_actual_var": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_lagged_pilot_actual_ratio": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
           "std_actual_kw": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "false",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
-          "pilot_coverage": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
+          "median_elapsed": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
-          "pilot_actual_ratio": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
+          "pilot_available_at_start": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_response_persistence_lagged": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "lagged_severe_gap_rate": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "history_coverage": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           }
         },
         "2-3": {
-          "n_active": {
-            "direction": "mixed",
-            "consistent_across_splits": false,
-            "splits": [
-              "true>false",
-              "nan",
-              "true>false"
-            ]
-          },
-          "median_elapsed": {
-            "direction": "mixed",
-            "consistent_across_splits": false,
-            "splits": [
-              "true<false",
-              "nan",
-              "true<false"
-            ]
-          },
           "median_actual_kw": {
-            "direction": "mixed",
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "definitional",
+            "pre_action": "false",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_recent_actual_q90": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": true
+          },
+          "median_recent_actual_var": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "true>false",
-              "nan",
-              "true>false"
-            ]
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_lagged_pilot_actual_ratio": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": true
           },
           "std_actual_kw": {
-            "direction": "mixed",
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "true>false",
-              "nan",
-              "true>false"
-            ]
+            "obs_class": "baseline_related_history",
+            "pre_action": "false",
+            "sample_sufficient": true,
+            "a5_eligible": false
           },
-          "pilot_coverage": {
-            "direction": "mixed",
-            "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "nan",
-              "equal"
-            ]
+          "median_elapsed": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": true
           },
-          "pilot_actual_ratio": {
-            "direction": "mixed",
+          "pilot_available_at_start": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "true<false",
-              "nan",
-              "true>false"
-            ]
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_response_persistence_lagged": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "lagged_severe_gap_rate": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "history_coverage": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
           }
         },
         "4-7": {
-          "n_active": {
-            "direction": "true>false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true>false",
-              "true>false",
-              "true>false"
-            ]
-          },
-          "median_elapsed": {
-            "direction": "true<false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true<false",
-              "true<false",
-              "true<false"
-            ]
-          },
           "median_actual_kw": {
-            "direction": "mixed",
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "true<false",
-              "true<false"
-            ]
+            "obs_class": "definitional",
+            "pre_action": "false",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_recent_actual_q90": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_recent_actual_var": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_lagged_pilot_actual_ratio": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
           "std_actual_kw": {
-            "direction": "mixed",
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "true<false",
-              "true>false",
-              "true>false"
-            ]
+            "obs_class": "baseline_related_history",
+            "pre_action": "false",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
-          "pilot_coverage": {
-            "direction": "n/a",
+          "median_elapsed": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "equal"
-            ]
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
-          "pilot_actual_ratio": {
-            "direction": "mixed",
+          "pilot_available_at_start": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "true>false",
-              "true>false"
-            ]
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_response_persistence_lagged": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "lagged_severe_gap_rate": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "history_coverage": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           }
         },
         "8-15": {
-          "n_active": {
-            "direction": "n/a",
-            "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "equal"
-            ]
-          },
-          "median_elapsed": {
-            "direction": "true>false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true>false",
-              "true>false",
-              "true>false"
-            ]
-          },
           "median_actual_kw": {
-            "direction": "true<false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true<false",
-              "true<false",
-              "true<false"
-            ]
+            "direction_train": "true>false",
+            "direction_validation": "true<false",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "definitional",
+            "pre_action": "false",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_recent_actual_q90": {
+            "direction_train": "true>false",
+            "direction_validation": "true<false",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_recent_actual_var": {
+            "direction_train": "true>false",
+            "direction_validation": "true<false",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_lagged_pilot_actual_ratio": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
           "std_actual_kw": {
-            "direction": "mixed",
+            "direction_train": "true<false",
+            "direction_validation": "true>false",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "true<false",
-              "true<false",
-              "true>false"
-            ]
+            "obs_class": "baseline_related_history",
+            "pre_action": "false",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
-          "pilot_coverage": {
-            "direction": "n/a",
+          "median_elapsed": {
+            "direction_train": "true<false",
+            "direction_validation": "true>false",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "equal"
-            ]
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
-          "pilot_actual_ratio": {
-            "direction": "true>false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true>false",
-              "true>false",
-              "true>false"
-            ]
+          "pilot_available_at_start": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_response_persistence_lagged": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "lagged_severe_gap_rate": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "history_coverage": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           }
         },
         "16+": {
-          "n_active": {
-            "direction": "true>false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true>false",
-              "true>false"
-            ]
-          },
-          "median_elapsed": {
-            "direction": "mixed",
-            "consistent_across_splits": false,
-            "splits": [
-              "true<false",
-              "true>false"
-            ]
-          },
           "median_actual_kw": {
-            "direction": "true<false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true<false",
-              "true<false"
-            ]
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "definitional",
+            "pre_action": "false",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_recent_actual_q90": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_recent_actual_var": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_lagged_pilot_actual_ratio": {
+            "direction_train": "true>false",
+            "direction_validation": "true<false",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
           "std_actual_kw": {
-            "direction": "true<false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true<false",
-              "true<false"
-            ]
-          },
-          "pilot_coverage": {
-            "direction": "n/a",
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal"
-            ]
+            "obs_class": "baseline_related_history",
+            "pre_action": "false",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
-          "pilot_actual_ratio": {
-            "direction": "true>false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true>false",
-              "true>false"
-            ]
+          "median_elapsed": {
+            "direction_train": "true>false",
+            "direction_validation": "true<false",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "pilot_available_at_start": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_response_persistence_lagged": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "missing",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "lagged_severe_gap_rate": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "history_coverage": {
+            "direction_train": "true<false",
+            "direction_validation": "equal",
+            "direction_test": "missing",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           }
         }
       },
       "jpl": {
         "1": {
-          "n_active": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
-          },
-          "median_elapsed": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
-          },
           "median_actual_kw": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "definitional",
+            "pre_action": "false",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_recent_actual_q90": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_recent_actual_var": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_lagged_pilot_actual_ratio": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
           "std_actual_kw": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "false",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
-          "pilot_coverage": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
+          "median_elapsed": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
-          "pilot_actual_ratio": {
-            "direction": "nan",
-            "consistent_across_splits": true,
-            "splits": [
-              "nan",
-              "nan",
-              "nan"
-            ]
+          "pilot_available_at_start": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "median_response_persistence_lagged": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "lagged_severe_gap_rate": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
+          },
+          "history_coverage": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           }
         },
         "2-3": {
-          "n_active": {
-            "direction": "mixed",
-            "consistent_across_splits": false,
-            "splits": [
-              "true>false",
-              "true>false",
-              "nan"
-            ]
-          },
-          "median_elapsed": {
-            "direction": "mixed",
-            "consistent_across_splits": false,
-            "splits": [
-              "true>false",
-              "true>false",
-              "nan"
-            ]
-          },
           "median_actual_kw": {
-            "direction": "mixed",
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "definitional",
+            "pre_action": "false",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_recent_actual_q90": {
+            "direction_train": "true<false",
+            "direction_validation": "true>false",
+            "direction_test": "true<false",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "true>false",
-              "nan"
-            ]
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_recent_actual_var": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": true
+          },
+          "median_lagged_pilot_actual_ratio": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
           "std_actual_kw": {
-            "direction": "mixed",
+            "direction_train": "true<false",
+            "direction_validation": "true>false",
+            "direction_test": "true<false",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "true>false",
-              "true>false",
-              "nan"
-            ]
+            "obs_class": "baseline_related_history",
+            "pre_action": "false",
+            "sample_sufficient": true,
+            "a5_eligible": false
           },
-          "pilot_coverage": {
-            "direction": "mixed",
-            "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "nan"
-            ]
+          "median_elapsed": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": true
           },
-          "pilot_actual_ratio": {
-            "direction": "mixed",
+          "pilot_available_at_start": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "nan"
-            ]
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_response_persistence_lagged": {
+            "direction_train": "true<false",
+            "direction_validation": "true>false",
+            "direction_test": "true<false",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "lagged_severe_gap_rate": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "history_coverage": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
           }
         },
         "4-7": {
-          "n_active": {
-            "direction": "true>false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true>false",
-              "true>false",
-              "true>false"
-            ]
-          },
-          "median_elapsed": {
-            "direction": "mixed",
-            "consistent_across_splits": false,
-            "splits": [
-              "true>false",
-              "true>false",
-              "true<false"
-            ]
-          },
           "median_actual_kw": {
-            "direction": "mixed",
+            "direction_train": "equal",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "true<false",
-              "true>false",
-              "true<false"
-            ]
+            "obs_class": "definitional",
+            "pre_action": "false",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_recent_actual_q90": {
+            "direction_train": "equal",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_recent_actual_var": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": true
+          },
+          "median_lagged_pilot_actual_ratio": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
           "std_actual_kw": {
-            "direction": "true>false",
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
             "consistent_across_splits": true,
-            "splits": [
-              "true>false",
-              "true>false",
-              "true>false"
-            ]
+            "obs_class": "baseline_related_history",
+            "pre_action": "false",
+            "sample_sufficient": true,
+            "a5_eligible": false
           },
-          "pilot_coverage": {
-            "direction": "n/a",
-            "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "equal"
-            ]
+          "median_elapsed": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": true
           },
-          "pilot_actual_ratio": {
-            "direction": "n/a",
+          "pilot_available_at_start": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "equal"
-            ]
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_response_persistence_lagged": {
+            "direction_train": "equal",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "lagged_severe_gap_rate": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "history_coverage": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
           }
         },
         "8-15": {
-          "n_active": {
-            "direction": "n/a",
-            "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "equal"
-            ]
-          },
-          "median_elapsed": {
-            "direction": "true>false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true>false",
-              "true>false",
-              "true>false"
-            ]
-          },
           "median_actual_kw": {
-            "direction": "true<false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true<false",
-              "true<false",
-              "true<false"
-            ]
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "true<false",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "definitional",
+            "pre_action": "false",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_recent_actual_q90": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "true<false",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_recent_actual_var": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "true<false",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_lagged_pilot_actual_ratio": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
           "std_actual_kw": {
-            "direction": "true>false",
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
             "consistent_across_splits": true,
-            "splits": [
-              "true>false",
-              "true>false",
-              "true>false"
-            ]
+            "obs_class": "baseline_related_history",
+            "pre_action": "false",
+            "sample_sufficient": true,
+            "a5_eligible": false
           },
-          "pilot_coverage": {
-            "direction": "n/a",
+          "median_elapsed": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "equal"
-            ]
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
           },
-          "pilot_actual_ratio": {
-            "direction": "n/a",
+          "pilot_available_at_start": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "equal"
-            ]
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_response_persistence_lagged": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "true<false",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "lagged_severe_gap_rate": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "history_coverage": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
           }
         },
         "16+": {
-          "n_active": {
-            "direction": "true>false",
-            "consistent_across_splits": true,
-            "splits": [
-              "true>false",
-              "true>false",
-              "true>false"
-            ]
-          },
-          "median_elapsed": {
-            "direction": "mixed",
-            "consistent_across_splits": false,
-            "splits": [
-              "true<false",
-              "true>false",
-              "true>false"
-            ]
-          },
           "median_actual_kw": {
-            "direction": "mixed",
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "true>false",
-              "true<false",
-              "true<false"
-            ]
+            "obs_class": "definitional",
+            "pre_action": "false",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_recent_actual_q90": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": true
+          },
+          "median_recent_actual_var": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true<false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": true
+          },
+          "median_lagged_pilot_actual_ratio": {
+            "direction_train": "nan",
+            "direction_validation": "nan",
+            "direction_test": "nan",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "baseline_related_history",
+            "pre_action": "true",
+            "sample_sufficient": false,
+            "a5_eligible": false
           },
           "std_actual_kw": {
-            "direction": "mixed",
-            "consistent_across_splits": false,
-            "splits": [
-              "true>false",
-              "true<false",
-              "true<false"
-            ]
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "baseline_related_history",
+            "pre_action": "false",
+            "sample_sufficient": true,
+            "a5_eligible": false
           },
-          "pilot_coverage": {
-            "direction": "n/a",
-            "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "equal"
-            ]
+          "median_elapsed": {
+            "direction_train": "true>false",
+            "direction_validation": "true>false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": true,
+            "consistent_across_splits": true,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": true
           },
-          "pilot_actual_ratio": {
-            "direction": "n/a",
+          "pilot_available_at_start": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
             "consistent_across_splits": false,
-            "splits": [
-              "equal",
-              "equal",
-              "equal"
-            ]
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "median_response_persistence_lagged": {
+            "direction_train": "true<false",
+            "direction_validation": "true<false",
+            "direction_test": "true>false",
+            "train_validation_consistent": true,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "lagged_severe_gap_rate": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
+          },
+          "history_coverage": {
+            "direction_train": "equal",
+            "direction_validation": "equal",
+            "direction_test": "equal",
+            "train_validation_consistent": false,
+            "test_not_reversed": false,
+            "consistent_across_splits": false,
+            "obs_class": "independent_operational",
+            "pre_action": "true",
+            "sample_sufficient": true,
+            "a5_eligible": false
           }
         }
       }
     },
-    "note": "direction consistent = train/val/test 同 bucket 同 observable 方向一致；仅 consistent 的 observable 才值得进入 A5 support-domain hypothesis。test 只产假设，不训练 classifier，不宣称已验证。"
+    "a5_candidates": [
+      {
+        "pool": "caltech",
+        "bucket": "2-3",
+        "observable": "median_recent_actual_q90",
+        "obs_class": "baseline_related_history",
+        "pre_action": "true",
+        "direction": "true<false",
+        "direction_train": "true<false",
+        "direction_validation": "true<false",
+        "direction_test": "true<false",
+        "train_validation_consistent": true,
+        "test_not_reversed": true,
+        "consistent_across_splits": true,
+        "sample_sufficient": true,
+        "a5_eligible": true
+      },
+      {
+        "pool": "caltech",
+        "bucket": "2-3",
+        "observable": "median_lagged_pilot_actual_ratio",
+        "obs_class": "baseline_related_history",
+        "pre_action": "true",
+        "direction": "true>false",
+        "direction_train": "true>false",
+        "direction_validation": "true>false",
+        "direction_test": "true>false",
+        "train_validation_consistent": true,
+        "test_not_reversed": true,
+        "consistent_across_splits": true,
+        "sample_sufficient": true,
+        "a5_eligible": true
+      },
+      {
+        "pool": "caltech",
+        "bucket": "2-3",
+        "observable": "median_elapsed",
+        "obs_class": "independent_operational",
+        "pre_action": "true",
+        "direction": "true>false",
+        "direction_train": "true>false",
+        "direction_validation": "true>false",
+        "direction_test": "true>false",
+        "train_validation_consistent": true,
+        "test_not_reversed": true,
+        "consistent_across_splits": true,
+        "sample_sufficient": true,
+        "a5_eligible": true
+      },
+      {
+        "pool": "jpl",
+        "bucket": "2-3",
+        "observable": "median_recent_actual_var",
+        "obs_class": "baseline_related_history",
+        "pre_action": "true",
+        "direction": "true<false",
+        "direction_train": "true<false",
+        "direction_validation": "true<false",
+        "direction_test": "true<false",
+        "train_validation_consistent": true,
+        "test_not_reversed": true,
+        "consistent_across_splits": true,
+        "sample_sufficient": true,
+        "a5_eligible": true
+      },
+      {
+        "pool": "jpl",
+        "bucket": "2-3",
+        "observable": "median_elapsed",
+        "obs_class": "independent_operational",
+        "pre_action": "true",
+        "direction": "true>false",
+        "direction_train": "true>false",
+        "direction_validation": "true>false",
+        "direction_test": "true>false",
+        "train_validation_consistent": true,
+        "test_not_reversed": true,
+        "consistent_across_splits": true,
+        "sample_sufficient": true,
+        "a5_eligible": true
+      },
+      {
+        "pool": "jpl",
+        "bucket": "4-7",
+        "observable": "median_recent_actual_var",
+        "obs_class": "baseline_related_history",
+        "pre_action": "true",
+        "direction": "true<false",
+        "direction_train": "true<false",
+        "direction_validation": "true<false",
+        "direction_test": "true<false",
+        "train_validation_consistent": true,
+        "test_not_reversed": true,
+        "consistent_across_splits": true,
+        "sample_sufficient": true,
+        "a5_eligible": true
+      },
+      {
+        "pool": "jpl",
+        "bucket": "4-7",
+        "observable": "median_elapsed",
+        "obs_class": "independent_operational",
+        "pre_action": "true",
+        "direction": "true>false",
+        "direction_train": "true>false",
+        "direction_validation": "true>false",
+        "direction_test": "true>false",
+        "train_validation_consistent": true,
+        "test_not_reversed": true,
+        "consistent_across_splits": true,
+        "sample_sufficient": true,
+        "a5_eligible": true
+      },
+      {
+        "pool": "jpl",
+        "bucket": "16+",
+        "observable": "median_recent_actual_q90",
+        "obs_class": "baseline_related_history",
+        "pre_action": "true",
+        "direction": "true<false",
+        "direction_train": "true<false",
+        "direction_validation": "true<false",
+        "direction_test": "true<false",
+        "train_validation_consistent": true,
+        "test_not_reversed": true,
+        "consistent_across_splits": true,
+        "sample_sufficient": true,
+        "a5_eligible": true
+      },
+      {
+        "pool": "jpl",
+        "bucket": "16+",
+        "observable": "median_recent_actual_var",
+        "obs_class": "baseline_related_history",
+        "pre_action": "true",
+        "direction": "true<false",
+        "direction_train": "true<false",
+        "direction_validation": "true<false",
+        "direction_test": "true<false",
+        "train_validation_consistent": true,
+        "test_not_reversed": true,
+        "consistent_across_splits": true,
+        "sample_sufficient": true,
+        "a5_eligible": true
+      },
+      {
+        "pool": "jpl",
+        "bucket": "16+",
+        "observable": "median_elapsed",
+        "obs_class": "independent_operational",
+        "pre_action": "true",
+        "direction": "true>false",
+        "direction_train": "true>false",
+        "direction_validation": "true>false",
+        "direction_test": "true>false",
+        "train_validation_consistent": true,
+        "test_not_reversed": true,
+        "consistent_across_splits": true,
+        "sample_sufficient": true,
+        "a5_eligible": true
+      }
+    ],
+    "a5_entry_gate": {
+      "A5_ENTRY": true,
+      "criteria": "非 definitional + pre-action + train稳定 + val同向 + test不反向 + true/false样本≥5 + 非纯 n_active 结构要求",
+      "n_candidates": 10,
+      "if_zero": "A5 = SKIP → Final R1 Gate Review"
+    },
+    "note": "tautological obs（median_actual_kw）不单独进 A5。test 只产假设，不训练 classifier，不宣称已验证。"
   },
   "discipline": "只读 frozen evidence + registry + minute table；不重跑 formal；不调参；deterministic"
 }

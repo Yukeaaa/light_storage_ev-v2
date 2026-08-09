@@ -137,42 +137,49 @@ limitation 假设一致，并增强了继续检查该假设的必要性；**尚�
 
 **禁止**：不改 80% 止损线；不因 test=77% 新造 78%/75% 等新线。
 
-### A3 结果
+### A3 结果（Batch_2.1 修正版，daily-share fidelity PASS）
 
-**问题**：A2/A3 elimination 77%（test）是孤立值，还是后期/某类场景普遍逼近或超过 80%？
-
-**结论**：test 域 A2/A3 elimination 确实从 train/val 的 ~52-54%/~22-26% 大幅上升到
-77%/63%，但 **未越过冻结的 80% STOP_COMPLEX_MODEL 线**。test 的上升伴随 top_month_share
-从 train 15% → val 25% → **test 79.5%**，说明基线压力上升与机会高度集中同步。
-JPL 无 A0 参照（current-only 无 pilot），但 top_month_share 也从 train 13% → test 47%。
+**daily-share fidelity**：6 frozen split 全部 recomputed = frozen（diff=0.0）。
 
 #### Caltech (E3-M)
 
-| split | n_valid | n_cand_A2 | elim_A2_vs_A0 | elim_A3_vs_A0 | top_month_share |
-|---|---|---|---|---|---|
-| train | 79,816 | 16,898 | 54.1% | 25.7% | 15.1% |
-| validation | 33,003 | 6,557 | 51.9% | 21.7% | 24.7% |
-| **test** | **4,920** | **63** | **77.0%** | **63.1%** | **79.5%** |
+| split | n_valid | n_cand_A2 | elim_A2 | elim_A3 | daily_share | top_month_share |
+|---|---|---|---|---|---|---|
+| train | 79,816 | 16,898 | 54.1% | 25.7% | 0.0413 | 15.1% |
+| validation | 33,003 | 6,557 | 51.9% | 21.7% | 0.0378 | 24.7% |
+| **test** | **4,920** | **63** | **77.0%** | **63.1%** | **0.0** | **79.5%** |
 
 #### JPL current-only (E3-X)
 
-| split | n_valid | n_cand_A2 | top_month_share |
-|---|---|---|---|
-| train | 56,429 | 22,196 | 13.1% |
-| validation | 21,340 | 7,698 | 31.7% |
-| test | 12,722 | 3,532 | 47.2% |
+| split | n_valid | n_cand_A2 | daily_share | top_month_share |
+|---|---|---|---|---|
+| train | 56,429 | 22,196 | 0.0378 | 13.1% |
+| validation | 21,340 | 7,698 | 0.0372 | 31.7% |
+| test | 12,722 | 3,532 | 0.0270 | 47.2% |
 
-- A2 candidate rate（cand/valid）：caltech train 21.2% → test **1.28%**；
-  jpl train 39.3% → test 27.8%（JPL 衰退温和）。
-- station exposure（仅 caltech，diagnostic 不可加总 energy）：输出 `a3_caltech_*_station_exposure.csv`。
+#### Caltech test month-level（A0=0 → NA，不再伪 100%）
 
-**解读**：复杂 executable-interval 模型价值空间在 test 域确实大幅收缩（A2 elimination 77%
-逼近 80% 止损线，A3 elimination 63%），但尚未越过冻结线。test 域同时存在极端集中
-（79.5% opp energy 在单月）。这不改变"broad active D1-R 不应恢复"的判断，但为
-A4 support-domain 检查提供了基线压力背景。
+| month | A0_rate | A2_elim | evaluable | daily_share |
+|---|---|---|---|---|
+| 2020-05 | 0.006 | 0.0% | True | 0.0 |
+| **2020-06** | 0.048 | **88.2%** | True | 0.0 |
+| **2020-07** | 0.085 | **86.7%** | True | 0.0 |
+| 2020-08 | 0.035 | 62.5% | True | 0.0 |
+| 2020-11 | 0.061 | 62.9% | True | 0.0053 |
+| 2020-12 | 0.0 | **NA** | **False** | 0.0 |
 
-输出文件：`results/raw/E3F_expansion/a3_*_by_month.csv` + `a3_*_station_exposure.csv`
-+ `a3_baseline_pressure.json`
+- **A2 months >80%**: {2020-06 (88.2%), 2020-07 (86.7%)} — post-hoc diagnostic，
+  **不触发正式 STOP_COMPLEX_MODEL**（冻结 80% 是 split-level gate，非 month-slice gate）。
+- A3 months >80%: {2020-06}。
+- 2020-12 A0=0 → elimination=NA + evaluable=False（不再伪 100%）。
+- daily-share month-level 确认 test median=0 来自 5/6 月 daily_share=0（2020-11 唯一非零 0.0053）。
+
+**解读**：后期 Caltech test 域出现局部月份强 baseline domination（2020-06/07 >80%），
+这在 train 月份中没有对应出现。复杂模型价值空间在 test 域已逼近预注册止损边界。
+这不改变"broad active D1-R 不应恢复"的判断。
+
+输出文件：`results/raw/E3F_expansion/a3_*_by_month.csv` + `a3_baseline_pressure.csv`
++ `a3_*_station_exposure.csv` + `a3_baseline_pressure.json`
 
 ---
 
@@ -183,58 +190,58 @@ A4 support-domain 检查提供了基线压力背景。
 **纪律**：Caltech measured-pilot main ≠ JPL current-only（分开报告，不平均）；
 office001 仅 descriptive external-only，不参与调规则。
 
-### A4 结果
+### A4 结果（Batch_2.1 修正版：正确 concurrency / lagged / pre-action / S1 独立）
 
-**设计**：同 n_active bucket 内 candidate=True vs candidate=False 对照（不把 candidate
-定义的结构条件误当 support predictor）；在线可观测量 n_active / median_elapsed /
-median_actual_kw / std_actual_kw / pilot_coverage / pilot_actual_ratio；
-train/val/test 方向一致性检查（仅 consistent 的才值得进 A5）。
+**设计**：concurrency 用 frozen candidate table n_active；S1/S2/S3 非互斥（S1 从 E1
+event-start→obs 独立构建）；lagged observables（cycle-level shift+rolling，不跨 run/gap/
+severe_gap_at_start）；observable 三类 + pre_action 标记；NaN/missing/equal→不准入；
+train+val consistent + test_not_reversed + observable-specific sample_sufficient。
 
-#### 方向一致（train/val/test 同 bucket 同 observable）的在线可观测量
+#### E1 cycle mapping
 
-**Caltech**：
+| split | n_e1_core | n_start_cycles | map_to_minute | map_to_e3_valid | S1∩S2 | S1∩S3 |
+|---|---|---|---|---|---|---|
+| caltech train | 1,106 | 1,066 | 100% | 99.5% | 606 | 455 |
+| caltech validation | 564 | 547 | 100% | 99.6% | 258 | 287 |
+| caltech test | 11 | 11 | 100% | 100% | **0** | **11** |
 
-| concurrency bucket | consistent observables |
-|---|---|
-| 4-7 | n_active: true>false；median_elapsed: true<false |
-| 8-15 | median_elapsed: true>false；median_actual_kw: true<false；pilot_actual_ratio: true>false |
-| 16+ | n_active: true>false；median_actual_kw: true<false；std_actual_kw: true<false；pilot_actual_ratio: true>false |
+- Caltech test：11 E1 core events 全部映射到 minute observable（100%），全部在 E3-valid
+  （100%），但 **S1∩S2=0**（无 E1 core 同时是 E3 A2 candidate）→ E1 response failure
+  和 E3 budget opportunity 在 test 域**不重叠**。
 
-**JPL current-only**：
+#### A5_ENTRY = True（10 candidates）
 
-| concurrency bucket | consistent observables |
-|---|---|
-| 4-7 | n_active: true>false；std_actual_kw: true>false |
-| 8-15 | median_elapsed: true>false；median_actual_kw: true<false；std_actual_kw: true>false |
-| 16+ | n_active: true>false |
+**A5 准入门**：非 definitional + pre_action=true + train/val 同向 + test 不反向 +
+observable-specific non-null ≥5。
 
-#### 关键发现
+| pool | bucket | observable | class | direction | a5_eligible |
+|---|---|---|---|---|---|
+| caltech | 2-3 | median_recent_actual_q90 | baseline_related | true<false | True |
+| caltech | 2-3 | median_lagged_pilot_actual_ratio | baseline_related | true>false | True |
+| caltech | 2-3 | median_elapsed | independent_operational | true>false | True |
+| jpl | 2-3 | median_recent_actual_var | baseline_related | true<false | True |
+| jpl | 2-3 | median_elapsed | independent_operational | true>false | True |
+| jpl | 4-7 | median_recent_actual_var | baseline_related | true<false | True |
+| jpl | 4-7 | median_elapsed | independent_operational | true>false | True |
+| jpl | 16+ | median_recent_actual_q90 | baseline_related | true<false | True |
+| jpl | 16+ | median_recent_actual_var | baseline_related | true<false | True |
+| jpl | 16+ | median_elapsed | independent_operational | true>false | True |
 
-1. **median_actual_kw: true<false** 在 caltech 8-15/16+ 和 jpl 8-15 **跨域一致**：
-   candidate=True 的周期 median actual power **低于** candidate=False。
-   方向合理：低 actual → budget gap (slack) 大 → candidate 成立。
-   这是 candidate 定义的自然推论（slack = budget - actual），但跨域一致值得记录。
+**关键观察**：
+1. `median_elapsed`（independent_operational）在 caltech 2-3 + jpl 2-3/4-7/16+ 均 eligible：
+   candidate=True 的周期 connected-elapsed 更长（true>false）。跨域一致。
+2. `median_recent_actual_q90/var`（baseline_related_history）在 caltech 2-3 + jpl 多 bucket
+   eligible：candidate=True 的 recent actual q90/var 更低（true<false）。
+3. `median_lagged_pilot_actual_ratio` 仅 caltech 2-3（measured-pilot 域）。
+4. **Caltech test S1∩S2=0**：E1 response failure 与 E3 budget opportunity 在 test 域
+   不重叠，但在 train/val 有大量 overlap（606/258）。
 
-2. **median_elapsed: true<false** 在 caltech 8-15 + jpl 8-15 一致：
-   candidate=True 的周期 connected-elapsed 更短（早期充电阶段）。
+**解读**：A5_ENTRY=true，但候选多为 baseline_related_history（与 A2 基线相近），
+independent_operational 只有 median_elapsed。需审查结论42 gate review 判断是否值得
+投入 A5，或直接 SKIP → Final R1 Gate。
 
-3. **pilot_actual_ratio: true>false** 在 caltech 8-15/16+ 一致但 JPL 无此变量
-   （current-only 无 pilot）→ 仅 measured-pilot 域可用。
-
-4. **bucket=1（n_active=1）全 nan**：candidate 定义要求 n_active≥2，bucket=1 无
-   candidate=True → 无法对照（符合预期，验证对照组设计正确）。
-
-5. **bucket=2-3 无 consistent**：63 个 test candidate cycles 全在 2-3，但 train/val/test
-   方向在此 bucket 不一致 → **2-3 并发本身不能直接当 support-domain predictor**。
-
-**解读**：存在少量跨域方向一致的在线可观测量（median_actual_kw、median_elapsed），
-但它们大多直接源于 candidate 定义（slack = budget - actual → 低 actual → candidate）。
-**目前不足以构成独立的 support-domain hypothesis**——需要 A5 进一步检查这些变量在
-"train 强 + val 强 + test 也与失败域不同"的条件下是否仍有选择性。
-test 只产假设，不训练 classifier，不宣称已验证。
-
-输出文件：`results/raw/E3F_expansion/a4_*_bucket_comparison.csv`
-+ `a4_cross_domain.json`
+输出文件：`results/raw/E3F_expansion/a4_cross_domain.csv`
++ `a4_*_bucket_comparison.csv` + `a4_state_observables_*.csv` + `a4_cross_domain.json`
 
 ---
 

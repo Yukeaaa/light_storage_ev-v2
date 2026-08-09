@@ -1,7 +1,7 @@
-month,n_valid_cycles,rate_A0_avg,n_candidate_A0_avg,energy_A0_avg_kwh,rate_A2_prev_actual,n_candidate_A2_prev_actual,energy_A2_prev_actual_kwh,rate_A3_rolling_quantile,n_candidate_A3_rolling_quantile,energy_A3_rolling_quantile_kwh,elimination_A2_vs_A0,elimination_A3_vs_A0
-2020-05,496,0.006048,3,1.29405,0.006048,3,0.320127,0.006048,3,1.143953,0.0,0.0
-2020-06,1404,0.048433,68,30.545499,0.005698,8,0.686267,0.00641,9,1.410532,0.882353,0.867652
-2020-07,1151,0.085143,98,27.458478,0.011295,13,1.439785,0.018245,21,3.630835,0.867341,0.785713
-2020-08,229,0.034934,8,5.016816,0.0131,3,0.198708,0.0131,3,0.405437,0.625007,0.625007
-2020-11,1593,0.060891,97,104.271957,0.022599,36,10.268235,0.040804,65,33.367596,0.628861,0.329885
-2020-12,47,0.0,0,0.0,0.0,0,0.0,0.0,0,0.0,1.0,1.0
+pool,split,month,n_valid_cycles,rate_A0_avg,n_candidate_A0_avg,energy_A0_avg_kwh,rate_A2_prev_actual,n_candidate_A2_prev_actual,energy_A2_prev_actual_kwh,rate_A3_rolling_quantile,n_candidate_A3_rolling_quantile,energy_A3_rolling_quantile_kwh,elimination_A2_prev_actual_vs_A0,elimination_A2_prev_actual_evaluable,elimination_A3_rolling_quantile_vs_A0,elimination_A3_rolling_quantile_evaluable,daily_candidate_energy_share_median
+caltech,test,2020-05,496,0.006048,3,1.29405,0.006048,3,0.320127,0.006048,3,1.143953,0.0,True,0.0,True,0.0
+caltech,test,2020-06,1404,0.048433,68,30.545499,0.005698,8,0.686267,0.00641,9,1.410532,0.882353,True,0.867652,True,0.0
+caltech,test,2020-07,1151,0.085143,98,27.458478,0.011295,13,1.439785,0.018245,21,3.630835,0.867341,True,0.785713,True,0.0
+caltech,test,2020-08,229,0.034934,8,5.016816,0.0131,3,0.198708,0.0131,3,0.405437,0.625007,True,0.625007,True,0.0
+caltech,test,2020-11,1593,0.060891,97,104.271957,0.022599,36,10.268235,0.040804,65,33.367596,0.628861,True,0.329885,True,0.005315
+caltech,test,2020-12,47,0.0,0,0.0,0.0,0,0.0,0.0,0,0.0,,False,,False,0.0

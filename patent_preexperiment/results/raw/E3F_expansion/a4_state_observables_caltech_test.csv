@@ -1,0 +1,6 @@
+pool,split,state,n_cycles,n_mapped_to_minute_observable,mapping_rate_to_minute,insufficient,median_median_actual_kw,median_median_recent_actual_q90,median_median_recent_actual_var,median_median_lagged_pilot_actual_ratio,median_std_actual_kw,median_median_elapsed,median_pilot_available_at_start,median_median_response_persistence_lagged,median_lagged_severe_gap_rate,median_history_coverage,median_concurrency_bucket
+caltech,test,S1_e1_core_independent,11,11.0,1.0,False,5.21055,5.236267,0.02657,1.220878,2.39839,65.691667,1.0,0.006187,0.0,1.0,
+caltech,test,S2_e3_opp,63,,,False,3.545136,5.003021,0.185907,1.308255,3.226548,91.783333,1.0,0.197303,0.0,1.0,2-3
+caltech,test,S3_valid_no_opp,4857,,,False,1.120994,2.448275,0.004305,1.719851,2.319192,187.933333,1.0,0.000964,0.0,1.0,1
+caltech,test,S1_and_S2,0,,,True,,,,,,,,,,,
+caltech,test,S1_and_S3,11,,,False,5.21055,5.236267,0.02657,1.220878,2.39839,65.691667,1.0,0.006187,0.0,1.0,1

@@ -1,0 +1,5 @@
+pool,split,state,n_cycles,insufficient,median_concurrency_bucket,median_median_actual_kw,median_median_recent_actual_q90,median_median_recent_actual_var,median_median_lagged_pilot_actual_ratio,median_std_actual_kw,median_median_elapsed,median_pilot_available_at_start,median_median_response_persistence_lagged,median_lagged_severe_gap_rate,median_history_coverage
+jpl,train,S2_e3_opp,22196,False,16+,1.061014,2.445914,0.010898,,2.075161,236.041667,0.0,0.001622,0.0,1.0
+jpl,train,S3_valid_no_opp,34233,False,1,0.0,1.535362,0.001106,,2.052052,231.666667,0.0,0.000153,0.0,1.0
+jpl,train,S1_and_S2,0,True,,,,,,,,,,,
+jpl,train,S1_and_S3,0,True,,,,,,,,,,,

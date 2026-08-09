@@ -1,83 +1,201 @@
 {
   "module": "A3_baseline_pressure",
   "stop_line_unchanged": "max(A2,A3) elimination > 80% → STOP_COMPLEX_MODEL（不改）",
-  "by_pool_split": {
-    "caltech": {
-      "train": {
-        "n_valid_cycles": 79816,
-        "n_months": 10,
-        "rate_A0_avg": 0.460985,
-        "n_candidate_A0_avg": 36794,
-        "rate_A2_prev_actual": 0.211712,
-        "n_candidate_A2_prev_actual": 16898,
-        "rate_A3_rolling_quantile": 0.342726,
-        "n_candidate_A3_rolling_quantile": 27355,
-        "elimination_A2_prev_actual_vs_A0": 0.54074,
-        "elimination_A3_rolling_quantile_vs_A0": 0.256535,
-        "top_month_share_opp_energy": 0.151092,
-        "top_month": "2019-01"
-      },
-      "validation": {
-        "n_valid_cycles": 33003,
-        "n_months": 10,
-        "rate_A0_avg": 0.413053,
-        "n_candidate_A0_avg": 13632,
-        "rate_A2_prev_actual": 0.198679,
-        "n_candidate_A2_prev_actual": 6557,
-        "rate_A3_rolling_quantile": 0.323577,
-        "n_candidate_A3_rolling_quantile": 10679,
-        "elimination_A2_prev_actual_vs_A0": 0.518999,
-        "elimination_A3_rolling_quantile_vs_A0": 0.216621,
-        "top_month_share_opp_energy": 0.246872,
-        "top_month": "2019-10"
-      },
-      "test": {
-        "n_valid_cycles": 4920,
-        "n_months": 6,
-        "rate_A0_avg": 0.055691,
-        "n_candidate_A0_avg": 274,
-        "rate_A2_prev_actual": 0.012805,
-        "n_candidate_A2_prev_actual": 63,
-        "rate_A3_rolling_quantile": 0.020528,
-        "n_candidate_A3_rolling_quantile": 101,
-        "elimination_A2_prev_actual_vs_A0": 0.770071,
-        "elimination_A3_rolling_quantile_vs_A0": 0.631395,
-        "top_month_share_opp_energy": 0.795178,
-        "top_month": "2020-11"
-      }
+  "daily_share_fidelity": {
+    "caltech_train": {
+      "frozen": 0.041346,
+      "recomputed": 0.041346,
+      "pass": true,
+      "diff": 0.0
     },
-    "jpl": {
-      "train": {
-        "n_valid_cycles": 56429,
-        "n_months": 10,
-        "rate_A2_prev_actual": 0.393344,
-        "n_candidate_A2_prev_actual": 22196,
-        "rate_A3_rolling_quantile": 0.544011,
-        "n_candidate_A3_rolling_quantile": 30698,
-        "top_month_share_opp_energy": 0.131134,
-        "top_month": "2019-04"
-      },
-      "validation": {
-        "n_valid_cycles": 21340,
-        "n_months": 5,
-        "rate_A2_prev_actual": 0.360731,
-        "n_candidate_A2_prev_actual": 7698,
-        "rate_A3_rolling_quantile": 0.513308,
-        "n_candidate_A3_rolling_quantile": 10954,
-        "top_month_share_opp_energy": 0.317153,
-        "top_month": "2019-10"
-      },
-      "test": {
-        "n_valid_cycles": 12722,
-        "n_months": 5,
-        "rate_A2_prev_actual": 0.277629,
-        "n_candidate_A2_prev_actual": 3532,
-        "rate_A3_rolling_quantile": 0.460305,
-        "n_candidate_A3_rolling_quantile": 5856,
-        "top_month_share_opp_energy": 0.472174,
-        "top_month": "2020-01"
-      }
+    "caltech_validation": {
+      "frozen": 0.037781,
+      "recomputed": 0.037781,
+      "pass": true,
+      "diff": 0.0
+    },
+    "caltech_test": {
+      "frozen": 0.0,
+      "recomputed": 0.0,
+      "pass": true,
+      "diff": 0.0
+    },
+    "jpl_train": {
+      "frozen": 0.037816,
+      "recomputed": 0.037816,
+      "pass": true,
+      "diff": 0.0
+    },
+    "jpl_validation": {
+      "frozen": 0.037153,
+      "recomputed": 0.037153,
+      "pass": true,
+      "diff": 0.0
+    },
+    "jpl_test": {
+      "frozen": 0.027001,
+      "recomputed": 0.027001,
+      "pass": true,
+      "diff": 0.0
     }
   },
-  "note": "station exposure = set membership diagnostic，不报可加总 station opportunity energy（审查结论37 P1）"
+  "daily_share_fidelity_all_pass": true,
+  "splits": [
+    {
+      "pool": "caltech",
+      "split": "train",
+      "n_valid_cycles": 79816,
+      "n_months": 10,
+      "rate_A0_avg": 0.460985,
+      "n_candidate_A0_avg": 36794,
+      "rate_A2_prev_actual": 0.211712,
+      "n_candidate_A2_prev_actual": 16898,
+      "rate_A3_rolling_quantile": 0.342726,
+      "n_candidate_A3_rolling_quantile": 27355,
+      "elimination_A2_prev_actual_vs_A0": 0.54074,
+      "elimination_A3_rolling_quantile_vs_A0": 0.256535,
+      "daily_candidate_energy_share_median": 0.041346,
+      "daily_candidate_energy_share_mean": 0.038381,
+      "daily_share_fidelity": {
+        "frozen": 0.041346,
+        "recomputed": 0.041346,
+        "pass": true,
+        "diff": 0.0
+      },
+      "top_month_share_opp_energy": 0.151092,
+      "top_month": "2019-01",
+      "n_months_evaluable_A2_prev_actual": 10,
+      "n_months_A2_prev_actual_elim_gt_80": 0,
+      "months_A2_prev_actual_elim_gt_80": [],
+      "n_months_evaluable_A3_rolling_quantile": 10,
+      "n_months_A3_rolling_quantile_elim_gt_80": 0,
+      "months_A3_rolling_quantile_elim_gt_80": []
+    },
+    {
+      "pool": "caltech",
+      "split": "validation",
+      "n_valid_cycles": 33003,
+      "n_months": 10,
+      "rate_A0_avg": 0.413053,
+      "n_candidate_A0_avg": 13632,
+      "rate_A2_prev_actual": 0.198679,
+      "n_candidate_A2_prev_actual": 6557,
+      "rate_A3_rolling_quantile": 0.323577,
+      "n_candidate_A3_rolling_quantile": 10679,
+      "elimination_A2_prev_actual_vs_A0": 0.518999,
+      "elimination_A3_rolling_quantile_vs_A0": 0.216621,
+      "daily_candidate_energy_share_median": 0.037781,
+      "daily_candidate_energy_share_mean": 0.031838,
+      "daily_share_fidelity": {
+        "frozen": 0.037781,
+        "recomputed": 0.037781,
+        "pass": true,
+        "diff": 0.0
+      },
+      "top_month_share_opp_energy": 0.246872,
+      "top_month": "2019-10",
+      "n_months_evaluable_A2_prev_actual": 6,
+      "n_months_A2_prev_actual_elim_gt_80": 0,
+      "months_A2_prev_actual_elim_gt_80": [],
+      "n_months_evaluable_A3_rolling_quantile": 6,
+      "n_months_A3_rolling_quantile_elim_gt_80": 0,
+      "months_A3_rolling_quantile_elim_gt_80": []
+    },
+    {
+      "pool": "caltech",
+      "split": "test",
+      "n_valid_cycles": 4920,
+      "n_months": 6,
+      "rate_A0_avg": 0.055691,
+      "n_candidate_A0_avg": 274,
+      "rate_A2_prev_actual": 0.012805,
+      "n_candidate_A2_prev_actual": 63,
+      "rate_A3_rolling_quantile": 0.020528,
+      "n_candidate_A3_rolling_quantile": 101,
+      "elimination_A2_prev_actual_vs_A0": 0.770071,
+      "elimination_A3_rolling_quantile_vs_A0": 0.631395,
+      "daily_candidate_energy_share_median": 0.0,
+      "daily_candidate_energy_share_mean": 0.00445,
+      "daily_share_fidelity": {
+        "frozen": 0.0,
+        "recomputed": 0.0,
+        "pass": true,
+        "diff": 0.0
+      },
+      "top_month_share_opp_energy": 0.795178,
+      "top_month": "2020-11",
+      "n_months_evaluable_A2_prev_actual": 5,
+      "n_months_A2_prev_actual_elim_gt_80": 2,
+      "months_A2_prev_actual_elim_gt_80": [
+        "2020-06",
+        "2020-07"
+      ],
+      "n_months_evaluable_A3_rolling_quantile": 5,
+      "n_months_A3_rolling_quantile_elim_gt_80": 1,
+      "months_A3_rolling_quantile_elim_gt_80": [
+        "2020-06"
+      ]
+    },
+    {
+      "pool": "jpl",
+      "split": "train",
+      "n_valid_cycles": 56429,
+      "n_months": 10,
+      "rate_A2_prev_actual": 0.393344,
+      "n_candidate_A2_prev_actual": 22196,
+      "rate_A3_rolling_quantile": 0.544011,
+      "n_candidate_A3_rolling_quantile": 30698,
+      "daily_candidate_energy_share_median": 0.037816,
+      "daily_candidate_energy_share_mean": 0.031855,
+      "daily_share_fidelity": {
+        "frozen": 0.037816,
+        "recomputed": 0.037816,
+        "pass": true,
+        "diff": 0.0
+      },
+      "top_month_share_opp_energy": 0.131134,
+      "top_month": "2019-04"
+    },
+    {
+      "pool": "jpl",
+      "split": "validation",
+      "n_valid_cycles": 21340,
+      "n_months": 5,
+      "rate_A2_prev_actual": 0.360731,
+      "n_candidate_A2_prev_actual": 7698,
+      "rate_A3_rolling_quantile": 0.513308,
+      "n_candidate_A3_rolling_quantile": 10954,
+      "daily_candidate_energy_share_median": 0.037153,
+      "daily_candidate_energy_share_mean": 0.031252,
+      "daily_share_fidelity": {
+        "frozen": 0.037153,
+        "recomputed": 0.037153,
+        "pass": true,
+        "diff": 0.0
+      },
+      "top_month_share_opp_energy": 0.317153,
+      "top_month": "2019-10"
+    },
+    {
+      "pool": "jpl",
+      "split": "test",
+      "n_valid_cycles": 12722,
+      "n_months": 5,
+      "rate_A2_prev_actual": 0.277629,
+      "n_candidate_A2_prev_actual": 3532,
+      "rate_A3_rolling_quantile": 0.460305,
+      "n_candidate_A3_rolling_quantile": 5856,
+      "daily_candidate_energy_share_median": 0.027001,
+      "daily_candidate_energy_share_mean": 0.026058,
+      "daily_share_fidelity": {
+        "frozen": 0.027001,
+        "recomputed": 0.027001,
+        "pass": true,
+        "diff": 0.0
+      },
+      "top_month_share_opp_energy": 0.472174,
+      "top_month": "2020-01"
+    }
+  ],
+  "note": "station exposure = set membership diagnostic，不报可加总 station energy。A0=0 → NA + evaluable=False。daily_candidate_energy_share 用 E3/K1 exact evaluable-day 口径。post-hoc month >80% ≠ formal STOP_COMPLEX_MODEL triggered。"
 }
