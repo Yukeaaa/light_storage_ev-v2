@@ -1,5 +1,5 @@
-stage,n_sessions,unit
-temporal_test_main,10528,
-l1_strict_matched,155,
+stage,n,unit
+temporal_test_main,10528,session
+l1_strict_matched,155,session
 valid_cycles,4920,cycle
 candidate_cycles_A2,63,cycle

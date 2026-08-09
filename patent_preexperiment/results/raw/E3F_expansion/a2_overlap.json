@@ -22,6 +22,44 @@
     "2_39_79_382_2020-06-08 16:47:28.606245"
   ],
   "n_shared_sessions": 1,
+  "shared_concurrency_buckets": [
+    "2-3"
+  ],
+  "e1_concurrency_distribution": {
+    "1": 6,
+    "2-3": 5
+  },
+  "e3_concurrency_distribution": {
+    "2-3": 63
+  },
+  "shared_elapsed_buckets": [
+    "120-239",
+    "30-59",
+    "60-119",
+    "<30"
+  ],
+  "e1_elapsed_distribution": {
+    "120-239": 1,
+    "30-59": 4,
+    "60-119": 4,
+    "<30": 2
+  },
+  "e3_elapsed_distribution": {
+    "120-239": 7,
+    "240+": 10,
+    "30-59": 19,
+    "60-119": 24,
+    "<30": 3
+  },
+  "shared_field_modes": [
+    "measured_pilot"
+  ],
+  "e1_field_mode_distribution": {
+    "measured_pilot": 11
+  },
+  "e3_field_mode_distribution": {
+    "measured_pilot": 63
+  },
   "e1_core_top_month_share": 1.0,
   "e3_opp_top_month_share": 0.7951783948546783,
   "e3_opp_top_month": "2020-11",
