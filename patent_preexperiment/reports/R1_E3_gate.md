@@ -66,12 +66,13 @@ caltech 能量占比 ∧ jpl 能量占比各自 ≥ 0.5%。
 - `cross_pool_review_required`：双轨 train/val + cross-pool 全 PASS 而 test FAIL。
 - JPL train 已 FAIL → `cross_pool_review_required` 不触发（不误标标准情况二）。
 
-## 5. evaluable-day 口径（审查结论29 P0-4）
+## 5. evaluable-day 口径（审查结论30 P0-2；与 K1 e3_lite exact 同源）
 
-- evaluable day = 至少有 1 个 `candidate=True` 的周期（有可评估机会的日期）。
-- 无 `candidate=True` 周期的日期**不以 share=0 进入 median**（non-evaluable ≠ real zero，与 E0 evaluable 汇总层原则一致）。
+- evaluable day = candidate table 里出现的 day（至少有 1 个 valid/eligible paired cycle；含 `candidate=False` 行）。
+- **evaluable + 当日全 `candidate=False` → share=0 是真实零效果，进入 median**（case A）。
+- 一天连一个 valid paired cycle 都没有 → non-evaluable，**不以 0 进入 median**（case B；non-evaluable ≠ real zero，与 E0 evaluable 汇总层原则一致）。
 - 报告：`n_operating_days` / `n_evaluable_days` / `n_non_evaluable_days` / `evaluable_day_coverage`。
-- 与 K1 E3-Lite 同源。
+- 与 K1 E3-Lite `e3_lite/run.py` daily energy section exact 同源（`cd.groupby(["pool","day"])[col].sum()`，`cd` 含 `candidate=False` 行）。
 
 ## 6. runner 治理（审查结论29 P0-1/P0-2/P0-3）
 

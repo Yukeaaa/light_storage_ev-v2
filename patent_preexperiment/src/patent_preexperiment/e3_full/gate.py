@@ -252,16 +252,25 @@ def assert_formal_test_not_started_or_exposed(provenance_path: Path) -> None:
         )
 
 
-def write_started_sentinel(provenance_path: Path, pre_run: dict[str, Any]) -> None:
-    """审查结论29 P0-1：在读取任何 test outcome 之前写 started sentinel。
+def write_started_sentinel(
+    provenance_path: Path,
+    pre_run: dict[str, Any],
+    pretest_summary_sha256: str | None = None,
+    subjects: list[str] | None = None,
+) -> None:
+    """审查结论29/30 P0-1：在读取任何 test outcome 之前写 started sentinel。
 
     state=started 后即使程序崩溃，下次运行 assert_formal_test_not_started_or_exposed 也硬拒。
+    审查结论30 P0-4 增强：含 expected code SHA、full pre_run provenance、pretest hash、subjects。
     """
     sentinel = {
         "experiment_id": "E3_Full_R1_replication",
         "record_type": "formal_test_state",
         "state": "started",
-        "started_at_code_sha": pre_run.get("code_sha"),
+        "expected_code_sha": pre_run.get("code_sha"),
+        "pre_run": pre_run,
+        "pretest_summary_sha256": pretest_summary_sha256,
+        "subjects": subjects or [],
         "note": (
             "started sentinel：formal test 已启动；即使本次运行崩溃，"
             "下次 assert_formal_test_not_started_or_exposed 仍硬拒（不自动获得第二次 test）"

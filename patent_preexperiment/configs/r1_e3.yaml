@@ -94,11 +94,17 @@ gates:
     cross_pool_review: "双轨 train/val + cross-pool 全 PASS 而 test FAIL"
     note: "审查结论29 NB-1：JPL train 已 FAIL 不误标标准情况二"
 
-# ---- evaluable-day 口径（审查结论29 P0-4；stats.pool_audit）----
+# ---- evaluable-day 口径（审查结论30 P0-2；与 K1 e3_lite exact 同源）----
 evaluable_day_rule:
-  definition: "evaluable day = 至少有 1 个 candidate=True 的周期（有可评估机会的日期）"
-  non_evaluable_handling: "无 candidate=True 周期的日期不以 share=0 进入 median（non-evaluable ≠ real zero）"
-  consistency: "与 E0 evaluable 汇总层原则一致；与 K1 E3-Lite 同源"
+  definition: >-
+    evaluable day = candidate table 里出现的 day（至少有 1 个 valid/eligible paired cycle；
+    含 candidate=False 的行，与 K1 e3_lite cd.groupby(["pool","day"]) 同源）
+  evaluable_zero_is_real_zero: >-
+    evaluable day + 当日全部 candidate=False → candidate energy=0 → share=0 是真实零效果，进入 median
+  non_evaluable_handling: >-
+    一天连一个 valid paired cycle 都没有 → non-evaluable，不以 0 进入 median
+    （non-evaluable ≠ real zero，与 E0 evaluable 汇总层原则一致）
+  consistency: "与 K1 E3-Lite e3_lite/run.py daily energy section exact 同源"
   report: [n_operating_days, n_evaluable_days, n_non_evaluable_days, evaluable_day_coverage]
 
 # ---- runner 治理（审查结论29 P0-1/P0-2/P0-3；gate.py + run.py）----

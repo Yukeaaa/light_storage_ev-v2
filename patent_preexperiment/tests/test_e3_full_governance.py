@@ -59,9 +59,27 @@ def test_assert_rejects_exposure_even_without_state(tmp_path: Path) -> None:
 def test_write_started_then_assert_rejects(tmp_path: Path) -> None:
     """P0-1 核心：写 started sentinel 后，即使'崩溃'（无 completed），下次也硬拒。"""
     p = tmp_path / "prov.json"
-    write_started_sentinel(p, {"code_sha": "abc123"})
+    write_started_sentinel(
+        p, {"code_sha": "abc123"},
+        pretest_summary_sha256="deadbeef", subjects=["caltech", "jpl"],
+    )
     with pytest.raises(RuntimeError, match="started"):
         assert_formal_test_not_started_or_exposed(p)
+
+
+def test_write_started_includes_enhanced_fields(tmp_path: Path) -> None:
+    """审查结论30 P0-4：started sentinel 含 expected SHA + pre_run + pretest hash + subjects。"""
+    p = tmp_path / "prov.json"
+    write_started_sentinel(
+        p, {"code_sha": "abc123", "worktree_clean": True},
+        pretest_summary_sha256="deadbeef", subjects=["caltech.CG1", "jpl.Arroyo.current_only"],
+    )
+    payload = json.loads(p.read_text(encoding="utf-8"))
+    assert payload["state"] == "started"
+    assert payload["expected_code_sha"] == "abc123"
+    assert payload["pre_run"]["worktree_clean"] is True
+    assert payload["pretest_summary_sha256"] == "deadbeef"
+    assert payload["subjects"] == ["caltech.CG1", "jpl.Arroyo.current_only"]
 
 
 def test_seal_completed_sets_state_and_exposure(tmp_path: Path) -> None:
@@ -118,5 +136,7 @@ def test_assert_clean_sha_rejects_none_clean() -> None:
 
 
 def test_assert_clean_sha_skip_clean_when_disabled() -> None:
+    """内部 helper 保留 require_clean=False 供 unit 隔离；CLI formal mode 不使用此 bypass
+    （审查结论30：formal 永远 require_clean=True，无 --no-require-clean）。"""
     prov = {"code_sha": "abc123", "worktree_clean": False}
-    assert_clean_and_sha(prov, "abc123", require_clean=False)  # 不要求 clean → 通过
+    assert_clean_and_sha(prov, "abc123", require_clean=False)  # helper 层可禁用

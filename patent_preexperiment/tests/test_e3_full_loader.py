@@ -22,7 +22,10 @@ from patent_preexperiment.e3_full.loader import (
     MAIN_LAYER,
     MAIN_ROLE,
     MAIN_SPLITS,
+    PRETEST_SPLITS,
+    TEST_ONLY_SPLITS,
     load_caltech_main,
+    load_evidence_minutes,
     load_jpl_current_only,
     population_sessions,
     split_minutes,
@@ -187,6 +190,47 @@ def test_split_minutes_empty_raises() -> None:
                                    MAIN_ROLE, "measured_pilot", t, None)])
     with pytest.raises(ValueError, match="无分钟数据"):
         split_minutes(df, "test")
+
+
+def test_pretest_splits_constant_excludes_test() -> None:
+    """审查结论30 P0-1：PRETEST_SPLITS 必须精确 == (train, validation)，不含 test。"""
+    assert PRETEST_SPLITS == ("train", "validation")
+    assert "test" not in PRETEST_SPLITS
+
+
+def test_test_only_splits_constant() -> None:
+    """审查结论30 P0-4：TEST_ONLY_SPLITS 必须精确 == (test,)。"""
+    assert TEST_ONLY_SPLITS == ("test",)
+
+
+def test_load_caltech_main_pretest_splits_predicate_pushdown(tmp_path: Path) -> None:
+    """审查结论30 P0-1：splits=PRETEST_SPLITS 时只返回 train/val 分钟（不读 test）。
+    spy load_evidence_minutes 确认请求的 splits 不含 test。"""
+    from unittest.mock import patch
+
+    df = _universe_minutes()  # 含 train/val/test 三 split
+    # 加一个 test split 会话到分钟表（验证被排除）
+    t = pd.Timestamp("2018-11-01 08:00:00", tz="UTC")
+    test_row = pd.DataFrame([_minute_row("cal_test_extra", "caltech", "California_Garage_01",
+                                         "test", MAIN_ROLE, "measured_pilot", t, None)])
+    df_all = pd.concat([df, test_row], ignore_index=True)
+    root = _write_flat_parquet(tmp_path, df_all)
+
+    captured_splits: list[tuple] = []
+
+    original = load_evidence_minutes
+
+    def _spy(minute_root, registry, role, field_mode=None, splits=MAIN_SPLITS, columns=None):
+        captured_splits.append(splits)
+        return original(minute_root, registry, role, field_mode=field_mode,
+                        splits=splits, columns=columns)
+
+    with patch("patent_preexperiment.e3_full.loader.load_evidence_minutes", side_effect=_spy):
+        out = load_caltech_main(root, _base_registry(), splits=PRETEST_SPLITS)
+
+    assert captured_splits == [PRETEST_SPLITS]
+    assert "test" not in set(out["split"].unique())
+    assert set(out["split"].unique()) == {"train", "validation"}
 
 
 # ---- 真实 registry 人口审计 ----

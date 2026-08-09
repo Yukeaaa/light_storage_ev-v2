@@ -25,6 +25,9 @@ import pyarrow.dataset as ds
 
 MAIN_LAYER = "L1_strict_matched"
 MAIN_SPLITS = ("train", "validation", "test")
+# 审查结论30 P0-1：pretest 真正 predicate-pushdown 到 train/validation（不读 test）
+PRETEST_SPLITS = ("train", "validation")
+TEST_ONLY_SPLITS = ("test",)
 
 # 预注册证据池标签（与 k1_preregister.yaml evidence_pools 语义一致）
 CALTECH_MAIN = "caltech.California_Garage_01"
@@ -100,10 +103,15 @@ def load_caltech_main(
     minute_root: Path,
     registry: pd.DataFrame,
     columns: list[str] | None = None,
+    splits: tuple[str, ...] = MAIN_SPLITS,
 ) -> pd.DataFrame:
-    """E3-M：Caltech 主门人口（L1 ∧ main）。"""
+    """E3-M：Caltech 主门人口（L1 ∧ main）。
+
+    splits 可限定为 PRETEST_SPLITS（不读 test）或 TEST_ONLY_SPLITS（仅 test）。
+    审查结论30 P0-1：pretest 必须 splits=PRETEST_SPLITS 真正 predicate-pushdown。
+    """
     return load_evidence_minutes(
-        minute_root, registry, role=MAIN_ROLE, columns=columns
+        minute_root, registry, role=MAIN_ROLE, splits=splits, columns=columns
     )
 
 
@@ -111,13 +119,18 @@ def load_jpl_current_only(
     minute_root: Path,
     registry: pd.DataFrame,
     columns: list[str] | None = None,
+    splits: tuple[str, ...] = MAIN_SPLITS,
 ) -> pd.DataFrame:
-    """E3-X：JPL current-only 跨池佐证人口（L1 ∧ current_only_fallback ∧ current_only）。"""
+    """E3-X：JPL current-only 跨池佐证人口（L1 ∧ current_only_fallback ∧ current_only）。
+
+    splits 可限定为 PRETEST_SPLITS / TEST_ONLY_SPLITS（审查结论30 P0-1）。
+    """
     return load_evidence_minutes(
         minute_root,
         registry,
         role=FALLBACK_ROLE,
         field_mode=FALLBACK_FIELD_MODE,
+        splits=splits,
         columns=columns,
     )
 

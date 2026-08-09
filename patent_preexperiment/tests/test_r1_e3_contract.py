@@ -89,11 +89,13 @@ def test_r1_e3_m4_hard_is_n_months_no_outlier_cutoff() -> None:
 
 
 def test_r1_e3_evaluable_day_rule_frozen() -> None:
-    """审查结论29 P0-4：evaluable-day 口径冻结。"""
+    """审查结论30 P0-2：evaluable-day 口径与 K1 exact 同源。"""
     r1 = _load_r1_e3()
     ed = r1["evaluable_day_rule"]
-    assert "candidate=True" in ed["definition"]
-    assert "non-evaluable ≠ real zero" in ed["non_evaluable_handling"]
+    assert "valid/eligible paired cycle" in ed["definition"]
+    assert "candidate=False" in ed["definition"]  # 含 candidate=False 行（K1 exact）
+    assert "真实零效果" in ed["evaluable_zero_is_real_zero"]  # case A
+    assert "non-evaluable" in ed["non_evaluable_handling"]  # case B
     assert "n_operating_days" in ed["report"]
 
 
