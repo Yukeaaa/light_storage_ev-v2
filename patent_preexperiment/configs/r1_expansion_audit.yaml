@@ -1,0 +1,121 @@
+# R1 最终收敛审计预注册（审查结论33/34；薄预注册，不改任何 frozen threshold）。
+#
+# 本预注册不是新验证实验，而是对已冻结 E1/E3 formal test 的 post-hoc 解释 + 支持域假设生成。
+# 纪律：test 已暴露，§10.2 只能解释失败、定位支持域、产生下一阶段假设；
+# 不能用 post-hoc 切片把 R1"重新算成 PASS"；不能训练 classifier 宣称已验证 support rule。
+# 真正的新 support-domain gate 以后需要新的独立数据验证。
+
+experiment_id: R1_expansion_audit_v1
+protocol_version: V2.0
+landing_version: V2.1
+review_conclusions: [33, 34]
+commit: auto
+
+# ---- 引用冻结源 ----
+references:
+  e3_code_baseline: "c1436f43e0feba8ac072beac0cb03c851eda2c05"
+  e3_evidence_commit: "310cbdb"
+  e3_pretest_sha256: "0aeb340f4cba80324ebc2d463433de16efffd1e55e48694e5da2e1f9942ab56e"
+  e1_evidence_commit: "44fa88c"
+  registry: "data_registry/e0_full_split_registry.parquet"
+  minute_table: "datasets/session_response_1min"
+  stop_lines: "e0_full.yaml#k1_replication_stop_lines（不改）"
+  e1_frozen_events: "results/raw/E1F/e1_full_test_event_table.parquet"
+  e3_frozen_candidates: "results/raw/E3F/e3_full_test_*_candidate.parquet"
+
+# ---- 纪律（冻结）----
+discipline:
+  no_threshold_change: "不改任何 frozen threshold（e1/e3 停止线、M4、evaluable-day 口径）"
+  no_population_change: "不改双轨人口定义；不改 split"
+  no_metric_change: "不改事件定义/candidate 定义/proxy 集"
+  no_rerun: "不重跑 E1/E3 formal test；只用已冻结 evidence + registry 做描述性拆解"
+  no_posthoc_rescue: "不能用 post-hoc 切片把 R1 重新算成 PASS"
+  no_classifier_validation: "不训练 classifier 宣称 support rule 已验证；只产假设"
+  test_only_hypothesis: "test 切片只产下一阶段假设，不能据此优化 rule 后宣称已验证"
+  jpl_no_rescue: "JPL PASS 不能抵消 Caltech FAIL；跨域定位分开报告，不平均"
+
+# ---- A1-A5 范围（冻结）----
+modules:
+  A1_population_bridge:
+    priority: 1
+    question: "Caltech temporal test main 10,528 → L1_strict_matched test 155 是怎么来的？是数据匹配层选择效应，还是后期运营域本身真的不同？"
+    inputs: ["e0_full_split_registry.parquet"]
+    outputs:
+      - "month × sample_layer（L0_static_extension vs L1_strict_matched）"
+      - "month × match_status（static_only vs matched）"
+      - "month × field_mode"
+      - "station × retained/dropped"
+      - "temporal-test → strict-L1 retention rate（每月）"
+      - "155 sessions 月份/站点组成"
+      - "E1 core-eligible / E3 valid-cycle-eligible 在 155 上再损失多少"
+    output_files:
+      - "results/raw/E3F_expansion/a1_population_bridge.csv"
+      - "results/raw/E3F_expansion/a1_population_bridge.json"
+
+  A2_frozen_test_decomposition:
+    priority: 2
+    question: "E1 11 事件全在 2020-06 + E3 5 机会月但 79.5% 集中——是否指向同一狭窄运行状态？"
+    inputs: ["e1_frozen_events", "e3_frozen_candidates", "minute_table"]
+    slices: [month, station, day, field_mode, concurrency_bucket, connected_elapsed_bucket]
+    outputs:
+      - "E1 test events × month/station/day"
+      - "E3 test candidate energy × month/station/day"
+      - "E3 test top_month 内 day-level 分布"
+      - "E1/E3 test 失败域是否重叠（同一月份/站点/并发桶）"
+    output_files:
+      - "results/raw/E3F_expansion/a2_e1_decomposition.csv"
+      - "results/raw/E3F_expansion/a2_e3_decomposition.csv"
+      - "results/raw/E3F_expansion/a2_overlap.json"
+    note: "只切片已冻结结果，不重跑、不调参、不改事件/candidate 定义"
+
+  A3_baseline_pressure:
+    priority: 3
+    question: "A2/A3 elimination 77%（test）是孤立值，还是后期/某类场景普遍逼近或超过 80%？"
+    scope: ["Caltech train/val/test × month/station", "JPL current-only train/val/test × month"]
+    metrics: [A2_elimination, A3_elimination, candidate_rate, daily_candidate_energy_share, concentration]
+    forbidden: "不改 80% 止损线；不因 test=77% 新造 78%/75% 等新线"
+    output_files:
+      - "results/raw/E3F_expansion/a3_baseline_pressure.csv"
+
+  A4_cross_domain_localization:
+    question: "为什么 Caltech test FAIL 而 JPL current-only test PASS？比较在线可观测域属性"
+    scope:
+      caltech_measured_pilot_main: "≠ jpl current_only（分开报告，不平均）"
+      office001: "descriptive external-only，不参与调规则"
+    online_observables: [n_active, recent_actual_quantile, actual_pilot_ratio, rolling_variance,
+                         connected_elapsed, gap_severe_gap, station_density, time_segment,
+                         recent_response_persistence]
+    output_files:
+      - "results/raw/E3F_expansion/a4_cross_domain.csv"
+
+  A5_support_domain_hypothesis:
+    priority: 5
+    question: "哪些 EVSE-online-observable 条件与 PASS/FAIL 域相关？"
+    method: "固定分桶 / 单变量或少量预定义组合，比较各桶 E1 evidence strength / E3 opportunity strength / baseline elimination"
+    buckets: [recent_actual_quantile, n_active_bucket, elapsed_connected_bucket,
+              pilot_actual_ratio_bucket, recent_variance_bucket]
+    forbidden: "不训练 classifier；不宣称 support rule 已验证；只产下一阶段假设"
+    output_files:
+      - "results/raw/E3F_expansion/a5_support_domain_hypothesis.csv"
+
+# ---- 执行顺序（冻结）----
+execution_order:
+  batch_1: [A1, A2]
+  gate_review_1: "A1/A2 出来后先审一次，再决定 A3-A5 缩放范围"
+  batch_2: [A3, A4]
+  batch_3: [A5]
+  final: "最终 R1 Gate Review → A / B / C"
+
+# ---- 最终 R1 决策预冻结（审查结论33）----
+final_decision:
+  A_narrow_go_d1p:
+    meaning: "机会真实存在但明显域依赖；扩展审计能找到由 EVSE 在线可观测变量描述的合理 support-domain 假设；支持域内保留 bounded correction，域外必须 protective fallback。后续仍需新独立数据验证 support rule。"
+  B_protective_only_go:
+    meaning: "主动候选修正跨域不稳定，或简单基线已解决绝大部分问题；但 recent actual/current-history protective boundary 在 JPL 等域表现稳定。放弃主动 redistribution/广义 executable correction，专利中心缩到 protective execution boundary + fallback。"
+  C_no_go:
+    meaning: "扩展后仍显示机会高度稀疏/高度集中、简单 A2/A3 基线基本解决问题，同时无法提出一个仅依赖在线可观测变量且有工程合理性的 support-domain 假设；此时停止 D1-R/D1-P 继续投入。"
+
+# ---- 输出目录 ----
+outputs:
+  dir: "results/raw/E3F_expansion"
+  gitignored: false
