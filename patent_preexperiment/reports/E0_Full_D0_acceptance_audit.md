@@ -9,7 +9,7 @@ D0 是对 E0F-01..04 冻结产物的只读验收审计：任何门不通过即 S
 | 门 | 结果 | 关键证据 |
 |---|---|---|
 | input_traceability | PASS | {"manifest_hashes": {"static_file_index.csv": {"sha256": "eff813e2a723749c2529a0174d21e19255c63b216cb18796c4c253037a96ac |
-| output_traceability | PASS | {"n_manifest_paths": 16} |
+| output_traceability | PASS | {"n_manifest_paths": 18} |
 | uniqueness | PASS | {"n_files": 81, "n_rows": 28301657, "n_sessions_covered": 85877, "duplicate_key_rows": 0, "orphan_sessions": 0, "missing |
 | completeness | PASS | {"quality_summary": {"files_total": 85877, "rows_total": 448817084, "read_fail": 0}, "session_partitions": {"n_files": 8 |
 | energy_consistency | PASS | {"by_site": {"caltech": {"sessions": 51884, "n_evaluable": 49773, "median_abs_dev": 0.009748084265699635, "p95_abs_dev": |
@@ -22,11 +22,11 @@ D0 是对 E0F-01..04 冻结产物的只读验收审计：任何门不通过即 S
 ## 每门关键证据与最坏情况
 
 ### input_traceability — PASS
-- 证据：`{"manifest_hashes": {"static_file_index.csv": {"sha256": "eff813e2a723749c2529a0174d21e19255c63b216cb18796c4c253037a96ac2e", "matches_baseline": true}, "api_metadata_index.csv": {"sha256": "99fea65a130ccfa7cca178a68b89bd2d4249c992ba15e485c0fc1bf2d2075692", "matches_baseline": true}, "static_api_mapping.csv": {"sha256": "9329c86718c7f5715e321a8057606b2c5c17facc9d35d8b297b2540e9325b620", "matches_baseline": true}}, "source_manifest_sha256": "f1a5fd036ed6901bf5b89af9e935b99b071b32b67812f7dff1810f76506bd17a", "source_manifest_matches_baseline": true, "code_sha": "70370e2569b991d33b61d00bf4ad7772451b76a6", "baseline_code_sha": "b75e591390c7213583facab7e65556896610dd58", "code_sha_matches_baseline": false, "code_sha_note": "provenance only; artifact integrity gated by determinism"}`
+- 证据：`{"manifest_hashes": {"static_file_index.csv": {"sha256": "eff813e2a723749c2529a0174d21e19255c63b216cb18796c4c253037a96ac2e", "matches_baseline": true}, "api_metadata_index.csv": {"sha256": "99fea65a130ccfa7cca178a68b89bd2d4249c992ba15e485c0fc1bf2d2075692", "matches_baseline": true}, "static_api_mapping.csv": {"sha256": "9329c86718c7f5715e321a8057606b2c5c17facc9d35d8b297b2540e9325b620", "matches_baseline": true}}, "source_manifest_sha256": "f1a5fd036ed6901bf5b89af9e935b99b071b32b67812f7dff1810f76506bd17a", "source_manifest_matches_baseline": true, "code_sha": "ff583b978cab981a0c62aefd874e6848613842ea", "baseline_code_sha": "42823a9506f03c9b768983277d4e15e92b767834", "code_sha_matches_baseline": false, "code_sha_note": "provenance only; artifact integrity gated by determinism"}`
 - 最坏情况：无
 
 ### output_traceability — PASS
-- 证据：`{"n_manifest_paths": 16}`
+- 证据：`{"n_manifest_paths": 18}`
 - 最坏情况：无
 
 ### uniqueness — PASS
@@ -54,7 +54,7 @@ D0 是对 E0F-01..04 冻结产物的只读验收审计：任何门不通过即 S
 - 最坏情况：无
 
 ### determinism — PASS
-- 证据：`{"artifact_sha_all_match": true, "session_partition_sha_match": 81, "n_session_partitions": 81, "e0_full_yaml_sha256": "bb51d2e6800f342f8c3ac66726b0115f79f5724d5f7acdf248acb51c78288cfa", "yaml_sha_matches_baseline": false, "code_sha": "70370e2569b991d33b61d00bf4ad7772451b76a6", "baseline_code_sha": "b75e591390c7213583facab7e65556896610dd58", "code_sha_matches_baseline": false, "provenance_note": "code_sha/yaml_sha 为 provenance，不入门线；产物 sha 才是完整性证明"}`
+- 证据：`{"artifact_sha_all_match": true, "session_partition_sha_match": 81, "n_session_partitions": 81, "e0_full_yaml_sha256": "bb51d2e6800f342f8c3ac66726b0115f79f5724d5f7acdf248acb51c78288cfa", "yaml_sha_matches_baseline": true, "code_sha": "ff583b978cab981a0c62aefd874e6848613842ea", "baseline_code_sha": "42823a9506f03c9b768983277d4e15e92b767834", "code_sha_matches_baseline": false, "provenance_note": "code_sha/yaml_sha 为 provenance，不入门线；产物 sha 才是完整性证明"}`
 - 最坏情况：无
 
 ### evaluable_aggregation — PASS
@@ -69,6 +69,6 @@ D0 是对 E0F-01..04 冻结产物的只读验收审计：任何门不通过即 S
 
 ## 冻结产物时点
 
-- created_at_utc：2026-08-08T15:18:35.894337+00:00
-- 冻结时点 code_sha（provenance，E0F-04 冻结提交）：`b75e591390c7213583facab7e65556896610dd58`
+- created_at_utc：2026-08-09T00:19:31.751080+00:00
+- 冻结时点 code_sha（provenance，E0F-04 冻结提交）：`42823a9506f03c9b768983277d4e15e92b767834`
 - E0F-03 分区：81 个分区，28,301,657 行，85,877 会话

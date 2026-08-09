@@ -1,10 +1,10 @@
 {
   "schema": "e0_full_d0_registry",
-  "created_at_utc": "2026-08-09T00:09:29.966825+00:00",
+  "created_at_utc": "2026-08-09T00:25:07.253324+00:00",
   "protocol_version": "V2.0",
   "experiment_id": "E0_full_preregister_v1",
   "baseline_path": "data_registry/e0_full_baseline.json",
-  "baseline_code_sha": "b75e591390c7213583facab7e65556896610dd58",
+  "baseline_code_sha": "42823a9506f03c9b768983277d4e15e92b767834",
   "gates": {
     "input_traceability": {
       "manifest_hashes": {
@@ -23,13 +23,15 @@
       },
       "source_manifest_sha256": "f1a5fd036ed6901bf5b89af9e935b99b071b32b67812f7dff1810f76506bd17a",
       "source_manifest_matches_baseline": true,
-      "code_sha": "70370e2569b991d33b61d00bf4ad7772451b76a6",
-      "baseline_code_sha": "b75e591390c7213583facab7e65556896610dd58",
+      "code_sha": "ff583b978cab981a0c62aefd874e6848613842ea",
+      "baseline_code_sha": "42823a9506f03c9b768983277d4e15e92b767834",
       "code_sha_matches_baseline": false,
-      "code_sha_note": "provenance only; artifact integrity gated by determinism"
+      "code_sha_note": "provenance only; artifact integrity gated by determinism",
+      "pass": true
     },
     "output_traceability": {
-      "n_manifest_paths": 16
+      "n_manifest_paths": 18,
+      "pass": true
     },
     "uniqueness": {
       "n_files": 81,
@@ -41,7 +43,8 @@
       "path_failures": 0,
       "governance_failures": 0,
       "sha_mismatch": 0,
-      "frozen_partitions_missing_files": 0
+      "frozen_partitions_missing_files": 0,
+      "pass": true
     },
     "completeness": {
       "quality_summary": {
@@ -53,7 +56,8 @@
         "n_files": 81,
         "n_rows": 28301657,
         "n_sessions_covered": 85877
-      }
+      },
+      "pass": true
     },
     "energy_consistency": {
       "by_site": {
@@ -913,7 +917,8 @@
         "2020-06",
         "2020-07"
       ],
-      "tolerance_median_dev": 0.01
+      "tolerance_median_dev": 0.01,
+      "pass": true
     },
     "gold_consistency": {
       "per_pool": {
@@ -1464,7 +1469,8 @@
           "total_gold_kwh": 21732.158,
           "total_ours_kwh": 21740.666
         }
-      }
+      },
+      "pass": true
     },
     "split_safety": {
       "split": [
@@ -1512,7 +1518,8 @@
         }
       },
       "n_main": 77773,
-      "n_external_stress": 8104
+      "n_external_stress": 8104,
+      "pass": true
     },
     "leak_safety": {
       "n_forbidden": 14,
@@ -1521,18 +1528,20 @@
         "done_charging_time",
         "kwh_delivered"
       ],
-      "forbidden_hits_in_products": []
+      "forbidden_hits_in_products": [],
+      "pass": true
     },
     "determinism": {
       "artifact_sha_all_match": true,
       "session_partition_sha_match": 81,
       "n_session_partitions": 81,
       "e0_full_yaml_sha256": "bb51d2e6800f342f8c3ac66726b0115f79f5724d5f7acdf248acb51c78288cfa",
-      "yaml_sha_matches_baseline": false,
-      "code_sha": "70370e2569b991d33b61d00bf4ad7772451b76a6",
-      "baseline_code_sha": "b75e591390c7213583facab7e65556896610dd58",
+      "yaml_sha_matches_baseline": true,
+      "code_sha": "ff583b978cab981a0c62aefd874e6848613842ea",
+      "baseline_code_sha": "42823a9506f03c9b768983277d4e15e92b767834",
       "code_sha_matches_baseline": false,
-      "provenance_note": "code_sha/yaml_sha 为 provenance，不入门线；产物 sha 才是完整性证明"
+      "provenance_note": "code_sha/yaml_sha 为 provenance，不入门线；产物 sha 才是完整性证明",
+      "pass": true
     },
     "evaluable_aggregation": {
       "config": {
@@ -1544,7 +1553,8 @@
         ],
         "report_non_evaluable_separately": true,
         "report_evaluable_coverage": true
-      }
+      },
+      "pass": true
     }
   },
   "semantic_guards": {
