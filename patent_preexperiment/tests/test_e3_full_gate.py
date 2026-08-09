@@ -46,7 +46,11 @@ def _audit(
             "A2_prev_actual": {"point": elim_a2},
             "A3_rolling_quantile": {"point": elim_a3},
         },
-        "concentration": {"n_months_with_opp": n_months},
+        "concentration": {
+            "n_months_with_opp": n_months,
+            "top_month_share_of_opp_energy": 0.4,
+            "top_day_share_of_opp_energy": 0.15,
+        },
         "n_dup_cycles": n_dup,
     }
 
@@ -128,10 +132,13 @@ def test_cross_pool_gate_caltech_fails() -> None:
 def test_verdict_pass() -> None:
     v = formal_verdict(
         caltech_test=_caltech_gate(), jpl_test=_jpl_gate(),
-        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(), stop=STOP,
+        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(),
+        jpl_train=_jpl_gate(), jpl_validation=_jpl_gate(), stop=STOP,
     )
     assert v["primary"] == "E3_PASS"
     assert v["review_required"] is False
+    assert v["main_review_required"] is False
+    assert v["cross_pool_review_required"] is False
     assert formal_exit_code(v) == 0
 
 
@@ -139,7 +146,8 @@ def test_verdict_stop_complex_model() -> None:
     """优先级②：A2/A3 消除 >80% → 停止复杂区间模型（即便主门其他项通过）。"""
     v = formal_verdict(
         caltech_test=_caltech_gate(elim_a2=0.85), jpl_test=_jpl_gate(),
-        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(), stop=STOP,
+        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(),
+        jpl_train=_jpl_gate(), jpl_validation=_jpl_gate(), stop=STOP,
     )
     assert v["primary"] == "STOP_COMPLEX_MODEL"
     assert formal_exit_code(v) == 1  # fail-closed
@@ -149,7 +157,8 @@ def test_verdict_fail_main() -> None:
     """优先级③：Caltech test 主门 FAIL → JPL 不得 rescue。"""
     v = formal_verdict(
         caltech_test=_caltech_gate(ci_lower=0.005), jpl_test=_jpl_gate(),
-        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(), stop=STOP,
+        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(),
+        jpl_train=_jpl_gate(), jpl_validation=_jpl_gate(), stop=STOP,
     )
     assert v["primary"] == "FORMAL_FAIL_MAIN"
     assert formal_exit_code(v) == 1
@@ -159,26 +168,63 @@ def test_verdict_fail_cross_pool() -> None:
     """优先级④：Caltech PASS 但 JPL 跨池佐证不足。"""
     v = formal_verdict(
         caltech_test=_caltech_gate(), jpl_test=_jpl_gate(energy_share=0.003),
-        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(), stop=STOP,
+        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(),
+        jpl_train=_jpl_gate(), jpl_validation=_jpl_gate(), stop=STOP,
     )
     assert v["primary"] == "FORMAL_FAIL_CROSS_POOL"
     assert formal_exit_code(v) == 1
 
 
-def test_verdict_review_required_train_val_pass_test_fail() -> None:
-    """情况二：train/validation PASS 而 test FAIL → review_required=True。"""
+def test_verdict_main_review_required_train_val_pass_test_fail() -> None:
+    """NB-1 main_review：Caltech train/val PASS 而 test 主门 FAIL → main_review=True。"""
     v = formal_verdict(
         caltech_test=_caltech_gate(ci_lower=0.005), jpl_test=_jpl_gate(),
-        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(), stop=STOP,
+        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(),
+        jpl_train=_jpl_gate(), jpl_validation=_jpl_gate(), stop=STOP,
     )
     assert v["primary"] == "FORMAL_FAIL_MAIN"
+    assert v["main_review_required"] is True
     assert v["review_required"] is True
+
+
+def test_verdict_cross_pool_review_required() -> None:
+    """NB-1 cross_pool_review：双轨 train/val + cross-pool 全 PASS 而 test FAIL。"""
+    v = formal_verdict(
+        caltech_test=_caltech_gate(), jpl_test=_jpl_gate(energy_share=0.003),
+        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(),
+        jpl_train=_jpl_gate(), jpl_validation=_jpl_gate(), stop=STOP,
+    )
+    assert v["primary"] == "FORMAL_FAIL_CROSS_POOL"
+    assert v["cross_pool_review_required"] is True
+    assert v["review_required"] is True
+
+
+def test_verdict_no_cross_pool_review_when_jpl_train_fails() -> None:
+    """NB-1 关键：JPL train 已 FAIL → cross_pool_review 不触发（不误标标准情况二）。
+    Caltech train/val PASS → main_review 仍可触发（test 主门 FAIL 时）。"""
+    v = formal_verdict(
+        caltech_test=_caltech_gate(ci_lower=0.005), jpl_test=_jpl_gate(),
+        caltech_train=_caltech_gate(), caltech_validation=_caltech_gate(),
+        jpl_train=_jpl_gate(energy_share=0.003), jpl_validation=_jpl_gate(), stop=STOP,
+    )
+    assert v["primary"] == "FORMAL_FAIL_MAIN"
+    assert v["cross_pool_review_required"] is False
+    assert v["main_review_required"] is True  # Caltech train/val 仍 PASS
 
 
 def test_verdict_no_review_when_train_also_fails() -> None:
     v = formal_verdict(
         caltech_test=_caltech_gate(ci_lower=0.005), jpl_test=_jpl_gate(),
         caltech_train=_caltech_gate(ci_lower=0.005), caltech_validation=_caltech_gate(),
-        stop=STOP,
+        jpl_train=_jpl_gate(), jpl_validation=_jpl_gate(), stop=STOP,
     )
     assert v["review_required"] is False
+
+
+def test_caltech_gate_m4_concentration_diagnostic_only() -> None:
+    """NB-2：M4 hard = n_months>=2；top_month/top_day 只作 diagnostic 输出。"""
+    g = _caltech_gate(n_months=1)
+    assert g["m4_not_single_month"] is False
+    assert "m4_concentration_diagnostic" in g
+    diag = g["m4_concentration_diagnostic"]
+    assert "top_month_share" in diag and "top_day_share" in diag

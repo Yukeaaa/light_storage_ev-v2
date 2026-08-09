@@ -2,11 +2,11 @@
 
 覆盖：
 - population_sessions：E3-M（main）/ E3-X（current_only_fallback ∧ current_only）过滤；
-  特别验证同 role 内 measured_pilot 不被误纳入 current-only 池（205 个须排除）；
+  特别验证同 role 内 measured_pilot 不被误纳入 current-only 池（163 个须排除）；
 - load_evidence_minutes：合成分区 + 谓词下推 + registry 交叉验证（missing/extra 拒绝）；
 - minutes_from_end / cycle_month 派生；
 - split_minutes 会话级隔离；
-- 真实 registry（若存在）：E3-M=13,477（9426/3896/155）、E3-X=23,471（13908/5026/1991）。
+- 真实 registry（若存在）：E3-M=13,477（9426/3896/155）、E3-X=20,925（13908/5026/1991）。
 """
 
 from __future__ import annotations

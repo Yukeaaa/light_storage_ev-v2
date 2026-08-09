@@ -1,0 +1,147 @@
+# R1-E3 独立预注册配置（审查结论29；不修改已被 D0 冻结的 e0_full.yaml）。
+#
+# 冻结规则：本文件在正式 test 暴露前冻结。停止线/种子不在此重复，引用
+# e0_full.yaml 的 k1_replication_stop_lines.e3 与 seeds（单一事实来源，已冻结）。
+# 本文件只冻结 R1-E3 新增项：双轨人口、代理集、M4 语义、runner 治理、
+# evaluable-day 口径、输出契约、fail-case 规则。
+# 配套测试：tests/test_e0_contract.py 契约同步 + tests/test_e3_full_*.py
+
+experiment_id: R1_E3_preregister_v1
+protocol_version: V2.0
+landing_version: V2.1
+review_conclusions: [28, 29]
+commit: auto
+
+# ---- 引用冻结源（e0_full.yaml，不重复定义，单一事实来源）----
+references:
+  stop_lines: "e0_full.yaml#k1_replication_stop_lines.e3"
+  seeds: "e0_full.yaml#seeds"
+  split: "e0_full.yaml#split（站点内 60/20/20，整会话不跨 split）"
+  power_priority: "e0_full.yaml#power（measured→computed→estimated，jpl=192.7V）"
+  registry: "data_registry/e0_full_split_registry.parquet"
+  minute_table: "datasets/session_response_1min"
+
+# ---- 双轨人口（审查结论28 定稿；loader.population_sessions 实现）----
+populations:
+  E3_M_caltech_main:
+    definition: "L1_strict_matched ∧ role==main ∧ split∈{train,validation,test}"
+    site: caltech
+    garage: California_Garage_01
+    expected_counts: {total: 13477, train: 9426, validation: 3896, test: 155}
+    role: main
+    field_mode: null  # main role 不限 field_mode（含 measured_pilot 等）
+  E3_X_jpl_current_only:
+    definition: >-
+      L1_strict_matched ∧ role==current_only_fallback ∧ field_mode==current_only
+      ∧ split∈{train,validation,test}
+    site: jpl
+    garage: Arroyo_Garage_01
+    expected_counts: {total: 20925, train: 13908, validation: 5026, test: 1991}
+    role: current_only_fallback
+    field_mode: current_only
+    exclusion_note: >-
+      同 role 内含 163 个 measured_pilot 会话（全在 test split；另 42 个在 stress 不进主切分），
+      必须靠 field_mode==current_only 排除，不能把整个 role 当作 current-only 池。
+
+# ---- 代理集与主基线（审查结论28；stats.CALTECH_PROXIES / JPL_PROXIES）----
+proxies:
+  caltech: [A0_avg, A2_prev_actual, A3_rolling_quantile]
+  jpl_current_only: [A2_prev_actual, A3_rolling_quantile]
+  main_baseline: A2_prev_actual
+  rationale: >-
+    主基线 A2_prev_actual 两池一致（候选量最低的预注册可执行简单基线）；
+    caltech A0_avg 作消除率参照、A3 作简单基线消除率研究；A1/A4 非门所需故不进 R1。
+
+# ---- 门结构（gate.py；停止线值引用 e0_full.yaml）----
+gates:
+  E3_M_caltech_main:
+    M1_a2_daily_ci_lower_rate:
+      threshold_ref: "e0_full.yaml#k1_replication_stop_lines.e3.caltech_a2_daily_ci_lower_rate"
+      value: 0.01
+      meaning: "日等权候选率日 cluster bootstrap CI 下界 ≥1%"
+    M2_caltech_energy_share:
+      threshold_ref: "e0_full.yaml#k1_replication_stop_lines.e3.daily_energy_share_each_pool"
+      value: 0.005
+      meaning: "日候选能量占比中位 ≥0.5%（evaluable-day 口径）"
+    M3_baseline_not_eliminated:
+      threshold_ref: "e0_full.yaml#k1_replication_stop_lines.e3.max_baseline_elimination"
+      value: 0.80
+      meaning: "A2/A3 消除 ≤80%（超限 = 复杂模型止损，单独判定，优先级②）"
+    M4_not_single_month:
+      hard: "n_months_with_opp >= 2"
+      diagnostic_only: [top_month_share_of_opp_energy, top_day_share_of_opp_energy]
+      note: "审查结论29 NB-2：不事后发明 outlier cutoff；top_month/top_day 仅 review evidence"
+  E3_X_jpl_current_only:
+    X1_energy_share:
+      value: 0.005
+      meaning: "日候选能量占比中位 ≥0.5%（evaluable-day 口径）"
+    X2_not_single_month:
+      hard: "n_months_with_opp >= 2"
+    X3_uniqueness:
+      hard: "n_dup_cycles == 0"
+      meaning: "候选表 [site,garage,cycle] 唯一（month_conn fan-out 债务已关闭）"
+    note: "不作率 CI 新硬门槛（JPL 仅跨池佐证）"
+  cross_pool:
+    energy_share_each_pool: "caltech ∧ jpl 能量占比各自 ≥0.5%"
+  formal_verdict_priority:
+    1: "数据/唯一性/provenance FAIL → HARD STOP（runner 抛异常）"
+    2: "A2/A3 消除 >80% → STOP_COMPLEX_MODEL"
+    3: "Caltech test 主门 FAIL → FORMAL_FAIL_MAIN（JPL 不得 rescue）"
+    4: "Caltech PASS 但 cross-pool FAIL → FORMAL_FAIL_CROSS_POOL"
+    5: "全部满足 → E3_PASS"
+  review_required:
+    main_review: "Caltech train/val PASS 而 test 主门 FAIL"
+    cross_pool_review: "双轨 train/val + cross-pool 全 PASS 而 test FAIL"
+    note: "审查结论29 NB-1：JPL train 已 FAIL 不误标标准情况二"
+
+# ---- evaluable-day 口径（审查结论29 P0-4；stats.pool_audit）----
+evaluable_day_rule:
+  definition: "evaluable day = 至少有 1 个 candidate=True 的周期（有可评估机会的日期）"
+  non_evaluable_handling: "无 candidate=True 周期的日期不以 share=0 进入 median（non-evaluable ≠ real zero）"
+  consistency: "与 E0 evaluable 汇总层原则一致；与 K1 E3-Lite 同源"
+  report: [n_operating_days, n_evaluable_days, n_non_evaluable_days, evaluable_day_coverage]
+
+# ---- runner 治理（审查结论29 P0-1/P0-2/P0-3；gate.py + run.py）----
+runner_governance:
+  modes:
+    pretest: "train+validation only → results/work/E3F_pretest/（禁加载 test）"
+    formal_test: "验证 pretest manifest → clean/SHA hard gate → started sentinel → Caltech+JPL test 一次 → results/raw/E3F/ → seal completed"
+    read_frozen: "只读冻结门（不重算/写盘）"
+  once_only_state_machine:
+    states: [absent, started, completed]
+    forbidden_on_rerun: [started, completed]
+    note: "started sentinel 在读取任何 test outcome 之前写；崩溃后不自动获第二次 test"
+  clean_sha_hard_gate:
+    assertions: ["code_sha != unknown", "code_sha == expected_code_sha", "worktree_clean is True"]
+    note: "正式 test 必须在最终 code-only baseline 上执行，clean worktree"
+  provenance_file: "results/raw/E3F/e3_full_provenance.json"
+
+# ---- 输出契约 ----
+outputs:
+  pretest:
+    dir: "results/work/E3F_pretest"
+    files:
+      - e3_full_pretest_summary.json
+      - "e3_full_{split}_{pool}_candidate.parquet"
+      - "e3_full_{split}_{pool}_fail_cases.csv"
+    gitignored: true
+  formal:
+    dir: "results/raw/E3F"
+    files:
+      - e3_full_summary.json
+      - e3_full_provenance.json
+      - "e3_full_{split}_{pool}_candidate.parquet"
+      - "e3_full_{split}_{pool}_fail_cases.csv"
+    gitignored: false
+
+# ---- fail-case 规则（审查结论29 NB-3）----
+fail_cases:
+  target: 20
+  composition: "top positive candidate windows + high-concurrency no-candidate / baseline-missed"
+  insufficient_flag: "若整个 split valid cycles < 20 → insufficient_failure_cases=true（进 review）"
+
+# ---- 术语纪律 ----
+terminology:
+  allowed: ["预算差值", "并发候选修正窗口"]
+  forbidden: ["可回收能力", "命令失败", "拒绝", "可吸收余量"]
+  scope_note: "R1-E3 仍是候选预算修正窗口审计；E2 可执行功率区间未获准启动"

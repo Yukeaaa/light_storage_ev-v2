@@ -14,8 +14,12 @@ R1 冻结差异（相对 E3-Lite）：
 - split 内全部正常月份（不再做 K1 的 6 个月窗口挑选），月份浓度单独报告；
 - 主基线 A2_prev_actual 两池一致；caltech 代理集 [A0_avg, A2, A3]（A0 作消除率参照、
   A3 作简单基线消除率研究；A1/A4 非门所需故不进 R1），jpl current-only [A2, A3]；
+- 审查结论29 P0-4：daily_energy_share 与 K1 同源——从 evaluable days（有 valid
+  candidate cycles 的日期）出发 left join EV energy；无 eligible cycles 的日期不以
+  share=0 进入 median（non-evaluable ≠ real zero，与 E0 evaluable 汇总层原则一致）；
+  另报 n_operating_days / n_evaluable_days / n_non_evaluable_days / coverage。
 - 补充 V2.0 §9.5 报告指标：机会持续时间（连续候选 run 中位/p95）、并发会话数
-  （候选周期 n_active/n_connected 中位）——只报告、不参与门判定。
+  （候选周期 n_active 中位）——只报告、不参与门判定。
 """
 
 from __future__ import annotations
@@ -129,10 +133,21 @@ def pool_audit(
     ev = minute_df.copy()
     ev["day"] = ev["timestamp_utc"].astype(str).str[:10]
     ev_day_energy = ev.groupby("day")["actual_power_kw"].sum() / 60.0
-    cand_day = cand.groupby("day")[f"candidate_energy_{MAIN_PROXY}_kwh"].sum()
-    share = cand_day.div(ev_day_energy.reindex(cand_day.index)).reindex(
-        ev_day_energy.index
-    ).fillna(0.0)
+    has_opp = cand[f"candidate_{MAIN_PROXY}"]
+    # 审查结论29 P0-4：与 K1 同源——evaluable day = 至少有 1 个 candidate=True 的周期
+    # （有可评估机会的日期）；无 candidate=True 周期的日期不以 share=0 进入 median
+    # （non-evaluable ≠ real zero，与 E0 evaluable 汇总层原则一致）。
+    cand_day = (
+        cand.loc[has_opp]
+        .groupby("day")[f"candidate_energy_{MAIN_PROXY}_kwh"]
+        .sum()
+    )
+    ev_on_evaluable = ev_day_energy.reindex(cand_day.index).clip(lower=1e-6)
+    share = cand_day.div(ev_on_evaluable)
+    n_operating_days = int((ev_day_energy > 0).sum())
+    n_evaluable_days = int(len(cand_day))
+    n_non_evaluable_days = max(n_operating_days - n_evaluable_days, 0)
+    evaluable_day_coverage = round(n_evaluable_days / max(n_operating_days, 1), 6)
 
     elimination = {}
     if "A0_avg" in proxies:
@@ -143,7 +158,6 @@ def pool_audit(
                     "ratio_ci95": _elimination_ratio_ci(cand, "A0_avg", p, seed, n_boot),
                 }
 
-    has_opp = cand[f"candidate_{MAIN_PROXY}"]
     concentration = {
         "n_months_with_opp": int(cand[has_opp]["month"].nunique()) if has_opp.any() else 0,
         "top_month_share_of_opp_energy": float(
@@ -173,6 +187,12 @@ def pool_audit(
         "elimination_vs_A0": elimination,
         "daily_energy_share_median": round(float(share.median()), 6) if len(share) else None,
         "daily_energy_share_mean": round(float(share.mean()), 6) if len(share) else None,
+        "evaluable_days": {
+            "n_operating_days": n_operating_days,
+            "n_evaluable_days": n_evaluable_days,
+            "n_non_evaluable_days": n_non_evaluable_days,
+            "evaluable_day_coverage": evaluable_day_coverage,
+        },
         "candidate_energy_total_kwh": round(
             float(cand[f"candidate_energy_{MAIN_PROXY}_kwh"].sum()), 6
         ) if len(cand) else 0.0,

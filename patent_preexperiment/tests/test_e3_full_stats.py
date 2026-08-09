@@ -134,3 +134,62 @@ def test_audit_to_serializable_strips_cand() -> None:
     serial = audit_to_serializable(audit)
     assert "_cand" not in serial
     assert "n_valid_cycles" in serial
+
+
+# ---- 审查结论29 P0-4：daily_energy_share evaluable-day 口径回归 ----
+
+
+def _two_day_minutes() -> pd.DataFrame:
+    """两日数据：
+    - day1（2018-11-01）：2 会话 × 4 周期，产生 eligible candidate cycles（与 _synth_minutes 同型）
+    - day2（2018-11-02）：1 会话 × 4 周期，EV 有能量但只有单会话 → 无 n_active≥2 候选
+      → day2 non-evaluable，不得以 share=0 进入 median。
+    """
+    base1 = pd.Timestamp("2018-11-01 08:00:00", tz="UTC")
+    base2 = pd.Timestamp("2018-11-02 08:00:00", tz="UTC")
+    rows: list[dict] = []
+    # day1：2 会话，与 _synth_minutes 同（cycle1/2 actual=6，cycle3/4 actual=2，pilot=8）
+    for sid in ("d1_s1", "d1_s2"):
+        for i, a in enumerate([6.0, 6.0, 2.0, 2.0]):
+            rows.append({
+                "session_id": f"caltech_{sid}", "station_id": f"st_{sid}",
+                "site": "caltech", "garage": "California_Garage_01",
+                "timestamp_utc": base1 + pd.Timedelta(minutes=5 * i),
+                "actual_power_kw": a, "pilot_power_kw": 8.0,
+            })
+    # day2：单会话（n_active=1，不满足候选 n_active≥2）
+    for i, a in enumerate([6.0, 6.0, 2.0, 2.0]):
+        rows.append({
+            "session_id": "caltech_d2_s1", "station_id": "st_d2s1",
+            "site": "caltech", "garage": "California_Garage_01",
+            "timestamp_utc": base2 + pd.Timedelta(minutes=5 * i),
+            "actual_power_kw": a, "pilot_power_kw": 8.0,
+        })
+    return pd.DataFrame(rows)
+
+
+def test_daily_energy_share_excludes_non_evaluable_days() -> None:
+    """P0-4：day2 有 EV 能量但无 eligible candidate cycles → non-evaluable，
+    不得以 share=0 进入 median；median 只来自 day1。"""
+    df = _two_day_minutes()
+    audit = pool_audit(df, "caltech.California_Garage_01", CALTECH_PROXIES, SEED, N_BOOT)
+    audit.pop("_cand", None)
+    evd = audit["evaluable_days"]
+    assert evd["n_operating_days"] == 2  # day1 + day2 都有 EV 能量
+    assert evd["n_evaluable_days"] == 1  # 仅 day1 有 valid candidate cycles
+    assert evd["n_non_evaluable_days"] == 1
+    assert evd["evaluable_day_coverage"] == pytest.approx(0.5)
+    # median 只来自 day1（day2 不以 0 进入）→ 不为 0
+    assert audit["daily_energy_share_median"] is not None
+    assert audit["daily_energy_share_median"] > 0.0
+
+
+def test_daily_energy_share_single_evaluable_day_nonzero() -> None:
+    """单 evaluable day：share_median = 该日 share（非 0）。"""
+    df = _synth_minutes("caltech", "California_Garage_01", pilot_kw=8.0)
+    audit = pool_audit(df, "caltech.California_Garage_01", CALTECH_PROXIES, SEED, N_BOOT)
+    audit.pop("_cand", None)
+    assert audit["evaluable_days"]["n_operating_days"] == 1
+    assert audit["evaluable_days"]["n_evaluable_days"] == 1
+    assert audit["evaluable_days"]["n_non_evaluable_days"] == 0
+    assert audit["daily_energy_share_median"] > 0.0
