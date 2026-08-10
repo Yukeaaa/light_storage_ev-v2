@@ -1,6 +1,7 @@
-"""P1 runner 测试（Review 56 检查点 1-7 + Review 57 X1 + Review 58 X1.1）：train-only fit、
-test loader 隔离、once-only state machine、hard gate、state-missing 短路、
-artifact-clean 生命周期闭环。用合成数据，不读取真实 test outcome。
+"""P1 runner 测试（Review 56 检查点 1-7 + Review 57 X1 + Review 58 X1.1 + Review 59 X1.2）：
+train-only fit、test loader 隔离、once-only state machine、hard gate、state-missing 短路、
+artifact-clean 生命周期闭环、pre-exposure artifact-integrity gate。
+用合成数据，不读取真实 test outcome。
 """
 
 from __future__ import annotations
@@ -125,13 +126,65 @@ def test_artifact_lifecycle_clean_worktree_closure(tmp_path: Path):
     assert summary["verdict"]["verdict"] in {
         "Go", "Conditional", "No-Go", "NOT_EVALUABLE",
     }
+    sentinel = json.loads(
+        (impl_root / "results" / "raw" / "phase3_p1" / "p1_test_sentinel.json").read_text("utf-8")
+    )
     manifest = json.loads(
         (impl_root / "results" / "raw" / "phase3_p1" / "p1_manifest.json").read_text("utf-8")
     )
-    assert manifest["code_sha"] == head
-    assert manifest["train_edges_sha256"] == hashlib.sha256(
+    file_sha = hashlib.sha256(
         (impl_root / "data_registry" / "p1_train_edges.json").read_bytes()
     ).hexdigest()
+    assert manifest["code_sha"] == head
+    # X1.2：sentinel / manifest 记录同一个 artifact SHA，且与文件一致
+    assert sentinel["train_edges_sha256"] == file_sha
+    assert manifest["train_edges_sha256"] == file_sha
+
+
+def test_formal_rejects_tampered_artifact_even_when_git_clean(tmp_path: Path):
+    """X1.2 fail-closed：fit 后手工改 q50 → artifact 被 .gitignore 掩盖，git 仍 clean →
+    formal 必须靠确定性重算在 test/sentinel 前拒绝（不依赖 git 状态）。"""
+    repo_root = tmp_path
+    impl_root = repo_root / "patent_preexperiment"
+    _make_impl(impl_root)
+    shutil.copyfile(_REPO_ROOT / ".gitignore", repo_root / ".gitignore")
+    _git(repo_root, "init", "-q", "-b", "main")
+    _git(repo_root, "config", "user.email", "p1-test@example.com")
+    _git(repo_root, "config", "user.name", "P1 Test")
+    _git(repo_root, "add", "-A")
+    _git(repo_root, "commit", "-q", "-m", "fixture: clean committed impl")
+    _git(repo_root, "rev-parse", "HEAD")
+
+    run_fit_train_edges(impl_root)
+
+    edges_path = impl_root / "data_registry" / "p1_train_edges.json"
+    payload = json.loads(edges_path.read_text(encoding="utf-8"))
+    payload["train"]["q50"] = float(payload["train"]["q50"]) + 1.0
+    edges_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    # 关键：artifact 被忽略 → git status 仍 clean，formal 只能靠 integrity gate 拒绝
+    assert _git(repo_root, "status", "--porcelain") == ""
+    with pytest.raises(RuntimeError, match="integrity"):
+        run_formal_test(impl_root)
+    # fail-closed：sentinel / summary 均未落盘
+    assert not (impl_root / "results" / "raw" / "phase3_p1" / "p1_test_sentinel.json").exists()
+    assert not (impl_root / "results" / "raw" / "phase3_p1" / "p1_test_summary.json").exists()
+
+
+def test_formal_rejects_tampered_quartile_edges(tmp_path: Path, monkeypatch):
+    """X1.2 fail-closed（fake provenance 快路径）：quartile edges 被改 → 同样拒绝。"""
+    _make_impl(tmp_path)
+    _fake_git_provenance(monkeypatch, sha="deadbeef", clean=True)
+    run_fit_train_edges(tmp_path)
+
+    edges_path = tmp_path / "data_registry" / "p1_train_edges.json"
+    payload = json.loads(edges_path.read_text(encoding="utf-8"))
+    payload["quartile_edges"]["edges"][1] = 999.0
+    edges_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(RuntimeError, match="integrity"):
+        run_formal_test(tmp_path)
+    assert not (tmp_path / "results" / "raw" / "phase3_p1" / "p1_test_sentinel.json").exists()
 
 
 def test_load_split_minutes_query_filter(tmp_path: Path, monkeypatch):

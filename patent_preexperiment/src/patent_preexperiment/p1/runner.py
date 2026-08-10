@@ -23,12 +23,23 @@ Review 57 X1（implementation-fidelity hotfix）：
   B) quartile direction 用最高/最低 effective label（不硬编码 Q4）；
   C) train-edge artifact 只能在 clean committed worktree 上产出，formal gate 两侧闭合
      （fit-time worktree_clean=True 且 code_sha 已知；formal-time sha 匹配 + clean）。
+
+Review 58 X1.1（artifact lifecycle closure）：
+  - p1_train_edges.json 入 .gitignore（fit 后 worktree 保持 clean，不产生往返 dirty）；
+  - formal manifest 记录 train_edges_sha256。
+
+Review 59 X1.2（artifact-integrity pre-exposure gate）：
+  - formal 读取 test **之前**确定性重算 q50/quartile edges（只读 train，同代码），
+    与冻结 artifact 严格比较，任何不一致 fail-closed（不写 sentinel、不读 test）；
+  - artifact SHA 在 started sentinel 中记录，结束前复算必须一致（防运行中被替换）；
+  - 该检查是 integrity verification，不重选规则、不覆盖 artifact。
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import math
 from pathlib import Path
 from typing import Any, cast
 
@@ -131,6 +142,63 @@ def _file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _close(a: Any, b: Any) -> bool:
+    """X1.2 严格比较：数值用紧容差，其余逐项等于。"""
+    if isinstance(a, (int, float)) and isinstance(b, (int, float)):
+        return math.isclose(float(a), float(b), rel_tol=1e-12, abs_tol=1e-12)
+    return bool(a == b)
+
+
+def _verify_train_edges_integrity(impl_root: Path, frozen: dict[str, Any]) -> None:
+    """X1.2：formal 暴露 test 前，确定性重算 train-edge 并与冻结 artifact 严格比较。
+
+    只读 train（同 fit 路径、同代码），重算结果仅用于 integrity verification：
+    不重选规则、不写新 edges、不覆盖 artifact。任何不一致 → fail-closed，
+    sentinel 与 test 均不读取（防止 artifact 被 .gitignore 掩盖后静默调边界）。
+    """
+    registry = pd.read_parquet(
+        impl_root / "data_registry" / "p1_office001_split_registry.parquet"
+    )
+    train_minutes = _load_split_minutes(
+        impl_root / "datasets" / "session_response_1min", registry, "train"
+    )
+    obs_train = cycle_observables(train_minutes)
+    q50_check = fit_train_q50(obs_train)
+    edges_check, _ = fit_quartile_edges(obs_train)
+
+    problems: list[str] = []
+    if not _close(q50_check, frozen["train"]["q50"]):
+        problems.append(f"q50: recomputed={q50_check!r} frozen={frozen['train']['q50']!r}")
+    for key in ("q25", "q50", "q75"):
+        if not _close(edges_check[key], frozen["quartile_edges"][key]):
+            problems.append(
+                f"quartile.{key}: recomputed={edges_check[key]!r} "
+                f"frozen={frozen['quartile_edges'][key]!r}"
+            )
+    if edges_check["edges"] != frozen["quartile_edges"]["edges"]:
+        problems.append("quartile.edges: recomputed != frozen")
+    if edges_check["labels"] != frozen["quartile_edges"]["labels"]:
+        problems.append("quartile.labels: recomputed != frozen")
+    if int(edges_check["n_train_nonnull"]) != int(
+        frozen["quartile_edges"]["n_train_nonnull"]
+    ):
+        problems.append("quartile.n_train_nonnull: recomputed != frozen")
+    if int(edges_check["effective_bins"]) != int(
+        frozen["quartile_edges"]["effective_bins"]
+    ):
+        problems.append("quartile.effective_bins: recomputed != frozen")
+    if bool(edges_check["insufficient_bin_resolution"]) != bool(
+        frozen["quartile_edges"]["insufficient_bin_resolution"]
+    ):
+        problems.append("quartile.insufficient_bin_resolution: recomputed != frozen")
+
+    if problems:
+        raise RuntimeError(
+            "P1 hard gate（integrity）：train-edge artifact 与当前代码确定性重算不一致，"
+            "禁止暴露 formal test：" + "; ".join(problems)
+        )
+
+
 def run_fit_train_edges(impl_root: Path) -> dict[str, Any]:
     """只在 office001 train 上拟合 q50 与 quartile edges，产出冻结 edges（code-only）。
 
@@ -216,13 +284,20 @@ def run_formal_test(impl_root: Path, seed: int = 20240810) -> dict[str, Any]:
     if train_edges["provenance"].get("worktree_clean") is not True:
         raise RuntimeError("P1 hard gate：train edges 并非在 clean worktree 上拟合，禁止暴露")
 
-    # ④ sentinel 在读取 test outcome 之前写入
+    # X1.2 pre-exposure integrity：确定性重算 train-only 并与冻结 artifact 严格比较。
+    # fail-closed → 不写 sentinel、不读 test（防 artifact 被 .gitignore 掩盖后静默调边界）。
+    _verify_train_edges_integrity(impl_root, train_edges)
+
+    # ④ sentinel 在读取 test outcome 之前写入，记录 artifact SHA
+    artifact_sha = _file_sha256(edges_path)
     sentinel = {
         "status": "running",
         "started_at": pd.Timestamp.now(tz="UTC").isoformat(),
         "expected_code_sha": expected_sha,
         "code_sha": prov["code_sha"],
         "worktree_clean": prov["worktree_clean"],
+        "train_edges_sha256": artifact_sha,
+        "integrity": "deterministic recompute == frozen artifact (pre-exposure)",
         "exposed_sha": None,
     }
     _write_json(sentinel_path, sentinel)
@@ -296,6 +371,15 @@ def run_formal_test(impl_root: Path, seed: int = 20240810) -> dict[str, Any]:
             "reuse": "Step 0 判定 feasible（见 data_registry/p1_step0_feasibility.json）",
         },
     }
+    # X1.2 end-of-run hash check：运行期间 artifact 被替换 → fail-closed（sentinel 记 aborted）
+    if _file_sha256(edges_path) != artifact_sha:
+        sentinel.update({"status": "aborted", "reason": "train_edges_sha256 changed mid-run"})
+        _write_json(sentinel_path, sentinel)
+        raise RuntimeError(
+            "P1 hard gate（integrity）：formal 运行期间 train-edge artifact 被替换，"
+            "结果未落盘，sentinel 记 aborted"
+        )
+
     _write_json(impl_root / _SUMMARY_PATH, summary)
 
     sentinel.update({"status": "completed", "exposed_sha": prov["code_sha"]})
@@ -308,7 +392,7 @@ def run_formal_test(impl_root: Path, seed: int = 20240810) -> dict[str, Any]:
         "summary": str(Path(_SUMMARY_PATH).as_posix()),
         "sentinel": str(Path(_SENTINEL_PATH).as_posix()),
         "train_edges": str(Path(_TRAIN_EDGES_PATH).as_posix()),
-        "train_edges_sha256": _file_sha256(edges_path),
+        "train_edges_sha256": artifact_sha,
         "code_sha": prov["code_sha"],
         "worktree_clean": prov["worktree_clean"],
         "once_only": True,
