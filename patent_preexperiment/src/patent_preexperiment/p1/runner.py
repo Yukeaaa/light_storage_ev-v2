@@ -85,12 +85,14 @@ _MINUTE_COLUMNS = [
     "pilot_a",
     "pilot_available",
     "connected_elapsed_min",
-    "minutes_from_end",
     "gap_flag",
     "severe_gap_before",
     "disconnect_time",
     "done_charging_time",
 ]
+
+# 生产 schema（E0 session_response_1min）不含 minutes_from_end；必须派生
+assert "minutes_from_end" not in _MINUTE_COLUMNS
 
 _TRAIN_EDGES_PATH = "data_registry/p1_train_edges.json"
 _SENTINEL_PATH = "results/raw/phase3_p1/p1_test_sentinel.json"
@@ -107,6 +109,8 @@ def _load_split_minutes(
 
     test/pretest loader 物理路径分开：本函数只被 formal 阶段调用，split 显式传入。
     加载后 fail-closed：loaded ids ⊆ 该 split 会话集。
+    minutes_from_end 由 disconnect_time - timestamp_utc 派生（与 Step 0 同式；
+    生产 schema 不含该列，Review 61）。
     """
     allowed = set(registry.loc[registry["split"] == split, "session_id"])
     if not allowed:
@@ -119,6 +123,9 @@ def _load_split_minutes(
     dataset = ds.dataset(str(minute_root))
     table = dataset.to_table(filter=pred, columns=_MINUTE_COLUMNS)
     df = cast(pd.DataFrame, table.to_pandas())
+    df["minutes_from_end"] = (
+        (df["disconnect_time"] - df["timestamp_utc"]).dt.total_seconds() / 60.0
+    )
     loaded = set(df["session_id"])
     if not (loaded <= allowed):
         raise RuntimeError(

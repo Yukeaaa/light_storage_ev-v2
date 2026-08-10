@@ -19,6 +19,7 @@ import pyarrow.parquet as pq
 import pytest
 
 from patent_preexperiment.p1.runner import (
+    _MINUTE_COLUMNS,
     _load_split_minutes,
     read_frozen,
     run_fit_train_edges,
@@ -59,7 +60,6 @@ def _write_minute_dataset(root: Path, constant_test: bool = False) -> pd.DataFra
                 "pilot_a": 32.0,
                 "pilot_available": True,
                 "connected_elapsed_min": float(m),
-                "minutes_from_end": float(n_min - m),
                 "gap_flag": False,
                 "severe_gap_before": False,
                 "disconnect_time": t0 + pd.Timedelta(minutes=n_min + 1),
@@ -224,6 +224,22 @@ def test_load_split_minutes_fail_closed(tmp_path: Path, monkeypatch):
     monkeypatch.setattr(ds, "dataset", lambda *a, **k: _NoFilterDataset(real_dataset))
     with pytest.raises(RuntimeError, match="fail-closed"):
         _load_split_minutes(tmp_path / "datasets" / "session_response_1min", reg, "test")
+
+
+def test_load_split_minutes_derives_minutes_from_end(tmp_path: Path):
+    """Review 61 regression：生产 schema 不含 minutes_from_end 列，loader 必须派生。"""
+    df = _write_minute_dataset(tmp_path)
+    reg = _registry()
+    assert "minutes_from_end" not in _MINUTE_COLUMNS
+    assert "minutes_from_end" not in df.columns  # parquet fixture 忠实生产 schema
+    loaded = _load_split_minutes(
+        tmp_path / "datasets" / "session_response_1min", reg, "test"
+    )
+    assert "minutes_from_end" in loaded.columns
+    expected = (
+        (loaded["disconnect_time"] - loaded["timestamp_utc"]).dt.total_seconds() / 60.0
+    )
+    assert (loaded["minutes_from_end"] - expected).abs().max() < 1e-6
 
 
 def _make_impl(impl_root: Path, constant_test: bool = False) -> None:
