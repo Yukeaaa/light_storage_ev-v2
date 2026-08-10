@@ -1,0 +1,48 @@
+{
+  "experiment_id": "P1_office001_replication_v1",
+  "protocol_version": "Phase3_v1.0.2",
+  "rule_version": "p1_office001_split_v1",
+  "site": "office001",
+  "population": "office001 ∧ sample_layer==L1_strict_matched（严格会话验证；static_only 不进入 P1）",
+  "split_rule": "office001 站点内按 [connection_time_canonical, session_id] mergesort 稳定排序：前 60% train / 中 20% validation / 后 20% test",
+  "ratios": {
+    "train": 0.6,
+    "validation": 0.2,
+    "test": 0.2
+  },
+  "registry_path": "data_registry\\p1_office001_split_registry.parquet",
+  "sha256": "6eaabe46f70318d03138156a479d497e94d216e81e978c60698131a7b519c740",
+  "rows": 1300,
+  "matched": 1300,
+  "static_only": 0,
+  "split_counts": {
+    "train": 644,
+    "stress": 226,
+    "validation": 215,
+    "test": 215
+  },
+  "n_stations": 8,
+  "months": [
+    "2019-03",
+    "2019-04",
+    "2019-05",
+    "2019-06",
+    "2019-07",
+    "2019-08",
+    "2019-09",
+    "2019-10",
+    "2019-11",
+    "2020-01",
+    "2020-03",
+    "2020-05",
+    "2020-06",
+    "2020-07",
+    "2020-08",
+    "2020-09",
+    "2020-10",
+    "2020-11"
+  ],
+  "stress_sessions": 226,
+  "contains_e1_fields": false,
+  "note": "split registry 只含 session_id/role/split 元数据；不含任何 E1 label/outcome 字段；test 的 E1 事件在正式 test 前禁止读取。"
+}

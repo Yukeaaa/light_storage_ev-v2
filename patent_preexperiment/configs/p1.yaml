@@ -1,0 +1,44 @@
+# P1 — 独立数据验证 C-007（Patent Definition Phase 3 v1.0.2 冻结）
+# 协议来源：patent_preexperiment/reports/patent_definition/minimum_evidence_preregistration.md §1
+# 冻结纪律：本文件在读取任何 office001 结果前冻结；test 的 E1 outcome 正式 test 前不可读。
+
+experiment_id: P1_office001_replication_v1
+protocol_version: Phase3_v1.0.2
+rule_version: p1_office001_split_v1
+output_version: p1_v1
+
+site: office001
+
+# --- P1 split（协议 §1.4：站点内时间 60/20/20，先确定并哈希）---
+split:
+  rule: "office001 站点内按 [connection_time_canonical, session_id] mergesort 稳定排序：前 60% train / 中 20% validation / 后 20% test"
+  unit: session                      # 整条会话属于唯一 split，禁止按分钟切分
+  ratios: {train: 0.6, validation: 0.2, test: 0.2}
+  population: "office001 ∧ sample_layer==L1_strict_matched（严格会话验证；static_only 不进入 P1）"
+  stress: "异常月份（2019-12/2020-02/2020-04/2020-12 及 2021）会话标记 split=stress，不进主切分，仅敏感性"
+  forbidden:
+    - test_exposure_before_freeze
+    - test_e1_label_read
+    - stress_in_main_split
+    - static_only_in_split
+  source_registry: "data_registry/e0_full_split_registry.parquet"
+
+# --- E1 事件定义：同一套冻结 E1 定义（协议 §1.4：唯一接口）---
+e1:
+  thresholds_ref: "configs/k1_preregister.yaml primary_threshold"   # K1 冻结值，不改
+  events: "E1 core_run_segment 事件（detect_gap_events + done 阶段切断，K1 冻结逻辑）"
+
+# --- Step 0 可行性线（协议 §1.6 Success ①；train+validation pretest 口径）---
+step0:
+  audit_splits: [train, validation]  # 只读这两个；test 的 E1 label/count 禁止读取
+  feasibility:
+    pilot_coverage_min: 0.50         # measured_pilot 会话覆盖 >=50%
+    pretest_e1_events:
+      go: 50                         # >=50 → 主数据可行，进入 P1 code-only implementation
+      conditional: 20                # 20–50 → Conditional feasibility
+                                     # <20 → UCSD backup feasibility 路径
+  verdicts:
+    feasible: "P1 primary data feasible → 进入 P1 code-only implementation"
+    conditional_feasibility: "P1 office001 Conditional feasibility，按冻结协议处理"
+    backup_path: "进入 UCSD backup feasibility 路径（不能自行扩大 population / 改 E1 定义）"
+    not_evaluable: "office001 与 UCSD 均不可行 → P1 evidence=NOT_EVALUABLE；Patent route=Conditional"
