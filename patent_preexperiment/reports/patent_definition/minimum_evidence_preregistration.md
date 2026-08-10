@@ -1,4 +1,4 @@
-# Patent Definition Phase 3 — Minimum Evidence Preregistration
+# Patent Definition Phase 3 — Minimum Evidence Preregistration（v1.0.1）
 
 > 依据：审查结论52（Final R1 Patent Gate：PROTECTIVE GO + D2/D3 fusion）；
 > Phase 2 Claim Architecture Freeze（`open_questions_decision_record.md`，commit `79ff1a1`）。
@@ -6,7 +6,12 @@
 > 每个实验固定 8 字段，第 8 项（失败后删哪一句）是本阶段最重要的纪律：
 > 从"实验过没过"改为"这个实验失败，会从专利里删掉哪一句"。
 >
-> **冻结效力**：本文档冻结后为 Phase 3 v1.0。任何改动须新版本 + 新测试协议，
+> **v1.0.1（审查结论53，protocol-only closure）**：① Step 0 禁止读取 test E1 labels；
+> ② 删除未定义的 matched hard gate；③ 冻结 `min_recent_samples=2`（A5 同源）；
+> ④ 封死 ratio zero-denominator 与 duplicate-edge 语义；⑤ 删除 P3→P-004 错误映射；
+> ⑥ `NOT_EVALUABLE` 与 Conditional patent route 分开表述。未改实验设计与科学方向。
+>
+> **冻结效力**：本文档冻结后为 Phase 3 v1.0.1。任何改动须新版本 + 新测试协议，
 > 禁止静默修改阈值/变量/population；封存 test 永不重跑；office001 外部验证禁止回填阈值。
 > 本文件不是法律意见。
 
@@ -54,6 +59,9 @@ P3 E4.1 克制版（P2 未出结果前不启动）
 ### 0.5 数据治理
 
 - 封存 test（E1/E3 formal）永不重跑；A5 已运行结果（`34f04f6` → evidence `a827df3`）为事实基线。
+- **test label 隔离（v1.0.1）**：任何实验先确定并哈希 train/val/test split；**Step 0 / 预检
+  只能读取 train + validation**；test 的 E1 event label / event count 在正式 test 前
+  **完全不可读取**；实现为 code-only baseline + clean worktree 后，formal test **单次 exposure**。
 - **office001 只做外部验证，禁止用其结果改任何阈值**（AGENTS.md）。
 - 低覆盖/异常月份（2019-12、2020-02、2020-04、2020-12、2021 全年）只作 stress/敏感性，
   不进主切分、不参与门判定。
@@ -104,31 +112,42 @@ P3 E4.1 克制版（P2 未出结果前不启动）
   - office001 **从未参与** A5 任何阈值/分桶/参考确定（A5 pools 仅 caltech + jpl）；
   - 与 A5 的**唯一接口**是"同一套冻结 E1 事件定义"与"同一套 recent_var 计算方法"
     （E0-Full 冻结代码，不改）。
-- **切分**：office001 站点内时间 60/20/20；quartile 边只在 office001 **train** 上拟合一次，
-  **test** 只评估一次（镜像 A5 方法）。
+- **切分（先哈希，v1.0.1）**：office001 站点内时间 60/20/20，split 注册先确定并哈希；
+  quartile 边只在 office001 **train** 上拟合一次；**Step 0 / 预检只读 train + validation**；
+  **test 的 E1 event label / event count 在正式 test 前不可读取**（code-only baseline +
+  clean worktree → formal test 单次 exposure）。
 - **绝对不**使用：E1/E3 封存 test；低覆盖/异常月份（仅敏感性）；A5 已用的 caltech/jpl 任何
   数据（避免与 C-007 发现同源）。
-- **备份**：若 office001 pilot 覆盖或 E1 事件数不足（见 1.6 预检），备份 = UCSD ChargePointEV
-  （E7 pipeline，允许按 V2.0 E7 构建）；两者均不可行 → 判 **条件 Go**（见 1.6），
-  **不静默换数据**。
+- **备份**：若 office001 pilot 覆盖或 pretest E1 事件数不足（见 1.6 预检），备份 = UCSD
+  ChargePointEV（E7 pipeline，允许按 V2.0 E7 构建）；两者均不可行 → **P1 evidence verdict =
+  NOT_EVALUABLE**、**Patent route verdict = Conditional**（见 1.6），**不静默换数据**。
 
 ### 1.5 Frozen method
 
-1. **预检（Step 0，不入门）**：office001 `matched` 会话数、measured_pilot 覆盖占比、
-   潜在 E1 事件数（同一套冻结 E1 定义）、站点/月份覆盖。产出《数据可行性报告》。
+1. **预检（Step 0，不入门）**：**只读 office001 train + validation**。报告 `matched`
+   会话数（**仅作 population audit，不参与 Go/No-Go**）、measured_pilot 覆盖占比、
+   **train+validation pretest E1 事件数**（同一套冻结 E1 定义）、站点/月份覆盖。
+   产出《数据可行性报告》。**test 的 E1 event label / event count 不可读取。**
 2. **变量**：`recent_var` = 与 A5 完全相同的滑动窗口 recent actual power 方差计算
    （E0-Full 冻结实现，**不重新发明、不重拟合**）。
-3. **三态映射（冻结于本文档）**：
-   - 在 office001 **train** 上对 recent_var 拟合 ECDF quartile 边（Q1..Q4，与 A5 同法）。
-   - **S1 response-supported** = recent_var ≤ Q2 上边（中位以下，实际稳定）；
-   - **S2 protective** = recent_var > Q2 上边（实际波动，按 P-003 语义降低信任）；
-   - **S3 insufficient** = 近期响应样本不足（前窗可评估样本 < `min_recent_samples`）。
-   - `min_recent_samples` 沿用 A5/E0-Full 既有非空/覆盖判定，冻结值在预检报告中记录，
-     不因 office001 结果调整。
+3. **三态映射（冻结于本文档 v1.0.1）**：
+   - **S1/S2 主切分直接用 office001 train raw q50（median）**，不依赖 duplicate-edge
+     后是否存在 `"Q2"` label：
+     - **S1 response-supported** = recent_var ≤ train_q50（实际稳定）；
+     - **S2 protective** = recent_var > train_q50（实际波动，按 P-003 语义降低信任）；
+   - **S3 insufficient** = 同一 session、同一 uninterrupted run 内先前有效 5-min cycle
+     observation **< `min_recent_samples`** → recent_var 不可评估 → S3。
+   - **`min_recent_samples = 2`**（v1.0.1 冻结；来源 = A5 `recent_actual_var` 同源实现：
+     前一时刻数据、12-cycle rolling window、`min_periods=2`、run 断裂 / severe gap 后重置）。
+     **Step 0 不再记录/另定该值。**
 4. **指标（test，单次）**：
    - 主指标：E1 evidence rate（cycle 级，event-start snapshot，与 A5 同口径）按 S1/S2 分层；
-     `rate_ratio = rate_S2 / rate_S1`。
-   - 次指标：Q1..Q4 逐 quartile 单调性（与 A5 方向对比）；S3 占比与触发正确性；绝对量+相对量。
+     `rate_ratio = rate_S2 / rate_S1`（effect size）与 `rate_diff = rate_S2 − rate_S1`
+     （inferential）。
+   - 次指标：quartile direction 用 **A5 duplicate-edge rule**——highest effective variance
+     bin > lowest effective variance bin（即 Q4>Q1 语义）；不足 2 个 effective bins →
+     `insufficient_bin_resolution`，**不得偷偷重找 cutpoint**；S3 占比与触发正确性；
+     绝对量+相对量。
    - 统计：会话/日级 cluster bootstrap 95%CI；报最差月份/站点；≥20 个失败案例归档。
 5. **敏感性（报告不入门）**：低覆盖/异常月份 + caltech-train 绝对边外推 office001（报告该
    敏感性结果，明确"不推翻主门、不回填阈值"）。
@@ -137,9 +156,9 @@ P3 E4.1 克制版（P2 未出结果前不启动）
 
 | 结果 | 判定 | 量化条件 |
 |---|---|---|
-| **Success (Go)** | 主门 | ① 预检可行（office001 matched ≥ 阈值、measured_pilot 覆盖 ≥ 50%、E1 事件 ≥ 50）；② `rate_S2 > rate_S1` 且 point `rate_ratio ≥ 1.5`；③ cluster bootstrap 95%CI 下界 > 1.0；④ 逐 quartile 方向与 A5 一致（Q4 > Q1）；⑤ S3 触发符合定义 |
-| **Conditional (条件 Go)** | 部分成立 | 方向正确但 `1.2 ≤ rate_ratio < 1.5`；或 CI 含 1.0 但 point 一致；或样本位于下界（E1 事件 20–50）；或 office001/UCSD 均数据不可行 |
-| **No-Go** | 主门失败 | 方向反转（`rate_S2 < rate_S1`）；或 CI 上界 < 1.0；或预检后 E1 事件 < 20 且备份不可行；或 S3 异常主导 |
+| **Success (Go)** | 主门 | ① 预检可行：measured_pilot 覆盖 ≥ 50%、**train+validation pretest E1 事件 ≥ 50**（matched 会话数仅作 population audit，不入门）；② effect-size：raw `rate_ratio ≥ 1.5`（`rate_S1=0` 时 ratio=∞，数学明确，**不加 pseudocount / continuity correction**）；③ inferential：cluster bootstrap 95% CI of `rate_diff = rate_S2 − rate_S1` **下界 > 0**；④ secondary quartile direction 符合 duplicate-edge rule（highest effective bin > lowest effective bin；不足 2 bins → `insufficient_bin_resolution`，不重找 cutpoint）；⑤ S3 触发符合定义 |
+| **Conditional (条件 Go)** | 部分成立 / 不可评估 | 方向正确但 `1.2 ≤ raw rate_ratio < 1.5`；或 rate_diff CI 含 0 但 point 一致；或样本位于下界（pretest E1 事件 20–50）；或 **P1 evidence verdict = NOT_EVALUABLE**（office001 与 UCSD 均数据不可行 → **Patent route verdict = Conditional**，表述为"不可评估"而非"部分成立"） |
+| **No-Go** | 主门失败 | 方向反转（`rate_S2 < rate_S1`）；或 rate_diff CI 上界 < 0；或 pretest E1 事件 < 20 且备份不可行；或 S3 异常主导 |
 
 ### 1.7 Forbidden post-hoc actions
 
@@ -147,7 +166,9 @@ P3 E4.1 克制版（P2 未出结果前不启动）
 - 禁止把 office001 结果回填/调整 caltech 阈值；禁止重跑封存 test；
 - 禁止用敏感性（异常月份/caltech 绝对边外推）结果推翻或豁免主门；
 - 禁止训练 classifier 或宣称"已验证 support rule"超出方向性复现；
-- 禁止把 No-Go 私下改成 Conditional 而不走版本化协议变更。
+- 禁止把 No-Go 私下改成 Conditional 而不走版本化协议变更；
+- **禁止在 test 暴露后处理 ratio 零分母 / duplicate-edge**：若 test 出现 `rate_S1=0` 或
+  effective bins < 2，必须按本文件已冻结规则判定，不得事后发明 pseudocount / 换 cutpoint。
 
 ### 1.8 Patent consequence if failed
 
@@ -157,9 +178,12 @@ P3 E4.1 克制版（P2 未出结果前不启动）
   `claim_evidence_registry`：**C-007 降级为 D**（描述性假设失去跨站点锚点）、**P-001 弱化**。
 - **Conditional**：CLAIM 1 第 2 步**措辞收窄**（限定"在存在导引/响应信息充分场景"，或把
   variance 作为 CLAIM 3 必要实施例而非 CLAIM 2 泛化）；C-007 维持 C 级不上 B；
-  需额外一次独立复现才能回到强中心。
+  需额外一次独立复现才能回到强中心。若为 **NOT_EVALUABLE**（office001 与 UCSD 均不可行），
+  专利后果按 Conditional 同规则，但表述为"不可评估"。
 - **Go**：C-007 升 **B 级（跨站点独立复现）**；P-001 强化；CLAIM 1 第 2 步维持强技术中心，
-  三态写入实施例。
+  三态写入实施例。**结论措辞仅限**："**variance-based state separation 获得独立站点复现**"——
+  **不得声称**"S2 protective 已证明更有效"（P1 只验证 `recent_var → E1 evidence density`
+  的区分关系；protective 边界是否更好由 P2/P3 回答）。
 
 ---
 
@@ -240,7 +264,10 @@ protective boundary 实施例**？它是否比直接沿用原预算更保守/稳
 
 ### 3.3 Supported claim_id(s)
 
-- **P-002**（控制权限/约束等级切换，D）、**P-004**（active bounded correction 从属化）。
+- **P-002**（控制权限/约束等级切换，D）。
+- **P-004 明确不映射（v1.0.1）**：P-004 = active bounded correction（对应 **CLAIM 8** 的
+  未来独立验证）；P3 禁止 active redistribution 且只测 protective/recovery/fallback →
+  **P3 不支撑 P-004**；P-004 维持 D 级，防止 active correction 从后门回来。
 
 ### 3.4 Input/data independence requirement
 
@@ -269,7 +296,7 @@ protective boundary 实施例**？它是否比直接沿用原预算更保守/稳
 ### 3.8 Patent consequence if failed
 
 - **No-Go**：**删除/弱化 CLAIM 1 第 5/6 步与 CLAIM 7 的技术行为依据** →
-  保护/恢复机制退化为纯架构设计主张，实施例证据依赖 P1/P2；P-002/P-004 维持 D。
+  保护/恢复机制退化为纯架构设计主张，实施例证据依赖 P1/P2；P-002 维持 D。
 - **Go**：第 5/6 步与 CLAIM 7 获得技术行为证据（P-002 升 C），实施例可用。
 
 ---
@@ -280,7 +307,7 @@ protective boundary 实施例**？它是否比直接沿用原预算更保守/稳
 |---|---|---|---|---|
 | P1 | CLAIM 1(2)、CLAIM 2/3、CLAIM 4(间接) | C-007、P-001 | 三态证据密度可重复（rate_ratio≥1.5、CI>1、方向一致） | 删 CLAIM 1 第 2 步强中心 → field/data-mode driven protective switching；C-007 降 D |
 | P2 | CLAIM 1(3/4)、CLAIM 5/6 | P-001/P-002/P-003、C-012 | current-only protective 优于基线且不压制正常充电、S3 正确 | 删 current-only 锚点，CLAIM 1 第 4 步收窄到 pilot 场景；P-001/P-002 弱化 |
-| P3 | CLAIM 1(5/6)、CLAIM 6/7 | P-002/P-004 | 三问题技术行为确定且符合设计 | 删 CLAIM 1 第 5/6 步与 CLAIM 7 技术行为依据；P-002/P-004 维持 D |
+| P3 | CLAIM 1(5/6)、CLAIM 6/7 | P-002 | 三问题技术行为确定且符合设计 | 删 CLAIM 1 第 5/6 步与 CLAIM 7 技术行为依据；P-002 维持 D |
 
 ## 5. 专利删除矩阵（失败时逐句删）
 
@@ -288,15 +315,26 @@ protective boundary 实施例**？它是否比直接沿用原预算更保守/稳
 |---|---|---|
 | P1 | CLAIM 1 第 2 步"响应证据支持状态"强中心 → 改为信息/数据模式驱动 | C-007 → D；P-001 弱化 |
 | P2 | CLAIM 1 第 4 步 current-only 分支 → 收窄到"存在导引信息" | P-001/P-002 弱化；C-012 维持弱 |
-| P3 | CLAIM 1 第 5/6 步 + CLAIM 7 技术行为依据 → 架构设计主张 | P-002/P-004 维持 D |
+| P3 | CLAIM 1 第 5/6 步 + CLAIM 7 技术行为依据 → 架构设计主张 | P-002 维持 D |
 
 > 任一 No-Go 触发的专利收缩方向汇总：**CLAIM 1 第 2 步 → 第 4 步 → 第 5/6 步** 依次收窄，
 > 最坏情形独立权利要求只剩"信息模式驱动的 protective boundary 选择 + conservative fallback"。
 
 ## 6. 变更控制与版本
 
-- 本文档 = **Phase 3 v1.0（冻结）**。P1 门后展开 P2/P3 字段 5 细节 = 新版本（v1.1/v1.2）
+- 本文档 = **Phase 3 v1.0.1（冻结）**。P1 门后展开 P2/P3 字段 5 细节 = 新版本（v1.1/v1.2）
   + 新测试协议，**不静默修改**本文件冻结的字段 1/2/3/6/7/8。
+- **v1.0.1 changelog（审查结论53，protocol-only closure）**：① Step 0/预检禁止读取
+  test E1 labels，可行性只看 train+validation pretest；split 先确定并哈希，code-only
+  baseline → formal test 单次 exposure；② 删除未定义的 `matched ≥ 阈值` hard gate
+  （matched 会话数仅 population audit）；③ 冻结 `min_recent_samples=2`（A5 `recent_actual_var`
+  同源：前一时刻数据、12-cycle rolling、min_periods=2、run 断裂/severe gap 重置）；
+  ④ effect-size 用 raw `rate_ratio ≥ 1.5`（`rate_S1=0`→∞ 数学明确，无 pseudocount），
+  inferential 用 rate_diff cluster CI 下界 > 0；S1/S2 主切分用 train raw q50（median），
+  secondary quartile 用 duplicate-edge rule（不足 2 effective bins → insufficient_bin_resolution）；
+  ⑤ P3 supported claim_id 删 P-004（P-004 仅对应 CLAIM 8 未来独立验证）；⑥ 双数据不可行 →
+  P1 evidence verdict = NOT_EVALUABLE + Patent route verdict = Conditional（非"部分成立"）；
+  Go 措辞限定为"variance-based state separation 获得独立站点复现"。
 - 每个实验 commit 记录：protocol SHA、analysis code SHA、输入 SHA、worktree_clean、运行时戳。
 - 本文件不是法律意见；最终以专利代理师出具的意见为准。
 
