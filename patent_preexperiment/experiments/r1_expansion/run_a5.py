@@ -1,4 +1,4 @@
-"""R1 最终收敛审计 A5 确定性生成器（审查结论47；protocol v1.2 FINAL FREEZE；X2=审查结论48）。
+"""R1 最终收敛审计 A5 确定性生成器（protocol v1.2 FINAL FREEZE；X2=审查结论48；X3=审查结论49）。
 
 严格实现 R1_A5_protocol_amendment.md v1.2：
 - 五单变量 fixed buckets（n_active/elapsed pre-existing；recent_actual_q90/
@@ -10,20 +10,20 @@
 - E1 event-start cycle snapshot
 - direction_vs_reference = pooled population fixed reference
 
-审查结论48 X2（code-only，未运行）：
-- P0-1 ECDF fit universe = frozen E3 valid-cycle keys × online-observable
-  nonnull（inner join），assert 子集 + manifest 记 fit provenance
-- P0-2 daily-share denominator = 该 bucket valid cycles 的 EV energy
-  （cycle 层 restriction，非 session 过滤/全站）
-- P0-3 E1 observable universe 与 E3 valid universe 分离（n_evaluable/n_e1_events
-  vs n_e3_valid_cycles/n_e3_candidates，同 bucket rule）
-- P0-3a 所有变量 + interaction 一律真实计算 E1 event-start stats（layer 不决定）
-- P0-4 Layer 2 direction 用 E1 evidence rate，Layer 1 用 E3 candidate rate；
-  未 round 原值比较，输出再 round
-- P0-5 JPL E1 unavailable → NA + metric_not_applicable（非假 0）
-- P0-6 duplicate-edge insufficient 用 cut 后实际 non-empty bins（n_nonempty>=2）
-- P1-1 lagged_pilot_actual_ratio → interpretation_scope=diagnostic
-- P1-2 manifest 补 ecdf_fit_provenance + minute tables rows/sessions
+审查结论48 X2：ECDF fit universe、cycle-level daily-share、双 universe 分离、
+layer-aware direction、JPL E1 NA、non-empty bins、diagnostic、manifest provenance。
+
+审查结论49 X3（code-only，未运行）：
+- P0 真正建立两个 dataframe universe：`obs` 独立分桶供
+  n_evaluable/n_e1_events/e1_rate（不受 E3-valid 限制）；`cand+obs` 分桶供
+  E3 candidate/daily-share/elimination。`_compute_bucket_row` 直接接收
+  obs_bucket + e3_bucket。
+- P0 pooled reference 改 variable-specific：每 pool×split×variable 单独算
+  pooled_e1_rate 与 pooled_e3_rate（各自 variable 可评估 population）；
+  interaction 用"两变量均可评估" population。
+- P1 JPL evidence layer 无 E1 evidence target 时 interpretation_scope 禁
+  hypothesis（最多 diagnostic；样本不足 insufficient）。
+- daily-share fail-closed：bucket valid day 但 EV-energy denominator 缺失 → raise。
 
 只读 frozen evidence + registry + minute table；不重跑 formal；deterministic。
 """
@@ -84,6 +84,17 @@ TRAIN_QUARTILE_VARS = {
 }
 ALL_VARIABLES = list(PRE_EXISTING_VARS.keys()) + list(TRAIN_QUARTILE_VARS.keys())
 INTERACTION = "n_active_x_elapsed"
+
+# obs-side（E1 universe）column per variable
+OBS_COL_BI = {
+    "n_active": "n_active_sessions",
+    "elapsed": "median_elapsed",
+}
+# E3-side（cand+obs）column per pre-existing variable
+E3_COL_BI = {
+    "n_active": "n_active",
+    "elapsed": "median_elapsed",
+}
 
 
 def _sha256_file(p: Path) -> str:
@@ -314,33 +325,77 @@ def _fit_quartile_edges(
 def _apply_bucket(
     merged: pd.DataFrame, var: str, edges: list, labels: list
 ) -> pd.Series:
-    """Apply pre-fitted edges to any split（val/test 只 apply，不重拟合）。"""
+    """Apply pre-fitted edges to any split（val/test 只 apply，不重拟合）。
+
+    返回 Categorical；不可分桶值 = NaN（`.notna()` 过滤、`== label` 比较均可用）。
+    """
     obs_col = TRAIN_QUARTILE_VARS.get(var, {}).get("obs_col", var)
     if obs_col not in merged.columns:
-        return pd.Series(["NA"] * len(merged), index=merged.index)
+        return pd.Series([pd.NA] * len(merged), index=merged.index,
+                         dtype="category")
     return pd.cut(
         merged[obs_col], bins=edges, labels=labels,
-        right=True, include_lowest=True).astype(str)
+        right=True, include_lowest=True)
+
+
+def _bucket_cut(
+    df: pd.DataFrame, col: str, edges: list, labels: list, right: bool
+) -> pd.Series:
+    return pd.cut(
+        df[col], bins=edges, labels=labels,
+        right=right, include_lowest=True)
+
+
+def _pooled_references(
+    obs: pd.DataFrame, merged: pd.DataFrame,
+    obs_mask: pd.Series, e3_mask: pd.Series,
+    s1_cycles: set, e1_applicable: bool,
+) -> tuple[float | None, float | None]:
+    """variable-specific pooled reference（审查结论49 P0）。
+
+    pooled_e1 = 该 variable E1-observable population 的 E1 event-start rate；
+    pooled_e3 = 该 variable E3 evaluable population 的 A2 candidate rate。
+    """
+    pooled_e1: float | None = None
+    if e1_applicable:
+        oev = obs[obs_mask]
+        n_obs = int(len(oev))
+        if n_obs:
+            keys = set(zip(oev["site"], oev["cycle"], strict=False))
+            n_e1 = int(sum(1 for k in keys if k in s1_cycles))
+            pooled_e1 = n_e1 / n_obs
+    mev = merged[e3_mask]
+    n_valid = int(len(mev))
+    pooled_e3: float | None = None
+    if n_valid:
+        pooled_e3 = float(mev["candidate_A2_prev_actual"].sum()) / n_valid
+    return pooled_e1, pooled_e3
 
 
 def _daily_share_bucket(
-    merged_bucket: pd.DataFrame, ev_cycle_energy: pd.DataFrame
+    e3_bucket: pd.DataFrame, ev_cycle_energy: pd.DataFrame
 ) -> float | None:
-    """v1.2 §9b + 审查结论48 P0-2: bucket-restricted E3/K1 exact daily share。
+    """v1.2 §9b + X2 P0-2 + X3 fail-closed: bucket-restricted E3/K1 daily share。
 
-    分母 = 该 bucket valid cycles 对应 EV energy（cycle 层 inner-join
-    restriction，非 session 过滤、非全站）。
+    分母 = 该 bucket valid cycles 对应 EV energy（cycle 层 inner-join restriction）。
+    fail-closed：bucket valid day 但 EV-energy denominator 缺失 → raise。
     """
-    if len(merged_bucket) == 0:
+    if len(e3_bucket) == 0:
         return None
-    cand_day = merged_bucket.groupby(
+    cand_day = e3_bucket.groupby(
         "day")["candidate_energy_A2_prev_actual_kwh"].sum()
     if len(cand_day) == 0:
         return None
-    keys = merged_bucket[["site", "cycle"]].drop_duplicates()
+    keys = e3_bucket[["site", "cycle"]].drop_duplicates()
     ev_res = ev_cycle_energy.merge(keys, on=["site", "cycle"], how="inner")
     ev_day = ev_res.groupby("day")["kwh"].sum()
-    ev_on_eval = ev_day.reindex(cand_day.index).clip(lower=1e-6)
+    ev_on_eval = ev_day.reindex(cand_day.index)
+    missing = ev_on_eval[ev_on_eval.isna()]
+    if len(missing) > 0:
+        raise RuntimeError(
+            "daily-share fail-closed: bucket valid day(s) without EV-energy "
+            f"denominator: {sorted(missing.index.tolist())}")
+    ev_on_eval = ev_on_eval.clip(lower=1e-6)
     share = cand_day.div(ev_on_eval)
     return float(share.median()) if len(share) else None
 
@@ -356,12 +411,16 @@ def _layer_for_var(var: str) -> str:
 
 
 def _interpretation_scope(
-    variable: str, layer: str, n_valid: int, n_evaluable: int
+    variable: str, layer: str, n_valid: int, n_evaluable: int,
+    e1_applicable: bool,
 ) -> str:
     # P1-1: lagged_pilot_actual_ratio 只到 diagnostic，不因 n>=5 升级 hypothesis
     if variable == "lagged_pilot_actual_ratio":
         return "diagnostic" if n_evaluable >= 5 else "insufficient"
     if layer == "evidence":
+        if not e1_applicable:
+            # X3 P1: JPL 无 E1 evidence target → 最多 diagnostic
+            return "diagnostic" if n_evaluable >= 5 else "insufficient"
         return "hypothesis" if n_evaluable >= 5 else "insufficient"
     return "hypothesis" if n_valid >= 5 else "insufficient"
 
@@ -369,49 +428,47 @@ def _interpretation_scope(
 def _compute_bucket_row(
     layer: str, pool: str, split: str, field_mode: str,
     variable: str, bucket: str, bucket_rule: str,
-    merged_bucket: pd.DataFrame, ev_cycle_energy: pd.DataFrame,
-    s1_cycles: set, pooled_e3_rate_raw: float | None,
-    pooled_e1_rate_raw: float | None, e1_applicable: bool,
+    obs_bucket: pd.DataFrame, e3_bucket: pd.DataFrame,
+    ev_cycle_energy: pd.DataFrame, s1_cycles: set,
+    pooled_e3_rate_raw: float | None, pooled_e1_rate_raw: float | None,
+    e1_applicable: bool,
 ) -> dict[str, Any]:
-    """计算单个 bucket row 的全部 19 列（P0-3/P0-3a/P0-4/P0-5）。"""
-    n_valid = int(len(merged_bucket))
-    n_cand = 0
-    if n_valid and "candidate_A2_prev_actual" in merged_bucket.columns:
-        n_cand = int(merged_bucket["candidate_A2_prev_actual"].sum())
+    """计算单个 bucket row 的全部 19 列（X3：真正双 universe）。
 
-    # ---- P0-3: E1 observable universe（与 E3 valid universe 分离）----
-    if n_valid and "is_observable" in merged_bucket.columns:
-        sub_obs = merged_bucket[merged_bucket["is_observable"]]
-    else:
-        sub_obs = merged_bucket.iloc[0:0]
-    n_evaluable = int(len(sub_obs))
+    obs_bucket = 独立 observable universe 中该 bucket 的 cycles（E1 侧）；
+    e3_bucket = E3-valid universe 中该 bucket 的 cycles（E3 侧）。
+    """
+    n_evaluable = int(len(obs_bucket))
     n_e1: int | None = None
     e1_rate_raw: float | None = None
     if e1_applicable and n_evaluable:
-        keys = set(zip(
-            sub_obs["site"], sub_obs["cycle"], strict=False))
+        keys = set(zip(obs_bucket["site"], obs_bucket["cycle"], strict=False))
         n_e1 = int(sum(1 for k in keys if k in s1_cycles))
         e1_rate_raw = n_e1 / n_evaluable
     elif e1_applicable:
         n_e1 = 0
 
+    n_valid = int(len(e3_bucket))
+    n_cand = 0
+    if n_valid and "candidate_A2_prev_actual" in e3_bucket.columns:
+        n_cand = int(e3_bucket["candidate_A2_prev_actual"].sum())
     cand_rate_raw = (n_cand / n_valid) if n_valid else None
     e1_rate = round(e1_rate_raw, 6) if e1_rate_raw is not None else None
     cand_rate = round(cand_rate_raw, 6) if cand_rate_raw is not None else None
 
-    # P0-2: daily share（分母 = 该 bucket valid cycles EV energy）
-    daily = _daily_share_bucket(merged_bucket, ev_cycle_energy)
+    # daily share（分母 = 该 bucket E3 valid cycles EV energy）
+    daily = _daily_share_bucket(e3_bucket, ev_cycle_energy)
 
     # elimination（protocol §9b；A0=0→NA+a0_zero_not_evaluable）
     a2_elim_raw: float | None = None
     a3_elim_raw: float | None = None
     na_reasons: list[str] = []
-    if "candidate_A0_avg" in merged_bucket.columns and n_valid:
-        rate_a0 = float(merged_bucket["candidate_A0_avg"].mean())
-        rate_a2 = float(merged_bucket["candidate_A2_prev_actual"].mean())
+    if "candidate_A0_avg" in e3_bucket.columns and n_valid:
+        rate_a0 = float(e3_bucket["candidate_A0_avg"].mean())
+        rate_a2 = float(e3_bucket["candidate_A2_prev_actual"].mean())
         rate_a3 = float(
-            merged_bucket["candidate_A3_rolling_quantile"].mean()) \
-            if "candidate_A3_rolling_quantile" in merged_bucket.columns \
+            e3_bucket["candidate_A3_rolling_quantile"].mean()) \
+            if "candidate_A3_rolling_quantile" in e3_bucket.columns \
             else 0.0
         if rate_a0 == 0:
             na_reasons.append("a0_zero_not_evaluable")
@@ -420,11 +477,11 @@ def _compute_bucket_row(
             a3_elim_raw = 1 - rate_a3 / rate_a0
     if pool == "jpl":
         na_reasons.append("a0_unavailable_current_only")
-    # P0-5: JPL E1 unavailable → NA + metric_not_applicable（非假 0）
+    # X2 P0-5: JPL E1 unavailable → NA + metric_not_applicable（非假 0）
     if not e1_applicable:
         na_reasons.append("metric_not_applicable")
 
-    # P0-4: layer-aware direction reference；未 round 原值比较
+    # layer-aware direction reference（未 round 原值比较）
     direction = "NA"
     if layer == "evidence":
         if e1_rate_raw is not None and pooled_e1_rate_raw is not None:
@@ -455,7 +512,7 @@ def _compute_bucket_row(
         if a3_elim_raw is not None else None,
         "direction_vs_reference": direction,
         "interpretation_scope": _interpretation_scope(
-            variable, layer, n_valid, n_evaluable),
+            variable, layer, n_valid, n_evaluable, e1_applicable),
         "na_reason": ";".join(na_reasons),
     }
 
@@ -465,14 +522,14 @@ def run_a5(
     minutes: dict[str, dict[str, pd.DataFrame]],
     e1_events: dict[str, pd.DataFrame],
 ) -> dict:
-    """A5: support/opportunity hypothesis audit（v1.2 protocol，X2=Review 48）。"""
+    """A5: support/opportunity hypothesis audit（v1.2 protocol；X3=Review 49）。"""
     all_rows: list[dict[str, Any]] = []
     all_edges: dict[str, dict[str, Any]] = {}
     fit_prov: dict[str, dict[str, Any]] = {}
 
     for pool in POOLS:
         field_mode = "measured_pilot" if pool == "caltech" else "current_only"
-        # ---- P0-1: ECDF fit on frozen E3 valid-cycle keys × obs（train only）----
+        # ---- X2 P0-1: ECDF fit on frozen E3 valid-cycle keys × obs（train only）----
         train_cand = cands[pool]["train"]
         train_tm = minutes[pool]["train"]
         train_obs = _cycle_observables(train_tm)
@@ -511,7 +568,6 @@ def run_a5(
                 obs, on=["site", "cycle"], how="left",
                 suffixes=("", "_obs"))
             merged["day"] = merged["cycle"].astype(str).str[:10]
-            merged["is_observable"] = merged["n_active_sessions"].notna()
 
             # S1: E1 core event-start cycle snapshot（仅 caltech 有 E1）
             s1_cycles: set[tuple[str, pd.Timestamp]] = set()
@@ -524,54 +580,43 @@ def run_a5(
                         ev["start_utc"]).floor("5min")
                     s1_cycles.add((ev["site"], c_start))
 
-            # pooled reference = 同 pool×split 全部 evaluable population
-            pooled_e3_rate_raw = float(
-                merged["candidate_A2_prev_actual"].mean()) \
-                if len(merged) else None
-            pooled_e1_rate_raw = None
-            if e1_applicable:
-                obs_sub = merged[merged["is_observable"]]
-                n_obs = int(len(obs_sub))
-                if n_obs:
-                    keys = set(zip(
-                        obs_sub["site"], obs_sub["cycle"], strict=False))
-                    n_e1_total = int(
-                        sum(1 for k in keys if k in s1_cycles))
-                    pooled_e1_rate_raw = n_e1_total / n_obs
-
             ev_cycle_energy = _ev_cycle_energy(tm)
 
-            # ---- pre-existing buckets ----
+            # ---- pre-existing buckets（双 universe 独立分桶）----
             for var, info in PRE_EXISTING_VARS.items():
                 layer = _layer_for_var(var)
-                if var == "n_active":
-                    merged["bucket_col"] = pd.cut(
-                        merged["n_active"], bins=info["edges"],
-                        labels=info["labels"], right=False,
-                        include_lowest=True).astype(str)
-                elif var == "elapsed":
-                    merged["bucket_col"] = pd.cut(
-                        merged["median_elapsed"], bins=info["edges"],
-                        labels=info["labels"], right=False,
-                        include_lowest=True).astype(str)
+                obs_col_o = OBS_COL_BI[var]
+                obs_col_e = E3_COL_BI[var]
+                obs["bucket_col"] = _bucket_cut(
+                    obs, obs_col_o, info["edges"], info["labels"],
+                    right=False)
+                merged["bucket_col"] = _bucket_cut(
+                    merged, obs_col_e, info["edges"], info["labels"],
+                    right=False)
+                pooled_e1, pooled_e3 = _pooled_references(
+                    obs, merged, obs["bucket_col"].notna(),
+                    merged["bucket_col"].notna(), s1_cycles,
+                    e1_applicable)
                 for bucket in info["labels"]:
-                    sub = merged[merged["bucket_col"] == bucket]
+                    obs_b = obs[obs["bucket_col"] == bucket]
+                    e3_b = merged[merged["bucket_col"] == bucket]
+                    if len(obs_b) == 0 and len(e3_b) == 0:
+                        continue
                     row = _compute_bucket_row(
                         layer, pool, split, field_mode, var, bucket,
-                        info["source"], sub, ev_cycle_energy, s1_cycles,
-                        pooled_e3_rate_raw, pooled_e1_rate_raw,
-                        e1_applicable)
+                        info["source"], obs_b, e3_b, ev_cycle_energy,
+                        s1_cycles, pooled_e3, pooled_e1, e1_applicable)
                     all_rows.append(row)
 
-            # ---- train-quartile buckets ----
+            # ---- train-quartile buckets（双 universe 独立分桶）----
             for var, info in TRAIN_QUARTILE_VARS.items():
                 layer = _layer_for_var(var)
                 edge_info = edges.get(var, {})
                 if edge_info.get("insufficient_bin_resolution"):
                     row = _compute_bucket_row(
                         layer, pool, split, field_mode, var, "NA",
-                        info["source"], pd.DataFrame(), ev_cycle_energy,
-                        s1_cycles, pooled_e3_rate_raw, pooled_e1_rate_raw,
+                        info["source"], pd.DataFrame(), pd.DataFrame(),
+                        ev_cycle_energy, s1_cycles, None, None,
                         e1_applicable)
                     base = row["na_reason"]
                     reason = edge_info.get(
@@ -580,40 +625,62 @@ def run_a5(
                     row["interpretation_scope"] = "insufficient"
                     all_rows.append(row)
                     continue
+                obs["bucket_col"] = _bucket_cut(
+                    obs, info["obs_col"], edge_info["edges"],
+                    edge_info["labels"], right=True)
                 merged["bucket_col"] = _apply_bucket(
                     merged, var, edge_info["edges"], edge_info["labels"])
+                pooled_e1, pooled_e3 = _pooled_references(
+                    obs, merged, obs["bucket_col"].notna(),
+                    merged["bucket_col"].notna(), s1_cycles,
+                    e1_applicable)
                 for bucket in edge_info["labels"]:
-                    sub = merged[merged["bucket_col"] == bucket]
+                    obs_b = obs[obs["bucket_col"] == bucket]
+                    e3_b = merged[merged["bucket_col"] == bucket]
+                    if len(obs_b) == 0 and len(e3_b) == 0:
+                        continue
                     row = _compute_bucket_row(
                         layer, pool, split, field_mode, var, bucket,
-                        info["source"], sub, ev_cycle_energy, s1_cycles,
-                        pooled_e3_rate_raw, pooled_e1_rate_raw,
-                        e1_applicable)
+                        info["source"], obs_b, e3_b, ev_cycle_energy,
+                        s1_cycles, pooled_e3, pooled_e1, e1_applicable)
                     all_rows.append(row)
 
-            # ---- interaction n_active × elapsed ----
-            merged["n_active_bucket"] = pd.cut(
-                merged["n_active"], bins=CONCURRENCY_BUCKETS,
-                labels=CONCURRENCY_LABELS, right=False,
-                include_lowest=True).astype(str)
-            merged["elapsed_bucket"] = pd.cut(
-                merged["median_elapsed"], bins=ELAPSED_BUCKETS,
-                labels=ELAPSED_LABELS, right=False,
-                include_lowest=True).astype(str)
+            # ---- interaction n_active × elapsed（两变量均可评估 population）----
+            obs["n_active_bucket"] = _bucket_cut(
+                obs, "n_active_sessions", CONCURRENCY_BUCKETS,
+                CONCURRENCY_LABELS, right=False)
+            obs["elapsed_bucket"] = _bucket_cut(
+                obs, "median_elapsed", ELAPSED_BUCKETS,
+                ELAPSED_LABELS, right=False)
+            merged["n_active_bucket"] = _bucket_cut(
+                merged, "n_active", CONCURRENCY_BUCKETS,
+                CONCURRENCY_LABELS, right=False)
+            merged["elapsed_bucket"] = _bucket_cut(
+                merged, "median_elapsed", ELAPSED_BUCKETS,
+                ELAPSED_LABELS, right=False)
+            pooled_e1, pooled_e3 = _pooled_references(
+                obs, merged,
+                obs["n_active_bucket"].notna()
+                & obs["elapsed_bucket"].notna(),
+                merged["n_active_bucket"].notna()
+                & merged["elapsed_bucket"].notna(),
+                s1_cycles, e1_applicable)
             for na_b in CONCURRENCY_LABELS:
                 for el_b in ELAPSED_LABELS:
-                    sub = merged[
+                    obs_b = obs[
+                        (obs["n_active_bucket"] == na_b)
+                        & (obs["elapsed_bucket"] == el_b)]
+                    e3_b = merged[
                         (merged["n_active_bucket"] == na_b)
                         & (merged["elapsed_bucket"] == el_b)]
-                    if len(sub) == 0:
+                    if len(obs_b) == 0 and len(e3_b) == 0:
                         continue
                     bucket_label = f"{na_b}|{el_b}"
                     row = _compute_bucket_row(
                         "opportunity", pool, split, field_mode,
                         INTERACTION, bucket_label, "pre_existing_cross",
-                        sub, ev_cycle_energy, s1_cycles,
-                        pooled_e3_rate_raw, pooled_e1_rate_raw,
-                        e1_applicable)
+                        obs_b, e3_b, ev_cycle_energy, s1_cycles,
+                        pooled_e3, pooled_e1, e1_applicable)
                     all_rows.append(row)
 
     # ---- output ----
@@ -642,15 +709,16 @@ def run_a5(
         "n_rows": int(len(result_df)),
         "variables": ALL_VARIABLES + [INTERACTION],
         "x2_review_48": (
-            "P0-1 ECDF fit universe=frozen E3 valid-cycle keys×obs inner join; "
-            "P0-2 daily-share denominator=bucket valid cycles EV energy (cycle-level); "
-            "P0-3 E1 observable universe separated from E3 valid universe; "
-            "P0-3a E1 event-start stats for all variables+interaction; "
-            "P0-4 layer-aware direction (Layer2=e1 rate, Layer1=e3 rate), raw compare; "
-            "P0-5 JPL E1 unavailable→NA+metric_not_applicable; "
-            "P0-6 insufficient by cut actual non-empty bins; "
-            "P1-1 lagged_pilot_actual_ratio→diagnostic; "
-            "P1-2 manifest ecdf_fit_provenance+minute tables"),
+            "ECDF fit universe=frozen E3 valid keys×obs; cycle-level daily-share; "
+            "E1/E3 universe separation; E1 for all layers; layer-aware direction; "
+            "JPL E1 NA+metric_not_applicable; non-empty-bin insufficient; "
+            "lagged ratio diagnostic; manifest fit provenance"),
+        "x3_review_49": (
+            "true dual universe: obs independently bucketed for E1 metrics "
+            "(not constrained by E3-valid), cand+obs bucketed for E3 metrics; "
+            "variable-specific pooled reference (per pool×split×variable, "
+            "interaction=both-variables-evaluable); JPL evidence layer scope<=diagnostic; "
+            "daily-share fail-closed on missing EV-energy denominator"),
         "note": (
             "五单变量 + n_active×elapsed 交互；train-only ECDF quartile；"
             "19-column schema；daily-share bucket-restricted E3/K1 exact；"
@@ -734,14 +802,14 @@ def run_a5_generator() -> dict:
         "discipline": (
             "只读 frozen evidence + registry + minute table；"
             "不重跑 formal；不调参；deterministic；"
-            "protocol v1.2 FINAL FREEZE；X2=审查结论48 code-only"),
+            "protocol v1.2 FINAL FREEZE；X2=审查结论48；X3=审查结论49 code-only"),
     }
     (OUT / "a5_manifest.json").write_text(
         json.dumps(manifest, ensure_ascii=False, indent=2),
         encoding="utf-8")
     print(json.dumps({
         "batch": "a5",
-        "x2": "review 48 code-only",
+        "x3": "review 49 code-only",
         "n_rows": a5["n_rows"],
         "ecdf_edges_pools": list(a5["ecdf_edges"].keys()),
         "manifest_written": True,
