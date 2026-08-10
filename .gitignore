@@ -14,3 +14,7 @@ patent_preexperiment/configs/paths.yaml
 # E3 R1 train/validation 探索性输出（formal test 前需 clean worktree；test 后正式证据入 results/raw/E3F）
 patent_preexperiment/results/work/**
 
+# P1 train-edge 冻结产物（fit 时由 runner 按 clean committed worktree 生成，不入库；
+# SHA256 在 formal manifest 中记录，保证 fit/formal 两侧 provenance 闭环）
+patent_preexperiment/data_registry/p1_train_edges.json
+

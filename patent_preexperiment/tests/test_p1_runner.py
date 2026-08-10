@@ -1,10 +1,14 @@
-"""P1 runner 测试（Review 56 检查点 1-7 + Review 57 X1）：train-only fit、test loader 隔离、
-once-only state machine、hard gate、state-missing 短路。用合成数据，不读取真实 test outcome。
+"""P1 runner 测试（Review 56 检查点 1-7 + Review 57 X1 + Review 58 X1.1）：train-only fit、
+test loader 隔离、once-only state machine、hard gate、state-missing 短路、
+artifact-clean 生命周期闭环。用合成数据，不读取真实 test outcome。
 """
 
 from __future__ import annotations
 
+import hashlib
 import json
+import shutil
+import subprocess
 from pathlib import Path
 
 import pandas as pd
@@ -19,6 +23,8 @@ from patent_preexperiment.p1.runner import (
     run_fit_train_edges,
     run_formal_test,
 )
+
+_REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
 def _write_minute_dataset(root: Path, constant_test: bool = False) -> pd.DataFrame:
@@ -83,6 +89,49 @@ def _fake_git_provenance(monkeypatch, sha: str, clean: bool):
 
     monkeypatch.setattr("patent_preexperiment.p1.runner.git_provenance", _fake)
     return state
+
+
+def _git(repo: Path, *args: str) -> str:
+    return subprocess.run(
+        ["git", "-C", str(repo), *args],
+        capture_output=True, text=True, check=True, timeout=30,
+    ).stdout.strip()
+
+
+def test_artifact_lifecycle_clean_worktree_closure(tmp_path: Path):
+    """X1.1 集成：真实 git 仓库 + 真实仓库 .gitignore → fit 后 worktree 仍 clean，
+    artifact provenance.code_sha == current SHA → formal hard gate 两侧闭合可继续。"""
+    repo_root = tmp_path
+    impl_root = repo_root / "patent_preexperiment"
+    _make_impl(impl_root)
+
+    shutil.copyfile(_REPO_ROOT / ".gitignore", repo_root / ".gitignore")
+    _git(repo_root, "init", "-q", "-b", "main")
+    _git(repo_root, "config", "user.email", "p1-test@example.com")
+    _git(repo_root, "config", "user.name", "P1 Test")
+    _git(repo_root, "add", "-A")
+    _git(repo_root, "commit", "-q", "-m", "fixture: clean committed impl")
+    head = _git(repo_root, "rev-parse", "HEAD")
+    assert head and head != "unknown"
+
+    # fit 只写 .gitignore 覆盖的 artifact → worktree 保持 clean，code_sha 即 HEAD
+    out = run_fit_train_edges(impl_root)
+    assert out["provenance"]["code_sha"] == head
+    assert out["provenance"]["worktree_clean"] is True
+    assert _git(repo_root, "status", "--porcelain") == ""
+
+    # formal hard gate 两侧闭合：expected sha == current，且两侧 clean → 可继续
+    summary = run_formal_test(impl_root)
+    assert summary["verdict"]["verdict"] in {
+        "Go", "Conditional", "No-Go", "NOT_EVALUABLE",
+    }
+    manifest = json.loads(
+        (impl_root / "results" / "raw" / "phase3_p1" / "p1_manifest.json").read_text("utf-8")
+    )
+    assert manifest["code_sha"] == head
+    assert manifest["train_edges_sha256"] == hashlib.sha256(
+        (impl_root / "data_registry" / "p1_train_edges.json").read_bytes()
+    ).hexdigest()
 
 
 def test_load_split_minutes_query_filter(tmp_path: Path, monkeypatch):

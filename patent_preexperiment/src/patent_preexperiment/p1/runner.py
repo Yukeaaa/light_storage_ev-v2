@@ -27,6 +27,7 @@ Review 57 X1（implementation-fidelity hotfix）：
 
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from typing import Any, cast
@@ -123,6 +124,11 @@ def _read_json(path: Path) -> dict[str, Any]:
 def _write_json(path: Path, payload: dict[str, Any]) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _file_sha256(path: Path) -> str:
+    """X1.1：train-edge artifact 的 SHA256，formal manifest 记录以证明两侧读同一冻结产物。"""
+    return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
 def run_fit_train_edges(impl_root: Path) -> dict[str, Any]:
@@ -302,6 +308,7 @@ def run_formal_test(impl_root: Path, seed: int = 20240810) -> dict[str, Any]:
         "summary": str(Path(_SUMMARY_PATH).as_posix()),
         "sentinel": str(Path(_SENTINEL_PATH).as_posix()),
         "train_edges": str(Path(_TRAIN_EDGES_PATH).as_posix()),
+        "train_edges_sha256": _file_sha256(edges_path),
         "code_sha": prov["code_sha"],
         "worktree_clean": prov["worktree_clean"],
         "once_only": True,
