@@ -1,0 +1,31 @@
+{
+  "record_type": "step0_governance_correction",
+  "protocol_version": "Phase3_v1.0.2",
+  "review": "Review 56",
+  "purpose": "provenance correction（非第二次预检、非重跑 Step 0）。对 4d8366f 的历史表述作更正记录；Step 0 数值冻结，不重跑。",
+  "step0_feasibility_numbers_remain_valid": true,
+  "feasibility_verdict": "feasible",
+  "pretest_e1_events": 140,
+  "pretest_e1_event_sessions": 74,
+  "measured_pilot_coverage": 1.0,
+  "runtime_facts_at_daf22c4": {
+    "all_office001_matched_rows_queried_before_pandas_filter": true,
+    "only_train_validation_rows_entered_e1_calculation": true,
+    "test_e1_labels_or_counts_computed_or_emitted": false,
+    "test_rows_entered_analysis_dataframe_or_e1_computation": 0
+  },
+  "corrected_statement": {
+    "original": "test minute rows loaded = 0",
+    "corrected": "0 test rows entered the analysis dataframe / E1 computation. 历史实现（daf22c4 时代）先查询 office001 全部 matched 分钟行，再在 pandas 中以 session_id.isin 过滤；因此 test 的原始分钟协变量在会话过滤前被 query 扫描（存储引擎 row-group 读取细节）。test 的 E1 label / outcome 从未计算或输出。正式 P1 仍保持 label-unexposed。",
+    "governance_target": "test rows 不进入 Step 0 query result / analysis dataframe（自本 correction 起，loader 把 session membership 放进 Arrow query predicate）。"
+  },
+  "references": {
+    "split_freeze_commit": "daf22c442622098821a4c283af36c490bb2a5b72",
+    "step0_evidence_commit": "4d8366f5320aebd9e862312d3aaf875f5744c4a0",
+    "protocol_commit": "c0b055b",
+    "split_sha256": "6eaabe46f70318d03138156a479d497e94d216e81e978c60698131a7b519c740",
+    "evidence_file": "data_registry/p1_step0_feasibility.json"
+  },
+  "no_step0_rerun": true,
+  "note": "Review 56 唯一实质问题：loader 在 to_pandas() 后过滤，query 层先扫描了 test 原始分钟行。本文件更正表述并记录 hotfix（session membership 进 Arrow predicate）的治理依据。"
+}

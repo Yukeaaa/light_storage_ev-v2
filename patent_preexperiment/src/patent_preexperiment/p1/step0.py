@@ -1,9 +1,12 @@
 """P1 Step 0 — train/validation-only feasibility audit（Phase 3 v1.0.2 §1.5）。
 
-范围纪律（协议 §1.5 / Review 53① / Review 55）：
+范围纪律（协议 §1.5 / Review 53① / Review 55 / Review 56）：
 - **只读 office001 train + validation**；test 的 E1 event label / event count 在正式 test
-  前不可读取；本模块在加载后**物理 drop test 会话行**，再进入任何 E1 计算，并有
-  fail-closed 断言：若 test 会话行存活到 E1 检测前，直接 RuntimeError。
+  前不可读取。
+- **session membership 在 Arrow query 层过滤**（Review 56）：predicate 直接含
+  `session_id.isin(train_val_ids)`，test 行**不进入 query result / analysis dataframe**；
+  加载后仍保留 fail-closed 断言（loaded ids ⊆ train_val_ids 且 ∩ test ids == ∅），
+  防止 registry 不一致或下游误用。
 - 报告项：matched 会话数（仅 population audit，不入门）、measured_pilot 覆盖占比、
   train+validation pretest E1 事件数（同一套冻结 E1 定义 = K1 阈值 + core_run_segment）、
   站点/月份覆盖、population / field_mode 分布。
@@ -52,7 +55,12 @@ def _load_train_val_minutes(
     minute_root: Path,
     registry: pd.DataFrame,
 ) -> pd.DataFrame:
-    """加载 office001 matched 1-min 行，join P1 split，物理剔除 test 会话行。"""
+    """加载 office001 matched 1-min 行，join P1 split。
+
+    Review 56：session membership 直接进 Arrow query predicate，test 行不进入
+    query result；加载后 fail-closed：loaded ids ⊆ train_val_ids、loaded ids ∩ test
+    ids == ∅（防 registry 不一致）。test 的 E1 outcome 在此层面即不可达。
+    """
     train_val_ids = set(
         registry.loc[registry["split"].isin(["train", "validation"]), "session_id"]
     )
@@ -62,19 +70,25 @@ def _load_train_val_minutes(
     if not test_ids:
         raise ValueError("P1 Step 0 失败：test 会话集为空（split 冻结异常）")
 
-    dataset = ds.dataset(str(minute_root))
-    table = dataset.to_table(
-        filter=(ds.field("site") == P1_SITE)
-        & (ds.field("match_status") == "matched"),
-        columns=_MINUTE_COLUMNS,
+    pred = (
+        (ds.field("site") == P1_SITE)
+        & (ds.field("match_status") == "matched")
+        & ds.field("session_id").isin(sorted(train_val_ids))
     )
+    dataset = ds.dataset(str(minute_root))
+    table = dataset.to_table(filter=pred, columns=_MINUTE_COLUMNS)
     df = cast(pd.DataFrame, table.to_pandas())
-    df = df[df["session_id"].isin(train_val_ids)].reset_index(drop=True)
 
-    overlap = set(df["session_id"]) & test_ids
+    loaded_ids = set(df["session_id"])
+    if not (loaded_ids <= train_val_ids):
+        raise RuntimeError(
+            "P1 Step 0 fail-closed：加载会话超出 train+validation 面："
+            f"n={len(loaded_ids - train_val_ids)}"
+        )
+    overlap = loaded_ids & test_ids
     if overlap:
         raise RuntimeError(
-            "P1 Step 0 fail-closed：test 会话行泄漏进 train/validation 加载面："
+            "P1 Step 0 fail-closed：test 会话行进入 analysis dataframe："
             f"n={len(overlap)}；test 的 E1 outcome 禁止在正式 test 前读取"
         )
     if df.empty:
@@ -186,8 +200,11 @@ def run_step0(
         "test_isolation": {
             "test_e1_event_count": None,
             "test_e1_label": None,
-            "test_minute_rows_loaded": 0,
-            "note": "test 会话行在 E1 计算前物理剔除；test 的 E1 label/count 未读取（v1.0.1①）",
+            "test_rows_in_query_result": 0,
+            "note": "session membership 在 Arrow query predicate 中过滤：test 行不进入 "
+                    "query result / analysis dataframe；test 的 E1 label/count 未读取 "
+                    "（v1.0.1① / Review 56）。历史 4d8366f 在 pandas 过滤前扫描过全部 "
+                    "matched 行，见 results/raw/phase3_p1/step0_governance_correction.json",
         },
         "protocol": "Patent Definition Phase 3 v1.0.2（minimum_evidence_preregistration.md §1）",
     }
@@ -246,7 +263,8 @@ def write_step0_report(
         "",
         f"- test E1 event count：{summary['test_isolation']['test_e1_event_count']}"
         f"（未读取）",
-        f"- test minute rows loaded：{summary['test_isolation']['test_minute_rows_loaded']}",
+        f"- test rows in query result："
+        f"{summary['test_isolation']['test_rows_in_query_result']}",
         f"- {summary['test_isolation']['note']}",
         "",
     ]

@@ -7,8 +7,9 @@
 - 排序键沿用 E0F-02：[connection_time_canonical, session_id] mergesort 稳定排序，
   session_id 作确定性 tie-break，无随机性。
 - 异常月份会话（stress=True）标记 split=stress，不进主切分，仅敏感性（协议 §1.4）。
-- split registry 含 test session_id/role/split（SHA 冻结需要），但**不写入任何
-  E1 label / outcome 字段**；test 的 E1 事件在 Step 0 及之前一律不可读取。
+- split registry 仅含会话/split 元数据（session_id/站点/时间/field_mode/sample_layer/
+  role/stress/source/anomaly 等），**不写入任何 E1 label / outcome 字段**；test 的 E1
+  事件在 Step 0 及之前一律不可读取。
 """
 
 from __future__ import annotations
@@ -168,8 +169,9 @@ def run_p1_split_freeze(
         ),
         "stress_sessions": int((reg["split"] == "stress").sum()),
         "contains_e1_fields": False,
-        "note": "split registry 只含 session_id/role/split 元数据；不含任何 E1 label/outcome 字段；"
-                "test 的 E1 事件在正式 test 前禁止读取。",
+        "note": "split registry 仅含会话/split 元数据（session_id/site/garage/station/"
+                "connection_time/field_mode/sample_layer/role/stress/source/anomaly），"
+                "不含任何 E1 label/outcome 字段；test 的 E1 事件在正式 test 前禁止读取。",
     }
     meta_path = impl_root / "data_registry" / "p1_office001_split_sha256.json"
     meta_path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")

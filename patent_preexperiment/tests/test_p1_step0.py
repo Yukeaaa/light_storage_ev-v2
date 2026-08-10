@@ -1,4 +1,8 @@
-"""P1 Step 0 测试（Phase 3 v1.0.2 §1.5）：test 物理隔离 fail-closed + pretest E1 计数正确性。"""
+"""P1 Step 0 测试（Phase 3 v1.0.2 §1.5）：test query-isolation fail-closed + pretest E1 计数正确性。
+
+Review 56：session membership 必须在 Arrow query predicate 层过滤（不能只靠 pandas
+后过滤）；test 行不进入 query result / analysis dataframe。
+"""
 
 from __future__ import annotations
 
@@ -6,6 +10,7 @@ from pathlib import Path
 
 import pandas as pd
 import pyarrow as pa
+import pyarrow.dataset as ds
 import pyarrow.parquet as pq
 import pytest
 
@@ -74,6 +79,39 @@ def test_test_rows_physically_excluded(tmp_path: Path):
     assert "S_TEST" not in set(out["session_id"])
 
 
+def test_query_predicate_contains_session_restriction(tmp_path: Path, monkeypatch):
+    """Review 56：session membership 必须在 Arrow query predicate 层，不能只靠 pandas 过滤。
+
+    spy dataset.to_table()，断言传入 predicate 已包含 session_id.isin(train_val_ids)。
+    这样 test 行不进入 query result（不只是 analysis dataframe）。
+    """
+    _write_minutes(tmp_path)
+    reg = _registry([("S1", "train"), ("S2", "validation"), ("S_TEST", "test")])
+
+    real_dataset = ds.dataset(str(tmp_path))
+    captured: dict = {}
+
+    class _SpyDataset:
+        def __init__(self, inner):
+            self._inner = inner
+
+        def to_table(self, **kwargs):
+            captured["filter"] = kwargs.get("filter")
+            return self._inner.to_table(**kwargs)
+
+    monkeypatch.setattr(ds, "dataset", lambda *a, **k: _SpyDataset(real_dataset))
+
+    out = _load_train_val_minutes(tmp_path, reg)
+    assert set(out["session_id"]) == {"S1", "S2"}
+
+    pred = captured["filter"]
+    assert pred is not None
+    assert "session_id" in str(pred)
+    assert "is_in" in str(pred).lower()
+    assert "S1" in str(pred) and "S2" in str(pred)
+    assert "S_TEST" not in str(pred)
+
+
 def test_fail_closed_on_test_leak(tmp_path: Path):
     _write_minutes(tmp_path)
     # registry 不一致：S_TEST 同时出现在 train 与 test → 泄漏面，必须 RuntimeError
@@ -82,6 +120,14 @@ def test_fail_closed_on_test_leak(tmp_path: Path):
         ("S_TEST", "train"), ("S_TEST", "test"),
     ])
     with pytest.raises(RuntimeError, match="fail-closed"):
+        _load_train_val_minutes(tmp_path, reg)
+
+
+def test_fail_closed_when_test_set_empty(tmp_path: Path):
+    _write_minutes(tmp_path)
+    # registry 无 test 会话 → split 冻结异常，必须拦截
+    reg = _registry([("S1", "train"), ("S2", "validation")])
+    with pytest.raises(ValueError, match="test 会话集为空"):
         _load_train_val_minutes(tmp_path, reg)
 
 
