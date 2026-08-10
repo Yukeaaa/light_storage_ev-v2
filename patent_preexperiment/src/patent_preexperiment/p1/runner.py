@@ -17,6 +17,12 @@ Review 56 检查点映射：
   5) expected code SHA + clean worktree hard gate（test 暴露失败即中止）；
   6) 0/0、+∞、empty-state、duplicate-edge 全部由 rates.exhaustive_ratio / states 机器实现；
   7) bootstrap cluster 单位 = day（预注册一致）。
+
+Review 57 X1（implementation-fidelity hotfix）：
+  A) state_missing 在 bootstrap 前直接落 NOT_EVALUABLE（跳过 bootstrap，不产生空 CI）；
+  B) quartile direction 用最高/最低 effective label（不硬编码 Q4）；
+  C) train-edge artifact 只能在 clean committed worktree 上产出，formal gate 两侧闭合
+     （fit-time worktree_clean=True 且 code_sha 已知；formal-time sha 匹配 + clean）。
 """
 
 from __future__ import annotations
@@ -120,7 +126,12 @@ def _write_json(path: Path, payload: dict[str, Any]) -> None:
 
 
 def run_fit_train_edges(impl_root: Path) -> dict[str, Any]:
-    """只在 office001 train 上拟合 q50 与 quartile edges，产出冻结 edges（code-only）。"""
+    """只在 office001 train 上拟合 q50 与 quartile edges，产出冻结 edges（code-only）。
+
+    闭环（Review 57 X1）：artifact 只在 clean committed worktree 上产生——git_provenance
+    必须在写入前取到有效 code_sha 且 worktree_clean=True，否则拒绝产出。formal gate 随后
+    用 artifact 记录的 sha 校验当前环境，两侧闭合。
+    """
     cfg = load_yaml(impl_root / "configs" / "p1.yaml")
     registry = pd.read_parquet(
         impl_root / "data_registry" / "p1_office001_split_registry.parquet"
@@ -131,6 +142,14 @@ def run_fit_train_edges(impl_root: Path) -> dict[str, Any]:
     obs_train = cycle_observables(train_minutes)
     train_q50 = fit_train_q50(obs_train)
     edges_result, edges_prov = fit_quartile_edges(obs_train)
+
+    prov = git_provenance(impl_root.parent)
+    if prov["code_sha"] == "unknown" or prov.get("worktree_clean") is not True:
+        raise RuntimeError(
+            "P1 hard gate（fit）：train edges 只允许在 clean committed worktree 上拟合，"
+            f"当前 code_sha={prov['code_sha']!r}, worktree_clean={prov.get('worktree_clean')!r}；"
+            "先 commit 冻结代码再 fit"
+        )
 
     payload = {
         "experiment_id": cfg["experiment_id"],
@@ -150,9 +169,9 @@ def run_fit_train_edges(impl_root: Path) -> dict[str, Any]:
         },
         "quartile_edges": edges_result,
         "fit_provenance": edges_prov,
+        "provenance": prov,
         "rule": "train q50 与 quartile 边只在 office001 train 上拟合一次；validation 不改规则",
     }
-    payload["provenance"] = git_provenance(impl_root.parent)
     _write_json(impl_root / _TRAIN_EDGES_PATH, payload)
     return payload
 
@@ -187,6 +206,9 @@ def run_formal_test(impl_root: Path, seed: int = 20240810) -> dict[str, Any]:
         )
     if prov.get("worktree_clean") is not True:
         raise RuntimeError("P1 hard gate：worktree 不洁净，禁止暴露 formal test")
+    # 闭环：fit 时也必须 clean（artifact 本身不可在 dirty/unknown 上产出）
+    if train_edges["provenance"].get("worktree_clean") is not True:
+        raise RuntimeError("P1 hard gate：train edges 并非在 clean worktree 上拟合，禁止暴露")
 
     # ④ sentinel 在读取 test outcome 之前写入
     sentinel = {
@@ -213,7 +235,11 @@ def run_formal_test(impl_root: Path, seed: int = 20240810) -> dict[str, Any]:
     obs_states = assign_states(obs_test, train_edges["train"]["q50"])
     r = state_rates(obs_states, e1_cycles)
     ratio = exhaustive_ratio(r)
-    ci = cluster_bootstrap_rate_diff_ci(obs_states, e1_cycles, seed=seed)
+    # Review 57 X1：state_missing 在 bootstrap 前直接落 NOT_EVALUABLE，跳过 bootstrap
+    if ratio.state_missing:
+        ci = None
+    else:
+        ci = cluster_bootstrap_rate_diff_ci(obs_states, e1_cycles, seed=seed)
     quartile = quartile_direction(
         obs_states, train_edges["quartile_edges"], e1_cycles
     )
@@ -244,11 +270,20 @@ def run_formal_test(impl_root: Path, seed: int = 20240810) -> dict[str, Any]:
             ),
             "ratio_kind": ratio.ratio_kind,
         },
-        "inferential": {
-            "bootstrap_unit": "day",
-            "seed": seed,
-            "ci95": [round(ci[0], 6), round(ci[1], 6)],
-        },
+        "inferential": (
+            {
+                "bootstrap_unit": "day",
+                "seed": seed,
+                "ci95": [round(ci[0], 6), round(ci[1], 6)],
+            }
+            if ci is not None
+            else {
+                "bootstrap_unit": "day",
+                "seed": seed,
+                "ci95": None,
+                "skipped": "state_missing（bootstrap 前直接落 NOT_EVALUABLE）",
+            }
+        ),
         "quartile_direction": quartile,
         "verdict": p1_verdict(r, ratio, ci, quartile, pretest_ok=True),
         "pretest": {

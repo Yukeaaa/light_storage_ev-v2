@@ -208,8 +208,11 @@ def test_p1_verdict_go():
     ci = (0.1, 0.5)
     quartile = {
         "direction": "Q4>Q1",
-        "rate_q1": 0.1,
-        "rate_q4": 0.4,
+        "low_label": "Q1",
+        "high_label": "Q4",
+        "rate_low": 0.1,
+        "rate_high": 0.4,
+        "high_gt_low": True,
         "insufficient_bin_resolution": False,
     }
     v = p1_verdict(r, ratio, ci, quartile, pretest_ok=True)
@@ -246,6 +249,21 @@ def test_p1_verdict_not_evaluable():
     assert v["patent_route"] == "Conditional"
 
 
+def test_p1_verdict_ci_none_notevaluable():
+    r = RateResult(
+        n_s1=10, n_s2=10, n_e1_s1=2, n_e1_s2=6,
+        rate_s1=0.2, rate_s2=0.6, rate_diff=0.4,
+    )
+    ratio = exhaustive_ratio(r)
+    v = p1_verdict(
+        r, ratio, None,
+        {"direction": "Q4>Q1", "insufficient_bin_resolution": False},
+        True,
+    )
+    assert v["verdict"] == "NOT_EVALUABLE"
+    assert "inferential_missing" in v["reason"]
+
+
 def test_p1_verdict_na_zero_zero_nogo():
     r = RateResult(
         n_s1=10, n_s2=10, n_e1_s1=0, n_e1_s2=0,
@@ -276,8 +294,30 @@ def test_quartile_direction_ok():
     e1_cycles = {("office001", cycles[6]), ("office001", cycles[7])}
     q = quartile_direction(obs, edges, e1_cycles)
     assert q["direction"] == "Q4>Q1"
-    assert q["rate_q4"] > q["rate_q1"]
+    assert q["low_label"] == "Q1" and q["high_label"] == "Q4"
+    assert q["rate_high"] > q["rate_low"]
+    assert q["high_gt_low"] is True
     assert not q["insufficient_bin_resolution"]
+
+
+def test_quartile_direction_effective_label_no_q4_hardcode():
+    # Review 57 X1-B：只存在 3 个 label 且中间 bin 空 → 用 Q3/Q1，不硬编码 Q4
+    cycles = pd.date_range("2019-06-01", periods=8, freq="5min")
+    obs = pd.DataFrame({
+        "site": ["office001"] * 8,
+        "cycle": cycles,
+        "median_recent_actual_var": [0.5, 0.6, 0.7, 0.8, 3.0, 3.1, 3.2, 3.3],
+    })
+    edges = {
+        "edges": [-np.inf, 1.0, 3.0, np.inf],
+        "labels": ["Q1", "Q2", "Q3"],
+        "insufficient_bin_resolution": False,
+    }
+    e1_cycles = {("office001", cycles[6]), ("office001", cycles[7])}
+    q = quartile_direction(obs, edges, e1_cycles)
+    assert q["direction"] == "Q3>Q1"
+    assert q["low_label"] == "Q1" and q["high_label"] == "Q3"
+    assert q["high_gt_low"] is True
 
 
 def test_quartile_direction_insufficient():
@@ -290,6 +330,7 @@ def test_quartile_direction_insufficient():
     q = quartile_direction(obs, edges, set())
     assert q["insufficient_bin_resolution"]
     assert q["direction"] == "insufficient_bin_resolution"
+    assert q["high_gt_low"] is None
 
 
 def test_cluster_bootstrap_ci_positive():
