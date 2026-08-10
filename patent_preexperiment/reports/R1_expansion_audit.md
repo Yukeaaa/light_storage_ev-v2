@@ -22,8 +22,8 @@
 ```
 batch_1: A1 + A2 → gate_review_1（先审一次）
 batch_2: A3 + A4
-batch_3: A5
-final:   最终 R1 Gate Review → A / B / C
+batch_3: A5（已完成）
+final:   最终 R1 Gate Review → A / B / C（待 A5 结果后触发）
 ```
 
 ---
@@ -254,9 +254,53 @@ E3 opportunity strength / baseline elimination。
 
 **禁止**：不训练 classifier；不宣称 support rule 已验证；只产下一阶段假设。
 
-### A5 结果（TBD）
+### A5 结果（Batch_3 正式运行；X2/X3/X3.1 baseline）
 
-TBD
+**运行基线**：code `34f04f6`（X3.1 fixed-edge fidelity，Review 50/51 approved），
+protocol SHA256 `c61e165f…`（v1.2 FINAL FREEZE，git `9302a7d`），worktree_clean=true，
+单次运行，未按输出调参。输出 249 行：223 hypothesis / 21 diagnostic / 5 insufficient。
+
+#### E1 Evidence 层（响应证据密度）
+
+evidence 层按协议只含 response 相关变量（`recent_var`、`lagged_pilot_actual_ratio`）。
+
+| 变量 | 层内状态 | 跨 split 方向 |
+|---|---|---|
+| **recent_var** | 唯一产生 hypothesis 的变量 | **train/val/test 一致** |
+| lagged_pilot_actual_ratio | diagnostic（P1-1 不上 hypothesis） | 一致逆单调（诊断） |
+
+`recent_var` E1 证据率单调递增（Q1→Q4）：train 0.0039→0.0060→0.0173→0.0261；
+validation 0.0054→0.0117→0.0154→0.0331；test Q3/Q4 > pooled、Q1/Q2 = 0（a0_zero）。
+→ **高 recent actual 波动（充电实际电流不稳定）→ 更高 E1 响应证据密度**，
+是跨 train/val/test 唯一一致、且机制可解释（偏差可观测 → 响应状态可识别）的支持域假设。
+
+`lagged_pilot_actual_ratio` 低值（Q1）→ E1 密度高（0.0283/0.0313/0.0042 vs Q3 0.0004/0.0/0.0），
+train/val/test 同向，但仅 diagnostic。
+
+JPL current-only 无 E1 evidence target → `metric_not_applicable` + `a0_unavailable_current_only`，
+evidence 层 0 hypothesis（全部 diagnostic/insufficient），符合 X3 P1。
+
+#### E3 Opportunity 层（budget 机会）
+
+| pool | test hypothesis 行 | 主导变量 | 方向 |
+|---|---|---|---|
+| caltech | 20 | interaction n_active×elapsed 10/20、elapsed 5 | gt/lt 大致对半 |
+| jpl | 39 | interaction 25/39、n_active 5、elapsed 5 | gt/lt 大致对半 |
+
+- test 层 opportunity hypothesis 方向 `bucket>pooled` 与 `bucket<pooled` 大致对半 →
+  无单一方向性 claim；interaction 主导但方向混合。
+- jpl test 存在 candidate_rate 高达 0.919 的 bucket；caltech test opportunity
+  a2_elimination 评估均值 0.709（support 存在但有限）。
+
+**解读**：A5 产出一个跨 train/val/test 一致的 evidence-layer 支持域假设（高 recent
+actual 波动 → 高 E1 响应证据密度），对应机制"EVSE 允许/实际电流偏差可观测时，充电
+响应状态可在线识别"；opportunity 层无单一方向 claim。hypothesis 均为描述性下一阶段
+假设，非已验证 support rule，不训练 classifier。**支持域假设仅依赖在线可观测变量
+（recent actual variance），具备工程合理性** → 满足 A/B/C 判据中 A 的关键前提之一，
+但是否立项依赖 Final R1 Gate 的 D1 归型与 D2/D3 架构判断。
+
+输出文件：`results/raw/E3F_expansion/a5_support_domain_hypothesis.csv`
++ `a5_summary.json` + `a5_manifest.json`
 
 ---
 

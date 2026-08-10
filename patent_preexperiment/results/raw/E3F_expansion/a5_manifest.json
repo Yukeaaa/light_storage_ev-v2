@@ -1,0 +1,619 @@
+{
+  "batch": "a5",
+  "preregister": "configs\\r1_expansion_audit.yaml",
+  "preregister_sha256": "c6329d06ec49c0bf6c9307151d60eadaa56fdde1ca4e846ceb15bddbf5f401b9",
+  "protocol": "reports\\R1_A5_protocol_amendment.md",
+  "protocol_sha256": "c61e165f119aa4ae8d39b84e06b9b65cd6b4a349fa1588c09e43c569d6d686df",
+  "protocol_version": "v1.2 FINAL FREEZE",
+  "analysis_code_sha": "34f04f650e645df5d335784cf0923f8e8c8d7ed0",
+  "worktree_clean": true,
+  "inputs": {
+    "split_registry": {
+      "sha256": "5cb0710240a570764dfac5421c3e834008c33629b6525313b6ab6e7b88c64e53",
+      "rows": 85877
+    },
+    "e3_caltech_train_candidate": {
+      "sha256": "22635363425ee9e2e350bf1afa00a755d63c9105376396a5b34d9f2575caa045",
+      "rows": 79816
+    },
+    "e3_caltech_validation_candidate": {
+      "sha256": "88e263bebb6f2e7615bf00b4487709ac31025646477e08095c3d1fa27c565738",
+      "rows": 33003
+    },
+    "e3_caltech_test_candidate": {
+      "sha256": "c551a92770797d7feb17091a951a0d5dba5b566ac672741220c741059656810b",
+      "rows": 4920
+    },
+    "e3_jpl_train_candidate": {
+      "sha256": "5bac493e874fa8b5802a15e4c40aa091c4fa0026e830071bc6e11d3f387746c7",
+      "rows": 56429
+    },
+    "e3_jpl_validation_candidate": {
+      "sha256": "1d5f8b41120a2037affeef6f0a4becd01bf31cc764e9ae349a93db1ed4258b6c",
+      "rows": 21340
+    },
+    "e3_jpl_test_candidate": {
+      "sha256": "305d6d81b58a337f53118126c3793298aac65087f8310538dee8c12bd321525b",
+      "rows": 12722
+    },
+    "e1_train_events": {
+      "sha256": "3bd17da5f39f4dd80ebbeb6d82fd2dfe9225ea4eb3d63ba2ce4377e60f5223c8",
+      "rows": 7582
+    },
+    "e1_validation_events": {
+      "sha256": "07e0e179c33a7765b91c087fc72e96811d6aeab82ca39d60ca6939499c2f6947",
+      "rows": 3489
+    },
+    "e1_test_events": {
+      "sha256": "ce3ce905b243affb2308b711bbb0a2ad034bcc9b7bac3149b899820256c8b4e4",
+      "rows": 101
+    }
+  },
+  "minute_tables": {
+    "caltech": {
+      "train": {
+        "rows": 3540777,
+        "sessions": 9426
+      },
+      "validation": {
+        "rows": 1328198,
+        "sessions": 3896
+      },
+      "test": {
+        "rows": 33140,
+        "sessions": 155
+      }
+    },
+    "jpl": {
+      "train": {
+        "rows": 5993773,
+        "sessions": 13908
+      },
+      "validation": {
+        "rows": 2090012,
+        "sessions": 5026
+      },
+      "test": {
+        "rows": 825269,
+        "sessions": 1991
+      }
+    }
+  },
+  "ecdf_edges": {
+    "caltech": {
+      "recent_actual_q90": {
+        "edges": [
+          -Infinity,
+          0.0,
+          3.3793537677536927,
+          Infinity
+        ],
+        "labels": [
+          "Q1",
+          "Q2",
+          "Q3"
+        ],
+        "insufficient_bin_resolution": false,
+        "q25": 0.0,
+        "q50": 0.0,
+        "q75": 3.3793537677536927,
+        "n_train_nonnull": 79816,
+        "effective_bins": 3
+      },
+      "recent_var": {
+        "edges": [
+          -Infinity,
+          0.0,
+          6.245431728820976e-07,
+          0.031218802657261104,
+          Infinity
+        ],
+        "labels": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4"
+        ],
+        "insufficient_bin_resolution": false,
+        "q25": 0.0,
+        "q50": 6.245431728820976e-07,
+        "q75": 0.031218802657261104,
+        "n_train_nonnull": 79816,
+        "effective_bins": 4
+      },
+      "lagged_pilot_actual_ratio": {
+        "edges": [
+          -Infinity,
+          1.3434231938849148,
+          1920000.0,
+          Infinity
+        ],
+        "labels": [
+          "Q1",
+          "Q2",
+          "Q3"
+        ],
+        "insufficient_bin_resolution": false,
+        "q25": 1.3434231938849148,
+        "q50": 1920000.0,
+        "q75": 1920000.0,
+        "n_train_nonnull": 79816,
+        "effective_bins": 3
+      }
+    },
+    "jpl": {
+      "recent_actual_q90": {
+        "edges": [
+          -Infinity,
+          0.0,
+          2.231074176666666,
+          3.0317458883333335,
+          Infinity
+        ],
+        "labels": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4"
+        ],
+        "insufficient_bin_resolution": false,
+        "q25": 0.0,
+        "q50": 2.231074176666666,
+        "q75": 3.0317458883333335,
+        "n_train_nonnull": 56429,
+        "effective_bins": 4
+      },
+      "recent_var": {
+        "edges": [
+          -Infinity,
+          3.165397237255134e-15,
+          0.002866984590880517,
+          0.14900251883038443,
+          Infinity
+        ],
+        "labels": [
+          "Q1",
+          "Q2",
+          "Q3",
+          "Q4"
+        ],
+        "insufficient_bin_resolution": false,
+        "q25": 3.165397237255134e-15,
+        "q50": 0.002866984590880517,
+        "q75": 0.14900251883038443,
+        "n_train_nonnull": 56429,
+        "effective_bins": 4
+      },
+      "lagged_pilot_actual_ratio": {
+        "n_nonnull": 0,
+        "q25": null,
+        "q50": null,
+        "q75": null,
+        "edges": null,
+        "labels": null,
+        "effective_bins": 0,
+        "insufficient_bin_resolution": true,
+        "reason": "no_pilot_in_current_only_domain"
+      }
+    }
+  },
+  "ecdf_fit_provenance": {
+    "caltech": {
+      "fit_split": "train",
+      "fit_universe": "e3_valid_paired_cycle_x_online_observable_nonnull",
+      "n_valid_cycles": 79816,
+      "n_mapped_obs": 79816,
+      "n_cycles_missing_obs": 0,
+      "variables": {
+        "recent_actual_q90": {
+          "n_nonnull": 79816,
+          "q25": 0.0,
+          "q50": 0.0,
+          "q75": 3.3793537677536927,
+          "edges": [
+            -Infinity,
+            0.0,
+            3.3793537677536927,
+            Infinity
+          ],
+          "labels": [
+            "Q1",
+            "Q2",
+            "Q3"
+          ],
+          "effective_bins": 3,
+          "insufficient_bin_resolution": false,
+          "reason": ""
+        },
+        "recent_var": {
+          "n_nonnull": 79816,
+          "q25": 0.0,
+          "q50": 6.245431728820976e-07,
+          "q75": 0.031218802657261104,
+          "edges": [
+            -Infinity,
+            0.0,
+            6.245431728820976e-07,
+            0.031218802657261104,
+            Infinity
+          ],
+          "labels": [
+            "Q1",
+            "Q2",
+            "Q3",
+            "Q4"
+          ],
+          "effective_bins": 4,
+          "insufficient_bin_resolution": false,
+          "reason": ""
+        },
+        "lagged_pilot_actual_ratio": {
+          "n_nonnull": 79816,
+          "q25": 1.3434231938849148,
+          "q50": 1920000.0,
+          "q75": 1920000.0,
+          "edges": [
+            -Infinity,
+            1.3434231938849148,
+            1920000.0,
+            Infinity
+          ],
+          "labels": [
+            "Q1",
+            "Q2",
+            "Q3"
+          ],
+          "effective_bins": 3,
+          "insufficient_bin_resolution": false,
+          "reason": ""
+        }
+      }
+    },
+    "jpl": {
+      "fit_split": "train",
+      "fit_universe": "e3_valid_paired_cycle_x_online_observable_nonnull",
+      "n_valid_cycles": 56429,
+      "n_mapped_obs": 56429,
+      "n_cycles_missing_obs": 0,
+      "variables": {
+        "recent_actual_q90": {
+          "n_nonnull": 56429,
+          "q25": 0.0,
+          "q50": 2.231074176666666,
+          "q75": 3.0317458883333335,
+          "edges": [
+            -Infinity,
+            0.0,
+            2.231074176666666,
+            3.0317458883333335,
+            Infinity
+          ],
+          "labels": [
+            "Q1",
+            "Q2",
+            "Q3",
+            "Q4"
+          ],
+          "effective_bins": 4,
+          "insufficient_bin_resolution": false,
+          "reason": ""
+        },
+        "recent_var": {
+          "n_nonnull": 56429,
+          "q25": 3.165397237255134e-15,
+          "q50": 0.002866984590880517,
+          "q75": 0.14900251883038443,
+          "edges": [
+            -Infinity,
+            3.165397237255134e-15,
+            0.002866984590880517,
+            0.14900251883038443,
+            Infinity
+          ],
+          "labels": [
+            "Q1",
+            "Q2",
+            "Q3",
+            "Q4"
+          ],
+          "effective_bins": 4,
+          "insufficient_bin_resolution": false,
+          "reason": ""
+        },
+        "lagged_pilot_actual_ratio": {
+          "n_nonnull": 0,
+          "q25": null,
+          "q50": null,
+          "q75": null,
+          "edges": null,
+          "labels": null,
+          "effective_bins": 0,
+          "insufficient_bin_resolution": true,
+          "reason": "no_pilot_in_current_only_domain"
+        }
+      }
+    }
+  },
+  "outputs": {
+    "results\\raw\\E3F_expansion\\a5_support_domain_hypothesis.csv": {
+      "sha256": "52b66cbf933210513067a504e710eea8daa067e241bce6dae21fee883b73dbf7",
+      "rows": 249
+    },
+    "results\\raw\\E3F_expansion\\a5_summary.json": {
+      "sha256": "24ab3756128feb60c83190e89c68b741cf5c465925aa34bb03623c09b12429a6"
+    }
+  },
+  "a5_summary": {
+    "module": "A5_support_domain_hypothesis",
+    "protocol_version": "v1.2 FINAL FREEZE",
+    "protocol_sha256": "c61e165f119aa4ae8d39b84e06b9b65cd6b4a349fa1588c09e43c569d6d686df",
+    "ecdf_edges": {
+      "caltech": {
+        "recent_actual_q90": {
+          "edges": [
+            -Infinity,
+            0.0,
+            3.3793537677536927,
+            Infinity
+          ],
+          "labels": [
+            "Q1",
+            "Q2",
+            "Q3"
+          ],
+          "insufficient_bin_resolution": false,
+          "q25": 0.0,
+          "q50": 0.0,
+          "q75": 3.3793537677536927,
+          "n_train_nonnull": 79816,
+          "effective_bins": 3
+        },
+        "recent_var": {
+          "edges": [
+            -Infinity,
+            0.0,
+            6.245431728820976e-07,
+            0.031218802657261104,
+            Infinity
+          ],
+          "labels": [
+            "Q1",
+            "Q2",
+            "Q3",
+            "Q4"
+          ],
+          "insufficient_bin_resolution": false,
+          "q25": 0.0,
+          "q50": 6.245431728820976e-07,
+          "q75": 0.031218802657261104,
+          "n_train_nonnull": 79816,
+          "effective_bins": 4
+        },
+        "lagged_pilot_actual_ratio": {
+          "edges": [
+            -Infinity,
+            1.3434231938849148,
+            1920000.0,
+            Infinity
+          ],
+          "labels": [
+            "Q1",
+            "Q2",
+            "Q3"
+          ],
+          "insufficient_bin_resolution": false,
+          "q25": 1.3434231938849148,
+          "q50": 1920000.0,
+          "q75": 1920000.0,
+          "n_train_nonnull": 79816,
+          "effective_bins": 3
+        }
+      },
+      "jpl": {
+        "recent_actual_q90": {
+          "edges": [
+            -Infinity,
+            0.0,
+            2.231074176666666,
+            3.0317458883333335,
+            Infinity
+          ],
+          "labels": [
+            "Q1",
+            "Q2",
+            "Q3",
+            "Q4"
+          ],
+          "insufficient_bin_resolution": false,
+          "q25": 0.0,
+          "q50": 2.231074176666666,
+          "q75": 3.0317458883333335,
+          "n_train_nonnull": 56429,
+          "effective_bins": 4
+        },
+        "recent_var": {
+          "edges": [
+            -Infinity,
+            3.165397237255134e-15,
+            0.002866984590880517,
+            0.14900251883038443,
+            Infinity
+          ],
+          "labels": [
+            "Q1",
+            "Q2",
+            "Q3",
+            "Q4"
+          ],
+          "insufficient_bin_resolution": false,
+          "q25": 3.165397237255134e-15,
+          "q50": 0.002866984590880517,
+          "q75": 0.14900251883038443,
+          "n_train_nonnull": 56429,
+          "effective_bins": 4
+        },
+        "lagged_pilot_actual_ratio": {
+          "n_nonnull": 0,
+          "q25": null,
+          "q50": null,
+          "q75": null,
+          "edges": null,
+          "labels": null,
+          "effective_bins": 0,
+          "insufficient_bin_resolution": true,
+          "reason": "no_pilot_in_current_only_domain"
+        }
+      }
+    },
+    "ecdf_fit_provenance": {
+      "caltech": {
+        "fit_split": "train",
+        "fit_universe": "e3_valid_paired_cycle_x_online_observable_nonnull",
+        "n_valid_cycles": 79816,
+        "n_mapped_obs": 79816,
+        "n_cycles_missing_obs": 0,
+        "variables": {
+          "recent_actual_q90": {
+            "n_nonnull": 79816,
+            "q25": 0.0,
+            "q50": 0.0,
+            "q75": 3.3793537677536927,
+            "edges": [
+              -Infinity,
+              0.0,
+              3.3793537677536927,
+              Infinity
+            ],
+            "labels": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "effective_bins": 3,
+            "insufficient_bin_resolution": false,
+            "reason": ""
+          },
+          "recent_var": {
+            "n_nonnull": 79816,
+            "q25": 0.0,
+            "q50": 6.245431728820976e-07,
+            "q75": 0.031218802657261104,
+            "edges": [
+              -Infinity,
+              0.0,
+              6.245431728820976e-07,
+              0.031218802657261104,
+              Infinity
+            ],
+            "labels": [
+              "Q1",
+              "Q2",
+              "Q3",
+              "Q4"
+            ],
+            "effective_bins": 4,
+            "insufficient_bin_resolution": false,
+            "reason": ""
+          },
+          "lagged_pilot_actual_ratio": {
+            "n_nonnull": 79816,
+            "q25": 1.3434231938849148,
+            "q50": 1920000.0,
+            "q75": 1920000.0,
+            "edges": [
+              -Infinity,
+              1.3434231938849148,
+              1920000.0,
+              Infinity
+            ],
+            "labels": [
+              "Q1",
+              "Q2",
+              "Q3"
+            ],
+            "effective_bins": 3,
+            "insufficient_bin_resolution": false,
+            "reason": ""
+          }
+        }
+      },
+      "jpl": {
+        "fit_split": "train",
+        "fit_universe": "e3_valid_paired_cycle_x_online_observable_nonnull",
+        "n_valid_cycles": 56429,
+        "n_mapped_obs": 56429,
+        "n_cycles_missing_obs": 0,
+        "variables": {
+          "recent_actual_q90": {
+            "n_nonnull": 56429,
+            "q25": 0.0,
+            "q50": 2.231074176666666,
+            "q75": 3.0317458883333335,
+            "edges": [
+              -Infinity,
+              0.0,
+              2.231074176666666,
+              3.0317458883333335,
+              Infinity
+            ],
+            "labels": [
+              "Q1",
+              "Q2",
+              "Q3",
+              "Q4"
+            ],
+            "effective_bins": 4,
+            "insufficient_bin_resolution": false,
+            "reason": ""
+          },
+          "recent_var": {
+            "n_nonnull": 56429,
+            "q25": 3.165397237255134e-15,
+            "q50": 0.002866984590880517,
+            "q75": 0.14900251883038443,
+            "edges": [
+              -Infinity,
+              3.165397237255134e-15,
+              0.002866984590880517,
+              0.14900251883038443,
+              Infinity
+            ],
+            "labels": [
+              "Q1",
+              "Q2",
+              "Q3",
+              "Q4"
+            ],
+            "effective_bins": 4,
+            "insufficient_bin_resolution": false,
+            "reason": ""
+          },
+          "lagged_pilot_actual_ratio": {
+            "n_nonnull": 0,
+            "q25": null,
+            "q50": null,
+            "q75": null,
+            "edges": null,
+            "labels": null,
+            "effective_bins": 0,
+            "insufficient_bin_resolution": true,
+            "reason": "no_pilot_in_current_only_domain"
+          }
+        }
+      }
+    },
+    "n_rows": 249,
+    "variables": [
+      "n_active",
+      "elapsed",
+      "recent_actual_q90",
+      "recent_var",
+      "lagged_pilot_actual_ratio",
+      "n_active_x_elapsed"
+    ],
+    "x2_review_48": "ECDF fit universe=frozen E3 valid keys×obs; cycle-level daily-share; E1/E3 universe separation; E1 for all layers; layer-aware direction; JPL E1 NA+metric_not_applicable; non-empty-bin insufficient; lagged ratio diagnostic; manifest fit provenance",
+    "x3_review_49": "true dual universe: obs independently bucketed for E1 metrics (not constrained by E3-valid), cand+obs bucketed for E3 metrics; variable-specific pooled reference (per pool×split×variable, interaction=both-variables-evaluable); JPL evidence layer scope<=diagnostic; daily-share fail-closed on missing EV-energy denominator",
+    "note": "五单变量 + n_active×elapsed 交互；train-only ECDF quartile；19-column schema；daily-share bucket-restricted E3/K1 exact；elimination A0=0→NA；E1 event-start snapshot；direction=pooled reference；test 只产假设"
+  },
+  "discipline": "只读 frozen evidence + registry + minute table；不重跑 formal；不调参；deterministic；protocol v1.2 FINAL FREEZE；X2=审查结论48；X3=审查结论49 code-only"
+}
