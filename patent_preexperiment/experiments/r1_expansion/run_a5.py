@@ -25,6 +25,11 @@ layer-aware direction、JPL E1 NA、non-empty bins、diagnostic、manifest prove
   hypothesis（最多 diagnostic；样本不足 insufficient）。
 - daily-share fail-closed：bucket valid day 但 EV-energy denominator 缺失 → raise。
 
+审查结论50 X3.1（code-only，未运行）：固定 bucket 边界 fidelity——
+CONCURRENCY_BUCKETS [1,2,4,8,16,+inf)（n_active=0 → non-evaluable，不再混入
+'1'）；ELAPSED_BUCKETS [0,30,60,120,240,+inf)（'240+' 非 '<100000'）。
+新增 _assert_fixed_edges() fail-closed guard。不改协议、不改逻辑。
+
 只读 frozen evidence + registry + minute table；不重跑 formal；deterministic。
 """
 from __future__ import annotations
@@ -54,9 +59,9 @@ OUT.mkdir(parents=True, exist_ok=True)
 SPLITS = ("train", "validation", "test")
 POOLS = ("caltech", "jpl")
 
-CONCURRENCY_BUCKETS = [0, 2, 4, 8, 16, 1000]
+CONCURRENCY_BUCKETS = [1, 2, 4, 8, 16, np.inf]
 CONCURRENCY_LABELS = ["1", "2-3", "4-7", "8-15", "16+"]
-ELAPSED_BUCKETS = [0, 30, 60, 120, 240, 100000]
+ELAPSED_BUCKETS = [0, 30, 60, 120, 240, np.inf]
 ELAPSED_LABELS = ["<30", "30-59", "60-119", "120-239", "240+"]
 
 MINUTE_COLS = [
@@ -517,12 +522,34 @@ def _compute_bucket_row(
     }
 
 
+def _assert_fixed_edges() -> None:
+    """fail-closed: 固定 bucket 边界 fidelity（审查结论50 X3.1）。
+
+    协议冻结 1/2-3/4-7/8-15/16+ 与 <30/30-59/60-119/120-239/240+；
+    n_active=0 必须 non-evaluable（不进 '1'），不污染 E1/E3 计数与 pooled。
+    """
+    s = pd.Series([0.0, 1.0, 2.0, 4.0, 16.0, 100.0], dtype=float)
+    b = pd.cut(s, bins=CONCURRENCY_BUCKETS, labels=CONCURRENCY_LABELS,
+               right=False, include_lowest=True)
+    assert pd.isna(b.iloc[0]), "n_active=0 必须 non-evaluable"
+    assert b.iloc[1] == "1"
+    assert b.iloc[2] == "2-3"
+    assert b.iloc[3] == "4-7"
+    assert b.iloc[4] == "16+" and b.iloc[5] == "16+"
+    e = pd.Series([30.0, 240.0, 1e6], dtype=float)
+    be = pd.cut(e, bins=ELAPSED_BUCKETS, labels=ELAPSED_LABELS,
+                right=False, include_lowest=True)
+    assert be.iloc[0] == "30-59"
+    assert be.iloc[1] == "240+" and be.iloc[2] == "240+"
+
+
 def run_a5(
     cands: dict[str, dict[str, pd.DataFrame]],
     minutes: dict[str, dict[str, pd.DataFrame]],
     e1_events: dict[str, pd.DataFrame],
 ) -> dict:
-    """A5: support/opportunity hypothesis audit（v1.2 protocol；X3=Review 49）。"""
+    """A5: support/opportunity hypothesis audit（v1.2 protocol；X3=Review 49；X3.1=Review 50）。"""
+    _assert_fixed_edges()
     all_rows: list[dict[str, Any]] = []
     all_edges: dict[str, dict[str, Any]] = {}
     fit_prov: dict[str, dict[str, Any]] = {}
