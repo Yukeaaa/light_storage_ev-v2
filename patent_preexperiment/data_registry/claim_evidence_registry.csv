@@ -5,9 +5,13 @@ C-003,ACN核心运行阶段存在持续响应差异,C,本项目 E1-Lite（冻结
 C-004,差值可被其他车辆吸收,D,待验证（研究假设）,—,—,未证明；与可回收能力等价,—,"可被其他车辆吸收/可回收能力/可回收电量",E1-Full + E2 / K2
 C-005,可减少储能补偿,D,待验证（研究假设）,—,—,未证明闭环收益,—,"可减少储能补偿",E4 / E7
 C-006,可提高光伏消纳,D,待验证（研究假设）,—,—,未证明闭环收益,—,"可提高光伏消纳",E4 / E7
-C-007,充电响应状态可识别（自然pilot正阶跃可验证增量响应）,D,待验证（研究假设）,—,—,E1-Full 未运行,—,"响应状态识别可用/已识别",E1-Full
+C-007,近期实际响应变化特征（recent actual variance）可区分响应证据密度,C,本项目 A5 扩展审计（Batch_3 正式运行，baseline 34f04f6；train/val/test 方向一致）,"S-005,R1_expansion_audit#A5",caltech measured-pilot（train/val/test 方向一致；Q1→Q4 单调 0.0039→0.0261 / 0.0054→0.0331）,描述性支持域假设，非已验证 support rule；不训练 classifier；JPL 无 E1 target 不适用,"近期实际波动越高→响应证据密度越高（train/val/test 方向一致，假设）","响应状态识别可用/已识别；variance 高→应修正/释放功率",Patent Definition / 新独立数据验证
 C-008,短时可执行功率区间可生成,D,待验证（研究假设）,—,—,E2 未运行,—,"短时可执行功率区间生成可用",E2 / K2
 C-009,支持域内有界修正可行,D,待验证（研究假设）,—,—,E2 未运行,—,"域内有界修正可行",E2 / K2
 C-010,支持域外保护回退有效,D,待验证（研究假设）,—,—,E2 未运行,—,"域外保护回退有效",E2 / K2
 C-011,A2上一周期实际功率可缓解但不消除候选,C,本项目 E3-Lite（冻结：caltech 候选率21.3%、日等权CI 20.3–23.5、消除55.2%）,S-005,caltech 主集冻结样本,单池、Lite 口径,"冻结样本下 A2 缓解但不消除（消除55.2%≤80%）","A2 可消除问题/候选可忽略",E0-Full 复现
 C-012,JPL边界方向一致但证据弱,C,本项目 E1-Lite K1-X（2020-06/07，COVID 低量期）,S-005,jpl.Arroyo_Garage_01,弱证据、不独立支持结论,"JPL 方向一致（弱证据）","JPL 独立支持结论",E0-Full 扩展审计
+P-001,响应证据支持状态→短时功率边界生成模式选择（pilot-rich→response/history-derived boundary；current-only→history protective boundary；history insufficient→conservative fallback）,C,审查结论52 Final R1 Patent Gate + A5（online 响应状态变量）+ E0-Full 信息模式审计,R1_expansion_audit#最终判定,caltech measured-pilot + jpl current-only 两真实分支,架构 candidate；未证明控制收益/闭环收益,"信息条件不同→边界生成方式不同→控制权限不同（架构候选）","已验证控制收益/闭环收益",Patent Definition 结构设计 + 实施例
+P-002,据所选边界限制/降级/恢复 EMS 对 EV/EV 池功率预算的控制权限（不无条件按分配−实际释放差值）,D,架构设计（待验证）,—,—,无闭环验证,"限制/降级/恢复控制权限（机制设计）","已验证能减少储能补偿/提高消纳",E4 或新独立验证
+P-003,高近期实际波动→降低对历史边界信任度→保护/观测状态（非多释放功率）,C,A5 evidence 方向（Q3/Q4 波动高→响应证据密度高）+ 工程安全论据,S-005,R1_expansion_audit#A5,caltech measured-pilot 方向一致,与 A5 方向一致但为工程安全推定，"高波动→降低信任/进入保护观测（与 A5 方向一致）","variance 高→应多释放功率",Patent Definition 实施例
+P-004,active bounded correction（支持状态满足且机会充分时，在边界内有界修正）保留为从属/可选实施方式,D,审查结论52（opportunity 层方向混合、caltech E3 formal FAIL）,—,—,未证明主测试域普遍价值,"支持域且机会充分时执行有界修正（从属/可选）","主权利要求必选/已证明普遍有效",新独立数据验证

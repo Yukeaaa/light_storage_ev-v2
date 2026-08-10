@@ -312,6 +312,48 @@ actual 波动 → 高 E1 响应证据密度），对应机制"EVSE 允许/实际
 | **B. Protective-only GO** | 主动候选修正跨域不稳定，或简单基线已解决绝大部分问题；但 recent actual/current-history protective boundary 在 JPL 等域表现稳定。放弃主动 redistribution/广义 executable correction，专利中心缩到 protective execution boundary + fallback。 |
 | **C. NO-GO** | 扩展后仍显示机会高度稀疏/高度集中、简单 A2/A3 基线基本解决问题，同时无法提出一个仅依赖在线可观测变量且有工程合理性的 support-domain 假设；此时停止 D1-R/D1-P 继续投入。 |
 
-### 最终判定（TBD）
+### 最终判定（审查结论52 Final R1 Patent Gate，PROTECTIVE GO）
 
-TBD
+**D1 = B：protective-only D1 candidate。**
+**D2/D3 fusion architecture = YES（独立专利架构候选）。**
+**Project Final Verdict = PROTECTIVE GO + D2/D3 融合架构。**
+
+- **D1 ≠ A**：E1 正式 test FAIL、Caltech E3 主门 FAIL（test 候选率 CI 下界 ≈0.0052、
+  日候选能量中位 0、A2 消除 77%、单月集中）；A1–A4 显示 Caltech test 层
+  E1 response evidence 与 E3 A2 opportunity 在 cycle 层 `S1∩S2=0`；A5 opportunity 层
+  `bucket>pooled` 与 `bucket<pooled` 大致对半，无稳定单向工程规则。因此不构成
+  "识别状态后可靠释放/增加/重分配 EV 功率预算"的独立权利要求中心。
+- **D1 ≠ C**：A5 evidence 层唯一跨 train/val/test 一致的假设——近期 actual 波动
+  （`recent_var`）越高 → E1 响应证据密度越高（train Q1→Q4 0.0039→0.0261、
+  val 0.0054→0.0331、test Q3/Q4>pooled），不依赖 SOC/车型/BMS 内部原因；
+  加上 pilot-rich / current-only / history-insufficient 三种真实信息条件分支，
+  足以支撑保护型方案："判断何时不能再信任原功率能力假设，并切换到更保守边界"。
+- **D1 收缩方向**：主动挖掘剩余功率 → **避免 EMS 对 EV 短时执行能力做过度乐观假设**。
+- **D2/D3 fusion = YES（架构 candidate，非已验证控制收益）**："信息条件不同 →
+  边界生成方式不同 → 赋予 EMS 不同控制权限"已由 A5 在线响应状态变量 + JPL
+  current-only 真实分支支撑，进入专利结构设计；但未证明闭环收益，禁止表述为已验证。
+- **不恢复 broad active D1-R/D1-A；不自动进入 E2/E4。** 阶段切换为 Patent Definition。
+
+**发明中心（Review 52）**：在车辆真实执行能力不可直接可靠获知、或执行行为随时间变化时，
+利用 EVSE/CSMS 在线实际响应形成**响应证据支持状态**；据此选择不同**短时功率边界生成模式**
+（pilot-rich → response/history-derived boundary；current-only → history protective
+boundary；history insufficient → conservative fallback）；并**限制/降级/恢复 EMS 对该
+EV/EV 池功率预算的控制权限**；以新的实际响应反馈更新支持状态，实现保护降级与恢复的闭环。
+
+**独立权利要求建议六步骤**（非把 variance 本身写死）：① 获取实际充电功率/电流时序及
+可得时的导引/允许电流、充电状态、数据可用性；② 据至少实际响应历史的变化特征形成响应
+证据支持状态；③ 据支持状态与可用信息类型选择短时功率边界生成模式；④ 包含 response/
+history / protective / conservative 三种模式分支；⑤ 据所选边界限制 EMS 对车辆功率预算
+的处理权限（不无条件按"分配−实际"释放差值）；⑥ 据后续实际响应更新支持状态，控制模式
+可降级亦可恢复。active bounded correction 降为从属/可选实施方式。
+
+**现有技术边界（Review 52 补检索）**：Porsche US12054065B2 已保护"系统故障→静态 fallback
+模式切换"（trigger=站/系统故障，非车辆响应证据）；ChargePoint US10464435B2 已覆盖"基于近期
+供电历史响应 power-limit message"；US10150380B2 已覆盖"allocated power 超过车辆能力时释放
+功率模块给其他 dispenser"；CN112829627A 已覆盖多车动态重分配；US9290104B2 已公开"改变 pilot
+前后测量响应"。故历史边界、差值回收、多车重分配、fallback mode、pilot 响应测量**均不能单独
+成主权利要求**；唯一可主张空间是它们的**新技术关系**：响应证据支持状态 → 边界模式选择 →
+控制权限切换 → 保护降级/响应恢复。该组合需作为后续检索重点攻击对象。
+
+> 后续产出：主发明技术交底骨架 + 独立/从属权利要求树 + 针对上述组合结构的现有技术检索矩阵
+> （置于 Patent Definition 阶段）。现有技术检索仅为技术筛选，非正式新颖性/创造性/FTO 法律意见。
