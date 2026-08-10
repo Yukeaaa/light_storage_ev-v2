@@ -1,4 +1,4 @@
-# A5 Protocol Amendment v1.1（审查结论44/45 战略纠偏 + 协议收口）
+# A5 Protocol Amendment v1.2（审查结论44/45/46 战略纠偏 + 协议收口）
 
 > 本文件是对 `configs/r1_expansion_audit.yaml` A5 部分的**解释性恢复**，不是新增变量/阈值。
 > 原预注册 A5 明确冻结了五类 fixed buckets 并允许"单变量或少量预定义组合"；
@@ -7,8 +7,12 @@
 > 审查结论45 v1.1：区分已有固定 bins 与需 outcome-blind train-only 冻结的变量；
 > pilot_actual_ratio 明确为 lagged/pre-action；Final Gate 改两级 verdict；
 > Layer 2 措辞降级；output schema + 组合限制冻结。
+> 审查结论46 v1.2：ECDF fit scope/source universe/outer bins/duplicate-edge rule 冻结；
+> schema 改正 19 列 + na_reason + interaction encoding；daily-share/elimination/
+> E1-rate/direction reference 精确定义（deterministic semantics closure）。
 >
 > **不新增变量、不搜索阈值、不训练 classifier。**
+> **v1.2 = 最终 protocol freeze。**
 
 ## 1. 为什么纠偏
 
@@ -138,11 +142,31 @@ recent_variance
 pilot_actual_ratio（lagged/pre-action，见 §8b）
 ```
 
-后三者必须现在冻结一个**与 outcome 完全无关的 deterministic binning rule**：
+后三者冻结一个**与 outcome 完全无关的 deterministic binning rule**：
 
-> **仅使用 frozen train distribution 建 ECDF/quantile bins（quartile: 25/50/75/100），
-> 边界由 train feature distribution 决定，不看 candidate label、E1/E3 outcome、
-> validation/test。**
+**Fit scope（审查结论46 P0-1）**：
+ECDF edges 按 `pool × variable` 分别在 frozen train 上拟合。
+field_mode 是该 pool 的既有模式属性，**不跨 Caltech/JPL 混合拟合**。
+lagged pilot ratio 自然只在 Caltech 拟合（JPL 无 pilot）。
+
+**Source universe（审查结论46 P0-1）**：
+edges 从 A4 同一定义的 **train pool×cycle online-observable table、
+该 variable 非空记录**拟合。拟合前不读取 E1 label、E3 candidate flag、
+A0/A2/A3 outcome。**不用 candidate cycles 拟合**，用全 valid-paired-cycle universe。
+
+**Quartile edges + outer bins（审查结论46 P0-1）**：
+```text
+Q1 = (-inf, q25]
+Q2 = (q25, q50]
+Q3 = (q50, q75]
+Q4 = (q75, +inf)
+```
+Q100 不作为外部硬边界。validation/test 超过 train max → 落入 Q4 (+inf)。
+
+**Duplicate-edge rule（审查结论46 P0-1）**：
+若 q25==q50 或 q50==q75：不 jitter、不人为找新 cutpoint。
+合并重复 cut edge；若不足以形成至少 2 个非空区间，
+该 variable/pool 标记 `insufficient_bin_resolution`，不产生方向性 support hypothesis。
 
 执行：
 ```text
@@ -165,32 +189,94 @@ train 得到 edges → 写入 manifest → validation/test 只 apply → 禁止�
 JPL current-only 无 pilot → `NA + reason: no_pilot_in_current_only_domain`，
 不换另一指标补洞。
 
-## 9. Output schema（审查结论45，冻结表结构防止写代码时改口径）
+## 9. Output schema（审查结论46 P0-2，19 列冻结）
 
 `a5_support_domain_hypothesis.csv` 列：
 
 ```text
-layer                 # opportunity / evidence
-pool                  # caltech / jpl
-split                 # train / validation / test
-field_mode            # measured_pilot / current_only / NA
-variable              # n_active / elapsed / recent_actual_q90 / recent_var / lagged_pilot_actual_ratio
-bucket                # 如 "2-3" / "60-119" / "Q1" 等
-bucket_rule_source    # pre_existing / train_quartile_ecdf / NA
-n_evaluable           # 该 bucket 可评估 cycle 数
-n_e1_events           # 该 bucket E1 core events（若适用）
-e1_evidence_rate      # n_e1_events / n_evaluable
-n_e3_valid_cycles     # E3 valid cycles
-n_e3_candidates       # E3 A2 candidate cycles
-e3_candidate_rate     # n_e3_candidates / n_e3_valid_cycles
-daily_candidate_energy_share
-a2_elimination
-a3_elimination
-direction_vs_reference # 该 bucket vs 同变量其他 bucket 的方向
+layer                  # opportunity / evidence
+pool                   # caltech / jpl
+split                  # train / validation / test
+field_mode             # measured_pilot / current_only / NA
+variable               # n_active / elapsed / recent_actual_q90 / recent_var / lagged_pilot_actual_ratio / n_active_x_elapsed
+bucket                 # 如 "2-3" / "60-119" / "Q1" / "2-3|60-119"（交互用 | 分隔）
+bucket_rule_source     # pre_existing / pre_existing_cross / train_quartile_ecdf / NA
+n_evaluable            # 该 bucket 可评估 cycle 数
+n_e1_events            # 该 bucket unique E1-core event-start cycles（event-start snapshot，不展开 duration）
+e1_evidence_rate       # n_e1_events / n_evaluable（见 §9b）
+n_e3_valid_cycles      # E3 valid cycles in bucket
+n_e3_candidates        # E3 A2 candidate cycles in bucket
+e3_candidate_rate      # n_e3_candidates / n_e3_valid_cycles
+daily_candidate_energy_share  # 见 §9b 精确定义
+a2_elimination         # 见 §9b
+a3_elimination         # 见 §9b
+direction_vs_reference # 见 §9b
 interpretation_scope   # hypothesis / diagnostic / insufficient
+na_reason              # no_pilot_in_current_only_domain / a0_zero_not_evaluable / a0_unavailable_current_only / insufficient_bin_resolution / metric_not_applicable / （空=可计算）
 ```
 
-某指标对某 pool 不可计算 → `NA + reason`，不换指标补洞。
+**Interaction row encoding**：`variable = n_active_x_elapsed`，
+`bucket = "2-3|60-119"`（`|` 分隔），`bucket_rule_source = pre_existing_cross`。
+不需要新输出表。
+
+## 9b. 指标精确定义（审查结论46 P0-3）
+
+### daily_candidate_energy_share
+
+沿用 E3/K1 exact evaluable-day semantics，仅在 bucket 内做 restriction：
+
+```text
+当天存在该 bucket 的 E3 valid paired cycles → 该日 evaluable
+candidate=False cycle 贡献 0（真实零，进入 median）
+没有该 bucket valid cycle 的日排除
+分母 = 该 bucket valid paired cycles 对应 EV energy（非全站）
+对 evaluable days 取 median
+```
+
+不重新发明全站 denominator。
+
+### a2_elimination / a3_elimination
+
+```text
+1 - bucket_rate_A2 / bucket_rate_A0
+1 - bucket_rate_A3 / bucket_rate_A0
+```
+
+只用 frozen candidate flags。
+
+A0 rate == 0 → `NA` + `na_reason = a0_zero_not_evaluable`。
+JPL current-only 无 A0 → `NA` + `na_reason = a0_unavailable_current_only`。
+不以别的 baseline 替换。
+
+### e1_evidence_rate
+
+使用 A4 已冻结的 **E1 core event-start cycle snapshot**：
+
+```text
+n_e1_events = unique E1-core event-start cycles mapped into 该 bucket
+e1_evidence_rate = n_e1_events / n_evaluable
+```
+
+不展开 event duration（避免长事件获额外权重）。
+
+### direction_vs_reference
+
+固定定义：以同 `pool × split × variable` 的**全部 evaluable population**
+为 pooled reference。
+
+```text
+Layer 1:
+  direction_vs_reference = e3_candidate_rate(bucket) vs pooled e3_candidate_rate
+  "bucket>pooled" / "bucket<pooled" / "equal" / "NA"
+
+Layer 2（若 E1 可评估）:
+  direction_vs_reference = e1_evidence_rate(bucket) vs pooled e1_evidence_rate
+  同上
+
+不可评估 → NA + na_reason
+```
+
+descriptive，不作为新 gate threshold。
 
 ## 10. 组合限制（审查结论45，防止过窄纠偏成过宽）
 
