@@ -1,4 +1,4 @@
-# Patent Definition Phase 3 — Minimum Evidence Preregistration（v1.0.1）
+# Patent Definition Phase 3 — Minimum Evidence Preregistration（v1.0.2）
 
 > 依据：审查结论52（Final R1 Patent Gate：PROTECTIVE GO + D2/D3 fusion）；
 > Phase 2 Claim Architecture Freeze（`open_questions_decision_record.md`，commit `79ff1a1`）。
@@ -11,7 +11,12 @@
 > ④ 封死 ratio zero-denominator 与 duplicate-edge 语义；⑤ 删除 P3→P-004 错误映射；
 > ⑥ `NOT_EVALUABLE` 与 Conditional patent route 分开表述。未改实验设计与科学方向。
 >
-> **冻结效力**：本文档冻结后为 Phase 3 v1.0.1。任何改动须新版本 + 新测试协议，
+> **v1.0.2（审查结论54，protocol-only mathematical exhaustiveness）**：把全部 outcome
+> 映射为唯一 verdict——`0/0` → NA → No-Go；`rate_S2 ≤ rate_S1`（含 equality）→ No-Go；
+> `n_S1=0 或 n_S2=0`（train-q50 外推后缺状态）→ NOT_EVALUABLE + route Conditional。
+> 不允许留下未定义分支。未改实验设计与科学方向。
+>
+> **冻结效力**：本文档冻结后为 Phase 3 v1.0.2。任何改动须新版本 + 新测试协议，
 > 禁止静默修改阈值/变量/population；封存 test 永不重跑；office001 外部验证禁止回填阈值。
 > 本文件不是法律意见。
 
@@ -143,7 +148,9 @@ P3 E4.1 克制版（P2 未出结果前不启动）
 4. **指标（test，单次）**：
    - 主指标：E1 evidence rate（cycle 级，event-start snapshot，与 A5 同口径）按 S1/S2 分层；
      `rate_ratio = rate_S2 / rate_S1`（effect size）与 `rate_diff = rate_S2 − rate_S1`
-     （inferential）。
+     （inferential）。**`rate_ratio` 的零分母/空状态分支一律按 §1.6 穷尽映射规则判定**
+     （`0/0` → NA → No-Go；`+∞` 仅限 `rate_S1=0 且 rate_S2>0`；`n_S1=0 或 n_S2=0` →
+     NOT_EVALUABLE）；**test 暴露后不得再发明处理**。
    - 次指标：quartile direction 用 **A5 duplicate-edge rule**——highest effective variance
      bin > lowest effective variance bin（即 Q4>Q1 语义）；不足 2 个 effective bins →
      `insufficient_bin_resolution`，**不得偷偷重找 cutpoint**；S3 占比与触发正确性；
@@ -156,9 +163,30 @@ P3 E4.1 克制版（P2 未出结果前不启动）
 
 | 结果 | 判定 | 量化条件 |
 |---|---|---|
-| **Success (Go)** | 主门 | ① 预检可行：measured_pilot 覆盖 ≥ 50%、**train+validation pretest E1 事件 ≥ 50**（matched 会话数仅作 population audit，不入门）；② effect-size：raw `rate_ratio ≥ 1.5`（`rate_S1=0` 时 ratio=∞，数学明确，**不加 pseudocount / continuity correction**）；③ inferential：cluster bootstrap 95% CI of `rate_diff = rate_S2 − rate_S1` **下界 > 0**；④ secondary quartile direction 符合 duplicate-edge rule（highest effective bin > lowest effective bin；不足 2 bins → `insufficient_bin_resolution`，不重找 cutpoint）；⑤ S3 触发符合定义 |
+| **Success (Go)** | 主门 | ① 预检可行：measured_pilot 覆盖 ≥ 50%、**train+validation pretest E1 事件 ≥ 50**（matched 会话数仅作 population audit，不入门）；② effect-size：按 §1.6 穷尽映射计算 raw `rate_ratio` 且 `rate_ratio ≥ 1.5`（`rate_S1=0 且 rate_S2>0` → +∞；`rate_S1=0 且 rate_S2=0` → NA → **No-Go**；**不加 pseudocount / continuity correction**）；③ inferential：cluster bootstrap 95% CI of `rate_diff = rate_S2 − rate_S1` **下界 > 0**；④ secondary quartile direction 符合 duplicate-edge rule（highest effective bin > lowest effective bin；不足 2 bins → `insufficient_bin_resolution`，不重找 cutpoint）；⑤ S3 触发符合定义 |
 | **Conditional (条件 Go)** | 部分成立 / 不可评估 | 方向正确但 `1.2 ≤ raw rate_ratio < 1.5`；或 rate_diff CI 含 0 但 point 一致；或样本位于下界（pretest E1 事件 20–50）；或 **P1 evidence verdict = NOT_EVALUABLE**（office001 与 UCSD 均数据不可行 → **Patent route verdict = Conditional**，表述为"不可评估"而非"部分成立"） |
-| **No-Go** | 主门失败 | 方向反转（`rate_S2 < rate_S1`）；或 rate_diff CI 上界 < 0；或 pretest E1 事件 < 20 且备份不可行；或 S3 异常主导 |
+| **No-Go** | 主门失败 | 方向反转或无正向分离（`rate_S2 ≤ rate_S1`，含 equality；`rate_S1=0 且 rate_S2=0` → NA）；或 rate_diff CI 上界 < 0；或 pretest E1 事件 < 20 且备份不可行；或 S3 异常主导 |
+
+**穷尽映射规则（v1.0.2，覆盖全部 outcome，不允许未定义分支）**：
+
+```text
+A. n_S1 > 0 且 n_S2 > 0（可评估）：
+   rate_S1 = 0 且 rate_S2 > 0 → rate_ratio = +∞（后续仍按 ②/③ 判定 Go/Conditional）
+   rate_S1 = 0 且 rate_S2 = 0 → rate_ratio = NA → No-Go（可评估，但无正向 state separation）
+   rate_S1 > 0 → rate_ratio = rate_S2 / rate_S1
+   rate_S2 ≤ rate_S1 → No-Go（无正向分离/反转；覆盖 equality）
+   rate_S2 > rate_S1 → 按 ② effect-size 与 ③ inferential 判定 Go / Conditional
+
+B. n_S1 = 0 或 n_S2 = 0（train-q50 外推到 test 后缺状态，无法比较）：
+   P1 evidence verdict = NOT_EVALUABLE
+   Patent route verdict = Conditional
+   （原因：非机制被反证，而是状态缺失；不归为 No-Go）
+
+三 verdict 穷尽：
+   Go          = 有正向分离且强
+   Conditional = 有正向分离但弱，或 NOT_EVALUABLE
+   No-Go       = 可评估但无正向分离 / 反转
+```
 
 ### 1.7 Forbidden post-hoc actions
 
@@ -172,14 +200,17 @@ P3 E4.1 克制版（P2 未出结果前不启动）
 
 ### 1.8 Patent consequence if failed
 
-- **No-Go（方向反转/证据不存在）**：**删除 CLAIM 1 第 2 步"响应证据支持状态"作为强技术中心**
+- **No-Go（方向反转 / 无正向分离 / evidence 不存在）**：**删除 CLAIM 1 第 2 步"响应证据支持状态"作为强技术中心**
   的资格 → 专利退化到 **field/data-mode driven protective switching**（独立权利要求中心改为
   "按信息条件/数据模式选择边界应用模式 + 保守回退"，variance 特征从 CLAIM 2/3 中删除）；
   `claim_evidence_registry`：**C-007 降级为 D**（描述性假设失去跨站点锚点）、**P-001 弱化**。
+  **注：`rate_ratio = NA`（`rate_S1=0 且 rate_S2=0`）与 `rate_S2 ≤ rate_S1`（含 equality）
+  均按本 No-Go 后果处理**。
 - **Conditional**：CLAIM 1 第 2 步**措辞收窄**（限定"在存在导引/响应信息充分场景"，或把
   variance 作为 CLAIM 3 必要实施例而非 CLAIM 2 泛化）；C-007 维持 C 级不上 B；
-  需额外一次独立复现才能回到强中心。若为 **NOT_EVALUABLE**（office001 与 UCSD 均不可行），
-  专利后果按 Conditional 同规则，但表述为"不可评估"。
+  需额外一次独立复现才能回到强中心。若为 **NOT_EVALUABLE**（office001 与 UCSD 均不可行，
+  或 test 中 `n_S1=0` / `n_S2=0` 导致状态缺失无法比较），
+  专利后果按 Conditional 同规则，但表述为"不可评估"，**不归为 No-Go**。
 - **Go**：C-007 升 **B 级（跨站点独立复现）**；P-001 强化；CLAIM 1 第 2 步维持强技术中心，
   三态写入实施例。**结论措辞仅限**："**variance-based state separation 获得独立站点复现**"——
   **不得声称**"S2 protective 已证明更有效"（P1 只验证 `recent_var → E1 evidence density`
@@ -322,14 +353,22 @@ protective boundary 实施例**？它是否比直接沿用原预算更保守/稳
 
 ## 6. 变更控制与版本
 
-- 本文档 = **Phase 3 v1.0.1（冻结）**。P1 门后展开 P2/P3 字段 5 细节 = 新版本（v1.1/v1.2）
+- 本文档 = **Phase 3 v1.0.2（冻结）**。P1 门后展开 P2/P3 字段 5 细节 = 新版本（v1.1/v1.2）
   + 新测试协议，**不静默修改**本文件冻结的字段 1/2/3/6/7/8。
+- **v1.0.2 changelog（审查结论54，protocol-only mathematical exhaustiveness）**：把全部
+  outcome 映射为唯一 verdict，不允许未定义分支——⑦ `rate_S1=0 且 rate_S2=0` → `rate_ratio=NA`
+  → **No-Go**（可评估但无正向 state separation）；⑧ `rate_S2 ≤ rate_S1`（含 equality）
+  → **No-Go**；⑨ test 中 `n_S1=0 或 n_S2=0`（train-q50 外推到新站点后缺状态）
+  → evidence **NOT_EVALUABLE** + route **Conditional**（非机制被反证，不归 No-Go）；
+  ⑩ `+∞` 仅限 `rate_S1=0 且 rate_S2>0`。三 verdict 穷尽：Go=有正向分离且强 /
+  Conditional=有正向分离但弱或 NOT_EVALUABLE / No-Go=可评估但无正向分离或反转。
 - **v1.0.1 changelog（审查结论53，protocol-only closure）**：① Step 0/预检禁止读取
   test E1 labels，可行性只看 train+validation pretest；split 先确定并哈希，code-only
   baseline → formal test 单次 exposure；② 删除未定义的 `matched ≥ 阈值` hard gate
   （matched 会话数仅 population audit）；③ 冻结 `min_recent_samples=2`（A5 `recent_actual_var`
   同源：前一时刻数据、12-cycle rolling、min_periods=2、run 断裂/severe gap 重置）；
-  ④ effect-size 用 raw `rate_ratio ≥ 1.5`（`rate_S1=0`→∞ 数学明确，无 pseudocount），
+  ④ effect-size 用 raw `rate_ratio ≥ 1.5`（`rate_S1=0`→∞ 数学明确，无 pseudocount；
+   **v1.0.2 细化为：仅当 `rate_S2>0` 时为 +∞；`rate_S2=0` → NA → No-Go**），
   inferential 用 rate_diff cluster CI 下界 > 0；S1/S2 主切分用 train raw q50（median），
   secondary quartile 用 duplicate-edge rule（不足 2 effective bins → insufficient_bin_resolution）；
   ⑤ P3 supported claim_id 删 P-004（P-004 仅对应 CLAIM 8 未来独立验证）；⑥ 双数据不可行 →
