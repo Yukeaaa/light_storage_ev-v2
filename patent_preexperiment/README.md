@@ -146,9 +146,9 @@ review/          每轮审查结论归档（审查结论2..7）
 
 ## 10. 下一阶段：Patent Definition（Review 52）
 
-1. 更新过时的 claim_evidence_registry 与 README 状态（本提交完成）。
-2. 主发明技术交底骨架 + 独立/从属权利要求树 + 针对"响应证据支持状态→边界模式选择→
-   控制权限切换→保护降级/恢复"组合结构的现有技术检索矩阵。
+1. 更新过时的 claim_evidence_registry 与 README 状态（`f6b49e8` 完成）。
+2. 主发明技术交底骨架 + 独立/从属权利要求树 + 现有技术检索矩阵
+   → `reports/patent_definition/tech_disclosure.md` + `claim_tree.md` + `prior_art_matrix.md`。
 3. 现有技术检索仅为技术筛选，非正式新颖性/创造性/FTO 法律意见；最终申请前需专利代理师
    做完整法律检索与权利要求判断。
 
