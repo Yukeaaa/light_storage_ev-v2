@@ -1,0 +1,61 @@
+{
+  "experiment_id": "P1_office001_replication_v1",
+  "protocol_version": "Phase3_v1.0.2",
+  "batch": "p1_formal",
+  "summary": "results/raw/phase3_p1/p1_test_summary.json",
+  "sentinel": "results/raw/phase3_p1/p1_test_sentinel.json",
+  "train_edges": "data_registry/p1_train_edges.json",
+  "train_edges_sha256": "650342d9d79fa934b0662b1b935d38484562c65f5be6377266ab616adc480eb8",
+  "code_sha": "d99a0c648980739e2a293b355189430dd3e204b8",
+  "worktree_clean": true,
+  "once_only": true,
+  "summary_payload": {
+    "experiment_id": "P1_office001_replication_v1",
+    "protocol_version": "Phase3_v1.0.2",
+    "scope": "P1 formal test（单次 exposure，test E1 outcome）",
+    "site": "office001",
+    "test": {
+      "n_sessions": 215,
+      "n_cycles": 15954,
+      "n_e1_core_events": 70,
+      "n_e1_event_cycles": 70,
+      "n_evaluable_cycles": 15685,
+      "n_s3_cycles": 269
+    },
+    "s1_s2": {
+      "n_s1": 6312,
+      "n_s2": 9373,
+      "n_e1_s1": 31,
+      "n_e1_s2": 38,
+      "rate_s1": 0.004911,
+      "rate_s2": 0.004054,
+      "rate_diff": -0.000857,
+      "rate_ratio": 0.8254870716505542,
+      "ratio_kind": "finite"
+    },
+    "inferential": {
+      "bootstrap_unit": "day",
+      "seed": 20240810,
+      "ci95": [
+        -0.005446,
+        0.003212
+      ]
+    },
+    "quartile_direction": {
+      "direction": "Q4>Q1",
+      "low_label": "Q1",
+      "high_label": "Q4",
+      "rate_low": 0.000682360968952576,
+      "rate_high": 0.0025390625,
+      "high_gt_low": true,
+      "insufficient_bin_resolution": false
+    },
+    "verdict": {
+      "verdict": "No-Go",
+      "reason": "rate_S2=0.004054 <= rate_S1=0.004911（含 equality）"
+    },
+    "pretest": {
+      "reuse": "Step 0 判定 feasible（见 data_registry/p1_step0_feasibility.json）"
+    }
+  }
+}

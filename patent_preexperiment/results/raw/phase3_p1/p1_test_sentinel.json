@@ -1,0 +1,10 @@
+{
+  "status": "completed",
+  "started_at": "2026-08-11T00:24:56.008619+00:00",
+  "expected_code_sha": "d99a0c648980739e2a293b355189430dd3e204b8",
+  "code_sha": "d99a0c648980739e2a293b355189430dd3e204b8",
+  "worktree_clean": true,
+  "train_edges_sha256": "650342d9d79fa934b0662b1b935d38484562c65f5be6377266ab616adc480eb8",
+  "integrity": "deterministic recompute == frozen artifact (pre-exposure)",
+  "exposed_sha": "d99a0c648980739e2a293b355189430dd3e204b8"
+}
