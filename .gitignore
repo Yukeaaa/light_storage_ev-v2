@@ -18,3 +18,9 @@ patent_preexperiment/results/work/**
 # SHA256 在 formal manifest 中记录，保证 fit/formal 两侧 provenance 闭环）
 patent_preexperiment/data_registry/p1_train_edges.json
 
+# P2 Step0 预暴露产物（kill-gate 证据，不入库；step0 可重跑。
+# 与 P1 同机制：gitignore 保持 step0→formal 两侧 clean worktree + code_sha 不变，
+# formal 的 pre-exposure 完整性用 p2_step0_summary.json 的 sha256 在运行前后对账。
+# formal 单次 exposure 后的 sentinel/summary/manifest/traces 仍入库作正式证据）
+patent_preexperiment/results/raw/phase3_p2/p2_step0_*
+
