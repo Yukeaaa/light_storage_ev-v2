@@ -1,7 +1,7 @@
-"""P1 runner 测试（Review 56 检查点 1-7 + Review 57 X1 + Review 58 X1.1 + Review 59 X1.2）：
-train-only fit、test loader 隔离、once-only state machine、hard gate、state-missing 短路、
-artifact-clean 生命周期闭环、pre-exposure artifact-integrity gate。
-用合成数据，不读取真实 test outcome。
+"""P1 runner 测试（Review 56 检查点 1-7 + Review 57 X1 + Review 58 X1.1 + Review 59 X1.2
++ Review 61 schema 兼容 + Review 63 once-only sentinel）：train-only fit、test loader 隔离、
+once-only state machine、hard gate、state-missing 短路、artifact-clean 生命周期闭环、
+pre-exposure artifact-integrity gate。用合成数据，不读取真实 test outcome。
 """
 
 from __future__ import annotations
@@ -187,6 +187,45 @@ def test_formal_rejects_tampered_quartile_edges(tmp_path: Path, monkeypatch):
     assert not (tmp_path / "results" / "raw" / "phase3_p1" / "p1_test_sentinel.json").exists()
 
 
+def test_formal_aborted_sentinel_still_blocks_rerun(tmp_path: Path, monkeypatch):
+    """Review 63 P0：aborted 也算 consumed——sentinel 只要存在即永久禁止重跑（test read 之前）。
+
+    第一次：模拟运行中 artifact hash 改变 → sentinel.status=aborted、summary 不落盘；
+    第二次：在任何 test read 之前立即拒绝。
+    """
+    _make_impl(tmp_path)
+    _fake_git_provenance(monkeypatch, sha="deadbeef", clean=True)
+    run_fit_train_edges(tmp_path)
+
+    # 模拟运行中 artifact hash 改变：sentinel 写入时 H1，结束前复算变 H2 → aborted
+    calls = {"n": 0}
+
+    def _flaky_sha(_path):
+        calls["n"] += 1
+        return "H1" if calls["n"] == 1 else "H2"
+
+    monkeypatch.setattr("patent_preexperiment.p1.runner._file_sha256", _flaky_sha)
+    with pytest.raises(RuntimeError, match="被替换"):
+        run_formal_test(tmp_path)
+    sentinel_path = tmp_path / "results" / "raw" / "phase3_p1" / "p1_test_sentinel.json"
+    sentinel = json.loads(sentinel_path.read_text("utf-8"))
+    assert sentinel["status"] == "aborted"
+    assert not (tmp_path / "results" / "raw" / "phase3_p1" / "p1_test_summary.json").exists()
+
+    # 第二次：任何 sentinel 存在 → 立即拒绝，且不触碰 test loader
+    load_calls = {"n": 0}
+    real_load = _load_split_minutes
+
+    def _spy_load(*a, **k):
+        load_calls["n"] += 1
+        return real_load(*a, **k)
+
+    monkeypatch.setattr("patent_preexperiment.p1.runner._load_split_minutes", _spy_load)
+    with pytest.raises(RuntimeError, match="already exists"):
+        run_formal_test(tmp_path)
+    assert load_calls["n"] == 0
+
+
 def test_load_split_minutes_query_filter(tmp_path: Path, monkeypatch):
     _write_minute_dataset(tmp_path)
     reg = _registry()
@@ -313,7 +352,7 @@ def test_formal_test_once_only_and_sentinel(tmp_path: Path, monkeypatch):
     assert sentinel["status"] == "completed"
     assert sentinel["exposed_sha"] == "deadbeef"
 
-    with pytest.raises(RuntimeError, match="already exposed"):
+    with pytest.raises(RuntimeError, match="already exists"):
         run_formal_test(tmp_path)
 
     frozen = read_frozen(tmp_path)

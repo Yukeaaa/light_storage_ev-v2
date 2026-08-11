@@ -33,6 +33,14 @@ Review 59 X1.2（artifact-integrity pre-exposure gate）：
     与冻结 artifact 严格比较，任何不一致 fail-closed（不写 sentinel、不读 test）；
   - artifact SHA 在 started sentinel 中记录，结束前复算必须一致（防运行中被替换）；
   - 该检查是 integrity verification，不重选规则、不覆盖 artifact。
+
+Review 61（production-schema compatibility）：
+  - _MINUTE_COLUMNS 删除 minutes_from_end（生产 schema 无此列，Arrow 投影会失败）；
+    加载后由 disconnect_time - timestamp_utc 派生（与 Step 0 同式）。
+
+Review 63（once-only sentinel state machine P0）：
+  - sentinel 是 exposure boundary：**只要存在**（running/completed/aborted 一律）即视为
+    consumed，永久禁止重跑。aborted 只在 sentinel 已写、test 已读后出现，不允许第二次 exposure。
 """
 
 from __future__ import annotations
@@ -270,12 +278,12 @@ def run_formal_test(impl_root: Path, seed: int = 20240810) -> dict[str, Any]:
 
     sentinel_path = impl_root / _SENTINEL_PATH
     if sentinel_path.exists():
-        existing = _read_json(sentinel_path)
-        if existing.get("status") in ("running", "completed"):
-            raise RuntimeError(
-                "P1 formal test already exposed at "
-                f"{existing.get('exposed_sha')!r} (sentinel: {sentinel_path}); rerun prohibited"
-            )
+        # Review 63 P0：sentinel 是 exposure boundary——无论 running/completed/aborted
+        # 只要存在即视为 consumed，永久禁止重跑（aborted 也可能已读取 test）。
+        raise RuntimeError(
+            "P1 formal test sentinel already exists; "
+            f"formal exposure is consumed and rerun is prohibited (sentinel: {sentinel_path})"
+        )
 
     prov = git_provenance(impl_root.parent)
     expected_sha = train_edges["provenance"].get("code_sha")
