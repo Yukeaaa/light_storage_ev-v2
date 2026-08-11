@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from patent_preexperiment.phase3_p2.schema import M4, SchemaConfig
+from patent_preexperiment.phase3_p2.schema import M4, NORMAL, PROTECTIVE, SchemaConfig
 
 _TRACE_COLUMNS = [
     "session_id",
@@ -121,7 +121,20 @@ def trace_records(
             "after_allowed_l": after_l,
             "after_allowed_u": after_u,
             "after_diff": after_diff,
-            "complete": m4_before and after_diff,
+            # complete 判门：在冻结 P2 协议 §5.6 定义（m4_before + after_diff）基础上，
+            # 显式校验 transition invariants（recovery 定义上即 PROTECTIVE→NORMAL 且
+            # boundary_mode 不变）。这些不变量由状态机结构保证，对冻结 1060 条 complete
+            # trace 计数无影响；加入是为 fail-closed：未来任何 bug 导致 transition 元数据
+            # 异常时，该 trace 不被计为 complete。mode_before 是否要求 == M3 留待 P2.1
+            # 协议定义，此处不凭感觉加入（审查 2608120033 §3 谨慎条款）。
+            "complete": (
+                m4_before
+                and after_diff
+                and state_before == PROTECTIVE
+                and str(row["application_state"]) == NORMAL
+                and boundary_mode_before is not None
+                and boundary_mode_before == str(row["boundary_mode"])
+            ),
             "n_post_recovery_cycles": int(len(post)),
             "first_post_recovery_diff_utc": first_diff_utc,
         })

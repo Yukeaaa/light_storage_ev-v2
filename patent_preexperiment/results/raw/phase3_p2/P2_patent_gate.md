@@ -135,12 +135,20 @@ P2 **没有**证明（明确边界）：
 ```text
 P-001（信息类别 → 边界生成方式）      D → C
 P-002（边界 → 预算修正允许区间）      D → C（controller mechanism，非效果声明）
-P-003（实际响应 → 权限恢复）          → C（STRONGLY SUPPORTED by natural traces）
+P-003（实际响应 → 权限恢复）          → C（机制已观测 by natural traces；recovery trigger
+                                       的语义有效性待 P2.1A falsification，不使用
+                                       "STRONGLY SUPPORTED" 表述）
 
 Broad active D1                      NO-GO（维持）
 recent_var state center              NO-GO（维持）
 PV/BESS benefit / 站级收益           未验证（维持 D/禁止外推）
 ```
+
+> **证据层级措辞更正（审查 2608120033 §4，2026-08-12）**：P-003 原记 "STRONGLY
+> SUPPORTED by natural traces" 系本冻结记录的编辑性措辞，非冻结协议 §6 判门输出。P2 formal
+> 判门结果（SUCCESS / NARROW GO）**不变**；仅 P-003 证据层级措辞按 `claim_evidence_registry.csv`
+> 收紧为"机制已观测；trigger 语义有效性（是否超过简单功率持续性）待 P2.1A falsification"。
+> 冻结 artifact（p2_test_summary.json / traces / sentinel / manifest）未改动、未重跑。
 
 ## 5. exit_code 口径纠正（冻结）
 
@@ -160,7 +168,7 @@ P2 formal frozen outcome                 SUCCESS（§6 判门）
 P2 route                                 NARROW GO
     └ D1 information-mode 分级选择        SUPPORTED, narrow（M1=1.0；K1 PASS）
     └ D2 budget-action gate              SUPPORTED as controller mechanism（K2/M2；clip 生效）
-    └ D3 response recovery               STRONGLY SUPPORTED（natural 1,060 会话）
+    └ D3 response recovery               机制已观测（natural 1,060 会话；trigger 语义有效性待 P2.1A）
 P2 rerun                                 PERMANENTLY PROHIBITED
 P3                                       HOLD（不自动开，见 §7）
 Next                                     Claim v2 撰写 + ACN element-by-element 对照

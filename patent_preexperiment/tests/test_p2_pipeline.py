@@ -240,3 +240,65 @@ def test_boundary_unavailable_only_on_missing_boundary() -> None:
     assert (m2_cycles["disposition"] == "boundary_unavailable").all()
     m34 = cycle[cycle["info_mode"].isin([M3, M4])]
     assert (m34["disposition"] != "boundary_unavailable").all()
+
+
+# ---- 审查 2608120033 §3 回归：m4_before 联合判定 + transition invariants fail-closed ----
+
+
+def _mk_trace_cycle(rows: list[dict]) -> pd.DataFrame:
+    """构造最小 cycle frame 供 trace_records 单测（不经过真实 pipeline）。"""
+    cols = [
+        "session_id", "run_id", "timestamp_utc", "info_mode", "application_state",
+        "boundary_mode", "recovery_event", "protective_bound", "budget",
+        "final_cf_protective", "final_cf_normal",
+    ]
+    return pd.DataFrame(rows, columns=cols)
+
+
+def test_m4_before_requires_m4_before_recovery() -> None:
+    """M4 只出现在 recovery 之后 → m4_before=False（回归原 .any() 分开判定 bug）。"""
+    t0 = pd.Timestamp("2026-01-01 00:00")
+    rows = [
+        # recovery 在 cycle 7；M4 只在 cycle 8（recovery 之后）出现
+        {"session_id": "s", "run_id": "r", "timestamp_utc": t0 + pd.Timedelta(minutes=i),
+         "info_mode": M3, "application_state": PROTECTIVE if i < 7 else NORMAL,
+         "boundary_mode": "history_protective_boundary",
+         "recovery_event": i == 7, "protective_bound": 5.0, "budget": 3.0,
+         "final_cf_protective": 0.0, "final_cf_normal": 2.0 if i > 7 else 0.0}
+        for i in range(10)
+    ]
+    # 把 cycle 8 改成 M4（recovery 之后）
+    rows[8]["info_mode"] = M4
+    cycle = _mk_trace_cycle(rows)
+    tr = trace_records(cycle, SCFG)
+    assert len(tr) == 1
+    row = tr.iloc[0]
+    # M4 全部在 recovery 之后 → m4_before 必须 False（原 bug 会因 run 内有 M4 且 run 内
+    # 有 recovery 之前的行而误判 True）
+    assert bool(row["m4_before"]) is False
+    # complete 依赖 m4_before → False
+    assert bool(row["complete"]) is False
+
+
+def test_complete_rejects_anomalous_transition() -> None:
+    """transition 元数据异常（state_before != PROTECTIVE）→ 不计为 complete（fail-closed）。"""
+    t0 = pd.Timestamp("2026-01-01 00:00")
+    rows = [
+        {"session_id": "s", "run_id": "r", "timestamp_utc": t0 + pd.Timedelta(minutes=i),
+         "info_mode": M4 if i < 5 else M3,
+         # 故意把 recovery 前一行 state 设成 NORMAL（异常：recovery 应从 PROTECTIVE 触发）
+         "application_state": NORMAL,
+         "boundary_mode": "history_protective_boundary",
+         "recovery_event": i == 7, "protective_bound": 5.0, "budget": 3.0,
+         "final_cf_protective": 0.0, "final_cf_normal": 2.0 if i > 7 else 0.0}
+        for i in range(10)
+    ]
+    cycle = _mk_trace_cycle(rows)
+    tr = trace_records(cycle, SCFG)
+    assert len(tr) == 1
+    row = tr.iloc[0]
+    # m4_before=True、after_diff=True，但 state_before=NORMAL（非 PROTECTIVE）→ complete 必须 False
+    assert bool(row["m4_before"]) is True
+    assert bool(row["after_diff"]) is True
+    assert str(row["state_before"]) == NORMAL
+    assert bool(row["complete"]) is False
