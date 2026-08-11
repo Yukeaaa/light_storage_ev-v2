@@ -1,84 +1,102 @@
-# 独立/从属权利要求树（Claim Surgery v1 — Patent Gate 2 检索前基线；§6 为检索后收窄版）
+# 独立/从属权利要求树（Claim Surgery v1 — Patent Gate 2 检索前基线；§6 检索后收窄；§7 Claim Surgery v2）
 
-> 依据：P1 Patent Gate NO-GO（`results/raw/phase3_p1/P1_patent_gate.md`）。本版为
-> **Claim Surgery v1**：把 prior-art 检索对象冻结为剩余保护架构，排除 recent_var 状态
-> 判定器作为核心。这是检索前的基线，**不是**定稿；Patent Gate 2 结果决定后续是否收窄
-> （Narrow Conditional GO）或止损（Project No-Go）。
+> 依据：P1 Patent Gate NO-GO（`results/raw/phase3_p1/P1_patent_gate.md`）；P2 formal
+> frozen outcome = **SUCCESS / NARROW GO**（`results/raw/phase3_p2/P2_patent_gate.md`）。
+>
+> **Claim Surgery v2（P2 后定稿）**：CLAIM 1 按 P2 已验证机制改写为**可执行设备动作链**
+> （§7），删除所有 P2 未验证的夸大措辞；P-001/P-002/P-003 升 C（`claim_evidence_registry.csv`，
+> 已按 P2 formal 更新）。升 C 仅表示"有证据支撑"，**不是**"已验证成效"——站级收益、
+> 真实 EMS request、active redistribution 均不在已验证范围。
 >
 > 撰写纪律沿用 Phase 2：所有"已验证"表述以 `claim_evidence_registry.csv` 为准；
-> C-005/C-006/C-008~C-010 仍为 D 级禁止外推；P-002 仍 D 级（"控制约束/权限"是机制
-> 而非已验证效果）。
+> C-005/C-006/C-008~C-010 与 P-004 仍为 D 级禁止外推。
 
-## 0. 权利要求树总览（v1 修订）
+## 0. 权利要求树总览（v2，P2 后定稿）
 
 ```text
-CLAIM 1（独立，核心闭环）   信息条件/历史充分性 → 边界生成模式 → 约束等级 → 保护降级/响应恢复
+CLAIM 1（独立，设备动作链）  获取信息 → 信息类别 → 边界生成方式 → EV 功率边界 → 预算修正
+   允许区间 → 限制 EMS 修正量 → 持续实测响应 → 边界接触条件 → 改变允许区间 → 后续按新区间执行
    ├─ CLAIM 2（强从属）      信息可用层级 → 边界生成模式的选择规则（capability/pilot/current-only）
    ├─ CLAIM 3（强从属）      history protective boundary 的具体实施（current-only / no-pilot）
-   ├─ CLAIM 4（强从属）      历史不足 → conservative fallback（不输出未支持区间）
-   ├─ CLAIM 5（强从属，恢复） 后续实际响应证据 → 解除保护、恢复更高控制权限
-   ├─ CLAIM 6（可选从属）     实际功率时序的波动/持续性/变化率作为辅助输入（非核心、非经验证规律）
-   ├─ CLAIM 7（弱从属）      有界修正（evidence 充分且 opportunity 满足时，限域内修正）
-   └─ CLAIM 8（场站级从属）  边界汇总为 EV 功率预算接口，与园区 EMS 对接
+   ├─ CLAIM 4（强从属）      历史不足 → conservative fallback（LOCKED / 不输出未支持区间）
+   ├─ CLAIM 5（强从属，恢复） 实测响应贴近边界 → 解除保护、恢复更高预算修正允许区间
+   ├─ CLAIM 6（可选从属）     实际功率时序的波动/持续性/变化率作为辅助输入（非核心；recent_var
+                               状态判定已被 P1 NO-GO，不得恢复为核心）
+   ├─ CLAIM 7（弱从属，D 级） 有界修正 active bounded correction（P-004 未验证，仅从属/可选）
+   └─ CLAIM 8（场站级从属）   边界汇总为 EV 功率预算接口，与园区 EMS 对接（不主张站级收益）
 ```
 
-> 注：v1 把原 CLAIM 2/3（variance 定义状态、滑动窗方差/标准差/极差 → S1/S2/S3）
-> **移出核心地位**。波动类特征只保留为 CLAIM 6 可选从属，且不得写成"已验证规律"。
+> v2 相对 v1 的关键变化：CLAIM 1 从"6 步闭环骨架"改写为 **10 步可执行设备动作链**
+> （P2 已验证的 M1/M2/M3/M4 机制逐条落到设备动作，见 §7.1）。波动类特征仍只保留为
+> CLAIM 6 可选从属。
 
-## 1. 独立权利要求（CLAIM 1，v1 核心）
+## 1. 独立权利要求（CLAIM 1 v2 — 可执行设备动作链，P2 后定稿）
 
 一种用于光储充站的电动汽车功率控制方法，包括：
 
-1. 获取充电对象在当前环境下可获得的信息，包括实际充电电流/功率时序，以及可获得时的
-   导引/允许电流、充电状态与数据可用性信息；
-2. 判断当前可使用的**信息类别**与**实际响应历史的充分程度**（不依赖 variance 定义的
-   支持状态）；
-3. 根据所述信息类别与历史充分性，选择一种**短时功率边界生成方式**，所述方式至少包括：
-   较高质量 capability evidence（如车辆侧/桩侧能力信息）对应高置信边界；pilot+actual
-   可用时对应响应/历史派生边界；仅 current/actual 历史可用时对应 history protective
-   boundary；历史本身不足时对应 conservative fallback；
-4. 根据所选择的短时功率边界，确定针对所述充电对象的**功率调整约束等级**与所述功率
-   边界的**应用模式**，限制基于该边界实施功率预算修正的**允许范围**；在信息或历史
-   不足时，该允许范围仅支持保护性控制，而非无条件根据"分配功率 − 实际功率"释放差值；
-5. 当信息或历史不足时进入**保护性控制模式**：所述保护性模式不是永久限功率，而是持续
-   观察后续实际充电响应；
-6. 当后续实际充电响应提供新的支持证据（或实际功率贴近所选边界）时，允许从保护性模式
-   **恢复至更高功率调整约束等级/更高控制权限**。
+1. 获取当前充电对象可获得的充电信息（含实际充电响应时序，以及可获得时的导引/允许电流、
+   充电状态与数据可用性信息）；
+2. 根据当前可获得的信息，确定所述充电对象的信息类别（车辆侧能力信息可用 /
+   pilot+actual 可用 / 仅 current-actual 历史可用 / 历史不足）；
+3. 根据所述信息类别，选择对应的**功率边界生成方式**；
+4. 生成所述充电对象的 **EV 功率边界**（history protective boundary 等，不输出超出历史
+   观察支持域的区间）；
+5. 根据所述边界，形成针对 EV 功率**预算修正动作**的**允许区间**
+   （allowed budget-correction interval）；
+6. 将 EMS 请求的预算修正量限制在该允许区间内（accepted / clipped_upper / clipped_lower）；
+7. 持续获得实际充电响应（因果化，避免未来信息泄漏）；
+8. 当实际充电响应满足**预定边界接触条件**（如实际功率贴近所选边界，连续若干周期）时，
+   **改变所述预算修正允许区间**（由保护性模式恢复到更高调整权限；功率边界生成方式不变）；
+9. 后续 EMS 预算修正按改变后的允许区间执行。
 
-**核心保护点（novel combination）**：第 3 步（信息条件 → 边界生成模式选择）→ 第 4 步
-（边界 → 功率调整约束等级/允许范围）→ 第 5/6 步（保护性降级 + 实际响应驱动恢复）之间的
-**闭环组合关系**。这是与全部近邻的区分边界，也是 Patent Gate 2 的检索靶子
-（见 `prior_art_matrix.md` §5）。
+**核心保护点（novel combination，P2 已验证机制）**：
+
+> 边界作用于**"预算修正动作范围"**，而不是直接输出充电功率或直接限制桩口功率设定值
+> （D2）；边界生成方式按**信息类别分级选择**（D1）；**实际充电响应**用于恢复这个动作范围
+> （D3）——三点组合闭环。与全部近邻的区分边界见 §7.2（ACN element-by-element）。
+>
+> P2 证明的是机制成立（M1=1.0 / M2=1.0 / M4=0.0；natural recovery 1,060 会话）；
+> **未证明**站级收益、真实 EMS request 语义、active redistribution（P-004 维持 D 级）。
 
 ## 2. 从属权利要求（CLAIM 2–8，草案）
 
 - **CLAIM 2（强从属）**：所述信息类别按可用层级判断——车辆侧能力信息可用 →
   高置信 capability evidence；pilot + actual 可用 → pilot-response/history derived
   boundary；仅 current/actual 历史可用 → current-only history protective boundary。
+  （P2 jpl_test M1=1.0：precedence 穷尽查表唯一性，K1 PASS。）
 - **CLAIM 3（强从属）**：在仅存在 current/actual 历史（无 pilot / 无车辆能力信息）时，
   所述 history protective boundary 由历史实际功率的滚动统计（persistence / rolling
   quantile / 保守上界）确定，不输出超出历史观察支持域的执行区间。
+  （P2 jpl_test：M3_current_only 888,794 / 899,869 cycle，实测验证。）
 - **CLAIM 4（强从属）**：当实际响应历史不足时，采用 conservative fallback，拒绝输出
-  未受支持的功率区间；不依据"分配 − 实际"差值进行功率释放。
-- **CLAIM 5（强从属，恢复）**：在保护性控制模式下，当检测到新的正向实际响应或实际功率
-  贴近所选边界时，解除保护性约束并恢复更高功率调整约束等级/控制权限（保护不是永久 cap）。
+  未受支持的功率区间（LOCKED）；不依据"分配 − 实际"差值进行功率释放。
+  （P2 jpl_test：M4_history_insufficient 11,095 cycle 全部 LOCKED，M4=0.0 无
+  unsupported release。）
+- **CLAIM 5（强从属，恢复）**：在保护性控制模式下，当检测到实际功率贴近所选边界
+  （预定边界接触条件，如 protective_bound>0 且 actual ≥ 0.95×boundary 连续 3 cycle）时，
+  改变预算修正允许区间、恢复更高调整权限（保护不是永久 cap；power boundary 生成方式不变）。
+  （P2 jpl_test：natural complete recovery traces = 1,060 / 1,060 会话；M4→M3 是
+  信息驱动转换，不计入 D3 恢复计数。）
 - **CLAIM 6（可选从属，非核心）**：在某些实施方式中，可使用实际功率时间序列的波动、
-  持续性、变化率等特征作为**辅助输入**；该特征不作为已独立验证的技术规律主张。
-- **CLAIM 7（弱从属，可选实施方式）**：当信息类别与历史充分性满足预设条件、且站级存在
+  持续性、变化率等特征作为**辅助输入**；该特征不作为已独立验证的技术规律主张
+  （recent_var 状态判定已被 P1 NO-GO 排除，不得恢复为核心规则）。
+- **CLAIM 7（弱从属，D 级，可选实施方式）**：当信息类别与历史充分性满足预设条件、且站级存在
   可调整功率机会时，在所述允许范围内对 EV 功率预算执行**有界修正**。
+  （P-004 未验证，仅从属/可选；**不得**升为主权利要求。）
 - **CLAIM 8（场站级从属，不升第二发明族）**：将多个充电对象的短时功率边界汇总为 EV
-  功率预算约束，并提供给园区 EMS 对接。（与 Phase 2 决策3 一致；D2/D3 fusion 不拆第二
-  独立发明族。）
+  功率预算约束，并提供给园区 EMS 对接。**不主张站级收益/储能补偿减少**（未验证）。
+  （与 Phase 2 决策3 一致；D2/D3 fusion 不拆第二独立发明族。）
 
-## 3. 分层依据（v1）
+## 3. 分层依据（v2，P2 后更新）
 
 | 层次 | 证据/依据 | 说明 |
 |---|---|---|
-| 主权利要求（1/2/3/4/5） | 保护性架构 candidate（P-001 改写）+ 三个真实信息分支（P-001）+ 工程安全设计 | 组合关系是检索对象；P1 未否定，但未验证 |
-| 强从属（3/4/5） | P-002（D 级，机制）+ P-001 | 具体实施方式为 P2 预留验证点 |
-| 可选从属（6） | 原 A5 recent_var（Caltech exploratory only） | 降级为辅助输入，**不得写成已验证规律** |
-| 弱从属（7） | P-004（D 级） | active correction 不作主权利要求必选 |
-| 场站级（8） | 架构设计 | 价值应用层，非创新核心 |
+| 主权利要求（1/2/3/4/5） | P-001（C）+ P-002（C，机制层）+ P-003（C） | 组合关系为检索对象；**P2 formal SUCCESS 已验证 D1/D2/D3 可落设备动作** |
+| 强从属（2/3/4） | P-001（C）+ P2 M1/M3/M4 | 信息分支与边界生成方式 P2 实测验证 |
+| 强从属（5，恢复） | P-003（C，STRONGLY SUPPORTED） | natural recovery 1,060 会话，非 replay 凑数 |
+| 可选从属（6） | 原 A5 recent_var（P1 NO-GO） | 降级为辅助输入，**不得写成已验证规律** |
+| 弱从属（7） | P-004（D 级，未验证） | active correction 不作主权利要求必选 |
+| 场站级（8） | 架构设计 | 价值应用层；不主张站级收益 |
 
 ## 4. 术语纪律与撰写约束（沿袭，v1 新增条款）
 
@@ -90,6 +108,10 @@ CLAIM 1（独立，核心闭环）   信息条件/历史充分性 → 边界生�
 - "控制权限"概念保留于技术交底；CLAIM 1 正文用技术化措辞（边界应用模式 / 功率调整约束
   等级 / 修正允许范围）。
 - 闭环收益（储能补偿减少/光伏消纳提高）在 E4.1 响应仿真器验证通过前不得写入实施例效果。
+- **真实 EMS request 语义未验证**：P2 的 requested_delta 是冻结的外生 conformance probe
+  （v1.0.2 §7 禁止按 [L,U] 反向生成 probe），不得写成"已验证真实 EMS 预算修正请求"。
+- **站级收益 / 储能补偿减少 / 主动重分配**不得写成已验证效果（P-004 仍 D 级，E4.1 未过）。
+- P2 的 replay 结果（train-side 机制证据）**不得**冒充 natural 计数或真实站点分布统计。
 
 ## 5. Patent Gate 2 前冻结的检索对象与排除项
 
@@ -149,7 +171,77 @@ D3  保护性降级 + 实测响应驱动恢复的权限分级制度：信息/历
 ### 6.3 状态更新
 
 ```text
-Patent Gate 2    NARROW CONDITIONAL GO / HOLD P2
-P2               可开，但须在 D1/D2/D3 收窄范围内；无法落设备动作即降级 No-Go
-排除项           维持（§5）不变，新增：不得主张单一模块（A/B/C/D 全已知）
+Patent Gate 2    NARROW CONDITIONAL GO / HOLD P2 →（P2 后）P2 = SUCCESS / NARROW GO
+P2 formal        SUCCESS（M1=1.0 / M2=1.0 / M4=0.0 / M3 natural 1,060 会话；§6 判门）
+D1/D2/D3         已落设备动作并验证（信息类别分级选择 / 预算修正动作允许区间 / 实测响应驱动恢复）
+P3               HOLD（不自动开；新增实验需新授权 + 新协议版本）
+排除项           维持（§5）不变，新增：不得主张单一模块（A/B/C/D 全已知）；不得主张站级收益
 ```
+
+### 6.4 P2 后定稿（Claim Surgery v2 生效）
+
+- CLAIM 1 已按 §7.1 改写为 10 步设备动作链（本文件 §1）；
+- P-001/P-002/P-003 在 `claim_evidence_registry.csv` 升 C（P-002 由 D 升 C，
+  controller mechanism 已验证）；P-004 维持 D；
+- 所有"已验证"升级仅到 C（证据支撑），不升 B/A（成效/普遍性）；
+- 下一步：§7.2 ACN element-by-element 对照 + 专利代理师法律检索意见。
+
+## 7. Claim Surgery v2 — 设备动作链与 ACN 最近邻对照（P2 后冻结）
+
+### 7.1 设备动作链（CLAIM 1 v2 靶子，P2 已验证机制；与 preregistration §9 靶子一致）
+
+```text
+获取当前充电信息（含实际充电响应时序，及可获得时的导引/允许电流、状态、数据可用性）
+↓
+确定信息类别（capability / pilot+actual / current-only / 历史不足）
+↓
+选择对应功率边界生成方式（D1：M1/M2/M3/M4 precedence 穷尽查表，jpl_test M1=1.0）
+↓
+生成 EV 功率边界（D1：history protective boundary，不输出超出历史观察支持域区间）
+↓
+根据该边界形成预算修正允许区间（D2：allowed budget-correction interval）
+↓
+将 EMS 请求的预算修正量限制在该区间（D2：accepted / clipped_upper / clipped_lower；
+  jpl_test m2_cov=0.376743 实际生效、n_diff_prot_normal=72,067）
+↓
+持续获得实际充电响应（因果化 shift(1)，禁止未来信息）
+↓
+实际响应满足预定边界接触条件（protective_bound>0 且 actual ≥ 0.95×boundary，连续 3 cycle）
+↓
+改变预算修正允许区间（D3：application_state → NORMAL，boundary_mode 不变；
+  jpl_test natural complete traces=1,060 / 1,060 会话）
+↓
+后续预算修正按新区间执行（after_diff 逐条可观察）
+```
+
+> 保护焦点：**边界作用于"预算修正动作范围"，而不是直接输出充电功率或直接限制桩口功率
+> 设定值**；实际充电响应用于**恢复这个动作范围**（不是通信恢复/停充恢复/电池内部限值恢复）。
+
+### 7.2 ACN 最近邻 element-by-element 对照（US10926659 / US20200254896A1，同数据源）
+
+> 来源：`prior_art_matrix.md` §6 已将 ACN 族列为主风险（观测→保守约束→在线调度约束→
+> 可行性放松）。本表逐要素对照，供专利代理师复核；差异点落在 §7.1 加粗的 D1/D2/D3 三点。
+
+| CLAIM 1 v2 要素 | ACN 族（US10926659 / US20200254896A1） | 差异判定 |
+|---|---|---|
+| 1 获取充电信息（含实际响应） | 观测 charging session（同一数据源） | 相同（背景，非区分点） |
+| 2 确定信息类别 | 无信息类别分级概念 | **D1 差异** |
+| 3 按信息类别选择边界生成方式 | 单一 estimation/optimization（电池模型拟合 / 用户输入），非分级切换 | **D1 差异** |
+| 4 生成 EV 功率边界 | per-EV max rate 边界（模型/可行性驱动） | 边界生成动机不同（历史观测保护 vs 模型/可行性） |
+| 5 边界 → 预算修正允许区间 | 边界直接作在线 LP 调度约束（capacity 分配） | **D2 差异**：本方案约束"预算修正动作的允许范围（权限等级）"，非直接调度分配 |
+| 6 限制 EMS 修正量（accepted/clipped） | 无"修正动作权限"概念（LP 解即最终分配） | **D2 差异** |
+| 7 持续实测响应 | 有实际响应观测（用于可行性检查/定价） | 部分相同（观测本身非新颖） |
+| 8 实测响应 → 恢复触发 | 恢复为可行性驱动约束放松（feasibility-based relaxation），非响应证据驱动权限恢复 | **D3 差异** |
+| 9 后续按新区间执行 | — | 由 D2/D3 继承 |
+
+**结论（供代理师复核）**：
+
+```text
+单要素：A/B/C/D 全部高拥挤（§6 已确认），不可单要素主张；
+组合差异：D1（信息类别分级选择）+ D2（边界作用于预算修正动作权限，而非直接分配/设定值）
+         + D3（实测响应驱动恢复权限）三点组合在 ACN 族中未发现同构公开。
+ACN 族是"可行性驱动的约束放松"，本方案是"响应证据驱动的权限恢复"——恢复对象为调度器
+        权限等级而非物理限值，这是与 ACN 族最核心的语义分界线。
+```
+
+> 注意：本对照基于 P2 冻结机制语义，不是法律检索/无效分析意见；以专利代理师正式意见为准。

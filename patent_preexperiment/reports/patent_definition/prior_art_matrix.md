@@ -110,10 +110,12 @@ D  后续实际响应 → constraint relaxation / permission recovery
 **FINAL 判定**：
 
 ```text
-判定       NARROW CONDITIONAL GO / HOLD P2
+判定       NARROW CONDITIONAL GO / HOLD P2 →（P2 后）P2 = SUCCESS / NARROW GO
 条件       P2 必须落地 D1/D2/D3（信息类别分级选择边界方式 / 边界应用为调度动作允许范围而非
            直接设限 / 保护性降级 + 实测响应驱动恢复权限），否则降级 Project No-Go
 主风险     ACN 族（US10926659/US20200254896A1）—— 观测→保守约束→在线调度约束→可行性放松
 规避锚     D1 信息类别分级、D2 权限约束 vs 直接设限、D3 响应驱动权限恢复（技术化、可落设备动作）
+P2 验证    D1/D2/D3 均已落设备动作并通过（M1=1.0/M2=1.0/M4=0.0/M3 natural 1,060 会话）；
+           CLAIM 1 v2 设备动作链 + ACN element-by-element 对照见 claim_tree.md §7
 法律前置   ACN 族 element-mapping + EP/CNIPA 库 + ISO 15118 动态功率限制标准演进（专利代理师）
 ```
