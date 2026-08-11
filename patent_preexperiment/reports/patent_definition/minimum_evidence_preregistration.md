@@ -1,4 +1,4 @@
-# Patent Definition Phase 3 — Minimum Evidence Preregistration（v1.0.2）
+# Patent Definition Phase 3 — Minimum Evidence Preregistration（v1.0.2；§2 P2 骨架已被 v1.1 取代）
 
 > 依据：审查结论52（Final R1 Patent Gate：PROTECTIVE GO + D2/D3 fusion）；
 > Phase 2 Claim Architecture Freeze（`open_questions_decision_record.md`，commit `79ff1a1`）。
@@ -16,8 +16,18 @@
 > `n_S1=0 或 n_S2=0`（train-q50 外推后缺状态）→ NOT_EVALUABLE + route Conditional。
 > 不允许留下未定义分支。未改实验设计与科学方向。
 >
-> **冻结效力**：本文档冻结后为 Phase 3 v1.0.2。任何改动须新版本 + 新测试协议，
-> 禁止静默修改阈值/变量/population；封存 test 永不重跑；office001 外部验证禁止回填阈值。
+> **v1.1（Patent Gate 2 重新定义 P2；本文件仅改 P2 骨架状态，未动 P1/P3 冻结字段）**：
+> Patent Gate 2 FINAL = NARROW CONDITIONAL GO / HOLD P2（`results/raw/patent_gate2/
+> patent_gate2_final.md`，commit `aeee71b`）。Gate 2 结论要求 P2 从"JPL current-only 保护
+> 实施例性能验证"重定义为 **D1/D2/D3 机制成立率验证**（信息模式驱动边界选择 + 预算修正
+> 动作集 + 响应驱动恢复；D2 为硬杀线，失败即 Project No-Go）。**§2 旧 P2 骨架被取代**，
+> 新 P2 完整冻结于 `phase3_p2_preregistration_v1.0.md`（8 字段 + Step0 K1/K2/K3 kill
+> gates + 机器可审计动作 schema `configs/phase3_p2_action_schema.yaml`）。P1 字段 1–8
+> 维持 v1.0.2 冻结不变；P3 维持 BLOCKED（本文件 §3 骨架仅作历史保留）。
+>
+> **冻结效力**：本文档 P1 冻结为 v1.0.2；P2 以 `phase3_p2_preregistration_v1.0.md` 为准。
+> 任何改动须新版本 + 新测试协议，禁止静默修改阈值/变量/population；封存 test 永不重跑；
+> office001 外部验证禁止回填阈值。
 > 本文件不是法律意见。
 
 ---
@@ -33,7 +43,7 @@ CLAIM / claim_id 的映射与失败后果，杜绝"开放式研发"。
 
 ```text
 P1 独立数据验证 C-007（专利生死门）→ Go/条件 Go/No-Go 门
-P2 JPL current-only 保护实施例（P1 未出结果前不启动）
+P2 D1/D2/D3 机制成立率验证（Gate 2 重定义版；P1 未出结果前不启动）
 P3 E4.1 克制版（P2 未出结果前不启动）
 ```
 
@@ -218,10 +228,11 @@ B. n_S1 = 0 或 n_S2 = 0（train-q50 外推到 test 后缺状态，无法比较�
 
 ---
 
-## 2. P2 — JPL current-only 保护实施例（协议骨架）
+## 2. P2 — ~~JPL current-only 保护实施例~~（**已被取代**，见 v1.1 changelog）
 
-> P1 未出结果前**不启动**。本节为骨架，字段 1/2/3/6/7/8 冻结；字段 5 细节（窗口/分位/
-> 阈值）在 P1 门后按"新版本 + 新测试协议"展开冻结，**不得与本文档原则冲突**。
+> **v1.1：本节旧 P2 骨架已被 Patent Gate 2 重定义版取代。** 新 P2 完整协议 =
+> `phase3_p2_preregistration_v1.0.md`（D1/D2/D3 机制成立率验证 + Step0 K1/K2/K3 kill
+> gates）。本节仅作历史保留，**不得作为执行依据**；新 P2 未出结果前**不启动**。
 
 ### 2.1 Patent question
 
@@ -337,7 +348,7 @@ protective boundary 实施例**？它是否比直接沿用原预算更保守/稳
 | 实验 | CLAIM | claim_id | 主门 | 失败专利后果 |
 |---|---|---|---|---|
 | P1 | CLAIM 1(2)、CLAIM 2/3、CLAIM 4(间接) | C-007、P-001 | 三态证据密度可重复（rate_ratio≥1.5、CI>1、方向一致） | 删 CLAIM 1 第 2 步强中心 → field/data-mode driven protective switching；C-007 降 D |
-| P2 | CLAIM 1(3/4)、CLAIM 5/6 | P-001/P-002/P-003、C-012 | current-only protective 优于基线且不压制正常充电、S3 正确 | 删 current-only 锚点，CLAIM 1 第 4 步收窄到 pilot 场景；P-001/P-002 弱化 |
+| P2 | CLAIM 1(3/4/5/6)、CLAIM 2/3/4/5 | P-001/P-002/P-003、C-012 | **D1/D2/D3 机制成立率**（v1.1 重定义版，见 `phase3_p2_preregistration_v1.0.md`）：K1/K2/K3 全过；M1=M2=1.0、M4=0.0、M3 自然 recovery trace ≥20/≥5 会话 | K2 失败 → **PROJECT NO-GO**（硬杀线）；K1/K3/M4 失败 → 组合核心缺失 → 极可能 No-Go；Conditional 见新 P2 协议 §6 |
 | P3 | CLAIM 1(5/6)、CLAIM 6/7 | P-002 | 三问题技术行为确定且符合设计 | 删 CLAIM 1 第 5/6 步与 CLAIM 7 技术行为依据；P-002 维持 D |
 
 ## 5. 专利删除矩阵（失败时逐句删）
@@ -345,7 +356,7 @@ protective boundary 实施例**？它是否比直接沿用原预算更保守/稳
 | 若 No-Go | 从专利删除/改写 | registry 降级 |
 |---|---|---|
 | P1 | CLAIM 1 第 2 步"响应证据支持状态"强中心 → 改为信息/数据模式驱动 | C-007 → D；P-001 弱化 |
-| P2 | CLAIM 1 第 4 步 current-only 分支 → 收窄到"存在导引信息" | P-001/P-002 弱化；C-012 维持弱 |
+| P2 | v1.1 重定义版：K2（D2 权限无法落动作边界）→ **PROJECT NO-GO**；K1 → 删 CLAIM 1 第 3 步信息类别分支；K3 → 删第 6 步/CLAIM 5 响应恢复；M4 违反 → 技术问题不成立 | P-002 确认 wording 级 / P-001→D / P-003 弱化 / C-012 维持弱 |
 | P3 | CLAIM 1 第 5/6 步 + CLAIM 7 技术行为依据 → 架构设计主张 | P-002 维持 D |
 
 > 任一 No-Go 触发的专利收缩方向汇总：**CLAIM 1 第 2 步 → 第 4 步 → 第 5/6 步** 依次收窄，
@@ -353,8 +364,9 @@ protective boundary 实施例**？它是否比直接沿用原预算更保守/稳
 
 ## 6. 变更控制与版本
 
-- 本文档 = **Phase 3 v1.0.2（冻结）**。P1 门后展开 P2/P3 字段 5 细节 = 新版本（v1.1/v1.2）
-  + 新测试协议，**不静默修改**本文件冻结的字段 1/2/3/6/7/8。
+- 本文档 = **Phase 3 v1.0.2（P1 冻结）**。**v1.1（2026-08-11，Patent Gate 2 重定义 P2）**：
+  P2 骨架被 `phase3_p2_preregistration_v1.0.md` 取代（D1/D2/D3 机制验证 + Step0 K1/K2/K3
+  kill gates）；P1 字段 1–8 与 P3 骨架不变。P3 字段 5 细节展开 = 新版本（v1.2）+ 新测试协议。
 - **v1.0.2 changelog（审查结论54，protocol-only mathematical exhaustiveness）**：把全部
   outcome 映射为唯一 verdict，不允许未定义分支——⑦ `rate_S1=0 且 rate_S2=0` → `rate_ratio=NA`
   → **No-Go**（可评估但无正向 state separation）；⑧ `rate_S2 ≤ rate_S1`（含 equality）
