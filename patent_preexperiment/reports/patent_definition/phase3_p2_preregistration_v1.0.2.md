@@ -1,18 +1,42 @@
-# P2 Preregistration v1.0.1 — 信息模式驱动的 EV 功率预算约束与响应恢复状态机回放验证
+# P2 Preregistration v1.0.2 — 信息模式驱动的 EV 功率预算约束与响应恢复状态机回放验证
 
-> 日期：2026-08-11（v1.0.1 冻结，Review 66 修复后）
+> 日期：2026-08-11（v1.0.2 冻结，Review 67 执行级 hotfix 后）
 > 依据：Patent Gate 2 FINAL = NARROW CONDITIONAL GO / HOLD P2
 > （`results/raw/patent_gate2/patent_gate2_final.md`，commit `aeee71b`）；
-> **Review 66 = CONDITIONAL FAIL**（Executable freeze 存在 P0 blockers）。
-> 本文件取代 v1.0（`minimum_evidence_preregistration.md` v1.1 changelog 已登记重定义），
-> v1.0.1 逐项封死 Review 66 的 P0/P1 接口闭环。
-> 冻结效力：本文件 + `configs/phase3_p2_action_schema.yaml`（v1.0.1）同步冻结；任何改动须
+> **Review 66 = CONDITIONAL FAIL**（Executable freeze 存在 P0 blockers）；
+> **Review 67 = CONDITIONAL FAIL**（六个主接口科学语义基本闭合，但 D1 机器 schema 与
+> 状态持久性仍存在执行级 P0 + 2 个治理一致性项）。
+> 本文件取代 v1.0（`minimum_evidence_preregistration.md` v1.1 changelog 已登记重定义）；
+> v1.0.1 封死 Review 66 的 P0/P1 接口闭环；**v1.0.2 封死 Review 67 的 P0-1/P0-2/P1-1/P1-2
+> + md5hex 机械冻结**。
+> 冻结效力：本文件 + `configs/phase3_p2_action_schema.yaml`（v1.0.2）同步冻结；任何改动须
 > 新版本 + 新测试协议。P2 是**机制成立率验证**，不是性能研究，更不是 active redistribution
 > 回炉。本文件不是法律意见。
 
 ---
 
-## 0. v1.0.1 changelog（Review 66 修复清单，全部冻结）
+## 0. v1.0.2 changelog（Review 67 执行级接口 hotfix，全部冻结）
+
+```text
+P0-1  D1 precedence 改为结构化机器可执行条目（if/mode + else: fail_closed）；删除
+      "-> M" 隐式目标字段（PyYAML 会把 "-> M1_capability_rich" 解析成值为 null 的键，
+      不是 target_mode）。实现直接加载 schema `d1_lookup.precedence`，禁止二次解释文字。
+P0-2  冻结 state_persistence：application_state 在 information_mode 不变的 cycle 间持续
+      保持；default_application_state 仅 run_start / information_mode_entry /
+      severe_gap_reset 时应用；禁止每 cycle 重查 default（M3 recovery→NORMAL 后不得掉回
+      PROTECTIVE）。
+P1-1  master 冻结效力行仍指向已删除的 v1.0 → 修正为 v1.0.2.md（authority 冲突消除）。
+P1-2  K3 穷尽映射删除"含 replay 后"：JPL train natural trace = 0 → PROJECT_NO_GO；
+      replay 单列辅助，不得救。
+freeze  md5hex 机械冻结：MD5(UTF-8 session_id) 首字节 seed_byte = int(md5_hex[0:2], 16)；
+      cycle_index = 0-based、同一不间断 run 内递增（run 定义绑定 E0 severe_gap_before）。
+```
+
+> v1.0.2 **未改动**任何冻结阈值或科学规则：`0.95 × protective_bound`、连续 3 cycle、
+> 15 min / Q95 / `min_history_samples=5`、probe 网格、budget 网格、M3 阈值、
+> K1/K2/K3 verdict 逻辑全部保持原值。
+
+## 0.1 v1.0.1 changelog（Review 66 修复清单，历史保留）
 
 ```text
 P0-1  D2 动作输入来源封死：controller-conformance replay + 外生 budget/probe 规则
@@ -141,6 +165,11 @@ NORMAL ──info_mode_change（退化到 M4）──▶ LOCKED
   `info_mode_change`（历史达 min_history_samples）→ M3+PROTECTIVE，才具备 D3 触发资格。
 - **禁止的切换**：PROTECTIVE→NORMAL 不得由通信恢复/停充解除/人为 reset/计时到期触发；
   任何切换不得由 recent_var / confidence / classifier 驱动。
+- **状态持久性（P0-2）**：`application_state` 在 `information_mode` 不变的 cycle 间**持续
+  保持**；`default_application_state` 只在 `run_start` / `information_mode_entry` /
+  `severe_gap_reset` 时应用，**禁止每 cycle 重查 default**。即 M3 recovery→NORMAL 后，
+  只要 info_mode 仍是 M3、且无显式 transition，下一 cycle 必须保持 NORMAL，不得自动掉回
+  PROTECTIVE。
 
 ### 5.2 D1 — 穷尽 precedence 查表（P0-3）
 
@@ -162,6 +191,9 @@ NORMAL ──info_mode_change（退化到 M4）──▶ LOCKED
   派生分支（M2/M3）。
 - 每 cycle 输出 `information_mode` / `boundary_mode` / `reason_code`（命中规则号），
   纯查表、无拟合、无学习。
+- **机器权威形式（P0-1）**：上表的结构化机器可执行版本 = schema
+  `d1_lookup.precedence`（`if` / `mode` 字段 + `else: fail_closed`）。实现**直接加载该
+  YAML 表**逐条求值，禁止以"理解文字"方式硬编码规则顺序。
 
 ### 5.3 D2 — 动作输入来源（P0-1，controller-conformance replay）
 
@@ -178,6 +210,14 @@ allocated              allocated == current_budget（同一变量，不独立存
 
 **红线（P0-1）**：禁止按 `[L,U]` 反向生成 probe 来"做出 1.0"；probe 与 boundary/state/
 outcome 完全外生。
+
+**md5hex 机械定义（v1.0.2 freeze）**：
+
+```text
+hash        MD5(UTF-8 session_id)；session_id = E0 会话表原始字符串（不 trim、不规范化）
+seed_byte   int(md5_hex[0:2], 16)         # 首字节 = MD5 hex 前两位
+cycle_index 0-based；同一不间断 run 内自 0 递增（run 定义绑定 E0 severe_gap_before）
+```
 
 ### 5.4 D2 — 约束等级 → 允许修正区间（按 application_state 唯一化）
 
@@ -272,7 +312,7 @@ K3  是否存在不依赖通信恢复/停充/reset、由实际充电响应触发
 ```text
 K1 FAIL → STOP（D1 不成立）→ Project No-Go（组合核心缺失）
 K2 FAIL → PROJECT NO-GO（权限只是抽象 wording，Gate 2 硬杀线）
-K3 FAIL（JPL train 0 natural trace，含 replay 后）→ PROJECT NO-GO（D3 无设备闭环）
+K3 FAIL（JPL train natural trace = 0；replay 不得救）→ PROJECT NO-GO（D3 无设备闭环）
 M4 违反（PROTECTIVE 出现 final_delta>0）→ PROJECT NO-GO（技术问题本身不成立）
 M3 natural < 20 但 ≥ 5（且 M1/M2/M4 全过）→ Conditional（追加 natural 或 replay 补强，
    但 replay 单列、不计入 natural 阈值）
@@ -326,19 +366,21 @@ M3 natural < 20 但 ≥ 5（且 M1/M2/M4 全过）→ Conditional（追加 natur
 ## 10. 交付物清单（P2 阶段）
 
 ```text
-configs/phase3_p2_action_schema.yaml            本实验冻结（v1.0.1，已提交）
-reports/patent_definition/phase3_p2_preregistration_v1.0.1.md  本文件（v1.0.1，已提交）
-src/experiments/phase3_p2/                      【尚未授权】P2 implementation 需 Review 67 通过
+configs/phase3_p2_action_schema.yaml            本实验冻结（v1.0.2，已提交）
+reports/patent_definition/phase3_p2_preregistration_v1.0.2.md  本文件（v1.0.2，已提交）
+src/experiments/phase3_p2/                      【尚未授权】P2 implementation 需 Review 68 通过
 results/raw/phase3_p2/                          【尚未授权】Step0 replay + formal 输出 + manifest
 reports/patent_definition/phase3_p2_gate.md     【尚未授权】门报告（8 字段 + Step0 结果 + 判定）
 ```
 
-**P2 implementation 开闸前置**：本协议（v1.0.1）+ schema 通过 **Review 67**（只核接口闭环）
-→ 才可写回放代码；Step0 结果先评审 → 才可单次暴露 jpl test。
+**P2 implementation 开闸前置**：本协议（v1.0.2）+ schema 通过 **Review 68**（只核
+Review 67 四项 P0/P1 修复是否闭合）→ 才可写回放代码；Step0 结果先评审 → 才可单次暴露
+jpl test。
 
 ## 11. 变更控制
 
-- 本文件 = **P2 preregistration v1.0.1（冻结）**；schema = 同步冻结。v1.0 由 git 历史保留。
+- 本文件 = **P2 preregistration v1.0.2（冻结）**；schema = 同步冻结。v1.0 / v1.0.1 由
+  git 历史保留。
 - 任何改动（含 D3 触发阈值 0.95 / K=3、min_history_samples、quantile、窗口、probe 网格）须
   新版本 + 新测试协议，走与 evidence freeze 相同的 Review 链；**test 暴露后零改动**。
 - 本文件不是法律意见；最终以专利代理师出具的意见为准。

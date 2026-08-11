@@ -1,11 +1,11 @@
-# P2 机器可审计动作 Schema + 状态机 + 边界模式 + 冻结阈值（v1.0.1，2026-08-11）
+# P2 机器可审计动作 Schema + 状态机 + 边界模式 + 冻结阈值（v1.0.2，2026-08-11）
 # 依据：Patent Gate 2 FINAL（results/raw/patent_gate2/patent_gate2_final.md，NARROW CONDITIONAL GO）
-#       + Review 66（CONDITIONAL FAIL，P0 接口闭环）。本版修复全部 P0/P1 blocker。
-# 冻结效力：本文件与 reports/patent_definition/phase3_p2_preregistration_v1.0.1.md 同步冻结；
+#       + Review 66（CONDITIONAL FAIL，P0 接口闭环）+ Review 67（CONDITIONAL FAIL，执行级 hotfix）。
+# 冻结效力：本文件与 reports/patent_definition/phase3_p2_preregistration_v1.0.2.md 同步冻结；
 # 任何改动 = 新版本 + 新测试协议。P2 只验证机制成立率，不验证性能/收益/active redistribution。
 
-experiment_id: P2_v1_0_1
-protocol_version: phase3_p2_preregistration_v1.0.1
+experiment_id: P2_v1_0_2
+protocol_version: phase3_p2_preregistration_v1.0.2
 frozen_date: 2026-08-11
 gate2_verdict: NARROW_CONDITIONAL_GO
 scope: mechanism_realizability_only
@@ -22,6 +22,14 @@ v1_0_1_changelog:
   - fix: "accept/clip/reject 统一为 accepted / clipped_upper / clipped_lower，删除 reject"
   - fix: "K3 出口唯一化为 PROJECT_NO_GO（Step0 与穷尽映射一致）"
 
+# --- v1.0.2 changelog（Review 67 执行级接口 hotfix；未改任何冻结阈值/科学规则）---
+v1_0_2_changelog:
+  - P0-1: "D1 precedence 改为结构化机器可执行条目（if/mode + else: fail_closed）；删除 '-> M' 隐式目标字段（PyYAML 会把 '-> M1' 解析成值为 null 的键）"
+  - P0-2: "冻结 state_persistence：application_state 在 information_mode 不变的 cycle 间持续保持；default 仅 run_start / information_mode_entry / severe_gap_reset 应用；禁止每 cycle 重查 default"
+  - P1-1: "master 冻结效力行仍指向已删除 v1.0.md → 修正为 v1.0.2.md（authority 冲突消除）"
+  - P1-2: "K3 穷尽映射删除 '含 replay 后'：JPL train natural trace = 0 → PROJECT_NO_GO；replay 不得救"
+  - freeze: "md5hex 机械冻结：MD5(UTF-8 session_id) 首字节 seed_byte=int(md5_hex[0:2],16)；cycle_index=0-based 不间断 run 内递增"
+
 # --- 三层解耦（P0-2）---
 # Layer 1: information_mode（每 cycle 由可用信息决定，确定性）
 # Layer 2: boundary_mode（information_mode 的固定映射，不变）
@@ -36,11 +44,20 @@ state_machine:
     M2_pilot_actual: response_history_boundary
     M3_current_only: history_protective_boundary
     M4_history_insufficient: conservative_fallback
-  default_application_state:            # 每信息模式的默认状态（固定表）
+  default_application_state:            # 每信息模式的默认状态（固定表；仅进入时应用，见 state_persistence）
     M1_capability_rich: NORMAL
     M2_pilot_actual: NORMAL
     M3_current_only: PROTECTIVE
     M4_history_insufficient: LOCKED
+  state_persistence:                    # v1.0.2（Review 67 P0-2）
+    rule: "application_state persists across cycles while information_mode is unchanged"
+    default_applies_on:
+      - run_start
+      - information_mode_entry
+      - severe_gap_reset               # 同 run 内 severe_gap / run 重置后重新应用默认态
+    forbidden:
+      - "reapply default_application_state every cycle"
+      - "info_mode 未变时按 default 表重查 state（M3 recovery→NORMAL 后下一 cycle 不得掉回 PROTECTIVE）"
   transitions:
     - {from: LOCKED, to: PROTECTIVE, via: info_mode_change}        # M4→M3（历史达到 min_samples，信息驱动，非 D3）
     - {from: PROTECTIVE, to: NORMAL, via: recovery_trigger}        # 唯一 D3 恢复；仅 M3+PROTECTIVE 可触发
@@ -55,22 +72,28 @@ state_machine:
     - "任何状态切换不得由 recent_var / confidence score / classifier 驱动"
     - "M4 -> NORMAL 或 M4 -> M3 后直接 NORMAL 均禁止：M4 必须先经 info_mode_change 到 M3+PROTECTIVE"
 
-# --- D1：穷尽 precedence 查表（P0-3；capability 优先，未覆盖组合 fail-closed 到 M4）---
+# --- D1：穷尽 precedence 查表（P0-3；v1.0.2 结构化 if/mode 机器可执行，P0-1）---
 d1_lookup:
-  precedence:            # 从上到下第一条命中的规则即最终信息模式（穷尽、互斥）
-    - {if: "capability_available == true",                        -> M1_capability_rich}
-    - {if: "pilot_available and actual_available and history_sufficient", -> M2_pilot_actual}
-    - {if: "pilot_available and actual_available",                -> M4_history_insufficient}
-    - {if: "actual_available and history_sufficient",             -> M3_current_only}
-    - {if: "actual_available",                                    -> M4_history_insufficient}
-    - {else: fail_closed,                                         -> M4_history_insufficient}
+  precedence:            # 从上到下第一条命中的规则即最终信息模式（穷尽、互斥、机器可执行）
+    - if: "capability_available == true"
+      mode: M1_capability_rich
+    - if: "pilot_available and actual_available and history_sufficient"
+      mode: M2_pilot_actual
+    - if: "pilot_available and actual_available"
+      mode: M4_history_insufficient
+    - if: "actual_available and history_sufficient"
+      mode: M3_current_only
+    - if: "actual_available"
+      mode: M4_history_insufficient
+    - else: fail_closed
+      mode: M4_history_insufficient
   history_sufficiency:
     definition: "当前 cycle 之前、同一 run 内、非 severe_gap 的 `actual_power_kw` 非空样本数 >= min_history_samples"
     min_history_samples: 5          # 冻结；低于此 → M4（conservative fallback）
   fail_closed: "任何未覆盖组合一律 M4_history_insufficient（保守回退，绝不输出未支持区间）"
   note: "capability 独立于 history 成立（capability=true 即 M1，不受 history 充分性影响）；
         history-insufficient 只作用于 pilot/actual 派生分支（M2/M3）；capability=true 但 pilot=false
-        → 规则 1 命中 → M1"
+        → 规则 1 命中 → M1；实现直接加载本 precedence 表（if/mode/else 字段），禁止二次解释文字"
 
 # --- 边界生成器（P0-5：M1/M2 dispatch-only；M3/M4 为 D2/D3 数值门对象）---
 boundary_generators:
@@ -109,6 +132,11 @@ candidate_action:
     rule: "probe_grid=[-3.0,-1.5,0.0,+1.5,+3.0] kW; probe(t)=probe_grid[(cycle_index+md5hex(session_id)首字节 mod 5) mod 5]"
     frozen: true
     independence: "probe 生成不读取 boundary_value / allowed interval / actual_power_kw / application_state / outcome"
+  seeding_definition:                # v1.0.2：md5hex 机械冻结（消除"首字节"实现自由度）
+    hash: "MD5(UTF-8 session_id)；session_id = E0 会话表原始字符串（不 trim、不规范化）"
+    seed_byte: "int(md5_hex[0:2], 16)   # 首字节 = MD5 hex 前两位"
+    cycle_index: "0-based；同一不间断 run 内自 0 递增（run 定义绑定 E0 severe_gap_before/gap_before_min）"
+    frozen: true
   allocated_definition: "allocated == current_budget（同一变量，不独立存在）"
   implementation_audit: "实现必须把 budget/probe 的生成与 boundary/state 计算分离并记录
                          probe_seed/budget_seed；审查可复核 probe 与 [L,U] 无依赖"
@@ -181,7 +209,7 @@ step0_kill_gates:
     fail_verdict: PROJECT_NO_GO   # 硬杀线，与 Gate 2 冻结规则一致
   K3_D3_recovery_trace:
     question: "是否存在不依赖通信恢复/停充/reset、由实际充电响应触发的 natural recovery trace？（JPL train）"
-    fail_verdict: PROJECT_NO_GO   # 出口唯一化：0 natural trace → PROJECT_NO_GO
+    fail_verdict: PROJECT_NO_GO   # 出口唯一化：JPL train natural trace = 0 → PROJECT_NO_GO；replay 不得救
   scope: "全部冻结 JPL train + 固定 Caltech replay（不挑样本）；probe/budget 外生规则冻结"
 
 # --- 数据与切分 ---
