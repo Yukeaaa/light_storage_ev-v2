@@ -1,5 +1,11 @@
 # P2.1 Preregistration v1.0 — D3 Falsification + D2 Technical-Effect Closed-Loop Gate
 
+> **⚠ 本文件已被 v1.1 取代（审查第二轮 6 项协议级修订）。权威版本：**
+> `phase3_p2_1_preregistration_v1.1.md`。本 v1.0 仅由 git 历史保留，**不得冻结**。
+> v1.0 的主要问题：risk set 未统一（P0-1）、baseline ε/median-max 未冻结（P0-2）、
+> Y 语义过强（P0-3）、Conditional 后门（P0-4）、B 的 CI 方向错误（P0-5）、无 MCID（P0-6）。
+> 详见 v1.1 §0 changelog。
+
 > 日期：2026-08-12（v1.0 草案，待 Review 通过后冻结）
 > 依据：P2 formal = SUCCESS / NARROW GO（`results/raw/phase3_p2/P2_patent_gate.md`，
 > mechanism realizability only）；审查 2608120033（`review/项目现状2608120033.md`）。
