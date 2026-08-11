@@ -21,9 +21,10 @@
 > patent_gate2_final.md`，commit `aeee71b`）。Gate 2 结论要求 P2 从"JPL current-only 保护
 > 实施例性能验证"重定义为 **D1/D2/D3 机制成立率验证**（信息模式驱动边界选择 + 预算修正
 > 动作集 + 响应驱动恢复；D2 为硬杀线，失败即 Project No-Go）。**§2 旧 P2 骨架被取代**，
-> 新 P2 完整冻结于 `phase3_p2_preregistration_v1.0.md`（8 字段 + Step0 K1/K2/K3 kill
-> gates + 机器可审计动作 schema `configs/phase3_p2_action_schema.yaml`）。P1 字段 1–8
-> 维持 v1.0.2 冻结不变；P3 维持 BLOCKED（本文件 §3 骨架仅作历史保留）。
+> 新 P2 完整冻结于 `phase3_p2_preregistration_v1.0.1.md`（8 字段 + Step0 K1/K2/K3 kill
+> gates + 机器可审计动作 schema `configs/phase3_p2_action_schema.yaml`；v1.0.1 为
+> Review 66 修复版，取代 v1.0）。P1 字段 1–8 维持 v1.0.2 冻结不变；P3 维持 BLOCKED
+> （本文件 §3 骨架仅作历史保留）。
 >
 > **冻结效力**：本文档 P1 冻结为 v1.0.2；P2 以 `phase3_p2_preregistration_v1.0.md` 为准。
 > 任何改动须新版本 + 新测试协议，禁止静默修改阈值/变量/population；封存 test 永不重跑；
@@ -231,8 +232,9 @@ B. n_S1 = 0 或 n_S2 = 0（train-q50 外推到 test 后缺状态，无法比较�
 ## 2. P2 — ~~JPL current-only 保护实施例~~（**已被取代**，见 v1.1 changelog）
 
 > **v1.1：本节旧 P2 骨架已被 Patent Gate 2 重定义版取代。** 新 P2 完整协议 =
-> `phase3_p2_preregistration_v1.0.md`（D1/D2/D3 机制成立率验证 + Step0 K1/K2/K3 kill
-> gates）。本节仅作历史保留，**不得作为执行依据**；新 P2 未出结果前**不启动**。
+> `phase3_p2_preregistration_v1.0.1.md`（D1/D2/D3 机制成立率验证 + Step0 K1/K2/K3 kill
+> gates；v1.0.1 修复 Review 66 P0 接口闭环）。本节仅作历史保留，**不得作为执行依据**；
+> 新 P2 未出结果前**不启动**。
 
 ### 2.1 Patent question
 
@@ -348,7 +350,7 @@ protective boundary 实施例**？它是否比直接沿用原预算更保守/稳
 | 实验 | CLAIM | claim_id | 主门 | 失败专利后果 |
 |---|---|---|---|---|
 | P1 | CLAIM 1(2)、CLAIM 2/3、CLAIM 4(间接) | C-007、P-001 | 三态证据密度可重复（rate_ratio≥1.5、CI>1、方向一致） | 删 CLAIM 1 第 2 步强中心 → field/data-mode driven protective switching；C-007 降 D |
-| P2 | CLAIM 1(3/4/5/6)、CLAIM 2/3/4/5 | P-001/P-002/P-003、C-012 | **D1/D2/D3 机制成立率**（v1.1 重定义版，见 `phase3_p2_preregistration_v1.0.md`）：K1/K2/K3 全过；M1=M2=1.0、M4=0.0、M3 自然 recovery trace ≥20/≥5 会话 | K2 失败 → **PROJECT NO-GO**（硬杀线）；K1/K3/M4 失败 → 组合核心缺失 → 极可能 No-Go；Conditional 见新 P2 协议 §6 |
+| P2 | CLAIM 1(3/4/5/6)、CLAIM 2/3/4/5 | P-001/P-002/P-003、C-012 | **D1/D2/D3 机制成立率**（v1.1 重定义版，见 `phase3_p2_preregistration_v1.0.1.md`）：K1/K2/K3 全过；M1=M2=1.0、M4=0.0、M3 **natural JPL** recovery trace ≥20/≥5 会话 | K2 失败 → **PROJECT NO-GO**（硬杀线）；K1/K3/M4 失败 → 组合核心缺失 → 极可能 No-Go；Conditional 见新 P2 协议 §6 |
 | P3 | CLAIM 1(5/6)、CLAIM 6/7 | P-002 | 三问题技术行为确定且符合设计 | 删 CLAIM 1 第 5/6 步与 CLAIM 7 技术行为依据；P-002 维持 D |
 
 ## 5. 专利删除矩阵（失败时逐句删）
@@ -365,8 +367,9 @@ protective boundary 实施例**？它是否比直接沿用原预算更保守/稳
 ## 6. 变更控制与版本
 
 - 本文档 = **Phase 3 v1.0.2（P1 冻结）**。**v1.1（2026-08-11，Patent Gate 2 重定义 P2）**：
-  P2 骨架被 `phase3_p2_preregistration_v1.0.md` 取代（D1/D2/D3 机制验证 + Step0 K1/K2/K3
-  kill gates）；P1 字段 1–8 与 P3 骨架不变。P3 字段 5 细节展开 = 新版本（v1.2）+ 新测试协议。
+  P2 骨架被 `phase3_p2_preregistration_v1.0.1.md` 取代（D1/D2/D3 机制验证 + Step0 K1/K2/K3
+  kill gates；v1.0.1 = Review 66 接口闭环修复版）；P1 字段 1–8 与 P3 骨架不变。P3 字段 5
+  细节展开 = 新版本（v1.2）+ 新测试协议。
 - **v1.0.2 changelog（审查结论54，protocol-only mathematical exhaustiveness）**：把全部
   outcome 映射为唯一 verdict，不允许未定义分支——⑦ `rate_S1=0 且 rate_S2=0` → `rate_ratio=NA`
   → **No-Go**（可评估但无正向 state separation）；⑧ `rate_S2 ≤ rate_S1`（含 equality）
