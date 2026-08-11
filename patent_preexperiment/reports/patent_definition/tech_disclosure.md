@@ -154,6 +154,8 @@ element-by-element）。
 
 > P2 formal = SUCCESS / NARROW GO（mechanism realizability only）。P3 不自动开；
 > 下一步只批准**攻击性 falsification**，不优化、不扩复杂度。任一失败 → Project No-Go。
+> **P2.1 预注册协议**：`reports/patent_definition/phase3_p2_1_preregistration_v1.0.md`
+> （v1.0 草案，待 Review 冻结）。
 
 1. **P2.1A — D3 Falsification gate**：D3 recovery 是否只是 rolling-Q95 自相关伪证据？
    做 negative control（恒功率/persistence baseline、recovery 时点随机匹配、lag-shuffle、
