@@ -1,4 +1,4 @@
-# 独立/从属权利要求树（Claim Surgery v1 — Patent Gate 2 检索前基线）
+# 独立/从属权利要求树（Claim Surgery v1 — Patent Gate 2 检索前基线；§6 为检索后收窄版）
 
 > 依据：P1 Patent Gate NO-GO（`results/raw/phase3_p1/P1_patent_gate.md`）。本版为
 > **Claim Surgery v1**：把 prior-art 检索对象冻结为剩余保护架构，排除 recent_var 状态
@@ -112,8 +112,44 @@ D  后续实际响应 → constraint relaxation / permission recovery
 - PV/BESS benefit；
 - 为绕 prior art 临时增加的复杂度（risk score、双模型、classifier 等）。
 
-## 6. 定稿前待补（Gate 2 之后）
+## 6. Patent Gate 2 后收窄（FINAL：NARROW CONDITIONAL GO / HOLD P2）
 
-- 依 Patent Gate 2 结果决定：Protective GO（直接 P2）/ Narrow Conditional GO（收窄组合、
-  重点保护边界应用模式 + 约束等级 + recovery trigger）/ Project No-Go（止损）。
-- 正式新颖性/创造性/FTO 法律检索（含中/欧专利库 + NPL）后，再做 claim 步骤裁剪合并。
+> 检索后结论见 `results/raw/patent_gate2/patent_gate2_final.md`。本版从"检索前基线"升级为
+> **检索后收窄版**。A/B/C/D 单模块全部高拥挤，完整闭环两轮纵深检索未发现同构公开，但存在
+> 三个分叉风险（ACN 族、ChargePoint 直接限功率、US12393888B2 静态规格边界约束），因此
+> 判定为 **Narrow Conditional GO**：必须收窄组合并技术化，否则退化为 Project No-Go。
+
+### 6.1 强制收窄锚点（D1/D2/D3，写入后续撰写要求）
+
+```text
+D1  信息类别分级选择边界生成方式：同一实际响应历史下，按可用信息类别（capability /
+    pilot+actual / current-only / 历史不足）切换边界生成方式 —— 非单一方式、非用户输入、
+    非静态规格。区分 ACN 族（边界来自用户输入/电池模型拟合）与 US12393888B2（静态规格）。
+D2  边界应用为"调度器功率预算修正动作的允许范围（权限等级）"：限制对 EV 功率预算的调整
+    动作边界（如仅允许收缩、禁止按"分配−实际"释放差值），而非直接限制充电电流设定值。
+    区分 ChargePoint 直接限桩口功率。
+D3  保护性降级 + 实测响应驱动恢复的权限分级制度：信息/历史不足 → 仅保护性动作权限等级并
+    持续观测实际响应；新正向实际响应证据（或实际功率贴近边界）→ 恢复更高调度权限等级。
+    区分 ACN 可行性放松、Hyundai/Kia 通信恢复、电池内部限值恢复。
+```
+
+> **D2 是最大 wording 风险**：若无法体现为设备可执行的动作边界，只剩抽象"权限"措辞，
+> 按判定出口即 Project No-Go。P2 必须验证 D1/D2/D3 对应的可落设备动作序列。
+
+### 6.2 CLAIM 1 收窄方向（v2 待 P2 验证后定稿）
+
+保留 v1 的 6 步闭环骨架，但对第 4 步的"功率调整约束等级/应用模式"补充强制措辞：
+
+- 第 4 步明确：所述边界用于约束对**功率预算的修正动作**（允许收缩、禁止无条件释放差值），
+  而非直接设定充电电流或限制桩口功率；
+- 第 3 步明确：边界生成方式由**当前可用信息类别**决定（分级选择），非单一估计方式；
+- 第 6 步明确：恢复触发为**实测实际响应证据**（新的正向响应 / 实际功率贴近边界），
+  排除通信恢复、停充解除、电池内部条件作为替代触发。
+
+### 6.3 状态更新
+
+```text
+Patent Gate 2    NARROW CONDITIONAL GO / HOLD P2
+P2               可开，但须在 D1/D2/D3 收窄范围内；无法落设备动作即降级 No-Go
+排除项           维持（§5）不变，新增：不得主张单一模块（A/B/C/D 全已知）
+```

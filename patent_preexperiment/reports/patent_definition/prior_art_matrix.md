@@ -1,4 +1,4 @@
-# 现有技术检索矩阵（Patent Definition Phase 1 + Patent Gate 2 检索前基线）
+# 现有技术检索矩阵（Patent Definition Phase 1 + Patent Gate 2，含检索后 FINAL 判定）
 
 > 依据：审查结论52 §八/§九 补检索 + P0 杀伤性初筛（`results/raw/P0/P0_patent_kill_screen.md`）
 > + P1 Patent Gate NO-GO（`results/raw/phase3_p1/P1_patent_gate.md`）。
@@ -84,3 +84,36 @@ D  后续实际响应 → constraint relaxation / permission recovery
 **重点追踪对象**：保护性降级 + 权限恢复是否已被类似关系公开；`historical limit` /
 `fallback control` / `mode switching` / `confidence-based control` /
 `dynamic charging constraint` 族。
+
+## 6. Patent Gate 2 — FINAL 判定：NARROW CONDITIONAL GO / HOLD P2（检索后）
+
+> 完整判定与证据链见 `results/raw/patent_gate2/patent_gate2_final.md`（FINAL 记录）。
+> 本节为矩阵更新，冻结检索后结论，替代 §5 的开放基线。
+
+**单模块已知度（两轮检索确认，A/B/C/D 全部高拥挤）**：
+
+| 模块 | 代表文献 | 已公开内容 |
+|---|---|---|
+| A | US20150077054A1；US20250196694A1 | 信息可用性→模式/控制选择 |
+| B | ChargePoint 族（US20140103866A1/US10953760/US11718191/US9656567B2/WO2013138781A1）；US20210268929A1；US9685798B2；**ACN 族（US10926659/US20200254896A1）** | actual/history→能力/功率边界（含直接限桩口、限设定值、在线 LP 约束） |
+| C | US11046205B1；US12054065B2；ACN 族（保守约束由观测推导） | 信息不足→保守/保护性处理 |
+| D | US20250196694A1（通信恢复）；US10214115B2（停充恢复）；EP4235909/US7489108B2（电池内部限值恢复） | 后续条件→恢复（恢复对象均为通信/电流/停充/电池内部，**非调度器权限**） |
+
+**两条防线纵深攻击（本轮）**：
+
+- 防线 1（boundary→调度动作权限约束，非直接设定值）：未命中。部分覆盖为 ChargePoint
+  直接限桩口功率、US12393888B2 静态规格 boundary 作 optimizer 约束、ACN 族 per-EV max
+  rate 作在线 LP 约束（同数据集，**风险最高近邻**）。
+- 防线 2（实测响应→恢复调度权限）：未命中。恢复类文献恢复对象均为通信/电流设定值/停充/
+  电池内部限值；ACN 族是可行性驱动的约束放松，非响应证据驱动的权限恢复。
+
+**FINAL 判定**：
+
+```text
+判定       NARROW CONDITIONAL GO / HOLD P2
+条件       P2 必须落地 D1/D2/D3（信息类别分级选择边界方式 / 边界应用为调度动作允许范围而非
+           直接设限 / 保护性降级 + 实测响应驱动恢复权限），否则降级 Project No-Go
+主风险     ACN 族（US10926659/US20200254896A1）—— 观测→保守约束→在线调度约束→可行性放松
+规避锚     D1 信息类别分级、D2 权限约束 vs 直接设限、D3 响应驱动权限恢复（技术化、可落设备动作）
+法律前置   ACN 族 element-mapping + EP/CNIPA 库 + ISO 15118 动态功率限制标准演进（专利代理师）
+```
