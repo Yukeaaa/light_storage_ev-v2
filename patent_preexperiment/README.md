@@ -1,7 +1,9 @@
-# patent-preexperiment：光储充专利预实验工程（R1 收敛审计完成 → Patent Definition 阶段）
+# patent-preexperiment：光储充专利预实验工程（P2 formal SUCCESS / NARROW GO；P3 HOLD）
 
 > 本 README 的作用不是介绍代码，而是防止项目被误解为普通充电负荷预测、多车调度优化、
 > 用户行为预测或通用光储充仿真平台。读任何代码、改任何配置、汇报任何结论之前，请先读本节。
+> **当前权威**：`reports/patent_definition/claim_tree.md` v2（§7 设备动作链）+
+> `results/raw/phase3_p2/P2_patent_gate.md`。
 
 ## 1. 项目要解决的真实问题
 
@@ -12,28 +14,40 @@
 本项目的发明不是回答"剩下 3 kW 应该给谁"，而是回答更底层的问题：**在当前数据条件下，
 有没有资格继续把这辆车当作 7 kW 的可执行负荷？** 若响应证据不足，就不盲信。
 
-最终发明中心（Review 52 Final R1 Patent Gate）：
+最终发明中心（P2 formal SUCCESS / NARROW GO 后；**以 `reports/patent_definition/claim_tree.md`
+v2 §7 设备动作链为权威**）：
 
-> 利用 EVSE/CSMS 在线实际响应形成**响应证据支持状态**；据当前可用信息条件选择
-> **短时功率边界生成模式**（pilot-rich → response/history-derived boundary；
-> current-only → history protective boundary；history insufficient → conservative
-> fallback）；据所选边界**限制/降级/恢复 EMS 对该 EV/EV 池功率预算的控制权限**
-> （不无条件按"分配功率−实际功率"释放差值）；以新的实际响应反馈更新支持状态，
-> 实现保护降级与响应恢复的技术闭环。
+> 获取当前充电信息 → 确定信息类别（capability / pilot+actual / current-only / 历史不足）
+> → 按信息类别选择功率边界生成方式 → 生成 EV 功率边界 → 形成预算修正允许区间 → 将 EMS
+> 请求的预算修正量限制在该区间（accepted / clipped_upper / clipped_lower）→ 持续获得实际
+> 充电响应 → 实际响应满足预定边界接触条件 → 单向改变预算修正允许区间 → 后续按新区间执行。
+> **边界作用于"预算修正动作范围"，而非直接输出充电功率或直接限制桩口功率设定值；实际
+> 响应用于恢复这个动作范围。**
 
-## 2. 当前专利主轴（V2.1 → Review 52 收缩后）
+> **⚠ P2 是 mechanism evidence，不是 performance evidence**：站级收益 / 储能补偿减少 /
+> 主动重分配 / 真实 EMS request 语义均**未验证**。M2（pilot+actual）分支为 dispatch-only
+> （无 numerical boundary_value），CLAIM 1 v2 主权利要求优先围绕 M3/M4 + D2 + D3 收紧。
+
+## 2. 当前专利主轴（P2 formal 后：D1/D2/D3 设备动作链，NARROW GO）
 
 原主轴 V2.1"充电响应状态识别 → 短时可执行功率区间 → 支持域内有界修正 → 支持域外保护回退"中，
-**active bounded correction 降为从属/可选实施方式**；broad active D1-R/D1-A 不恢复；
-不自动进入 E2/E4。D1 收缩为 **protective-only**：判断何时不能再信任原功率能力假设，
-并切换到更保守的边界。术语纪律（AGENTS.md，违规即退回）：
+**active bounded correction 降为从属/可选实施方式**（P-004 维持 D）；broad active D1-R/D1-A
+不恢复。**P1 formal No-Go** 已把 recent_var / variance 状态判定移出核心；**P2 formal
+SUCCESS** 验证的是 **D1（信息类别分级选择边界生成方式）+ D2（边界→预算修正动作允许区间）
++ D3（实测响应驱动单向恢复）** 的设备动作链（见 `claim_tree.md` §7.1）。术语纪律（AGENTS.md，
+违规即退回）：
 
 - pilot 与 actual 的差异只能称"导引/允许电流与实际响应差异"，**不得**称"命令失败/拒绝"；
 - 只用自然 pilot 正阶跃验证过增量响应的，才谈"可吸收余量"；
 - 只用观察值称"预算差值"而非"可回收能力"；
 - 未通过 E4.1 验证的响应仿真器不得输出闭环收益结论。
 
-## 3. 已经证明与尚未证明（截至 Final R1 Patent Gate）
+## 3. 已经证明与尚未证明（截至 P2 formal frozen outcome）
+
+> **阶段线**：Final R1 Patent Gate（PROTECTIVE GO）→ **P1 formal No-Go**（recent_var
+> 状态判定移出核心）→ Patent Gate 2（NARROW CONDITIONAL GO）→ **P2 formal
+> SUCCESS / NARROW GO**（D1/D2/D3 设备动作链机制成立）。P3 HOLD。下方表格中 Final R1
+> 及之前条目为历史背景，P1/P2 为当前权威。
 
 ### 已证明（冻结样本、冻结阈值、负对照下）
 
@@ -48,9 +62,14 @@
 | Caltech test 层 E1 response evidence 与 E3 A2 opportunity 在 cycle 层 `S1∩S2=0`；A1 漏斗 10,528 → 155（retention 1.47%，strict-match 选择效应） | R1 扩展审计 A1/A4 | `reports/R1_expansion_audit.md#A1`、`#A4` |
 | **A5：近期 actual 波动（recent_var）越高 → E1 响应证据密度越高，train/val/test 方向一致**（Q1→Q4 单调 0.0039→0.0261 / 0.0054→0.0331；test Q3,Q4>pooled） | A5 扩展审计（Batch_3 正式运行，baseline `34f04f6`） | `reports/R1_expansion_audit.md#A5` |
 | **Final R1 Gate：D1=B protective-only、D2/D3 fusion=YES、Project=PROTECTIVE GO** | 审查结论52 | `reports/R1_expansion_audit.md#最终判定` |
+| **P1 formal No-Go**：recent_var 状态判定作为核心规则 external formal FAIL（215 会话/15,954 cycle，主效应方向反）；variance-defined S1/S2/S3 移出核心 | P1 formal | `results/raw/phase3_p1/P1_patent_gate.md` |
+| **Patent Gate 2 = NARROW CONDITIONAL GO**：A/B/C/D 单模块全高拥挤，闭环未公开；主风险 ACN 族 | 检索后冻结 | `results/raw/patent_gate2/patent_gate2_final.md` |
+| **P2 formal = SUCCESS / NARROW GO**：D1/D2/D3 设备动作链机制成立（M1=1.0 / M2=1.0 / M4=0.0；M3 natural JPL 1,060 traces / 1,060 sessions；n_diff_prot_normal=72,067） | P2 formal frozen outcome | `results/raw/phase3_p2/P2_patent_gate.md` |
 
-门判定：**Final R1 Patent Gate = PROTECTIVE GO + D2/D3 融合架构；阶段切换 Patent Definition。**
-此前 K1 条件 Go、R1 K1 硬切分复现、扩展审计 A1–A5 均已完成并落账。
+门判定：**当前 = P2 formal SUCCESS / NARROW GO（mechanism realizability only）；P3 HOLD。**
+Final R1 Patent Gate = PROTECTIVE GO + D2/D3 融合架构为历史阶段线；P1 formal No-Go 已把
+recent_var 状态判定移出核心；Patent Gate 2 NARROW CONDITIONAL GO 已收窄到 D1/D2/D3
+三点组合。
 
 ### 尚未证明（全部为 D 级假设，禁止对外断言）
 
@@ -133,27 +152,38 @@ review/          每轮审查结论归档（审查结论2..7）
 
 ## 9. 当前工程治理状态
 
-- **审查结论52 Final R1 Patent Gate（最新）**：D1=B protective-only、D2/D3 fusion=YES、
-  Project Final Verdict = **PROTECTIVE GO + D2/D3 融合架构**；不恢复 broad active
-  D1-R/D1-A；不自动进入 E2/E4；R1 预实验方向探索阶段正式关闭，切换 **Patent Definition**。
-- 审查结论33/34 准入 R1 扩展审计（§10.2）；结论45/46 A5 protocol v1.2 FINAL FREEZE
-  （`9302a7d`）；结论47–51 A5 generator X1→X3.1 code-only 修正与正式运行授权
-  （baseline `34f04f6`，Evidence commit `a827df3`）。
-- K1.2.2 审查通过（`review/审查结论5.md`），E0-Full 数据构建批准（限定范围）。
-- 审查结论7：先完成 E0-Full 阶段启动冻结（证据台账、预注册配置、数据契约、split 规则和
-  停止线），冻结审查通过后再进行全量数据构建；全量复现通过后才启动 E1-Full 和 E2。
-  该口令已完成其历史使命（E0-Full 已全部完成）。
+- **当前最新（P2 formal 后）**：**P2 = SUCCESS / NARROW GO**（mechanism realizability
+  only）；P-001/P-002/P-003 升 C（P-002 由 D 升 C，controller mechanism）；P-004 维持 D；
+  CLAIM 1 v2 改写为 10 步可执行设备动作链（`claim_tree.md` §7）；**P3 HOLD**。
+  - **P2 是 mechanism evidence，不是 performance evidence**：站级收益 / 储能补偿 / 主动
+    重分配 / 真实 EMS request 语义均未验证；M2 分支 dispatch-only（无 numerical
+    boundary_value）；M3 recovery 为段内**单向**恢复（非双向降级↔恢复）。
+  - 下一步仅批准攻击性 falsification（**P2.1A D3 falsification + P2.1B D2 closed-loop/HIL**，
+    见 `tech_disclosure.md` §7 / `claim_tree.md` §6.4），任一失败 → Project No-Go。
+- **历史阶段线**：审查结论52 Final R1 Patent Gate（PROTECTIVE GO + D2/D3 融合）→
+  P1 formal No-Go（recent_var 移出核心）→ Patent Gate 2（NARROW CONDITIONAL GO）→
+  P2 formal（SUCCESS / NARROW GO）。
+- 审查结论33/34 准入 R1 扩展审计；结论45/46 A5 protocol v1.2 FINAL FREEZE（`9302a7d`）；
+  结论47–51 A5 正式运行（baseline `34f04f6`，Evidence commit `a827df3`）。
+- K1.2.2 审查通过（`review/审查结论5.md`），E0-Full 数据构建完成。
 
-## 10. 下一阶段：Patent Definition（Review 52）
+## 10. 下一阶段（P2 formal 后：P2.1 攻击性验证 + 专利代理师检索）
 
-1. 更新过时的 claim_evidence_registry 与 README 状态（`f6b49e8` 完成）。
-2. 主发明技术交底骨架 + 独立/从属权利要求树 + 现有技术检索矩阵
-   → `reports/patent_definition/tech_disclosure.md` + `claim_tree.md` + `prior_art_matrix.md`。
-3. 现有技术检索仅为技术筛选，非正式新颖性/创造性/FTO 法律意见；最终申请前需专利代理师
-   做完整法律检索与权利要求判断。
+1. **P2.1A — D3 Falsification gate**：recovery 是否只是 rolling-Q95 自相关伪证据？
+   negative control（恒功率/persistence baseline、随机时点匹配、lag-shuffle）；
+   核心指标 = D3 条件对后续可支持上界的预测增益（超过简单功率持续性）。无增量辨识力
+   → **D3 No-Go**。
+2. **P2.1B — D2 Technical-Effect gate（最小闭环/HIL）**：独立 EMS request generator +
+   独立 EV response emulator；比较 unrestricted vs D1+D2 vs D1+D2+D3。指标：
+   infeasible command rate / boundary violation / unsupported positive correction rate /
+   tracking residual。无真实技术效果 → **D2 No-Go**。不做经济收益。
+3. **专利代理师检索**：ACN 族 element-by-element 对照（`claim_tree.md` §7.2）+ EP/CNIPA
+   库 + ISO 15118 动态功率限制标准演进；正式新颖性/创造性/FTO 法律意见。
+4. 权威 claim 以 `reports/patent_definition/claim_tree.md` v2（§7 设备动作链）+
+   `results/raw/phase3_p2/P2_patent_gate.md` 为准；`tech_disclosure.md` 骨架部分表述
+   已过时（见其顶部 banner），按 claim_tree v2 收缩。
 
-现有技术边界（Review 52 补检索）：Porsche US12054065B2（故障→fallback 切换，trigger 非
-车辆响应证据）、ChargePoint US10464435B2（近期供电历史响应 power-limit）、US10150380B2
-（allocated 超能力→释放模块给其他 dispenser）、CN112829627A（多车动态重分配）、
-US9290104B2（pilot 改变前后测量响应）。历史边界、差值回收、多车重分配、fallback mode、
-pilot 响应测量均不能单独成主权利要求；可主张空间是它们的**新技术关系组合**。
+现有技术边界（Patent Gate 2 FINAL）：单模块 A/B/C/D 全高拥挤；主风险 ACN 族
+（US10926659 / US20200254896A1，同数据源最近邻，observation→conservative constraint→
+scheduling constraint→feasibility relaxation）；规避锚 = D1 信息类别分级 + D2 权限约束
+vs 直接设限 + D3 响应驱动权限恢复的三点组合（技术化、可落设备动作）。

@@ -16,7 +16,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from patent_preexperiment.phase3_p2.schema import LOCKED, M3, M4, NORMAL, PROTECTIVE, SchemaConfig
+from patent_preexperiment.phase3_p2.schema import M4, SchemaConfig
 
 _TRACE_COLUMNS = [
     "session_id",
@@ -64,7 +64,23 @@ def trace_records(
         run = run.sort_values("timestamp_utc")
 
         recovery_ts = row["timestamp_utc"]
-        m4_before = bool((run["info_mode"] == M4).any() and (run["timestamp_utc"] < recovery_ts).any())
+        # 修复：M4 前置必须与 recovery 之前的时间段联合判定（原实现把
+        # `(info_mode==M4).any()` 与 `(ts<recovery_ts).any()` 分开做 `.any()`，
+        # 只要 run 里任何位置有 M4、且 run 里任何位置在 recovery 之前就会误判为 True）。
+        m4_before = bool(
+            ((run["info_mode"] == M4) & (run["timestamp_utc"] < recovery_ts)).any()
+        )
+        # before 邻域字段从实际 transition 前一行读出（不硬编码）。
+        prev = run[run["timestamp_utc"] < recovery_ts]
+        if not prev.empty:
+            prev_row = prev.iloc[-1]
+            mode_before = str(prev_row["info_mode"])
+            state_before = str(prev_row["application_state"])
+            boundary_mode_before = str(prev_row["boundary_mode"])
+        else:
+            mode_before = None
+            state_before = None
+            boundary_mode_before = None
         post = run[run["timestamp_utc"] > recovery_ts]
 
         pb = row["protective_bound"]
@@ -95,11 +111,11 @@ def trace_records(
             "n_run_cycles": int(len(run)),
             "recovery_utc": recovery_ts,
             "m4_before": m4_before,
-            "mode_before": M4,
-            "state_before": PROTECTIVE,
-            "state_after": NORMAL,
-            "boundary_mode_before": scfg.layer2_boundary_modes[M3],
-            "boundary_mode_after": scfg.layer2_boundary_modes[M3],
+            "mode_before": mode_before,
+            "state_before": state_before,
+            "state_after": str(row["application_state"]),
+            "boundary_mode_before": boundary_mode_before,
+            "boundary_mode_after": str(row["boundary_mode"]),
             "before_allowed_l": before_l,
             "before_allowed_u": before_u,
             "after_allowed_l": after_l,

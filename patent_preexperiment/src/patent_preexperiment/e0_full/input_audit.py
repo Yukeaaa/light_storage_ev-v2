@@ -1689,7 +1689,9 @@ def current_only_full_pool_sensitivity(
         if sid not in affected_sessions:
             continue
         try:
-            raw = read_static_csv(root / str(r["static_file"]))
+            # static_file 在 sample registry 中可能用反斜杠（Windows 数据链路产物），
+            # Linux CI 下 pathlib 会把反斜杠当字面文件名 → 先归一化到正斜杠（两平台均有效）。
+            raw = read_static_csv(root / str(r["static_file"]).replace("\\", "/"))
         except (OSError, ValueError):
             rebuild_failed.append(sid)
             continue
