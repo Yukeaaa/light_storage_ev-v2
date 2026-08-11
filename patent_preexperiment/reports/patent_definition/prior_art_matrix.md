@@ -1,8 +1,11 @@
-# 现有技术检索矩阵（Patent Definition Phase 1，组合结构专项）
+# 现有技术检索矩阵（Patent Definition Phase 1 + Patent Gate 2 检索前基线）
 
-> 依据：审查结论52 §八/§九 补检索 + P0 杀伤性初筛（`results/raw/P0/P0_patent_kill_screen.md`）。
+> 依据：审查结论52 §八/§九 补检索 + P0 杀伤性初筛（`results/raw/P0/P0_patent_kill_screen.md`）
+> + P1 Patent Gate NO-GO（`results/raw/phase3_p1/P1_patent_gate.md`）。
 > 本矩阵是**技术筛选**，非正式新颖性/创造性/FTO 法律意见；最终申请前需专利代理师做
 > 完整法律检索与权利要求判断。
+> **Phase 1 的检索靶子（recent_var 状态判定器）已被 P1 formal 否掉**；§5 冻结
+> Patent Gate 2 的新检索对象与排除项，见 `claim_tree.md` §5。
 
 ## 1. 检索目标（最重点攻击的组合）
 
@@ -48,3 +51,36 @@
 - 产出：每篇近邻的 claim 要素对照表（element-mapping），作为权利要求撰写与
   答复审查意见的基础。
 - 结论前不做 FTO 判断；最终以专利代理师出具的法律意见为准。
+
+## 5. Patent Gate 2 — 剩余发明核 prior-art stress test（检索前基线）
+
+> 检索对象、分层判断与排除项在 `claim_tree.md` §5 冻结（本矩阵 §1-3 的旧靶子——响应
+> 证据支持状态→边界→权限——已因 P1 No-Go 失效，仅作背景保留）。
+
+**检索对象（四类组合，逐类查单模块已知度，再查 A+B+C+D 闭环是否已被公开）**：
+
+```text
+A  信息可用性 → 控制/模型模式选择
+B  actual/history → EV capability/power boundary
+C  信息或历史不足 → protective/conservative fallback
+D  后续实际响应 → constraint relaxation / permission recovery
+```
+
+**两层判断**：
+
+1. 单模块（A/B/C/D）是否已知；
+2. **组合关系是否显而易见 / 已明确公开**——尤其 A+B+C+D 是否已被串成闭环
+   （"按信息质量选能力模型 → 历史不足保守模式 → 后续响应恢复"）。
+
+**判定出口**：
+
+- 组合未被清楚公开 → **Protective GO**（P2：验证 current-only history protective
+  boundary 实施例技术成立）；
+- 组合有类似方案但边界应用模式/约束等级/recovery trigger 有区别 → **Narrow
+  Conditional GO**（收窄范围后决定 P2）；
+- 组合已被充分公开（车辆信息不足→history estimate→保守约束→新观测→放宽约束）→
+  **Project No-Go**，禁止用 risk score / 双模型 / classifier 等制造复杂度硬撑。
+
+**重点追踪对象**：保护性降级 + 权限恢复是否已被类似关系公开；`historical limit` /
+`fallback control` / `mode switching` / `confidence-based control` /
+`dynamic charging constraint` 族。
