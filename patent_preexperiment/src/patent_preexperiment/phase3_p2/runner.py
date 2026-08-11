@@ -222,7 +222,7 @@ def read_frozen(impl_root: Path) -> dict[str, Any]:
 def main() -> None:
     import argparse
 
-    impl_root = Path(__file__).resolve().parents[2]
+    impl_root = Path(__file__).resolve().parents[3]
 
     parser = argparse.ArgumentParser(description="P2 kill gates + formal test runner")
     parser.add_argument("--step0", action="store_true", help="跑 K1/K2/K3 kill gates")
