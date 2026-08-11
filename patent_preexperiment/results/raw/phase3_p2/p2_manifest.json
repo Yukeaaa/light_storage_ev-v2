@@ -1,0 +1,15 @@
+{
+  "experiment_id": "P2_v1_0_2",
+  "protocol_version": "phase3_p2_preregistration_v1.0.2",
+  "batch": "p2_formal",
+  "summary": "results/raw/phase3_p2/p2_test_summary.json",
+  "sentinel": "results/raw/phase3_p2/p2_test_sentinel.json",
+  "step0_summary": "results/raw/phase3_p2/p2_step0_summary.json",
+  "traces": "results/raw/phase3_p2/p2_test_traces.parquet",
+  "step0_summary_sha256": "1c9418458fe90976fc78883f20903393fb09a352b2ac217a69ad59866b01843d",
+  "step0_verdict": "PROCEED",
+  "code_sha": "0bca5f2ae57f1eec9d3d39439676ebca1fe84079",
+  "worktree_clean": true,
+  "once_only": true,
+  "exit_code": 0
+}

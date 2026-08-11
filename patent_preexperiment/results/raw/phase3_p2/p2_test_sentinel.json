@@ -1,0 +1,11 @@
+{
+  "status": "completed",
+  "started_at": "2026-08-11T14:59:03.507994+00:00",
+  "expected_code_sha": "0bca5f2ae57f1eec9d3d39439676ebca1fe84079",
+  "code_sha": "0bca5f2ae57f1eec9d3d39439676ebca1fe84079",
+  "worktree_clean": true,
+  "step0_summary_sha256": "1c9418458fe90976fc78883f20903393fb09a352b2ac217a69ad59866b01843d",
+  "step0_verdict": "PROCEED",
+  "integrity": "step0 summary sha recorded pre-exposure; rechecked pre-write",
+  "exposed_sha": "0bca5f2ae57f1eec9d3d39439676ebca1fe84079"
+}
