@@ -11,7 +11,7 @@
   "code_sha": null,
   "code_sha_locked": false,
   "worktree_clean_at_code_lock": null,
-  "step0_data_sufficiency_status": "NOT_RUN",
+  "step0_data_sufficiency_status": "SUFFICIENT",
   "formal_exposure_started_at": null,
   "formal_verdict": null,
   "once_only": true,
@@ -26,5 +26,30 @@
   "implementation_worktree_clean": true,
   "implementation_locked_at": "2026-08-12T16:05:09.661830+00:00",
   "dependency_manifest_path": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_dependency_manifest.json",
-  "dependency_manifest_sha256": "45c570f10614c3a517b18970ad80fcc134adb05e86d9c6b1d546ffac40890809"
+  "dependency_manifest_sha256": "45c570f10614c3a517b18970ad80fcc134adb05e86d9c6b1d546ffac40890809",
+  "step0_summary_sha256": "9e8bab7a9e72225d5105d8b6373798c7ec8f73ae52b255c085510a78caa2655f",
+  "step0_artifacts": {
+    "boundary_frame": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_boundary_frame.parquet",
+    "eligible": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_eligible.parquet",
+    "b3_map": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_b3_map.parquet",
+    "trigger_counts": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_trigger_counts.parquet"
+  },
+  "step0_artifact_sha256": {
+    "boundary_frame": "2473dd4fda23995c922078dc96aa5ecdce47efa8fd2c2bb4b0c8827eb27af970",
+    "eligible": "9f2084235f42a94d0947256a18dfbbf6505da746ff0ad6b6aa9af96f98f5a879",
+    "b3_map": "67be0906f3bebdc263d0dc1db6fef8015bbda95794e20fe4264fbfbf2d5a843a",
+    "trigger_counts": "840c2fc0b92cab8b1bece8e4e429cd4c4827be87baef2488ddc828195f804495"
+  },
+  "step0_counts": {
+    "n_eligible_segments": 14227,
+    "trigger_distinct_sessions": {
+      "B0": 13840,
+      "B1": 13873,
+      "B2a": 13855,
+      "B2b": 11530,
+      "B3": 13874,
+      "B4": 13846
+    }
+  },
+  "step0_code_sha": "e8a58c4c7e96b1e6aed4a87af61e0db35a0a9841"
 }
