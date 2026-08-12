@@ -677,3 +677,176 @@ def test_assert_d3_trigger_params_match_called_in_load_pool(tmp_path, monkeypatc
     monkeypatch.setattr(runner, "load_pool_minutes", lambda *_a, **_k: pd.DataFrame())
     runner._load_pool(tmp_path)
     assert called["n"] == 1
+
+
+# ---------------------------------------------------------------------------
+# X1：lock-impl → evidence-only commit → clean HEAD != code SHA → Step-0 accepted
+# X2：dependency manifest
+# ---------------------------------------------------------------------------
+
+def test_x2_lock_impl_writes_dependency_manifest(tmp_path, monkeypatch) -> None:
+    """X2：--lock-impl 生成 dependency manifest，sentinel 记其 SHA256。"""
+    from patent_preexperiment.phase3_p2_1 import runner
+
+    _write_synthetic_sentinel(tmp_path)
+    monkeypatch.setattr(runner, "git_provenance", lambda _r: {
+        "code_sha": "codeABC", "worktree_clean": True,
+    })
+    # pyproject.toml 存在性不强制（tmp_path 无；_build_dependency_manifest 会记 None）
+    s = runner.lock_implementation(tmp_path)
+
+    dep_path = tmp_path / "results" / "raw" / "phase3_p2_1" / "p2_1a_dependency_manifest.json"
+    assert dep_path.exists()
+    assert s["dependency_manifest_path"] == str(dep_path.as_posix())
+    assert s["dependency_manifest_sha256"] == runner._file_sha256(dep_path)
+    dep = json.loads(dep_path.read_text(encoding="utf-8"))
+    assert dep["implementation_code_sha"] == "codeABC"
+    assert dep["frozen_protocol_blob_sha"] == FROZEN.frozen_protocol_blob_sha
+    assert "numpy" in dep["packages"] and "pandas" in dep["packages"]
+    assert s["status"] == "UNCONSUMED"  # lock-impl 不改 status
+
+
+def test_x1_step0_accepts_evidence_only_commit_after_lock(tmp_path, monkeypatch) -> None:
+    """X1：lock-impl 后 evidence-only commit 使 HEAD != locked impl SHA，Step-0 仍接受。
+
+    模拟正确流程：
+      code-only clean (HEAD=codeABC)
+      → --lock-impl（写 sentinel + dep manifest，worktree dirty）
+      → evidence-only commit（HEAD=evidDEF，diff 仅含 results/raw/phase3_p2_1/）
+      → --step0 接受（evidence-only diff 通过）
+    """
+    from patent_preexperiment.phase3_p2_1 import runner
+
+    _write_synthetic_sentinel(tmp_path)
+    monkeypatch.setattr(runner, "git_provenance", lambda _r: {
+        "code_sha": "codeABC", "worktree_clean": True,
+    })
+    runner.lock_implementation(tmp_path)
+
+    # 模拟 evidence-only commit 后：HEAD=evidDEF，git diff(codeABC, evidDEF) 只含 evidence
+    monkeypatch.setattr(runner, "git_provenance", lambda _r: {
+        "code_sha": "evidDEF", "worktree_clean": True,
+    })
+    monkeypatch.setattr(
+        runner, "_git_diff_name_only",
+        lambda _r, _a, _b: [
+            "patent_preexperiment/results/raw/phase3_p2_1/p2_1a_sentinel.json",
+            "patent_preexperiment/results/raw/phase3_p2_1/p2_1a_dependency_manifest.json",
+        ],
+    )
+
+    # Step-0 数据管线 monkeypatch（与 test_step0_does_not_write_status 同款）
+    elig = pd.DataFrame({
+        "session_id": [f"s{i}" for i in range(120)],
+        "segment_id": [f"s{i}#1" for i in range(120)],
+    })
+    counts_rows = []
+    for i in range(120):
+        for m in (B0, B1, B2A, B2B, B3, B4):
+            counts_rows.append({"session_id": f"s{i}", "segment_id": f"s{i}#1",
+                                "method": m, "cycle_index": 7})
+    counts = pd.DataFrame(counts_rows)
+
+    def fake_artifacts(_root):
+        out = tmp_path / "results" / "raw" / "phase3_p2_1"
+        out.mkdir(parents=True, exist_ok=True)
+        paths = {
+            "boundary_frame": out / "bf.parquet",
+            "eligible": out / "elig.parquet",
+            "b3_map": out / "b3.parquet",
+            "trigger_counts": out / "tc.parquet",
+        }
+        elig.to_parquet(paths["eligible"], index=False)
+        counts.to_parquet(paths["trigger_counts"], index=False)
+        pd.DataFrame().to_parquet(paths["boundary_frame"], index=False)
+        pd.DataFrame().to_parquet(paths["b3_map"], index=False)
+        return {"paths": {k: str(v.as_posix()) for k, v in paths.items()},
+                "sha256": {k: "x" for k in paths}}
+
+    monkeypatch.setattr(runner, "_step0_artifacts", fake_artifacts)
+    step0 = runner.run_step0(tmp_path)  # 不应抛错 = X1 闭合
+    assert step0["sufficiency"]["sufficient"] is True
+    assert step0["implementation_code_sha"] == "codeABC"  # 锁定的 impl SHA
+    s_after = runner._read_sentinel_strict(tmp_path)
+    assert s_after["status"] == "UNCONSUMED"  # Step-0 不改 status
+
+
+def test_x1_step0_rejects_non_evidence_diff(tmp_path, monkeypatch) -> None:
+    """X1：HEAD 相对 locked impl 变化了非 evidence 路径 → Step-0 拒绝。"""
+    from patent_preexperiment.phase3_p2_1 import runner
+
+    _write_synthetic_sentinel(tmp_path, implementation_code_sha="codeABC")
+    monkeypatch.setattr(runner, "git_provenance", lambda _r: {
+        "code_sha": "evidDEF", "worktree_clean": True,
+    })
+    # 含 src 变化 → 违规
+    monkeypatch.setattr(
+        runner, "_git_diff_name_only",
+        lambda _r, _a, _b: [
+            "patent_preexperiment/results/raw/phase3_p2_1/p2_1a_sentinel.json",
+            "patent_preexperiment/src/patent_preexperiment/phase3_p2_1/gate.py",
+        ],
+    )
+    with pytest.raises(RuntimeError, match="非 evidence 路径"):
+        runner.run_step0(tmp_path)
+
+
+def test_x2_formal_rejects_when_dependency_manifest_drifts(tmp_path, monkeypatch) -> None:
+    """X2：formal 前 dependency manifest SHA 漂移 → fail-closed。"""
+    from patent_preexperiment.phase3_p2_1 import runner
+
+    # 写一个 sentinel 含 dep manifest 记录 + SUFFICIENT step0
+    _write_synthetic_sentinel(
+        tmp_path, implementation_code_sha="abc123",
+        step0_data_sufficiency_status="SUFFICIENT",
+        step0_summary_sha256="will_set",
+        step0_artifacts={
+            "boundary_frame": "results/raw/phase3_p2_1/bf.parquet",
+            "eligible": "results/raw/phase3_p2_1/elig.parquet",
+            "b3_map": "results/raw/phase3_p2_1/b3.parquet",
+            "trigger_counts": "results/raw/phase3_p2_1/tc.parquet",
+        },
+        step0_artifact_sha256={
+            "boundary_frame": "x", "eligible": "x", "b3_map": "x", "trigger_counts": "x",
+        },
+        dependency_manifest_path="results/raw/phase3_p2_1/p2_1a_dependency_manifest.json",
+        dependency_manifest_sha256="fake_sha_drift",
+    )
+    out = tmp_path / "results" / "raw" / "phase3_p2_1"
+    out.mkdir(parents=True, exist_ok=True)
+    for name in ("bf", "elig", "b3", "tc"):
+        (out / f"{name}.parquet").write_bytes(b"data")
+    # dep manifest 文件存在但 SHA 与 sentinel 记录不一致
+    (out / "p2_1a_dependency_manifest.json").write_text("{}", encoding="utf-8")
+    # artifact SHA 必须真实匹配，否则会先在 artifact 校验处抛错（在 dep manifest 之前）
+    real_sha = {
+        "boundary_frame": runner._file_sha256(out / "bf.parquet"),
+        "eligible": runner._file_sha256(out / "elig.parquet"),
+        "b3_map": runner._file_sha256(out / "b3.parquet"),
+        "trigger_counts": runner._file_sha256(out / "tc.parquet"),
+    }
+    step0 = {
+        "sufficiency": {"sufficient": True},
+        "artifacts": {
+            "paths": {
+                "boundary_frame": "results/raw/phase3_p2_1/bf.parquet",
+                "eligible": "results/raw/phase3_p2_1/elig.parquet",
+                "b3_map": "results/raw/phase3_p2_1/b3.parquet",
+                "trigger_counts": "results/raw/phase3_p2_1/tc.parquet",
+            },
+            "sha256": real_sha,
+        },
+    }
+    (out / "p2_1a_step0.json").write_text(json.dumps(step0), encoding="utf-8")
+    # 修正 sentinel：step0 summary sha + artifact sha 为真实值，dep manifest SHA 留错
+    s = runner._read_sentinel_strict(tmp_path)
+    s["step0_summary_sha256"] = runner._file_sha256(out / "p2_1a_step0.json")
+    s["step0_artifact_sha256"] = real_sha
+    runner._write_sentinel(tmp_path, s)
+
+    monkeypatch.setattr(runner, "git_provenance", lambda _r: {
+        "code_sha": "abc123", "worktree_clean": True,
+    })
+    monkeypatch.setattr(runner, "_assert_evidence_only_diff", lambda *_a, **_k: None)
+    with pytest.raises(RuntimeError, match="dependency manifest SHA256"):
+        runner.run_formal_test(tmp_path)

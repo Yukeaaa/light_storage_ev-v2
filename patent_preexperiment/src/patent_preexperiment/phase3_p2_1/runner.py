@@ -60,6 +60,7 @@ _B3MAP_PATH = "results/raw/phase3_p2_1/p2_1a_b3_map.parquet"
 _TRIGGER_COUNTS_PATH = "results/raw/phase3_p2_1/p2_1a_trigger_counts.parquet"
 _TRIGGER_TABLE_PATH = "results/raw/phase3_p2_1/p2_1a_trigger_table.parquet"
 _BOOTSTRAP_PATH = "results/raw/phase3_p2_1/p2_1a_bootstrap_deltas.npz"
+_DEP_MANIFEST_PATH = "results/raw/phase3_p2_1/p2_1a_dependency_manifest.json"
 
 _BF_KEEP = [
     "session_id", "run_id", "segment_id", "timestamp_utc", "cycle_index",
@@ -165,14 +166,53 @@ def _load_pool(impl_root: Path) -> tuple[Any, pd.DataFrame]:
 
 
 # ---------------------------------------------------------------------------
-# --lock-impl（Blocker 6：锁 implementation SHA）
+# --lock-impl（Blocker 6：锁 implementation SHA + X2 dependency manifest）
 # ---------------------------------------------------------------------------
 
+def _build_dependency_manifest(impl_root: Path, impl_sha: str) -> dict[str, Any]:
+    """X2：生成 dependency manifest（运行环境固定证据）。
+
+    记录 python 版本、平台、关键包版本、项目 pyproject.toml SHA256、protocol blob SHA、
+    implementation_code_sha。落盘为 evidence artifact。
+    """
+    import platform as _platform
+    from importlib.metadata import PackageNotFoundError
+    from importlib.metadata import version as _pkg_version
+
+    def _v(name: str) -> str:
+        try:
+            return _pkg_version(name)
+        except PackageNotFoundError:
+            return "NOT_INSTALLED"
+
+    pyproject = impl_root / "pyproject.toml"
+    pyproject_sha = _file_sha256(pyproject) if pyproject.exists() else None
+
+    return {
+        "experiment_id": FROZEN.experiment_id,
+        "protocol_version": FROZEN.protocol_version,
+        "frozen_protocol_blob_sha": FROZEN.frozen_protocol_blob_sha,
+        "implementation_code_sha": impl_sha,
+        "python_version": _platform.python_version(),
+        "platform": _platform.platform(),
+        "packages": {
+            "numpy": _v("numpy"),
+            "pandas": _v("pandas"),
+            "pyarrow": _v("pyarrow"),
+            "scipy": _v("scipy"),
+            "PyYAML": _v("PyYAML"),
+        },
+        "pyproject_sha256": pyproject_sha,
+        "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
+    }
+
+
 def lock_implementation(impl_root: Path) -> dict[str, Any]:
-    """Implementation Review PASS 后锁 implementation_code_sha。
+    """Implementation Review PASS 后锁 implementation_code_sha + dependency manifest。
 
     要求：sentinel 存在且 UNCONSUMED、clean committed worktree、code_sha 非 unknown。
     只写 implementation_* 字段，不触碰 status（仍 UNCONSUMED）。
+    同时生成 p2_1a_dependency_manifest.json（X2），记其 SHA256 回 sentinel。
     """
     s = _read_sentinel_strict(impl_root)
     _require_unconsumed(s, "--lock-impl")
@@ -182,11 +222,20 @@ def lock_implementation(impl_root: Path) -> dict[str, Any]:
             "P2.1A --lock-impl：要求 clean committed worktree（纯代码 commit），"
             f"当前 code_sha={prov['code_sha']!r}, worktree_clean={prov.get('worktree_clean')!r}"
         )
+    impl_sha = prov["code_sha"]
+
+    # X2：dependency manifest
+    dep_manifest = _build_dependency_manifest(impl_root, impl_sha)
+    dep_path = impl_root / _DEP_MANIFEST_PATH
+    _write_json(dep_path, dep_manifest)
+
     s.update(
         {
-            "implementation_code_sha": prov["code_sha"],
+            "implementation_code_sha": impl_sha,
             "implementation_worktree_clean": prov["worktree_clean"],
             "implementation_locked_at": pd.Timestamp.now(tz="UTC").isoformat(),
+            "dependency_manifest_path": str(dep_path.as_posix()),
+            "dependency_manifest_sha256": _file_sha256(dep_path),
         }
     )
     _write_sentinel(impl_root, s)
@@ -231,7 +280,12 @@ def _step0_artifacts(impl_root: Path) -> dict[str, Any]:
 
 
 def run_step0(impl_root: Path) -> dict[str, Any]:
-    """Step-0：只读 eligible/trigger counts（§5 sufficiency）。禁止读 Y/gain/Δ/CI。"""
+    """Step-0：只读 eligible/trigger counts（§5 sufficiency）。禁止读 Y/gain/Δ/CI。
+
+    X1：不再要求 HEAD == locked_impl（lock-impl 会写 sentinel 使 worktree dirty，
+    commit 后 HEAD 变化）。改用与 formal 同一种 evidence-only diff 规则：
+    HEAD 相对 locked implementation SHA 只允许变化 allowlisted evidence paths。
+    """
     s = _read_sentinel_strict(impl_root)
     _require_unconsumed(s, "--step0")
     locked_impl = s.get("implementation_code_sha")
@@ -239,16 +293,15 @@ def run_step0(impl_root: Path) -> dict[str, Any]:
         raise RuntimeError("P2.1A --step0：implementation_code_sha 未锁，先跑 --lock-impl")
 
     prov = git_provenance(impl_root.parent)
-    if prov["code_sha"] == "unknown" or prov.get("worktree_clean") is not True:
+    if prov["code_sha"] == "unknown":
+        raise RuntimeError("P2.1A --step0：当前 code_sha 未知")
+    if prov.get("worktree_clean") is not True:
         raise RuntimeError(
-            "P2.1A --step0：要求 clean committed worktree（HEAD == locked impl SHA），"
+            "P2.1A --step0：要求 clean committed worktree（evidence-only commit 后），"
             f"当前 code_sha={prov['code_sha']!r}, worktree_clean={prov.get('worktree_clean')!r}"
         )
-    if prov["code_sha"] != locked_impl:
-        raise RuntimeError(
-            f"P2.1A --step0：当前 HEAD {prov['code_sha']} != locked implementation "
-            f"{locked_impl}；Step-0 必须在锁定的实现 commit 上跑"
-        )
+    # X1：evidence-only diff（允许 lock-impl 写 sentinel + dep manifest 后 evidence commit）
+    _assert_evidence_only_diff(impl_root, locked_impl, prov["code_sha"])
 
     artifacts = _step0_artifacts(impl_root)
     eligible = pd.read_parquet(impl_root / artifacts["paths"]["eligible"])
@@ -358,6 +411,19 @@ def run_formal_test(impl_root: Path) -> dict[str, Any]:
                 f"P2.1A hard gate（artifact integrity）：{name} SHA256 漂移 "
                 f"step0 记录={artifact_sha[name]} != 当前={actual}；禁止 exposure"
             )
+
+    # X2：dependency manifest SHA256 校验（lock-impl 时固定，formal 前不得篡改）
+    dep_path_str = s.get("dependency_manifest_path")
+    dep_sha = s.get("dependency_manifest_sha256")
+    if not dep_path_str or not dep_sha:
+        raise RuntimeError("P2.1A hard gate（X2）：dependency manifest 未在 sentinel 记录")
+    dep_path = impl_root / dep_path_str
+    if not dep_path.exists():
+        raise RuntimeError(f"P2.1A hard gate（X2）：dependency manifest 缺失：{dep_path}")
+    if _file_sha256(dep_path) != dep_sha:
+        raise RuntimeError(
+            "P2.1A hard gate（X2）：dependency manifest SHA256 漂移，禁止 exposure"
+        )
 
     # sentinel 在读取 test outcome 之前写 RUNNING（锁 formal code_sha）
     s.update(
@@ -493,6 +559,8 @@ def run_formal_test(impl_root: Path) -> dict[str, Any]:
         "artifact_sha256": step0["artifacts"]["sha256"],
         "trigger_table": str((impl_root / _TRIGGER_TABLE_PATH).as_posix()),
         "bootstrap_deltas": str((impl_root / _BOOTSTRAP_PATH).as_posix()),
+        "dependency_manifest": s.get("dependency_manifest_path"),
+        "dependency_manifest_sha256": s.get("dependency_manifest_sha256"),
         "implementation_code_sha": locked_impl,
         "formal_code_sha": prov["code_sha"],
         "worktree_clean": prov["worktree_clean"],
@@ -643,7 +711,9 @@ def main() -> None:
         s = lock_implementation(impl_root)
         print(json.dumps(
             {"implementation_code_sha": s.get("implementation_code_sha"),
-             "implementation_locked_at": s.get("implementation_locked_at")},
+             "implementation_locked_at": s.get("implementation_locked_at"),
+             "dependency_manifest_path": s.get("dependency_manifest_path"),
+             "dependency_manifest_sha256": s.get("dependency_manifest_sha256")},
             ensure_ascii=False, indent=2,
         ))
         return
