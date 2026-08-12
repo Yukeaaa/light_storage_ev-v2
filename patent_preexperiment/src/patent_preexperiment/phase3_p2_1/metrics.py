@@ -35,6 +35,8 @@ from patent_preexperiment.phase3_p2_1.triggers import (
 
 _TRIGGER_TABLE_COLS = ["session_id", "segment_id", "method", "cycle_index"]
 
+_COUNT_COLS = _TRIGGER_TABLE_COLS + ["timestamp_utc", "station_id"]
+
 
 def build_trigger_counts(
     eligible: pd.DataFrame,
@@ -43,10 +45,11 @@ def build_trigger_counts(
 ) -> pd.DataFrame:
     """Step-0 安全：每 baseline 每 segment 的第一个 trigger（不含 Y）。
 
-    列：session_id, segment_id, method, cycle_index。每 (segment_id, method) 至多一行。
+    列：session_id, segment_id, method, cycle_index, timestamp_utc, station_id。
+    每 (segment_id, method) 至多一行。station_id 仅供 formal diagnostics，不进 Gate。
     """
     if eligible.empty:
-        return pd.DataFrame(columns=_TRIGGER_TABLE_COLS + ["timestamp_utc"])
+        return pd.DataFrame(columns=_COUNT_COLS)
 
     frames: list[pd.DataFrame] = []
     for method in ALL_BASELINES:
@@ -58,6 +61,11 @@ def build_trigger_counts(
             raise ValueError(f"未知 baseline: {method!r}")
         if trig.empty:
             continue
+        station = (
+            trig["station_id"].to_numpy()
+            if "station_id" in trig.columns
+            else np.array(["unknown"] * len(trig), dtype=object)
+        )
         frames.append(
             pd.DataFrame(
                 {
@@ -66,11 +74,12 @@ def build_trigger_counts(
                     "method": method,
                     "cycle_index": trig["cycle_index"].to_numpy(),
                     "timestamp_utc": trig["timestamp_utc"].to_numpy(),
+                    "station_id": station,
                 }
             )
         )
     if not frames:
-        return pd.DataFrame(columns=_TRIGGER_TABLE_COLS + ["timestamp_utc"])
+        return pd.DataFrame(columns=_COUNT_COLS)
     return pd.concat(frames, ignore_index=True)
 
 
@@ -85,7 +94,7 @@ def build_trigger_table(
     Y 是该 cycle 的 outcome；映射不到或含 NaN → fail-closed。返回 bool 列 y。
     """
     if trigger_counts.empty:
-        return pd.DataFrame(columns=_TRIGGER_TABLE_COLS + ["y"])
+        return pd.DataFrame(columns=_TRIGGER_TABLE_COLS + ["timestamp_utc", "station_id", "y"])
     ymap = pd.DataFrame(
         {
             "segment_id": eligible["segment_id"].to_numpy(),
@@ -99,7 +108,8 @@ def build_trigger_table(
             "P2.1A fail-closed：部分 trigger 行映射不到 Y（eligible/Y 对齐损坏或 Y 未定义）"
         )
     merged["y"] = merged["y"].astype(bool)
-    return merged[["session_id", "segment_id", "method", "cycle_index", "y"]]
+    return merged[["session_id", "segment_id", "method", "cycle_index",
+                   "timestamp_utc", "station_id", "y"]]
 
 
 def point_metrics(

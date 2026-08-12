@@ -92,6 +92,7 @@ def build_eligible_risk_set(
     keep = [
         "session_id", "run_id", "segment_id", "timestamp_utc", "cycle_index",
         "protective_bound", "actual_power_kw", "history_sufficient", "post_window_ok",
+        "station_id", "site",  # formal diagnostics 需要站点身份（不进 Gate）
     ]
     return eligible[keep]
 

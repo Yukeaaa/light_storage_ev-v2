@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import json
+import sys
 from pathlib import Path
 from typing import Any
 
@@ -884,3 +885,89 @@ def test_x3_lock_impl_rejects_relock_after_head_changes(tmp_path, monkeypatch) -
         runner.lock_implementation(tmp_path)
     s_after = runner._read_sentinel_strict(tmp_path)
     assert s_after["implementation_code_sha"] == "codeABC"  # 未被覆盖
+
+
+# ---------------------------------------------------------------------------
+# formal diagnostics（审查 #4 closure：诊断不进 Gate / Step-0 不加载 / 确定性选取）
+# ---------------------------------------------------------------------------
+
+def test_step0_does_not_load_diagnostics_module(monkeypatch) -> None:
+    """审查 #4：执行 --step0 的进程不加载 formal_diagnostics（import 物理隔离）。"""
+    import importlib
+
+    import patent_preexperiment.phase3_p2_1.runner as runner
+
+    # 清除可能已加载的 formal_diagnostics
+    mod_name = "patent_preexperiment.phase3_p2_1.formal_diagnostics"
+    sys.modules.pop(mod_name, None)
+    # 重新 import runner（顶层不应加载 formal_diagnostics）
+    importlib.reload(runner)
+    after = mod_name in sys.modules
+    assert not after, (
+        "formal_diagnostics 在 runner 顶层被加载——Step-0 import 物理隔离破坏"
+    )
+
+
+def test_deterministic_failure_case_selection(tmp_path) -> None:
+    """审查 #4：失败案例选择机械固定——同输入两次调用得到同 20 案例。"""
+    from patent_preexperiment.phase3_p2_1.formal_diagnostics import (
+        generate_formal_diagnostics,
+    )
+
+    # 构造 25 个 B0 trigger 且 Y=0 的 trigger_table（应取前 20）
+    rows = []
+    for i in range(25):
+        ts = pd.Timestamp("2019-06-01", tz="UTC") + pd.Timedelta(minutes=i)
+        rows.append({
+            "session_id": f"sid_{i:03d}", "segment_id": f"sid_{i:03d}#1",
+            "method": B0, "cycle_index": 7 + i % 5,
+            "timestamp_utc": ts, "station_id": f"CA-{i % 3}", "y": False,
+        })
+    # 加一些 B0 trigger 且 Y=1（不应被选）
+    for i in range(5):
+        rows.append({
+            "session_id": f"ok_{i:03d}", "segment_id": f"ok_{i:03d}#1",
+            "method": B0, "cycle_index": 7,
+            "timestamp_utc": pd.Timestamp("2019-06-01", tz="UTC"),
+            "station_id": "CA-0", "y": True,
+        })
+    tt = pd.DataFrame(rows)
+    elig = pd.DataFrame({
+        "session_id": [f"sid_{i:03d}" for i in range(25)] + [f"ok_{i:03d}" for i in range(5)],
+        "segment_id": [f"sid_{i:03d}#1" for i in range(25)] + [f"ok_{i:03d}#1" for i in range(5)],
+        "timestamp_utc": [pd.Timestamp("2019-06-01", tz="UTC") + pd.Timedelta(minutes=i)
+                          for i in range(25)] + [pd.Timestamp("2019-06-01", tz="UTC")] * 5,
+        "station_id": [f"CA-{i % 3}" for i in range(25)] + ["CA-0"] * 5,
+        "site": ["jpl"] * 30,
+        "actual_power_kw": [1.0] * 30,
+        "protective_bound": [5.0] * 30,
+    })
+    bf = elig[["session_id", "segment_id", "timestamp_utc", "actual_power_kw",
+               "protective_bound", "station_id"]].copy()
+    bf["run_id"] = 1
+    bf["cycle_index"] = 7
+
+    d1 = generate_formal_diagnostics(tt, elig, bf, tmp_path / "diag1")
+    d2 = generate_formal_diagnostics(tt, elig, bf, tmp_path / "diag2")
+    assert d1["failure_cases"]["n_selected"] == 20
+    # 确定性：两次选取的案例完全一致
+    fc1 = pd.read_parquet(d1["failure_cases"]["path"])
+    fc2 = pd.read_parquet(d2["failure_cases"]["path"])
+    assert fc1.equals(fc2)
+    # 全部 Y=0
+    assert (~fc1["y"]).all()
+    # 按稳定排序的前 20：session_id 从 sid_000 到 sid_019
+    assert fc1["session_id"].tolist() == [f"sid_{i:03d}" for i in range(20)]
+
+
+def test_diagnostics_bypass_gate() -> None:
+    """审查 #4：诊断字段不改变 Gate 计算——Gate 只消费 point_metrics + delta_cis。"""
+    # Gate 输入与 test_gate_pass_all_six 完全相同；诊断存在与否不影响 verdict
+    point = _point_fixture()
+    cis = {"delta_b1": (0.2, 0.4), "delta_b3": (0.2, 0.4), "delta_b2": (0.05, 0.2)}
+    g = a_gate_verdict(point, cis)
+    assert g.verdict == "PASS"
+    assert len(g.conditions) == 6  # 诊断不增减 Gate 条件
+    # diagnostics 不出现在 gate 的 condition_details 中
+    for key in g.condition_details:
+        assert "diagnostics" not in key and "timing" not in key and "failure" not in key

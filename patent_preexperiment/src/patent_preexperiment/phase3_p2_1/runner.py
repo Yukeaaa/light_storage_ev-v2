@@ -69,6 +69,7 @@ _DEP_MANIFEST_PATH = "results/raw/phase3_p2_1/p2_1a_dependency_manifest.json"
 _BF_KEEP = [
     "session_id", "run_id", "segment_id", "timestamp_utc", "cycle_index",
     "protective_bound", "actual_power_kw", "post_window_ok",
+    "station_id", "site",  # formal diagnostics 需要站点身份（不进 Gate）
 ]
 
 _EVIDENCE_PREFIXES = ("patent_preexperiment/results/raw/phase3_p2_1/",)
@@ -205,6 +206,7 @@ def _build_dependency_manifest(impl_root: Path, impl_sha: str) -> dict[str, Any]
             "pyarrow": _v("pyarrow"),
             "scipy": _v("scipy"),
             "PyYAML": _v("PyYAML"),
+            "matplotlib": _v("matplotlib"),
         },
         "pyproject_sha256": pyproject_sha,
         "generated_at": pd.Timestamp.now(tz="UTC").isoformat(),
@@ -457,6 +459,9 @@ def run_formal_test(impl_root: Path) -> dict[str, Any]:
         bootstrap_delta_distributions,
         percentile_ci,
     )
+    from patent_preexperiment.phase3_p2_1.formal_diagnostics import (  # noqa: E402
+        generate_formal_diagnostics,
+    )
     from patent_preexperiment.phase3_p2_1.gate import a_gate_verdict  # noqa: E402
     from patent_preexperiment.phase3_p2_1.metrics import (  # noqa: E402
         build_trigger_table,
@@ -549,6 +554,13 @@ def run_formal_test(impl_root: Path) -> dict[str, Any]:
         delta_b1=dist["delta_b1"], delta_b3=dist["delta_b3"], delta_b2=dist["delta_b2"],
         n_boot=dist["n_boot"], seed=dist["seed"],
     )
+
+    # formal diagnostics（v1.3 §4.5 必报项；诊断/审计，不进 Gate）
+    diag_dir = impl_root / "results" / "raw" / "phase3_p2_1"
+    diagnostics = generate_formal_diagnostics(trigger_table, eligible, bf, diag_dir)
+    summary["diagnostics"] = diagnostics
+    _write_json(impl_root / _SUMMARY_PATH, summary)  # 重写含 diagnostics 的 summary
+
     _write_outcome_report(impl_root, summary)
 
     s.update(
@@ -573,6 +585,7 @@ def run_formal_test(impl_root: Path) -> dict[str, Any]:
         "artifact_sha256": step0["artifacts"]["sha256"],
         "trigger_table": str((impl_root / _TRIGGER_TABLE_PATH).as_posix()),
         "bootstrap_deltas": str((impl_root / _BOOTSTRAP_PATH).as_posix()),
+        "diagnostics": summary.get("diagnostics"),
         "dependency_manifest": s.get("dependency_manifest_path"),
         "dependency_manifest_sha256": s.get("dependency_manifest_sha256"),
         "implementation_code_sha": locked_impl,
@@ -680,6 +693,20 @@ def _write_outcome_report(impl_root: Path, summary: dict[str, Any]) -> None:
         lines += ["", "失败条件：", ""]
         for fc in gate["failed_conditions"]:
             lines.append(f"- {fc}")
+    # (7) formal diagnostics（v1.3 §4.5 必报项；诊断/审计，不进 Gate）
+    diag = summary.get("diagnostics")
+    if diag:
+        lines += ["", "## (7) Formal diagnostics（不进 Gate；审计材料）", ""]
+        lines.append(f"- timing distribution：{diag['timing_distribution']['path']}"
+                     f"（B0={diag['timing_distribution']['n_b0_triggers']}，"
+                     f"B1={diag['timing_distribution']['n_b1_triggers']}）"
+                     f" plot={diag['timing_distribution']['plot']}")
+        lines.append(f"- station/month 分层：{diag['station_month']['path']}"
+                     f"（{diag['station_month']['n_strata']} strata）")
+        lines.append(f"- failure cases（{diag['failure_cases']['n_selected']}）："
+                     f"{diag['failure_cases']['path']}"
+                     f" plot={diag['failure_cases']['plot']}")
+        lines.append(f"  - 选择规则：{diag['failure_cases']['selection_rule']}")
     report_path = impl_root / _REPORT_PATH
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text("\n".join(lines), encoding="utf-8")
