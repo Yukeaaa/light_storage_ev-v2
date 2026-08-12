@@ -1,0 +1,25 @@
+{
+  "experiment_id": "P2_1A_v1_3",
+  "protocol_version": "phase3_p2_1_preregistration_v1.3",
+  "status": "UNCONSUMED",
+  "frozen_protocol_commit_sha": "293ca11cbcfdae7d82ca21e184e44426999ea349",
+  "frozen_protocol_blob_sha": "7f09148b09f10b3a2ef89264e2031e3a5eca28a6",
+  "frozen_protocol_path": "patent_preexperiment/reports/patent_definition/phase3_p2_1_preregistration_v1.3.md",
+  "freeze_review": "APPROVED",
+  "freeze_basis": "审查 2608120033 第五轮签字；commit 293ca11 / blob 7f09148 / CI run #87 success",
+  "integrity": "protocol immutable after freeze; sentinel guards single formal exposure",
+  "code_sha": null,
+  "code_sha_locked": false,
+  "worktree_clean_at_code_lock": null,
+  "step0_data_sufficiency_status": "NOT_RUN",
+  "formal_exposure_started_at": null,
+  "formal_verdict": null,
+  "once_only": true,
+  "prohibited": [
+    "modifying frozen protocol (blob 7f09148) — would invalidate freeze",
+    "using Python built-in hash() for B3 trigger map / SIL noise — must use hashlib.md5/sha256",
+    "regenerating B3 trigger map during bootstrap — must query fixed artifact",
+    "reading Y / gain / Δ / CI during Step-0 data sufficiency",
+    "locking implementation SHA after formal outcome exposure"
+  ]
+}
