@@ -1,5 +1,12 @@
 # P2.1 Preregistration v1.1 — D3 Falsification + D2 Technical-Effect Closed-Loop SIL Gate
 
+> **⚠ 本文件已被 v1.2 取代（审查第三轮 8 项协议闭环修订）。权威版本：**
+> `phase3_p2_1_preregistration_v1.2.md`。本 v1.1 仅由 git 历史保留，**不得冻结**。
+> v1.1 的剩余 Freeze 漏洞：B3/B4/bootstrap 随机性未冻结（F1）、"消除 confound"过强（F2）、
+> requested_delta→P_cmd 动作链未闭合（F3）、emulator saturation 数学 bug（F4）、PI controller
+> 未冻结（F5）、C_true≠true capability 未处理（F6）、tracking residual 残留"或"（F7）、
+> B-core/B-recovery 判定冲突（F8）。详见 v1.2 §0 changelog。
+
 > 日期：2026-08-12（v1.1 草案，待 Review 通过后冻结）
 > 依据：P2 formal = SUCCESS / NARROW GO（`results/raw/phase3_p2/P2_patent_gate.md`，
 > mechanism realizability only）；审查 2608120033 第一轮（`review/项目现状2608120033.md`）
