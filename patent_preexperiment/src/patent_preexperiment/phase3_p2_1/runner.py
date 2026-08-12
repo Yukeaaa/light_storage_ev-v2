@@ -701,12 +701,27 @@ def _write_outcome_report(impl_root: Path, summary: dict[str, Any]) -> None:
                      f"（B0={diag['timing_distribution']['n_b0_triggers']}，"
                      f"B1={diag['timing_distribution']['n_b1_triggers']}）"
                      f" plot={diag['timing_distribution']['plot']}")
-        lines.append(f"- station/month 分层：{diag['station_month']['path']}"
-                     f"（{diag['station_month']['n_strata']} strata）")
-        lines.append(f"- failure cases（{diag['failure_cases']['n_selected']}）："
-                     f"{diag['failure_cases']['path']}"
-                     f" plot={diag['failure_cases']['plot']}")
-        lines.append(f"  - 选择规则：{diag['failure_cases']['selection_rule']}")
+        sm = diag["station_month"]
+        lines.append(f"- station/month 分层：{sm['path']}"
+                     f"（{sm['n_strata']} strata）")
+        worst = sm.get("worst_b0_station_month")
+        if worst:
+            lines.append(
+                f"- **worst B0 station/month**（gain 最低；tie→字典序）："
+                f"{worst['station_id']} / {worst['month']}"
+                f"（n={worst['n']}，gain={worst['gain']}）"
+            )
+        fc = diag["failure_cases"]
+        lines.append(f"- failure cases（n_selected={fc['n_selected']}，"
+                     f"n_available={fc['n_available']}，要求≥20）："
+                     f"{fc['path']}"
+                     f" plot={fc['plot']}")
+        lines.append(f"  - 选择规则：{fc['selection_rule']}")
+        if fc.get("diagnostic_shortfall"):
+            lines.append(
+                f"  - **DIAGNOSTIC_SHORTFALL**：可用 B0/Y=0 案例仅 {fc['n_available']} 个"
+                f"（< 20），已画出全部可用案例，不虚称满足“至少 20”"
+            )
     report_path = impl_root / _REPORT_PATH
     report_path.parent.mkdir(parents=True, exist_ok=True)
     report_path.write_text("\n".join(lines), encoding="utf-8")

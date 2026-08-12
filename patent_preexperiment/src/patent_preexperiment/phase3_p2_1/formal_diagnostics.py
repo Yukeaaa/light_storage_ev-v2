@@ -22,7 +22,8 @@ import pandas as pd
 
 from patent_preexperiment.phase3_p2_1.triggers import B0, B1
 
-_N_FAILURE_CASES = 20
+N_FAILURE_CASES = 20
+"""frozen v1.3 §4.5 要求的失败案例最少数量（公开常量，供 runner 报告引用）。"""
 _FIG_DPI = 100
 
 
@@ -57,7 +58,10 @@ def generate_formal_diagnostics(
     station_month = _station_month_stratified(trigger_table, eligible)
 
     # 3. ≥20 失败案例（B0 trigger 且 Y=0），机械固定选取
-    failure_cases = _select_failure_cases(trigger_table, eligible, bf, _N_FAILURE_CASES)
+    failure_cases = _select_failure_cases(trigger_table, eligible, bf, N_FAILURE_CASES)
+    n_failure_available = _count_b0_failures(trigger_table)
+    n_selected = int(len(failure_cases))
+    requirement_met = n_failure_available >= N_FAILURE_CASES
 
     # 4. 可视化（matplotlib Agg backend，无 GUI 依赖）
     timing_plot = _write_timing_plot(timing, out_dir / "p2_1a_timing_distribution.png")
@@ -73,24 +77,36 @@ def generate_formal_diagnostics(
     fc_path = out_dir / "p2_1a_failure_cases.parquet"
     failure_cases.to_parquet(fc_path, index=False)
 
+    # worst B0 stratum（gain 最低；tie → station_id, month 字典序）
+    worst_b0 = _worst_b0_stratum(station_month)
+
     return {
         "timing_distribution": {
             "path": str(timing_path.as_posix()),
             "plot": str(timing_plot.as_posix()),
-            "n_b0_triggers": int(timing["B0_count"].sum()) if "B0_count" in timing else 0,
-            "n_b1_triggers": int(timing["B1_count"].sum()) if "B1_count" in timing else 0,
+            "n_b0_triggers": int(
+                timing.loc[timing["method"] == B0, "count"].sum()
+            ) if not timing.empty else 0,
+            "n_b1_triggers": int(
+                timing.loc[timing["method"] == B1, "count"].sum()
+            ) if not timing.empty else 0,
         },
         "station_month": {
             "path": str(sm_path.as_posix()),
             "n_strata": int(len(station_month)),
+            "worst_b0_station_month": worst_b0,
         },
         "failure_cases": {
             "path": str(fc_path.as_posix()),
             "plot": str(failure_plot.as_posix()),
-            "n_selected": int(len(failure_cases)),
+            "n_selected": n_selected,
+            "n_available": n_failure_available,
+            "requirement_met": requirement_met,
+            "diagnostic_shortfall": (not requirement_met),
             "selection_rule": (
                 "B0 trigger & Y=0，按 (session_id, segment_id, timestamp_utc) "
-                f"稳定排序取前 {_N_FAILURE_CASES}，禁止人工挑图"
+                f"稳定排序取前 {min(N_FAILURE_CASES, n_failure_available)}/"
+                f"{N_FAILURE_CASES}，禁止人工挑图"
             ),
         },
     }
@@ -172,6 +188,36 @@ def _select_failure_cases(
     keep = ["session_id", "segment_id", "timestamp_utc", "cycle_index",
             "station_id", "actual_power_kw", "protective_bound", "y"]
     return b0[keep].reset_index(drop=True)
+
+
+def _count_b0_failures(trigger_table: pd.DataFrame) -> int:
+    """B0 trigger 且 Y=0 的总数（用于判断 ≥20 requirement 是否满足）。"""
+    b0 = trigger_table[(trigger_table["method"] == B0) & (~trigger_table["y"])]
+    return int(len(b0))
+
+
+def _worst_b0_stratum(station_month: pd.DataFrame) -> dict[str, Any] | None:
+    """B0 strata 中 gain 最低者；tie → (station_id, month) 字典序。
+
+    返回 {station_id, month, n, gain} 或 None（无 B0 strata）。
+    纯诊断，不进 Gate。
+    """
+    if station_month.empty:
+        return None
+    b0 = station_month[station_month["method"] == B0].copy()
+    if b0.empty:
+        return None
+    # gain 最低；tie → station_id, month 字典序（稳定机械选取）
+    b0 = b0.sort_values(
+        ["gain", "station_id", "month"], ascending=[True, True, True]
+    )
+    row = b0.iloc[0]
+    return {
+        "station_id": str(row["station_id"]),
+        "month": str(row["month"]),
+        "n": int(row["n"]),
+        "gain": float(row["gain"]) if pd.notna(row["gain"]) else None,
+    }
 
 
 def _write_timing_plot(timing: pd.DataFrame, path: Path) -> Path:

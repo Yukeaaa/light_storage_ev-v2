@@ -950,6 +950,10 @@ def test_deterministic_failure_case_selection(tmp_path) -> None:
     d1 = generate_formal_diagnostics(tt, elig, bf, tmp_path / "diag1")
     d2 = generate_formal_diagnostics(tt, elig, bf, tmp_path / "diag2")
     assert d1["failure_cases"]["n_selected"] == 20
+    # 审查 #5 item 3：n_available + requirement_met + 无 shortfall
+    assert d1["failure_cases"]["n_available"] == 25
+    assert d1["failure_cases"]["requirement_met"] is True
+    assert d1["failure_cases"]["diagnostic_shortfall"] is False
     # 确定性：两次选取的案例完全一致
     fc1 = pd.read_parquet(d1["failure_cases"]["path"])
     fc2 = pd.read_parquet(d2["failure_cases"]["path"])
@@ -958,6 +962,49 @@ def test_deterministic_failure_case_selection(tmp_path) -> None:
     assert (~fc1["y"]).all()
     # 按稳定排序的前 20：session_id 从 sid_000 到 sid_019
     assert fc1["session_id"].tolist() == [f"sid_{i:03d}" for i in range(20)]
+    # 审查 #5 item 1：timing n_b0_triggers 正确（不读不存在的 B0_count 列）
+    assert d1["timing_distribution"]["n_b0_triggers"] == 30  # 25 Y=0 + 5 Y=1
+    # 审查 #5 item 2：worst B0 station/month 已报告
+    worst = d1["station_month"]["worst_b0_station_month"]
+    assert worst is not None
+    assert "station_id" in worst and "month" in worst and "n" in worst and "gain" in worst
+
+
+def test_diagnostics_shortfall_when_fewer_than_20_failures(tmp_path) -> None:
+    """审查 #5 item 3：B0/Y=0 不足 20 → n_selected<20，diagnostic_shortfall=True。"""
+    from patent_preexperiment.phase3_p2_1.formal_diagnostics import (
+        generate_formal_diagnostics,
+    )
+
+    rows = []
+    for i in range(7):  # 仅 7 个失败案例
+        ts = pd.Timestamp("2019-06-01", tz="UTC") + pd.Timedelta(minutes=i)
+        rows.append({
+            "session_id": f"sid_{i:03d}", "segment_id": f"sid_{i:03d}#1",
+            "method": B0, "cycle_index": 7,
+            "timestamp_utc": ts, "station_id": "CA-0", "y": False,
+        })
+    tt = pd.DataFrame(rows)
+    elig = pd.DataFrame({
+        "session_id": [f"sid_{i:03d}" for i in range(7)],
+        "segment_id": [f"sid_{i:03d}#1" for i in range(7)],
+        "timestamp_utc": [pd.Timestamp("2019-06-01", tz="UTC") + pd.Timedelta(minutes=i)
+                          for i in range(7)],
+        "station_id": ["CA-0"] * 7,
+        "site": ["jpl"] * 7,
+        "actual_power_kw": [1.0] * 7,
+        "protective_bound": [5.0] * 7,
+    })
+    bf = elig[["session_id", "segment_id", "timestamp_utc", "actual_power_kw",
+               "protective_bound", "station_id"]].copy()
+    bf["run_id"] = 1
+    bf["cycle_index"] = 7
+
+    d = generate_formal_diagnostics(tt, elig, bf, tmp_path / "diag")
+    assert d["failure_cases"]["n_available"] == 7
+    assert d["failure_cases"]["n_selected"] == 7  # 不伪造，画全部
+    assert d["failure_cases"]["requirement_met"] is False
+    assert d["failure_cases"]["diagnostic_shortfall"] is True
 
 
 def test_diagnostics_bypass_gate() -> None:
