@@ -1,14 +1,35 @@
 # P2.1 Preregistration v1.3 — D3 Falsification + D2 Technical-Effect Closed-Loop SIL Gate
 
-> 日期：2026-08-12（v1.3 草案，待 Freeze Review 通过后冻结）
+> 日期：2026-08-12（v1.3 FREEZE-READY；待 Freeze Review 签字后冻结）
 > 依据：P2 formal = SUCCESS / NARROW GO（`results/raw/phase3_p2/P2_patent_gate.md`，
-> mechanism realizability only）；审查 2608120033 第一/二/三/四轮（`review/项目现状2608120033.md`）。
+> mechanism realizability only）；审查 2608120033 第一/二/三/四/五轮（`review/项目现状2608120033.md`）。
 > **P3 继续 HOLD**。本协议不"继续优化"，**专门杀这个发明核**。
 > 本文件不是法律意见；最终以专利代理师意见为准。
 
 ---
 
-## 0. v1.3 changelog（审查第四轮六项最终协议闭合，全部冻结）
+## 0. v1.3 changelog（审查第四轮六项 + 第五轮二项最终闭合，全部冻结）
+
+```text
+C1  A：PASS/FAIL 穷尽逻辑——PASS=CI_lower>0，FAIL=CI_lower<=0。
+C2  A：B3 trigger map 一次生成、永久固定；bootstrap 不重随机 B3。
+C3  B：P_target 与 C_true 完全解耦（外生 target bank，E1–E4 共用）。
+C4  B：P_base(t+1)=P_cmd(t)；冻结 P_base(0)=P_hw_max×0.5、P_hw_max=6.6kW。
+C5  B：冻结 noise/scenario sampling + scenario-level metric estimator。
+C6  B：B-core = full-chain technical-effect gate（非 D2 独立）；B-core PASS 不升 P-002。
+
+closure-1（第五轮 §1）B：B-recovery E1–E4 family aggregation 明确——Δ_unnec_prot 与
+      Δ_inf_rec 均须在 E1–E4 四个 family 分别满足 Gate（与 B-core 同"每 family 分别判"逻辑，
+      非 pooled、非先跨 family 平均）；任一 family FAIL → B-recovery FAIL（不回滚 B-core）。
+closure-2（第五轮 §2）B：B-core FAIL 时 P-002 **维持 C（mechanism-only）**，不降 D——
+      P-002 的 C 级证据来自 P2（机制可实现，已冻结验证），实验失败不能抹除历史机制证据；
+      Project No-Go 由 full-chain effect 不成立触发，非由 P-002 降 D 触发。
+```
+
+> **implementation 注意项（不阻断 Freeze，implementation review 时强制）**：B3 trigger map
+> 与 SIL noise 的 `hash(seed, ...)` 须用稳定跨进程/跨平台 hash（如仓库既有
+> `hashlib.md5/sha256` 机械映射，参考 P2 `seed_byte = int(md5(session_id)[:2],16)`），**不得**
+> 使用 Python built-in `hash()`（跨进程不稳定）；B3 trigger map 固化为 artifact。
 
 ```text
 C1  A：PASS/FAIL 穷尽逻辑——PASS=CI_lower>0，FAIL=CI_lower<=0（删除 v1.2 的"CI 包含 0"未覆盖
@@ -540,15 +561,19 @@ FAIL（任一成立 → B-core FAIL → full-chain 无技术效果 → Project N
 3. safety_invariant 违反；
 4. 任一 family 上 Δ_tracking：CI 上界 >= δ_track_ni。
 
-**B-recovery Gate（Arm2 vs Arm1；D3 marginal recovery value；仅在 B-core PASS 后判定）**：
+**B-recovery Gate（Arm2 vs Arm1；D3 marginal recovery value；仅在 B-core PASS 后判定；closure-1：E1–E4 family aggregation 与 B-core 同攻击逻辑）**：
 
-PASS（全部满足）：
-5. Δ_unnec_prot：95%CI 上界 < −δ_prot（Arm2 比 Arm1 少 ≥ 3 cycle unnecessary protective）；
-6. Δ_inf_rec：95%CI 上界 < δ_inf_ni_rec（Arm2 infeasible 不比 Arm1 差）。
+> **closure-1（审查第五轮 §1）**：B-recovery 的 Δ_unnec_prot 与 Δ_inf_rec **均须在 E1–E4
+> 四个 family 分别满足 Gate**（与 B-core 同一"每个 family 分别判"逻辑，非 pooled、非先跨
+> family 平均）。任一 family 上 FAIL → B-recovery FAIL。
 
-FAIL（任一成立 → B-recovery FAIL；**不回滚 B-core**，D2 仍存活，仅 D3 无独立价值）：
-5. Δ_unnec_prot：CI 上界 >= −δ_prot；
-6. Δ_inf_rec：CI 上界 >= δ_inf_ni_rec。
+PASS（在 E1/E2/E3/E4 每一个 family 上均全部满足）：
+5. Δ_unnec_prot：该 family 上 95%CI 上界 < −δ_prot（Arm2 比 Arm1 少 ≥ 3 cycle unnecessary protective）；
+6. Δ_inf_rec：该 family 上 95%CI 上界 < δ_inf_ni_rec（Arm2 infeasible 不比 Arm1 差）。
+
+FAIL（任一 family 上任一条件成立 → B-recovery FAIL；**不回滚 B-core**，full-chain 仍存活，仅 D3 无独立价值）：
+5. 任一 family 上 Δ_unnec_prot：CI 上界 >= −δ_prot；
+6. 任一 family 上 Δ_inf_rec：CI 上界 >= δ_inf_ni_rec。
 
 > **完全不要加 PV / BESS / 电价 / 经济收益指标。**
 
@@ -562,16 +587,22 @@ FAIL（任一成立 → B-recovery FAIL；**不回滚 B-core**，D2 仍存活，
 | **A FAIL** | D3 No-Go | §4.4 任一 FAIL 成立 → 极可能 Project No-Go |
 | **A DATA INSUFFICIENT** | HOLD | §5 机械阈值不满足；需新协议版本 + 新数据 |
 | **B-core PASS** | full-chain 有技术效果 | A PASS 后，§6.6 B-core 在全部 4 个 C_true family 上 PASS（C6：D1+D2+D3 组合效果，非 D2 独立） |
-| **B-core FAIL** | full-chain No-Go | §6.6 B-core 任一 FAIL → Project No-Go |
-| **B-recovery PASS** | D3 有独立技术价值 | B-core PASS 后，§6.6 B-recovery PASS |
-| **B-recovery FAIL** | D3 无独立价值（D2 仍存活） | B-core PASS 后，§6.6 B-recovery 任一 FAIL |
+| **B-core FAIL** | full-chain No-Go | §6.6 B-core 任一 FAIL → Project No-Go（closure-2：P-002 **维持 C** mechanism-only，不降 D；历史机制证据不抹除） |
+| **B-recovery PASS** | D3 有独立技术价值 | B-core PASS 后，§6.6 B-recovery 在全部 4 个 C_true family 上 PASS（closure-1） |
+| **B-recovery FAIL** | D3 无独立价值（full-chain 仍存活） | B-core PASS 后，§6.6 B-recovery 任一 family 任一 FAIL |
 
 **穷尽映射（F8；消除 v1.1 §6.5"任一 FAIL→D2 No-Go"与 §7"Arm1 also PASS→仅降 CLAIM 5"的冲突）**：
 
 ```text
 A DATA INSUFFICIENT          → HOLD（新协议 + 新数据；不判 No-Go，也不 PASS）
 A FAIL                       → D3 No-Go → 重判 Patent Gate（D3 区别锚消失）→ 极可能 Project No-Go
-A PASS, B-core FAIL          → full-chain No-Go → Project No-Go（P-002 降 D）
+A PASS, B-core FAIL          → full-chain No-Go → Project No-Go
+                                （closure-2：P-002 **维持 C** mechanism-only——P2 已证明
+                                clip/action-set 机制可实现，历史证据不抹除；但该 C 级机制
+                                证据不足以支撑当前 patent core，故 Project No-Go 不靠降 P-002
+                                实现，而靠 full-chain effect 不成立。effect claim 若有单独
+                                ID 则降 D，否则在 P-002 limitation 注明 "mechanism-only，
+                                full-chain effect 未验证"）
 A PASS, B-core PASS,
         B-recovery FAIL      → full-chain survives，D3 无独立技术价值
                                 → CLAIM 5 降弱从属；D3 区别锚弱化；回 Patent Gate /
@@ -583,10 +614,13 @@ A PASS, B-core PASS,
                                   技术效果已验证"；P-003 维持 C）
 ```
 
-> **C6 关键（审查 §6）**：Arm2 vs Arm0 证明的是 **D1+D2+D3 full-chain technical effect**，不
-> 能单独归因于 D2。B-core 重命名为 "full-chain closed-loop technical-effect gate"；B-core
-> PASS **不**把 P-002 升为"D2 独立技术效果已验证"，维持 P2 既有 controller mechanism C 级。
-> B-recovery（Arm2 vs Arm1）仍正确归因 D3 marginal value。
+> **closure-2 关键（审查第五轮 §2）**：B-core FAIL 是 **full-chain technical-effect failure**，
+> 不是 "D2 mechanism failure"。P-002 的 C 级证据来自 P2（clip/action-set 机制可实现，已冻结
+> 验证），**实验失败不能把已经存在的"机制可实现"历史证据抹掉**。故 B-core FAIL 时 P-002 维持
+> C（mechanism-only），Project No-Go 由 full-chain effect 不成立触发，而非由 P-002 降 D 触发。
+> **C6 关键（沿用 v1.3）**：Arm2 vs Arm0 证明的是 **D1+D2+D3 full-chain technical effect**，不
+> 能单独归因于 D2。B-core PASS **不**把 P-002 升为"D2 独立技术效果已验证"，维持 P2 既有
+> controller mechanism C 级。B-recovery（Arm2 vs Arm1）仍正确归因 D3 marginal value。
 > **F8 关键（沿用 v1.2）**：B-recovery FAIL **不回滚 B-core**（full-chain 仍存活，不 Project
 > No-Go）；D3 的独立价值由**直接 Arm2 vs Arm1**判断。
 
@@ -622,7 +656,7 @@ A PASS, B-core PASS,
 |---|---|---|
 | A FAIL（D3 无增量辨识力） | CLAIM 1 第 8/9 步 + CLAIM 5"实测响应驱动恢复"删除 → 恢复仅剩通信/停充/电池内部（prior art 已覆盖）→ 极可能 Project No-Go | P-003 降 D |
 | A DATA INSUFFICIENT | HOLD；CLAIM 5 维持"机制已观测；trigger 语义有效性 train 域证据不足" | P-003 维持 C（有条件） |
-| B-core FAIL（full-chain 无技术效果） | CLAIM 1 第 5/6 步"预算修正允许区间"退化为抽象措辞 → 按 Patent Gate 2 硬杀线 Project No-Go | P-002 降 D |
+| B-core FAIL（full-chain 无技术效果） | CLAIM 1 第 5/6 步"预算修正允许区间"退化为抽象措辞 → 按 Patent Gate 2 硬杀线 Project No-Go。**closure-2：P-002 维持 C（mechanism-only）**——P2 已证明 clip/action-set 机制可实现，历史证据不抹除；Project No-Go 由 full-chain effect 不成立触发，非由 P-002 降 D 触发 | P-002 维持 C（limitation 注明 mechanism-only / full-chain effect 未验证） |
 | B-core PASS, B-recovery FAIL（D3 无独立价值） | CLAIM 5 降为弱从属；D3 区别锚弱化；回 Patent Gate / 代理师重点审 ACN 族风险 | P-003 降 C-（弱）；P-002 维持 C（C6：B-core PASS 不升 P-002 为"D2 独立效果"） |
 
 **A PASS + B-core PASS + B-recovery PASS 的后果**：P-003 升 C（trigger 语义有效性 train 域
@@ -659,8 +693,25 @@ PI controller、target bank、P_base 状态方程、metric estimator、δ margin
 **实施前置**：本协议 v1.3 须通过 Freeze Review（核冻结项是否闭合、D3 参数真冻结、baseline
 真 adversarial、bootstrap 真冻结、A 穷尽逻辑无未定义分支、emulator 数学正确、PI controller
 真冻结、P_target 与 C_true 真解耦、P_base 状态方程真闭合、C_true 证据边界清楚、metric
-estimator 真冻结、双 Gate 判定无冲突、B-core 证据归属正确）→ 才可写 P2.1A 代码；P2.1A 结果
-先评审 → 才可运行 P2.1B。
+estimator 真冻结、双 Gate 判定无冲突、B-core 证据归属正确、**B-recovery E1–E4 aggregation
+明确**（closure-1）、**B-core FAIL 时 P-002 维持 C 不降 D**（closure-2））→ 才可写 P2.1A 代码；
+P2.1A 结果先评审 → 才可运行 P2.1B。
+**implementation review 强制项**：B3 trigger map / SIL noise 的 hash 须用 `hashlib.md5/
+sha256` 机械映射（非 built-in `hash()`），B3 trigger map 固化为 artifact。
+
+**Freeze 后执行顺序**：
+```text
+v1.3 final protocol Freeze
+→ 锁 protocol commit/blob SHA（现在可锁）
+→ 建立 P2.1A sentinel（UNCONSUMED）
+→ 开发 P2.1A implementation（synthetic/unit tests only）
+→ implementation review（含 hash 稳定性强制项）
+→ 锁 implementation SHA + clean worktree（代码完成、测试通过、正式接触 A outcome 之前锁）
+→ Step-0 data sufficiency（§5）
+→ formal exposure
+→ sentinel CONSUMED
+→ 一次性 A verdict
+```
 
 ---
 
