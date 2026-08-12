@@ -2,9 +2,13 @@
 
 执行序列（Freeze manifest 治理顺序；区分 implementation SHA 与 evidence commit SHA）：
     --lock-impl    : Implementation Review PASS 后锁 implementation_code_sha（clean worktree，
-                     HEAD = 纯代码 commit）。写入 sentinel，不触碰 status（仍 UNCONSUMED）。
+                     HEAD = 纯代码 commit）。**一次性**——已锁则永久拒绝重锁（X3）。
+                     写入 sentinel，不触碰 status（仍 UNCONSUMED）。同时生成 dependency
+                     manifest（X2）。产出 lock evidence → worktree 变 dirty → evidence-only commit。
     --step0        : 要求 sentinel UNCONSUMED + implementation_code_sha 已锁 + clean worktree
-                     + 当前 HEAD == locked impl SHA。构建 eligible / B3 map / trigger counts
+                     + HEAD 相对 locked impl SHA 只变化 allowlisted evidence paths（X1：
+                     不再要求 HEAD == locked impl，因 lock-impl 写 sentinel 后必 dirty、
+                     evidence commit 后 HEAD 必变）。构建 eligible / B3 map / trigger counts
                      （**全部不读 Y/gain/Δ/CI**），只输出 sufficiency 计数（§5）。
                      Step-0 **不写 status**，只附加 sufficiency/artifact 信息。
                      产出 evidence → worktree 变 dirty → evidence-only commit。
@@ -213,9 +217,19 @@ def lock_implementation(impl_root: Path) -> dict[str, Any]:
     要求：sentinel 存在且 UNCONSUMED、clean committed worktree、code_sha 非 unknown。
     只写 implementation_* 字段，不触碰 status（仍 UNCONSUMED）。
     同时生成 p2_1a_dependency_manifest.json（X2），记其 SHA256 回 sentinel。
+
+    X3：lock 是 **一次性**的——已锁则永久拒绝重锁（同一 SHA 也不行，避免重生成
+    locked_at / dep manifest SHA）。UNLOCKED → LOCKED 单向，直到 formal PASS/FAIL/ABORTED。
     """
     s = _read_sentinel_strict(impl_root)
     _require_unconsumed(s, "--lock-impl")
+    # X3：implementation_code_sha 已锁 → 永久拒绝重锁
+    existing = s.get("implementation_code_sha")
+    if existing not in (None, "", "unknown"):
+        raise RuntimeError(
+            f"P2.1A implementation already locked (sha={existing!r}); "
+            "re-lock prohibited（lock 是一次性的，直到 formal 结束）"
+        )
     prov = git_provenance(impl_root.parent)
     if prov["code_sha"] == "unknown" or prov.get("worktree_clean") is not True:
         raise RuntimeError(

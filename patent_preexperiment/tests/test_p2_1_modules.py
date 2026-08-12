@@ -850,3 +850,37 @@ def test_x2_formal_rejects_when_dependency_manifest_drifts(tmp_path, monkeypatch
     monkeypatch.setattr(runner, "_assert_evidence_only_diff", lambda *_a, **_k: None)
     with pytest.raises(RuntimeError, match="dependency manifest SHA256"):
         runner.run_formal_test(tmp_path)
+
+
+# ---------------------------------------------------------------------------
+# X3：lock 是一次性的——已锁则永久拒绝重锁（同一 SHA / 不同 HEAD 都拒绝）
+# ---------------------------------------------------------------------------
+
+def test_x3_lock_impl_rejects_second_lock_same_sha(tmp_path, monkeypatch) -> None:
+    """X3：同一 SHA 重复 lock 也拒绝（不幂等，避免重生成 locked_at/dep manifest SHA）。"""
+    from patent_preexperiment.phase3_p2_1 import runner
+
+    _write_synthetic_sentinel(tmp_path, implementation_code_sha="codeABC")
+    monkeypatch.setattr(runner, "git_provenance", lambda _r: {
+        "code_sha": "codeABC", "worktree_clean": True,
+    })
+    with pytest.raises(RuntimeError, match="already locked"):
+        runner.lock_implementation(tmp_path)
+    # sentinel 中的 implementation_code_sha 不变
+    s_after = runner._read_sentinel_strict(tmp_path)
+    assert s_after["implementation_code_sha"] == "codeABC"
+
+
+def test_x3_lock_impl_rejects_relock_after_head_changes(tmp_path, monkeypatch) -> None:
+    """X3 关键场景：lock(codeABC) → HEAD=laterXYZ → clean → status UNCONSUMED
+    → --lock-impl MUST FAIL，sentinel implementation_code_sha 仍 == codeABC。"""
+    from patent_preexperiment.phase3_p2_1 import runner
+
+    _write_synthetic_sentinel(tmp_path, implementation_code_sha="codeABC")
+    monkeypatch.setattr(runner, "git_provenance", lambda _r: {
+        "code_sha": "laterXYZ", "worktree_clean": True,
+    })
+    with pytest.raises(RuntimeError, match="already locked"):
+        runner.lock_implementation(tmp_path)
+    s_after = runner._read_sentinel_strict(tmp_path)
+    assert s_after["implementation_code_sha"] == "codeABC"  # 未被覆盖
