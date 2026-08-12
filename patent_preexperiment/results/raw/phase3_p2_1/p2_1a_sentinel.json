@@ -1,7 +1,7 @@
 {
   "experiment_id": "P2_1A_v1_3",
   "protocol_version": "phase3_p2_1_preregistration_v1.3",
-  "status": "UNCONSUMED",
+  "status": "CONSUMED",
   "frozen_protocol_commit_sha": "293ca11cbcfdae7d82ca21e184e44426999ea349",
   "frozen_protocol_blob_sha": "7f09148b09f10b3a2ef89264e2031e3a5eca28a6",
   "frozen_protocol_path": "patent_preexperiment/reports/patent_definition/phase3_p2_1_preregistration_v1.3.md",
@@ -9,11 +9,11 @@
   "freeze_basis": "审查 2608120033 第五轮签字；commit 293ca11 / blob 7f09148 / CI run #87 success",
   "integrity": "protocol immutable after freeze; sentinel guards single formal exposure",
   "code_sha": null,
-  "code_sha_locked": false,
-  "worktree_clean_at_code_lock": null,
+  "code_sha_locked": true,
+  "worktree_clean_at_code_lock": true,
   "step0_data_sufficiency_status": "SUFFICIENT",
-  "formal_exposure_started_at": null,
-  "formal_verdict": null,
+  "formal_exposure_started_at": "2026-08-12T16:33:16.757420+00:00",
+  "formal_verdict": "FAIL",
   "once_only": true,
   "prohibited": [
     "modifying frozen protocol (blob 7f09148) — would invalidate freeze",
@@ -51,5 +51,8 @@
       "B4": 13846
     }
   },
-  "step0_code_sha": "e8a58c4c7e96b1e6aed4a87af61e0db35a0a9841"
+  "step0_code_sha": "e8a58c4c7e96b1e6aed4a87af61e0db35a0a9841",
+  "formal_code_sha": "c59559e87d251eb8aba8f049443e7891f17e97e7",
+  "formal_exposure_completed_at": "2026-08-12T16:34:21.512117+00:00",
+  "outcome_report": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/P2_1A_outcome_report.md"
 }

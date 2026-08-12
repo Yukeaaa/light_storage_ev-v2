@@ -1,0 +1,56 @@
+{
+  "experiment_id": "P2_1A_v1_3",
+  "protocol_version": "phase3_p2_1_preregistration_v1.3",
+  "summary": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_summary.json",
+  "sentinel": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_sentinel.json",
+  "report": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/P2_1A_outcome_report.md",
+  "step0_summary": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_step0.json",
+  "artifacts": {
+    "boundary_frame": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_boundary_frame.parquet",
+    "eligible": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_eligible.parquet",
+    "b3_map": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_b3_map.parquet",
+    "trigger_counts": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_trigger_counts.parquet"
+  },
+  "artifact_sha256": {
+    "boundary_frame": "2473dd4fda23995c922078dc96aa5ecdce47efa8fd2c2bb4b0c8827eb27af970",
+    "eligible": "9f2084235f42a94d0947256a18dfbbf6505da746ff0ad6b6aa9af96f98f5a879",
+    "b3_map": "67be0906f3bebdc263d0dc1db6fef8015bbda95794e20fe4264fbfbf2d5a843a",
+    "trigger_counts": "840c2fc0b92cab8b1bece8e4e429cd4c4827be87baef2488ddc828195f804495"
+  },
+  "trigger_table": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_trigger_table.parquet",
+  "bootstrap_deltas": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_bootstrap_deltas.npz",
+  "diagnostics": {
+    "timing_distribution": {
+      "path": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_timing_distribution.parquet",
+      "plot": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_timing_distribution.png",
+      "n_b0_triggers": 14105,
+      "n_b1_triggers": 14215
+    },
+    "station_month": {
+      "path": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_station_month.parquet",
+      "n_strata": 3120,
+      "worst_b0_station_month": {
+        "station_id": "1-1-191-806",
+        "month": "2019-05",
+        "n": 24,
+        "gain": 0.625
+      }
+    },
+    "failure_cases": {
+      "path": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_failure_cases.parquet",
+      "plot": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_failure_cases.png",
+      "n_selected": 20,
+      "n_available": 1302,
+      "requirement_met": true,
+      "diagnostic_shortfall": false,
+      "selection_rule": "B0 trigger & Y=0，按 (session_id, segment_id, timestamp_utc) 稳定排序取前 20/20，禁止人工挑图"
+    }
+  },
+  "dependency_manifest": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_dependency_manifest.json",
+  "dependency_manifest_sha256": "45c570f10614c3a517b18970ad80fcc134adb05e86d9c6b1d546ffac40890809",
+  "implementation_code_sha": "ddfb6557118d36a6e7fd8bc5c99cc3bfdfe7406f",
+  "formal_code_sha": "c59559e87d251eb8aba8f049443e7891f17e97e7",
+  "worktree_clean": true,
+  "once_only": true,
+  "exit_code": 1
+}

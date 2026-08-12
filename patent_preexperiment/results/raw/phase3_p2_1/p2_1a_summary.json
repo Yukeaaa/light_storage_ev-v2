@@ -1,0 +1,161 @@
+{
+  "experiment_id": "P2_1A_v1_3",
+  "protocol_version": "phase3_p2_1_preregistration_v1.3",
+  "scope": "P2.1A A-gate formal exposure（单次；JPL train current_only，不合成）",
+  "data": "E0 minutes JPL train current_only（matched）",
+  "sufficiency": {
+    "sufficient": true,
+    "n_eligible_segments": 14227,
+    "min_eligible_segments": 100,
+    "trigger_distinct_sessions": {
+      "B0": 13840,
+      "B1": 13873,
+      "B2a": 13855,
+      "B2b": 11530,
+      "B3": 13874,
+      "B4": 13846
+    },
+    "min_trigger_sessions": 30,
+    "failed": []
+  },
+  "implementation_code_sha": "ddfb6557118d36a6e7fd8bc5c99cc3bfdfe7406f",
+  "point_metrics": {
+    "gains": {
+      "B0": 0.907692,
+      "B1": 0.837918,
+      "B2a": 0.875097,
+      "B2b": 0.904635,
+      "B3": 0.656568,
+      "B4": 0.888046
+    },
+    "delta_b1": 0.069775,
+    "delta_b3": 0.251124,
+    "delta_b2": 0.003057,
+    "best_rolling": 0.904635,
+    "coverage": {
+      "B0": 0.991425,
+      "B1": 0.999157,
+      "B2a": 0.997751,
+      "B2b": 0.820342,
+      "B3": 1.0,
+      "B4": 0.991987
+    },
+    "latency": {
+      "B0": 7.0,
+      "B1": 5.0,
+      "B2a": 5.0,
+      "B2b": 12.0,
+      "B3": 94.0,
+      "B4": 7.0
+    },
+    "n_triggers": {
+      "B0": 14105,
+      "B1": 14215,
+      "B2a": 14195,
+      "B2b": 11671,
+      "B3": 14227,
+      "B4": 14113
+    },
+    "n_eligible_segments": 14227
+  },
+  "bootstrap": {
+    "n_boot": 2000,
+    "n_invalid_delta_b1": 0,
+    "n_invalid_delta_b3": 0,
+    "n_invalid_delta_b2": 0,
+    "seed": 4073065459,
+    "universe_n_sessions": 13874,
+    "ci": {
+      "delta_b1": [
+        0.06415,
+        0.075163
+      ],
+      "delta_b3": [
+        0.242773,
+        0.259714
+      ],
+      "delta_b2": [
+        -0.003236,
+        0.009249
+      ]
+    }
+  },
+  "a_gate": {
+    "verdict": "FAIL",
+    "conditions": {
+      "c1_delta_b1": true,
+      "c2_delta_b3": true,
+      "c3_b4_dominance": true,
+      "c4_coverage_ni": true,
+      "c5_latency_ni": true,
+      "c6_delta_b2": false
+    },
+    "condition_details": {
+      "c1_delta_b1": {
+        "ci_lower": 0.06414984399563337,
+        "ci_upper": 0.0751625758272777
+      },
+      "c2_delta_b3": {
+        "ci_lower": 0.2427731177836149,
+        "ci_upper": 0.2597140526106252
+      },
+      "c3_b4_dominance": {
+        "gain_b0": 0.9076923076923077,
+        "gain_b4": 0.8880464819669808,
+        "holds": true
+      },
+      "c4_coverage_ni": {
+        "coverage_b0": 0.9914247557461165,
+        "coverage_b1": 0.999156533352077,
+        "required": 0.7993252266816616,
+        "ni_factor": 0.8
+      },
+      "c5_latency_ni": {
+        "latency_b0": 7.0,
+        "latency_b1": 5.0,
+        "allowed": 8.0,
+        "add_cycles": 3
+      },
+      "c6_delta_b2": {
+        "ci_lower": -0.0032361941091048423,
+        "ci_upper": 0.00924858345304635
+      }
+    },
+    "failed_conditions": [
+      "c6_delta_b2"
+    ]
+  },
+  "provenance": {
+    "code_sha": "c59559e87d251eb8aba8f049443e7891f17e97e7",
+    "worktree_clean": true
+  },
+  "step0_summary_sha256": "9e8bab7a9e72225d5105d8b6373798c7ec8f73ae52b255c085510a78caa2655f",
+  "artifact_sha256_verified": true,
+  "diagnostics": {
+    "timing_distribution": {
+      "path": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_timing_distribution.parquet",
+      "plot": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_timing_distribution.png",
+      "n_b0_triggers": 14105,
+      "n_b1_triggers": 14215
+    },
+    "station_month": {
+      "path": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_station_month.parquet",
+      "n_strata": 3120,
+      "worst_b0_station_month": {
+        "station_id": "1-1-191-806",
+        "month": "2019-05",
+        "n": 24,
+        "gain": 0.625
+      }
+    },
+    "failure_cases": {
+      "path": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_failure_cases.parquet",
+      "plot": "D:/JobWorkspaces/light_storage_ev-v2/patent_preexperiment/results/raw/phase3_p2_1/p2_1a_failure_cases.png",
+      "n_selected": 20,
+      "n_available": 1302,
+      "requirement_met": true,
+      "diagnostic_shortfall": false,
+      "selection_rule": "B0 trigger & Y=0，按 (session_id, segment_id, timestamp_utc) 稳定排序取前 20/20，禁止人工挑图"
+    }
+  }
+}
