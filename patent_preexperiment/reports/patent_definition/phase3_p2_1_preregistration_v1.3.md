@@ -1,20 +1,58 @@
-# P2.1 Preregistration v1.2 — D3 Falsification + D2 Technical-Effect Closed-Loop SIL Gate
+# P2.1 Preregistration v1.3 — D3 Falsification + D2 Technical-Effect Closed-Loop SIL Gate
 
-> **⚠ 本文件已被 v1.3 取代（审查第四轮 6 项最终协议闭合）。权威版本：**
-> `phase3_p2_1_preregistration_v1.3.md`。本 v1.2 仅由 git 历史保留，**不得冻结**。
-> v1.2 的剩余 Freeze 漏洞：A PASS/FAIL 未穷尽（C1）、B3 trigger realization 未固定（C2）、
-> P_target 读取 C_true oracle（C3）、P_base 状态方程未闭合（C4）、noise/estimator 未冻结
-> （C5）、B-core 证据归属过强（C6）。详见 v1.3 §0 changelog。
-
-> 日期：2026-08-12（v1.2 草案，待 Freeze Review 通过后冻结）
+> 日期：2026-08-12（v1.3 草案，待 Freeze Review 通过后冻结）
 > 依据：P2 formal = SUCCESS / NARROW GO（`results/raw/phase3_p2/P2_patent_gate.md`，
-> mechanism realizability only）；审查 2608120033 第一/二/三轮（`review/项目现状2608120033.md`）。
+> mechanism realizability only）；审查 2608120033 第一/二/三/四轮（`review/项目现状2608120033.md`）。
 > **P3 继续 HOLD**。本协议不"继续优化"，**专门杀这个发明核**。
 > 本文件不是法律意见；最终以专利代理师意见为准。
 
 ---
 
-## 0. v1.2 changelog（审查第三轮八项协议闭环修订，全部冻结）
+## 0. v1.3 changelog（审查第四轮六项最终协议闭合，全部冻结）
+
+```text
+C1  A：PASS/FAIL 穷尽逻辑——PASS=CI_lower>0，FAIL=CI_lower<=0（删除 v1.2 的"CI 包含 0"未覆盖
+     CI=[负,负] 的漏洞；B1/B2/B3 全部统一）。纯逻辑 closure，不改变统计设计。
+C2  A：B3 trigger realization 一次生成、永久固定——对每个 (session_id, M3_segment_id) 用
+     hash(global_seed, session_id, segment_id) 从该 segment 的 eligible-risk-set cycles 中
+     均匀选 1 个；bootstrap 只重采样 session cluster，不重新随机 B3 trigger（避免 cluster
+     被重复抽到时产生新 realization）。B3 抽样区间限定为 eligible-risk-set cycles（与统一
+     risk set 的 post-window W=10 要求合并，消除两处规则歧义）。
+C3  B：P_target 与 C_true 完全解耦——P_target 改为外生 target bank，E1–E4 共用同一 P_target(t)；
+     v1.2 的 P_target=ΣC_true×70%×sin 使 controller 获得 C_true oracle，E2/E3 uplift 同时放大
+     target、E4 实时读取 C_true(t) 波动，adverse family 压力被部分抵消。
+C4  B：P_base 状态方程闭合——P_base(t+1)=P_cmd(t)（v1.2 的 P_base+delta_exec 不 clip 会产生
+     负 budget / 超硬件 budget 的非物理内部状态）；冻结 P_base(0) 与 P_hw_max 唯一数值/映射规则。
+C5  B：冻结 SIL noise/scenario sampling + scenario-level metric estimator——noise seed
+     hash(global_noise_seed, scenario_id, family_id)；scenario sampling with replacement；
+     metric 一律"每 scenario 先算 1 个值 → Arm 间 paired scenario difference → 对 300 个
+     paired differences 做 scenario bootstrap"（非 pooled cycle rate）；unnecessary_protective_
+     duration estimator = 每 scenario 内各 M3 segment duration 的均值（cycle/segment）。
+C6  B：B-core 证据归属校正——Arm2vsArm0 是 D1+D2+D3 full-chain technical effect，非"D2 独立
+     效果"；B-core 重命名为 full-chain closed-loop technical-effect gate；B-core PASS 不把
+     P-002 升为"D2 独立技术效果已验证"，维持 controller mechanism C 级（P2 既有证据）；
+     B-recovery（Arm2vsArm1）仍正确归因 D3 marginal value。
+```
+
+> v1.3 **未改动**：D3 trigger 参数（§3）、A→B 前置硬门、Y 语义、coverage/latency non-inferiority、
+> 删除 Conditional 后门、动作链（§6.1）、emulator saturation 数学（§6.2，F4 已闭合）、C_true
+> 4 family（§6.2，F6 已闭合）、tracking residual 唯一定义（F7 已闭合）、双 Gate 拆分（F8 已
+> 闭合）、δ margins、禁止调参救场、JPL train only、不引入 ML/PV/BESS/经济收益——均沿用 v1.2。
+
+---
+
+## 0.1 v1.2 changelog（审查第三轮八项，历史保留；均已 CLOSED）
+
+```text
+F1  A：冻结 B3/B4 随机性 + cluster bootstrap；B2 functional。
+F2  A："消除 confound"→"控制并审计"。
+F3  B：闭合 requested_delta → delta_exec → P_cmd 动作链。
+F4  B：修 emulator saturation 数学 bug。
+F5  B：冻结 PI controller（v1.3 C3/C4 进一步闭合 target 解耦与 P_base 状态方程）。
+F6  B：C_true → latent feasible-envelope proxy + 4 adverse families。
+F7  B：tracking residual 唯一定义。
+F8  B：B-core / B-recovery 双 Gate 拆分。
+```
 
 ```text
 F1  A：冻结 B3/B4 随机性（RNG seed/每 segment 抽样次数/charging phase 机械定义；B4 删除"或"
@@ -62,8 +100,8 @@ P2 证明 D1/D2/D3 设备动作链**机制可实现**（M1/M2/M4 实现正确性
 P2.1A  D3 Falsification     recovery trigger 是否有超过 persistence 的增量辨识力？
         ↓ FAIL / DATA INSUFFICIENT
         ↓ PASS only
-P2.1B  D2 Closed-loop SIL   B-core (D2 effect) + B-recovery (D3 marginal value)
-        ↓ B-core FAIL       D2 No-Go → Project No-Go
+P2.1B  D2 Closed-loop SIL   B-core (full-chain effect, C6) + B-recovery (D3 marginal value)
+        ↓ B-core FAIL       full-chain No-Go → Project No-Go
         ↓ B-core PASS
 专利代理师检索（ACN element-mapping + EP/CNIPA + ISO 15118）→ FILING GO 候选
 ```
@@ -100,7 +138,7 @@ feasible-envelope proxy C_true(t)）的最小闭环中，D1+D2+D3 相对 unrestr
 **问题 B-recovery**：D3 recovery 相对"永远 PROTECTIVE"（Arm1），是否在 B-core PASS 前提下
 降低 unnecessary protective duration ≥ δ 且不引入新 infeasible？
 
-**零假设 H_B0**：B-core 任一 superiority 条件不成立或 non-inferiority 被违反 → **D2 No-Go**。
+**零假设 H_B0**：B-core 任一 superiority 条件不成立或 non-inferiority 被违反 → **full-chain No-Go**（C6）。
 **零假设 H_BR0**：B-recovery 不成立 → D3 无独立技术价值（CLAIM 5 降弱从属，但 B-core PASS
 不回滚——D2 仍存活）。
 
@@ -166,11 +204,15 @@ B1  simple persistence   连续 3 cycle，max(actual) − min(actual) <= 5% × m
                          （机械冻结 ε = 5%×median；"功率稳定几分钟"）
 B2a rolling median       actual >= rolling_median(actual, window=15min, shift(1))，连续 3 cycle
 B2b rolling max          actual >= rolling_max(actual, window=15min, shift(1))，连续 3 cycle
-B3  random matched       charging phase = 同 session 内 M3 segment 的连续 cycle 区间
-                         （机械定义：从该 segment 的第一个 eligible cycle 起，到 segment 末或
-                         disconnect/severe gap 前的连续区间）；在该 phase 长度区间内用
-                         冻结 RNG（seed=20260813_A）均匀抽 1 个时点；每 segment 抽 1 次
-                         （不重复抽样取最优）
+B3  random matched       charging phase = 同 session 内 M3 segment 的 **eligible-risk-set
+                         cycles**（机械定义：满足 §4.2 统一 risk set + post-window W=10 完整
+                         的 cycle 区间——合并 v1.2 "phase 长度区间"与"post-window 要求"两处
+                         规则为唯一定义）；对每个 (session_id, M3_segment_id) 用
+                         hash(global_seed=20260813_A, session_id, segment_id) 从该 segment 的
+                         eligible cycles 中均匀选 1 个 trigger。
+                         **B3 trigger map 一次生成、永久固定**；bootstrap 只重采样 session
+                         cluster，不重新随机 B3 trigger（避免 cluster 被重复抽到时产生新
+                         realization）。每 segment 抽 1 次（不重复抽样取最优）。
 B4  lag-shuffle null     用 actual 的 lag(1) 版本触发 B0 条件（破坏当 cycle 与历史同时序
                          关系；"shuffle"语义统一为 lag(1)，删除 v1.1 的"lag(1)/shuffle"二选一）
 ```
@@ -226,10 +268,13 @@ RNG seed             20260813_B（冻结）
 per replicate        重采样 session 集合 → 在被抽中的 sessions 上重算每 segment 第一个
                      trigger → 重算 gain(m) → 重算 Δ(B1)/Δ(B3)/Δ(B2)（含 max[B2a,B2b]）
                      完整 functional
+                     **C2：B3 trigger map 固定，bootstrap 不重新随机 B3**（只用已固定的
+                     B3 trigger map 在被抽中 sessions 上查表；B0/B1/B2a/B2b 的 trigger
+                     由各自规则在 resample 后的 session 子集上重算，因它们是确定性的）
 CI                   percentile 95%CI（[2.5%, 97.5%]）
 ```
 
-**PASS 条件（A，全部满足）**：
+**PASS 条件（A，全部满足；C1 穷尽逻辑）**：
 1. Δ(B1) 的 95%CI **下界** > 0（D3 严格优于 persistence）；
 2. Δ(B3) 的 95%CI 下界 > 0（D3 严格优于随机匹配）；
 3. gain(B0) > gain(B4)（null control sanity）；
@@ -237,12 +282,16 @@ CI                   percentile 95%CI（[2.5%, 97.5%]）
 5. latency non-inferiority 成立（B0 <= B1+3）；
 6. Δ(B2) 的 95%CI 下界 > 0（D3 优于最强 rolling baseline；诊断性加严门，防止 Q95 无特殊价值）。
 
-**FAIL 条件（A，任一成立 → D3 No-Go）**：
-1. Δ(B1) 的 95%CI 包含 0；
-2. Δ(B3) 的 95%CI 包含 0；
+**FAIL 条件（A，任一成立 → D3 No-Go；C1 穷尽逻辑：FAIL = NOT PASS，即 CI_lower <= 0）**：
+1. Δ(B1) 的 95%CI **下界** <= 0（不严格优于 persistence；覆盖 CI=[负,负] 与 CI 包含 0）；
+2. Δ(B3) 的 95%CI 下界 <= 0；
 3. gain(B0) <= gain(B4)（trigger 无意义）；
 4. coverage 或 latency non-inferiority 违反（D3 靠选择性触发换 precision）；
-5. Δ(B2) 的 95%CI 包含 0（Q95 无增量；诊断性 FAIL）。
+5. Δ(B2) 的 95%CI 下界 <= 0（Q95 无增量；诊断性 FAIL）。
+
+> **C1 穷尽说明**：v1.2 的 FAIL 写"CI 包含 0"未覆盖 CI=[-0.20,-0.05]（既不 PASS 也不"包含 0"
+> → 无 verdict）。v1.3 改为 `PASS = CI_lower > 0` / `FAIL = CI_lower <= 0`，二态穷尽，无未定义
+> 分支（B1/B2/B3 全部统一）。sanity gate（#3）与 non-inferiority gate（#4/#5）本就是二态。
 
 > 报告绝对量 gain(m) 与相对量 Δ(m) 同报；必须报最差站点/月份；至少 20 个失败案例可视化；
 > 报告 B0/B1 触发时点分布（timing confound 审计材料，F2）。
@@ -345,7 +394,11 @@ family E4  volatile envelope    C_true(t) = E1 × (1 + 0.2×sin(2πt/T))，T=30 
 - 每个 scenario 同时跑 E1–E4 四个 C_true family（同一 latent trajectory base，仅 envelope
   变换）；**B-core PASS 须在全部 4 个 family 上成立**（任一 family FAIL → D2 在该假设下
   无效果，记为 B-core conditional FAIL，触发 §7 穷尽映射）；
-- scenario bank N=300（从 JPL train sessions 采样，冻结 seed=20260812）；
+- **C5 scenario sampling**：N=300 scenarios，从 JPL train sessions 用
+  `Generator(seed=20260812).choice(session_ids, size=300, replace=True)` 采样（with replacement）；
+- **C5 noise realization**：每个 (scenario_id, family_id) 的 noise(t) 用
+  `seed=hash(global_noise_seed=20260813_D, scenario_id, family_id)` 生成；Arm0/1/2 共享
+  完全相同 noise realization（paired counterfactual）；
 - 三臂共享同一 C_true family + 同一 latent trajectory base + noise + controller target
   （paired counterfactual，只改 gate）。
 
@@ -365,16 +418,44 @@ integrator init       I(0) = 0
 anti-windup           I(t) clamp to [−10, +10]（冻结，防积分饱和）
 request clamp         requested_delta clamp to [−3, +3] kW（冻结，与 P2 probe 量级一致
                       但由 controller 独立产生，非枚举）
-P_base(t) 更新        P_base(t+1) = P_base(t) + delta_exec(t)
-                      （三臂均如此；delta_exec 按 arm 不同 → P_base 演化分叉）
-P_target(t)           站级功率目标轨迹 = Σ EV C_true 的 70% × (1 + 0.1×sin(2πt/T_target))
-                      （T_target=120 cycle；模拟站级调度目标在 C_true 70% 附近波动，留出
-                      向上修正空间——既非总超功率也非极保守）
-controller RNG seed   20260813_C（冻结；target 轨迹与 P_base 演化确定性）
+P_base(t) 更新        P_base(t+1) = P_cmd(t)        （C4：闭合状态方程，见 §6.3b）
+P_target(t)           **C3：外生 target bank，与 C_true 完全解耦**
+                      P_target(t) = target_bank[scenario_id](t)
+                      target_bank 由 station rated power（P_hw_max）的 70% ×
+                      (1 + 0.1×sin(2πt/T_target))，T_target=120 cycle 生成——
+                      基于**硬件额定值**（外生、固定），**不读取 C_true(t)**。
+                      E1–E4 共用完全相同的 P_target(t)（同一 scenario 的 4 family
+                      target 完全一致；C_true 改变时 target 不变）。
+                      target bank 在 scenario 采样时一次性预生成（seed=20260813_C）。
+controller RNG seed   20260813_C（冻结；target bank 预生成 + P_base 演化确定性）
 ```
 
-> **F5 关键**：EMS request aggressive 程度直接决定 D2 看起来多有用——controller 全参数冻结，
-> 三臂共享相同 controller + 相同 target trajectory + 相同 seed。`requested_delta` 由 PI
+> **C3 关键（审查 §3）**：v1.2 的 `P_target=ΣC_true×70%×sin` 使 controller 获得 C_true oracle
+> ——E2/E3 uplift 同时放大 target、E4 实时读取 C_true(t) 波动，adverse family 压力被部分抵消
+> （被测 envelope 与控制器目标同步放大/波动）。v1.3 改为外生 target bank（基于 P_hw_max），
+> E1–E4 共用同一 target：C_true 变难时 controller 要求不变，**adverse family 才真正成立**。
+
+### 6.3b P_base 状态方程与初始/硬件上限冻结（C4）
+
+> **C4 关键（审查 §4）**：v1.2 的 `P_base(t+1)=P_base(t)+delta_exec(t)` 不 clip——当
+> P_base=1, delta_exec=−3 时 P_cmd=0（物理命令正确 clip），但内部状态 P_base(next)=−2
+> （不存在的负 budget），下一周期 PI 在非物理状态上计算；同理可超硬件上限。v1.3 闭合：
+
+```text
+P_base(t+1) = P_cmd(t)               （C4：内部状态 = 上一周期实际物理命令，永远物理可行）
+P_base(0)   = P_hw_max × 0.5         （冻结：初始 budget = 硬件上限的 50%）
+P_hw_max    = 6.6 kW                 （冻结：per-EV 硬件上限，取 JPL caltech/office001 常见
+                                       单桩额定 6.6 kW；P_cmd 与 P_base 上限一致）
+```
+
+> `P_base(t+1)=P_cmd(t)` 与 `P_base(t+1)=clip(P_base(t)+delta_exec(t),0,P_hw_max)` 等价
+> （因 P_cmd(t)=clip(P_base(t)+delta_exec(t),0,P_hw_max)），但前者语义更清晰：内部 budget
+> 始终等于上一周期真正下发的物理命令，不存在非物理中间态。三臂均如此；delta_exec 按 arm
+> 不同 → P_cmd 分叉 → P_base 演化分叉（paired counterfactual 在同一初始条件 + 同一 target +
+> 同一 noise 下展开）。
+
+> **F5 关键（沿用 v1.2）**：EMS request aggressive 程度直接决定 D2 看起来多有用——controller
+> 全参数冻结，三臂共享相同 controller + 相同 target bank + 相同 seed。`requested_delta` 由 PI
 > controller 独立产生，**不**为"让 clip 生效"枚举 probe。
 
 ### 6.4 三臂（Arm1 机械定义沿用 v1.1 §6.3）
@@ -387,38 +468,52 @@ Arm 1  D1+D2          有信息类别分级 + 预算修正允许区间，但无 
 Arm 2  D1+D2+D3       完整设备动作链
 ```
 
-### 6.5 物理控制指标（F3/F7；infeasible/violation 基于 P_cmd vs C_true；tracking 唯一定义）
+### 6.5 物理控制指标（F3/F7/C5；infeasible/violation 基于 P_cmd vs C_true；tracking 唯一定义；scenario-level estimator）
+
+> **C5 estimator 冻结（审查 §5）**：v1.2 未冻结 metric 是"pooled cycle rate"还是"per-scenario
+> 先算再平均"——长/短 session 权重会完全不同。v1.3 统一为：
+> **每 scenario 先算 1 个 metric 值 → Arm 间做 paired scenario difference → 对 300 个 paired
+> differences 做 scenario bootstrap**（resample unit = scenario，percentile 95%CI）。
+> 这样长/短 session 等权，且 paired counterfactual 干净。
 
 所有差值 Δ = Arm2 − Arm0（B-core）或 Arm2 − Arm1（B-recovery）；percentile bootstrap 95%CI
-（§4.4 冻结设定；resample unit = scenario）。
+（N_boot=2000，seed=20260813_E，resample unit = scenario）。
 
 ```text
-—— B-core 指标（Arm2 vs Arm0；D2 technical effect）——
-Δ_inf       = rate_infeasible(Arm2) − rate_infeasible(Arm0)
-              infeasible 定义：P_cmd(t) > C_true(t) + tol（基于 emulator 独立 envelope proxy，
-              不是 D2 自己的 boundary；防 M2 自证；与 CLAIM 1 第 6 步 clip 后物理命令同构）
-              tol 冻结 = 0.1 kW
+—— B-core 指标（Arm2 vs Arm0；full-chain technical effect，C6）——
+per-scenario metric:
+  rate_infeasible(scn)      = n(P_cmd(t) > C_true(t) + tol) / n_cycles(scn)
+  rate_violation(scn)       = n(P_cmd(t) > C_true(t))        / n_cycles(scn)
+  tracking_residual(scn)    = median |actual_power(t) − P_cmd(t)|   ← F7 唯一定义
+  unsupported_pos_corr(scn) = n(PROTECTIVE 段 final_delta>0) / n_cycles(scn)   （safety invariant）
 
-Δ_violation = rate_violation(Arm2) − rate_violation(Arm0)
-              violation 定义：P_cmd(t) > C_true(t)（越过 latent feasible envelope；
-              非 actual 越 protective boundary——后者只说明边界保守，方向不明）
+paired difference per scenario:
+  Δ_inf(scn)       = rate_infeasible(Arm2, scn) − rate_infeasible(Arm0, scn)
+  Δ_violation(scn) = rate_violation(Arm2, scn)  − rate_violation(Arm0, scn)
+  Δ_tracking(scn)  = tracking_residual(Arm2, scn) − tracking_residual(Arm0, scn)
 
-safety_invariant  unsupported_positive_correction_rate(Arm2) == 0
-              （PROTECTIVE U=0 必然为 0，controller invariant / regression check，
-              不作 superiority gate）
-
-Δ_tracking = tracking_residual(Arm2) − tracking_residual(Arm0)
-              tracking_residual = median |actual_power(t) − P_cmd(t)|   ← F7 唯一定义，删"或"
+infeasible 定义：P_cmd(t) > C_true(t) + tol（基于 emulator 独立 envelope proxy，不是 D2 自己
+  boundary；防 M2 自证；与 CLAIM 1 第 6 步 clip 后物理命令同构）；tol 冻结 = 0.1 kW
+violation 定义：P_cmd(t) > C_true(t)（越过 latent feasible envelope；非 actual 越 protective
+  boundary——后者只说明边界保守，方向不明）
+safety_invariant：unsupported_positive_correction_rate(Arm2) == 0（PROTECTIVE U=0 必然为 0，
+  controller invariant / regression check，不作 superiority gate）
 
 —— B-recovery 指标（Arm2 vs Arm1；D3 marginal recovery value）——
-Δ_unnec_prot = unnecessary_protective_duration(Arm2) − unnecessary_protective_duration(Arm1)
-              unnecessary_protective_duration = PROTECTIVE 段中 C_true(t) 高于 P_cmd(t)
-              （实际可支持更高）却仍 PROTECTIVE 的 cycle 数
-              （回答"为什么不能永远 PROTECTIVE"——D3 的独立价值）
+per-scenario metric:
+  unnecessary_protective_duration(scn) = mean over M3 segments in scn of
+          (n cycles where PROTECTIVE 且 C_true(t) > P_cmd(t)（实际可支持更高）却仍 PROTECTIVE)
+          单位 = cycle/segment   ← C5 唯一 estimator（mean over segments，非 pooled total / 非 median）
 
-Δ_inf_rec   = rate_infeasible(Arm2) − rate_infeasible(Arm1)
-              （recovery 不引入新 infeasible）
+paired difference per scenario:
+  Δ_unnec_prot(scn) = unnecessary_protective_duration(Arm2, scn) − unnecessary_protective_duration(Arm1, scn)
+  Δ_inf_rec(scn)    = rate_infeasible(Arm2, scn) − rate_infeasible(Arm1, scn)
+  （recovery 不引入新 infeasible）
 ```
+
+> **C5 关键**：`unnecessary_protective_duration` 唯一定义为"每 scenario 内各 M3 segment duration
+> 的**均值**（cycle/segment）"（非 pooled total、非 median，删"或"）。δ_prot=3 cycle/segment
+> 对应此 estimator。bootstrap 对 300 个 paired scenario differences 重采样。
 
 **预冻结 margins（MCID + non-inferiority）**：
 ```text
@@ -431,7 +526,7 @@ safety_invariant  unsupported_positive_correction_rate(Arm2) == 0
 
 ### 6.6 PASS / FAIL 条件（F8；B-core 与 B-recovery 拆分，消除判定冲突）
 
-**B-core Gate（Arm2 vs Arm0；D2 technical effect；须在全部 4 个 C_true family 上成立）**：
+**B-core Gate（Arm2 vs Arm0；full-chain closed-loop technical-effect gate，C6；须在全部 4 个 C_true family 上成立）**：
 
 PASS（全部满足）：
 1. Δ_inf：95%CI **上界** < −δ_inf（每个 C_true family 均成立）；
@@ -439,7 +534,7 @@ PASS（全部满足）：
 3. safety_invariant：unsupported_positive_correction_rate(Arm2) == 0；
 4. Δ_tracking：95%CI 上界 < δ_track_ni（每个 family；non-inferior）。
 
-FAIL（任一成立 → B-core FAIL → D2 No-Go → Project No-Go）：
+FAIL（任一成立 → B-core FAIL → full-chain 无技术效果 → Project No-Go，C6）：
 1. 任一 C_true family 上 Δ_inf：CI 上界 >= −δ_inf；
 2. 任一 family 上 Δ_violation：CI 上界 >= −δ_violation；
 3. safety_invariant 违反；
@@ -466,8 +561,8 @@ FAIL（任一成立 → B-recovery FAIL；**不回滚 B-core**，D2 仍存活，
 | **A PASS** | D3 有增量辨识力 | 数据充分 + §4.4 PASS 全部满足 |
 | **A FAIL** | D3 No-Go | §4.4 任一 FAIL 成立 → 极可能 Project No-Go |
 | **A DATA INSUFFICIENT** | HOLD | §5 机械阈值不满足；需新协议版本 + 新数据 |
-| **B-core PASS** | D2 有技术效果 | A PASS 后，§6.6 B-core 在全部 4 个 C_true family 上 PASS |
-| **B-core FAIL** | D2 No-Go | §6.6 B-core 任一 FAIL → Project No-Go |
+| **B-core PASS** | full-chain 有技术效果 | A PASS 后，§6.6 B-core 在全部 4 个 C_true family 上 PASS（C6：D1+D2+D3 组合效果，非 D2 独立） |
+| **B-core FAIL** | full-chain No-Go | §6.6 B-core 任一 FAIL → Project No-Go |
 | **B-recovery PASS** | D3 有独立技术价值 | B-core PASS 后，§6.6 B-recovery PASS |
 | **B-recovery FAIL** | D3 无独立价值（D2 仍存活） | B-core PASS 后，§6.6 B-recovery 任一 FAIL |
 
@@ -476,19 +571,24 @@ FAIL（任一成立 → B-recovery FAIL；**不回滚 B-core**，D2 仍存活，
 ```text
 A DATA INSUFFICIENT          → HOLD（新协议 + 新数据；不判 No-Go，也不 PASS）
 A FAIL                       → D3 No-Go → 重判 Patent Gate（D3 区别锚消失）→ 极可能 Project No-Go
-A PASS, B-core FAIL          → D2 No-Go → Project No-Go（P-002 降 D）
+A PASS, B-core FAIL          → full-chain No-Go → Project No-Go（P-002 降 D）
 A PASS, B-core PASS,
-        B-recovery FAIL      → D2 survives，D3 无独立技术价值
+        B-recovery FAIL      → full-chain survives，D3 无独立技术价值
                                 → CLAIM 5 降弱从属；D3 区别锚弱化；回 Patent Gate /
                                   代理师重点审 ACN 族风险（P-003 降 C-弱，P-002 维持 C）
 A PASS, B-core PASS,
-        B-recovery PASS      → D2 + D3 technical effect
-                                → 进代理师检索（FILING GO 候选）（P-002/P-003 维持 C）
+        B-recovery PASS      → full-chain + D3 marginal technical effect
+                                → 进代理师检索（FILING GO 候选）
+                                  （C6：P-002 维持 controller mechanism C 级，不升"D2 独立
+                                  技术效果已验证"；P-003 维持 C）
 ```
 
-> **F8 关键**：B-recovery FAIL **不回滚 B-core**（D2 仍存活，不 Project No-Go）；D3 的独立
-> 价值由**直接 Arm2 vs Arm1**判断，而非 v1.1 的"看 Arm1 是否也比 Arm0 好"（后者不等价于
-> "D3 无独立价值"）。
+> **C6 关键（审查 §6）**：Arm2 vs Arm0 证明的是 **D1+D2+D3 full-chain technical effect**，不
+> 能单独归因于 D2。B-core 重命名为 "full-chain closed-loop technical-effect gate"；B-core
+> PASS **不**把 P-002 升为"D2 独立技术效果已验证"，维持 P2 既有 controller mechanism C 级。
+> B-recovery（Arm2 vs Arm1）仍正确归因 D3 marginal value。
+> **F8 关键（沿用 v1.2）**：B-recovery FAIL **不回滚 B-core**（full-chain 仍存活，不 Project
+> No-Go）；D3 的独立价值由**直接 Arm2 vs Arm1**判断。
 
 ---
 
@@ -499,43 +599,51 @@ A PASS, B-core PASS,
 - 禁止把 P2 formal test（已 consumed）重新用于阈值选择 / 规则修改；
 - 禁止在 P2.1A 失败后"换一个 trigger 再试"（先 No-Go，再新版本协议）；
 - 禁止 **post-hoc 追加 train 子集**（数据不够 = DATA INSUFFICIENT/HOLD）；
-- 禁止调 B1 ε / B2 median-max / B3 RNG seed+phase 定义+抽样次数 / B4 lag 定义（已冻结）；
-- 禁止调 cluster bootstrap（percentile / N_boot=2000 / seed / resample 重算 trigger / B2 functional）；
+- 禁止调 B1 ε / B2 median-max / B3 RNG seed+phase 定义+抽样次数+trigger map 固定规则 / B4 lag 定义（已冻结，C2）；
+- 禁止调 cluster bootstrap（percentile / N_boot=2000 / seed / resample 重算 trigger / B2 functional / B3 trigger map 固定，C1/C2）；
 - 禁止调 emulator family / saturation 顺序 / lag / noise / C_true family 定义与 uplift 因子 / scenario bank / δ margins；
-- 禁止调 PI controller（Kp/Ki/anti-windup/clamp/target trajectory/P_base 更新/seed）；
+- 禁止调 PI controller（Kp/Ki/anti-windup/clamp/target bank/P_base 状态方程/seed；C3 P_target 解耦 / C4 P_base(0)+P_hw_max 已冻结）；
+- 禁止 P_target 读取 C_true（C3：须用外生 target bank，E1–E4 共用同一 target）；
+- 禁止调 SIL noise seed / scenario sampling（with replacement）/ scenario-level metric estimator / unnecessary_protective_duration mean 定义（C5）；
 - 禁止在 P2.1B 引入 PV / BESS / 电价 / 经济收益指标或据此宣称站级收益；
 - 禁止用 EV response emulator 反推 gate 参数；infeasible/violation 基于 P_cmd vs C_true（非 D2 boundary）；
 - 禁止把 C_true 称 "true capability"（须称 latent feasible-envelope proxy）；禁止把 B 结论
   宣称"真实车辆能力下的效果"（须限定 "synthetic envelope 假设下的 closed-loop technical effect"）；
+- 禁止把 B-core PASS 解读为"D2 独立技术效果已验证"（C6：仅 full-chain 组合效果，P-002 维持 controller mechanism C）；
 - 禁止把 train 域 falsification 结果宣称"独立验证"；
 - 禁止在 A FAIL/DATA INSUFFICIENT 后运行 B（A 是 B 前置硬门）；
 - 禁止因 B-recovery FAIL 而回滚 B-core PASS（双 Gate 独立）。
 
 ---
 
-## 9. Patent consequence if failed（字段 8；F8 对齐双 Gate）
+## 9. Patent consequence if failed（字段 8；F8 双 Gate + C6 证据归属）
 
 | 失败点 | 专利后果 | registry |
 |---|---|---|
 | A FAIL（D3 无增量辨识力） | CLAIM 1 第 8/9 步 + CLAIM 5"实测响应驱动恢复"删除 → 恢复仅剩通信/停充/电池内部（prior art 已覆盖）→ 极可能 Project No-Go | P-003 降 D |
 | A DATA INSUFFICIENT | HOLD；CLAIM 5 维持"机制已观测；trigger 语义有效性 train 域证据不足" | P-003 维持 C（有条件） |
-| B-core FAIL（D2 无技术效果） | CLAIM 1 第 5/6 步"预算修正允许区间"退化为抽象措辞 → 按 Patent Gate 2 硬杀线 Project No-Go | P-002 降 D |
-| B-core PASS, B-recovery FAIL（D3 无独立价值） | CLAIM 5 降为弱从属；D3 区别锚弱化；回 Patent Gate / 代理师重点审 ACN 族风险 | P-003 降 C-（弱）；P-002 维持 C |
+| B-core FAIL（full-chain 无技术效果） | CLAIM 1 第 5/6 步"预算修正允许区间"退化为抽象措辞 → 按 Patent Gate 2 硬杀线 Project No-Go | P-002 降 D |
+| B-core PASS, B-recovery FAIL（D3 无独立价值） | CLAIM 5 降为弱从属；D3 区别锚弱化；回 Patent Gate / 代理师重点审 ACN 族风险 | P-003 降 C-（弱）；P-002 维持 C（C6：B-core PASS 不升 P-002 为"D2 独立效果"） |
 
 **A PASS + B-core PASS + B-recovery PASS 的后果**：P-003 升 C（trigger 语义有效性 train 域
-验证，仍非独立数据验证）；P-002 维持 C（技术效果验证，synthetic envelope 假设下）；进入
-专利代理师检索；P3 仍不自动开。
+验证，仍非独立数据验证）；P-002 维持 C（**C6：full-chain technical effect 验证，但不升为
+"D2 独立技术效果"**——P-002 证据仍是 P2 既有 controller mechanism C 级 + B-core 支持的组合
+链效果）；进入专利代理师检索；P3 仍不自动开。
 
 ---
 
 ## 10. 冻结与治理（字段 9-11）
 
 ```text
-冻结项     本文件 v1.2 + D3 trigger 参数（§3）+ eligible risk set（§4.2）+ baselines（§4.3，
-           含 B3/B4 RNG）+ Y/W/0.9（§4.4）+ bootstrap 全设定（§4.4）+ B2 functional 定义
-           + coverage/latency margins + 数据充分性阈值（§5，B0-B4 全纳入）
-           + 动作链（§6.1）+ emulator（§6.2，saturation 顺序 + C_true 4 family）+ PI
-           controller（§6.3）+ Arm 定义（§6.4）+ 指标与 δ margins（§6.5）+ 双 Gate（§6.6）
+冻结项     本文件 v1.3 + D3 trigger 参数（§3）+ eligible risk set（§4.2）+ baselines（§4.3，
+           含 B3 trigger map 固定规则 C2 / B4 RNG）+ Y/W/0.9（§4.4）+ bootstrap 全设定（§4.4，
+           C1 穷尽逻辑 / B3 map 固定 C2）+ B2 functional + coverage/latency margins
+           + 数据充分性阈值（§5，B0-B4 全纳入）
+           + 动作链（§6.1）+ emulator（§6.2，saturation 顺序 + C_true 4 family + C5 noise/
+           scenario sampling）+ PI controller（§6.3，C3 target 解耦 / §6.3b C4 P_base 状态
+           方程 + P_base(0) + P_hw_max）+ Arm 定义（§6.4）+ 指标与 δ margins（§6.5，C5
+           scenario-level estimator + unnecessary_protective_duration mean）+ 双 Gate（§6.6，
+           C6 B-core = full-chain technical-effect gate）
 SHA 锁定   implementation code SHA + protocol SHA + clean worktree
 sentinel   P2.1A formal exposure sentinel（一次 consumed 后永久禁止 rerun）
 数据域     P2.1A = JPL train only；P2.1B = 仿真闭环（C_true 从 JPL train bootstrap + uplift
@@ -544,12 +652,15 @@ sentinel   P2.1A formal exposure sentinel（一次 consumed 后永久禁止 reru
 ```
 
 **变更控制**：任何改动（参数、baseline、bootstrap、指标、阈值、emulator、C_true family、
-PI controller、δ margins、risk set、双 Gate 判定）须新版本 + 新测试协议，走与 evidence
-freeze 相同的 Review 链；test 暴露后零改动。
+PI controller、target bank、P_base 状态方程、metric estimator、δ margins、risk set、双 Gate
+判定、证据归属）须新版本 + 新测试协议，走与 evidence freeze 相同的 Review 链；test 暴露后
+零改动。
 
-**实施前置**：本协议 v1.2 须通过 Freeze Review（核冻结项是否闭合、D3 参数真冻结、baseline
-真 adversarial、bootstrap 真冻结、emulator 数学正确、PI controller 真冻结、C_true 证据边界
-清楚、双 Gate 判定无冲突）→ 才可写 P2.1A 代码；P2.1A 结果先评审 → 才可运行 P2.1B。
+**实施前置**：本协议 v1.3 须通过 Freeze Review（核冻结项是否闭合、D3 参数真冻结、baseline
+真 adversarial、bootstrap 真冻结、A 穷尽逻辑无未定义分支、emulator 数学正确、PI controller
+真冻结、P_target 与 C_true 真解耦、P_base 状态方程真闭合、C_true 证据边界清楚、metric
+estimator 真冻结、双 Gate 判定无冲突、B-core 证据归属正确）→ 才可写 P2.1A 代码；P2.1A 结果
+先评审 → 才可运行 P2.1B。
 
 ---
 

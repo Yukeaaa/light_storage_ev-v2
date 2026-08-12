@@ -154,11 +154,10 @@ element-by-element）。
 
 > P2 formal = SUCCESS / NARROW GO（mechanism realizability only）。P3 不自动开；
 > 下一步只批准**攻击性 falsification**，不优化、不扩复杂度。任一失败 → Project No-Go。
-> **P2.1 预注册协议**：`reports/patent_definition/phase3_p2_1_preregistration_v1.2.md`
-> （v1.2 草案，待 Freeze Review；v1.0/v1.1 已被取代——审查第三轮 8 项协议闭环修订：
-> B3/B4/bootstrap 冻结、conound 表述收紧、requested_delta→P_cmd 动作链闭合、
-> emulator saturation 数学修正、PI controller 全冻结、C_true→latent envelope proxy +
-> 4 adverse families、tracking residual 唯一定义、B-core/B-recovery 双 Gate 拆分）。
+> **P2.1 预注册协议**：`reports/patent_definition/phase3_p2_1_preregistration_v1.3.md`
+> （v1.3 草案，待 Freeze Review；v1.0/v1.1/v1.2 已被取代——审查第四轮 6 项最终协议闭合：
+> A PASS/FAIL 穷尽逻辑、B3 trigger map 固定、P_target 与 C_true 解耦、P_base 状态方程闭合、
+> noise/estimator 冻结、B-core 证据归属校正为 full-chain technical effect）。
 
 1. **P2.1A — D3 Falsification gate**：D3 recovery 是否只是 rolling-Q95 自相关伪证据？
    做 negative control（恒功率/persistence baseline、recovery 时点随机匹配、lag-shuffle、
