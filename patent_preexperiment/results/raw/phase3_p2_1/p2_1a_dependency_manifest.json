@@ -1,0 +1,18 @@
+{
+  "experiment_id": "P2_1A_v1_3",
+  "protocol_version": "phase3_p2_1_preregistration_v1.3",
+  "frozen_protocol_blob_sha": "7f09148b09f10b3a2ef89264e2031e3a5eca28a6",
+  "implementation_code_sha": "ddfb6557118d36a6e7fd8bc5c99cc3bfdfe7406f",
+  "python_version": "3.12.7",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "packages": {
+    "numpy": "2.5.1",
+    "pandas": "3.0.5",
+    "pyarrow": "25.0.0",
+    "scipy": "NOT_INSTALLED",
+    "PyYAML": "6.0.3",
+    "matplotlib": "3.11.1"
+  },
+  "pyproject_sha256": "b8d8fefa2ffd812b861c7c70cb3d9aa157b5f72fc05abea0d0ebdbabe09a8061",
+  "generated_at": "2026-08-12T16:05:09.660829+00:00"
+}
