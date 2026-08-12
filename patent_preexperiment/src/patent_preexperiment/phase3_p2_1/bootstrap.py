@@ -58,6 +58,7 @@ def _agg_per_session_method(trigger_table: pd.DataFrame) -> pd.DataFrame:
 
 def bootstrap_delta_distributions(
     trigger_table: pd.DataFrame,
+    eligible_sessions: np.ndarray,
     seed: int | None = None,
     n_boot: int | None = None,
 ) -> dict[str, Any]:
@@ -65,6 +66,9 @@ def bootstrap_delta_distributions(
 
     Args:
         trigger_table: metrics.build_trigger_table 输出（含 y）。
+        eligible_sessions: **全部 eligible-risk-set session IDs**（np.ndarray）。
+            重采样 universe 必须是全 eligible session 集合，不是"至少有一个 baseline
+            trigger 的 session"——后者会条件化掉零-trigger session，改变 cluster 方差。
         seed: 重采样种子（默认 FROZEN.bootstrap_seed 稳定映射）。
         n_boot: 重采样次数（默认 FROZEN.bootstrap_n）。
 
@@ -77,7 +81,7 @@ def bootstrap_delta_distributions(
           "n_invalid_delta_b1": int,      # Δ 未定义 replicate 数（方法 0 trigger）
           "n_invalid_delta_b3": int,
           "n_invalid_delta_b2": int,
-          "n_sessions": int,
+          "n_sessions": int,              # universe 大小（= eligible_sessions）
           "seed": int,
         }
     """
@@ -87,9 +91,9 @@ def bootstrap_delta_distributions(
         n_boot = FROZEN.bootstrap_n
 
     groups = _agg_per_session_method(trigger_table)
-    sessions = np.asarray(trigger_table["session_id"].unique())
+    sessions = np.asarray(eligible_sessions)
     if sessions.size == 0:
-        raise ValueError("P2.1A bootstrap：触发表为空，无法构造分布")
+        raise ValueError("P2.1A bootstrap：eligible session universe 为空")
 
     rng = np.random.default_rng(seed)
     delta_b1 = np.full(n_boot, np.nan)
@@ -110,7 +114,6 @@ def bootstrap_delta_distributions(
         g3 = _gain_from_groups(groups, counts, B3)
         g2a = _gain_from_groups(groups, counts, B2A)
         g2b = _gain_from_groups(groups, counts, B2B)
-        best2 = max(g2a, g2b)
         if np.isfinite(g1):
             delta_b1[i] = g0 - g1
         else:
@@ -119,8 +122,9 @@ def bootstrap_delta_distributions(
             delta_b3[i] = g0 - g3
         else:
             n_invalid[B3] += 1
-        if np.isfinite(best2):
-            delta_b2[i] = g0 - best2
+        # Δ(B2) functional：B2a/B2b **都** finite 才取 max；任一 NaN → Δ 未定义
+        if np.isfinite(g2a) and np.isfinite(g2b):
+            delta_b2[i] = g0 - max(g2a, g2b)
         else:
             n_invalid["B2"] += 1
 

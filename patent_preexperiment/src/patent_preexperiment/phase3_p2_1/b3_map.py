@@ -73,6 +73,54 @@ def load_b3_map(path: Path) -> pd.DataFrame:
     return pd.read_parquet(path)
 
 
+def build_or_load_b3_map(
+    eligible: pd.DataFrame,
+    artifact_path: Path,
+) -> pd.DataFrame:
+    """C2 一次生成、永久固定——artifact 优先 + 语义校验。
+
+    - artifact 不存在：构建并保存（首次）。
+    - artifact 存在：load + 从当前 eligible 重新构建（确定性）并逐行比对：
+        * 完全一致 → 复用 artifact（不覆盖写）；
+        * 不一致 → hard fail（eligible risk set 与 artifact 生成时不同，
+          说明 Step-0 数据/代码漂移；C2 禁止静默换 realization）。
+
+    返回 artifact 中的 map（= 生成时的 realization，永久固定）。
+    """
+    freshly_built = build_b3_map(eligible)
+    if not artifact_path.exists():
+        save_b3_map(freshly_built, artifact_path)
+        return freshly_built
+    stored = load_b3_map(artifact_path)
+    _assert_b3_map_equal(stored, freshly_built, artifact_path)
+    return stored  # 复用，不覆盖
+
+
+def _assert_b3_map_equal(
+    stored: pd.DataFrame, expected: pd.DataFrame, path: Path
+) -> None:
+    """逐行校验 stored 与 freshly-built map 一致。"""
+    if list(stored.columns) != list(expected.columns):
+        raise RuntimeError(
+            f"B3 map C2 漂移（列不一致）：stored={list(stored.columns)} "
+            f"!= expected={list(expected.columns)}（artifact={path}）"
+        )
+    if len(stored) != len(expected):
+        raise RuntimeError(
+            f"B3 map C2 漂移（行数）：stored={len(stored)} != expected={len(expected)}"
+            f"（artifact={path}）"
+        )
+    s = stored.sort_values("segment_id").reset_index(drop=True)
+    e = expected.sort_values("segment_id").reset_index(drop=True)
+    if not (s["segment_id"].to_numpy() == e["segment_id"].to_numpy()).all():
+        raise RuntimeError(f"B3 map C2 漂移（segment_id 集合不一致）（artifact={path}）")
+    for col in ("session_id", "timestamp_utc", "cycle_index"):
+        if not (s[col].to_numpy() == e[col].to_numpy()).all():
+            raise RuntimeError(
+                f"B3 map C2 漂移（列 {col} 选中的 cycle 不同）（artifact={path})"
+            )
+
+
 def _b3_selected_cycle_rows(
     eligible: pd.DataFrame,
     b3_map: pd.DataFrame,

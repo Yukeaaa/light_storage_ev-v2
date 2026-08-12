@@ -6,10 +6,13 @@
 
 from __future__ import annotations
 
+import json
 from pathlib import Path
+from typing import Any
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from patent_preexperiment.phase3_p2.schema import load_schema
 from patent_preexperiment.phase3_p2_1.b3_map import _b3_selected_cycle_rows, build_b3_map
@@ -18,6 +21,7 @@ from patent_preexperiment.phase3_p2_1.bootstrap import (
     percentile_ci,
     seed_from_string,
 )
+from patent_preexperiment.phase3_p2_1.frozen import FROZEN
 from patent_preexperiment.phase3_p2_1.gate import a_gate_verdict
 from patent_preexperiment.phase3_p2_1.metrics import (
     build_trigger_counts,
@@ -240,6 +244,30 @@ def test_b3_map_no_builtin_hash() -> None:
     assert m_again["timestamp_utc"].iloc[0] == first
 
 
+def test_build_or_load_b3_map_once_only(tmp_path) -> None:
+    """C2 一次生成、永久固定：已存在则 load+校验、不覆盖；不同则 hard fail。"""
+    from patent_preexperiment.phase3_p2_1.b3_map import build_or_load_b3_map
+
+    pool = _pool([_stable_session(f"bl_{i}") for i in range(3)])
+    elig = build_eligible_risk_set(pool, SCFG)
+    apath = tmp_path / "b3.parquet"
+
+    first = build_or_load_b3_map(elig, apath)
+    assert apath.exists()
+    first_bytes = apath.read_bytes()
+
+    # 第二次：eligible 相同 → 复用，不覆盖
+    second = build_or_load_b3_map(elig, apath)
+    assert apath.read_bytes() == first_bytes  # 文件未被重写
+    assert second.equals(first)
+
+    # eligible 变化（多一个 session）→ hard fail
+    pool2 = _pool([_stable_session(f"bl_{i}") for i in range(4)])
+    elig2 = build_eligible_risk_set(pool2, SCFG)
+    with pytest.raises(RuntimeError, match="C2 漂移"):
+        build_or_load_b3_map(elig2, apath)
+
+
 # ---------------------------------------------------------------------------
 # metrics
 # ---------------------------------------------------------------------------
@@ -319,10 +347,12 @@ def test_bootstrap_deterministic_and_ci() -> None:
     y = compute_y(bf).loc[elig.index]
     table = build_trigger_table(counts, elig, y)
 
-    d1 = bootstrap_delta_distributions(table, n_boot=100)
-    d2 = bootstrap_delta_distributions(table, n_boot=100)
+    eligible_sessions = elig["session_id"].unique()
+    d1 = bootstrap_delta_distributions(table, eligible_sessions, n_boot=100)
+    d2 = bootstrap_delta_distributions(table, eligible_sessions, n_boot=100)
     assert np.array_equal(d1["delta_b1"], d2["delta_b1"], equal_nan=True)
     assert d1["n_boot"] == 100
+    assert d1["n_sessions"] == len(eligible_sessions)
     for name in ("delta_b1", "delta_b3", "delta_b2"):
         lo, hi = percentile_ci(d1[name])
         assert lo <= hi
@@ -339,7 +369,8 @@ def test_bootstrap_functional_delta_b2_per_replicate() -> None:
             rows.append({"session_id": sid, "segment_id": f"{sid}#1",
                          "method": method, "cycle_index": 3, "y": bool(yy)})
     table = pd.DataFrame(rows)
-    dist = bootstrap_delta_distributions(table, n_boot=50)
+    eligible_sessions = np.asarray(sessions)
+    dist = bootstrap_delta_distributions(table, eligible_sessions, n_boot=50)
     # 每 replicate：gain(B2a)=1 → best=1 → Δ(B2)=gain(B0)−1=0
     assert np.allclose(np.nan_to_num(dist["delta_b2"]), 0.0, atol=1e-12)
 
@@ -397,13 +428,25 @@ def _point_fixture() -> dict:
     }
 
 
-def test_gate_pass_all_five() -> None:
+def test_gate_pass_all_six() -> None:
     point = _point_fixture()
     cis = {"delta_b1": (0.2, 0.4), "delta_b3": (0.2, 0.4), "delta_b2": (0.05, 0.2)}
     g = a_gate_verdict(point, cis)
     assert g.verdict == "PASS"
+    assert len(g.conditions) == 6  # c1..c6（c3=gain(B0)>gain(B4) 现为正式条件）
     assert all(g.conditions.values())
-    assert g.b4_dominance is True  # 0.8 > 0.5
+    assert g.conditions["c3_b4_dominance"] is True  # gain(B0)=0.8 > gain(B4)=0.5
+
+
+def test_gate_fail_when_b4_not_dominant() -> None:
+    """Blocker 1：gain(B0)<=gain(B4) 是正式 FAIL 条件 c3。"""
+    point = _point_fixture()
+    point["gains"][B4] = 0.85  # gain(B4) > gain(B0)=0.8
+    cis = {"delta_b1": (0.2, 0.4), "delta_b3": (0.2, 0.4), "delta_b2": (0.05, 0.2)}
+    g = a_gate_verdict(point, cis)
+    assert g.verdict == "FAIL"
+    assert g.conditions["c3_b4_dominance"] is False
+    assert "c3_b4_dominance" in g.failed_conditions
 
 
 def test_gate_fail_when_ci_lower_nonpositive() -> None:
@@ -413,6 +456,15 @@ def test_gate_fail_when_ci_lower_nonpositive() -> None:
     assert g.verdict == "FAIL"
     assert g.conditions["c1_delta_b1"] is False
     assert "c1_delta_b1" in g.failed_conditions
+
+
+def test_gate_fail_when_delta_b2_ci_nonpositive() -> None:
+    point = _point_fixture()
+    cis = {"delta_b1": (0.2, 0.4), "delta_b3": (0.2, 0.4), "delta_b2": (-0.05, 0.05)}
+    g = a_gate_verdict(point, cis)
+    assert g.verdict == "FAIL"
+    assert g.conditions["c6_delta_b2"] is False
+    assert "c6_delta_b2" in g.failed_conditions
 
 
 def test_gate_fail_when_ci_nan() -> None:
@@ -435,3 +487,193 @@ def test_gate_fail_coverage_or_latency_ni() -> None:
     g2 = a_gate_verdict(point2, cis)
     assert g2.verdict == "FAIL"
     assert g2.conditions["c5_latency_ni"] is False
+
+
+# ---------------------------------------------------------------------------
+# runner sentinel 治理（Blocker 4 / 6）——纯治理逻辑，monkeypatch 掉真实数据/git
+# ---------------------------------------------------------------------------
+
+def _write_synthetic_sentinel(root: Path, **over: Any) -> None:
+    """写一个符合 v1.3 身份的合成 sentinel（便于治理测试）。"""
+    base = {
+        "experiment_id": FROZEN.experiment_id,
+        "protocol_version": FROZEN.protocol_version,
+        "frozen_protocol_commit_sha": FROZEN.frozen_protocol_commit_sha,
+        "frozen_protocol_blob_sha": FROZEN.frozen_protocol_blob_sha,
+        "status": "UNCONSUMED",
+        "once_only": True,
+    }
+    base.update(over)
+    (root / "results" / "raw" / "phase3_p2_1").mkdir(parents=True, exist_ok=True)
+    (root / "results" / "raw" / "phase3_p2_1" / "p2_1a_sentinel.json").write_text(
+        json.dumps(base, ensure_ascii=False, indent=2), encoding="utf-8"
+    )
+
+
+def test_sentinel_strict_rejects_missing(tmp_path) -> None:
+    from patent_preexperiment.phase3_p2_1.runner import _read_sentinel_strict
+
+    with pytest.raises(RuntimeError, match="sentinel 缺失"):
+        _read_sentinel_strict(tmp_path)
+
+
+def test_sentinel_strict_rejects_identity_drift(tmp_path) -> None:
+    from patent_preexperiment.phase3_p2_1.runner import _read_sentinel_strict
+
+    _write_synthetic_sentinel(tmp_path, frozen_protocol_blob_sha="tampered")
+    with pytest.raises(RuntimeError, match="身份字段 frozen_protocol_blob_sha 漂移"):
+        _read_sentinel_strict(tmp_path)
+
+
+def test_step0_rejects_consumed_sentinel(tmp_path) -> None:
+    """Blocker 4：CONSUMED sentinel 不能再跑 Step-0（防复活）。"""
+    from patent_preexperiment.phase3_p2_1.runner import run_step0
+
+    _write_synthetic_sentinel(tmp_path, status="CONSUMED")
+    with pytest.raises(RuntimeError, match="拒绝"):
+        run_step0(tmp_path)
+
+
+def test_step0_rejects_when_impl_sha_not_locked(tmp_path) -> None:
+    """Blocker 6：Step-0 前必须先 --lock-impl。"""
+    from patent_preexperiment.phase3_p2_1.runner import run_step0
+
+    _write_synthetic_sentinel(tmp_path)  # 无 implementation_code_sha
+    with pytest.raises(RuntimeError, match="implementation_code_sha 未锁"):
+        run_step0(tmp_path)
+
+
+def test_step0_does_not_write_status(tmp_path, monkeypatch) -> None:
+    """Blocker 4：Step-0 只附加 sufficiency，不写 status（保持 UNCONSUMED）。"""
+    from patent_preexperiment.phase3_p2_1 import runner
+
+    _write_synthetic_sentinel(tmp_path, implementation_code_sha="abc123")
+
+    monkeypatch.setattr(runner, "git_provenance", lambda _r: {
+        "code_sha": "abc123", "worktree_clean": True,
+    })
+    # Step-0 数据管线 monkeypatch：构造最小 eligible/trigger_counts 让 sufficiency 通过
+    elig = pd.DataFrame({
+        "session_id": [f"s{i}" for i in range(120)],
+        "segment_id": [f"s{i}#1" for i in range(120)],
+    })
+    counts_rows = []
+    for i in range(120):
+        for m in (B0, B1, B2A, B2B, B3, B4):
+            counts_rows.append({"session_id": f"s{i}", "segment_id": f"s{i}#1",
+                                "method": m, "cycle_index": 7})
+    counts = pd.DataFrame(counts_rows)
+
+    def fake_artifacts(_root):
+        out = tmp_path / "results" / "raw" / "phase3_p2_1"
+        out.mkdir(parents=True, exist_ok=True)
+        paths = {
+            "boundary_frame": out / "bf.parquet",
+            "eligible": out / "elig.parquet",
+            "b3_map": out / "b3.parquet",
+            "trigger_counts": out / "tc.parquet",
+        }
+        elig.to_parquet(paths["eligible"], index=False)
+        counts.to_parquet(paths["trigger_counts"], index=False)
+        pd.DataFrame().to_parquet(paths["boundary_frame"], index=False)
+        pd.DataFrame().to_parquet(paths["b3_map"], index=False)
+        return {"paths": {k: str(v.as_posix()) for k, v in paths.items()},
+                "sha256": {k: "x" for k in paths}}
+
+    monkeypatch.setattr(runner, "_step0_artifacts", fake_artifacts)
+    runner.run_step0(tmp_path)
+
+    s_after = json.loads(
+        (tmp_path / "results" / "raw" / "phase3_p2_1" / "p2_1a_sentinel.json").read_text()
+    )
+    assert s_after["status"] == "UNCONSUMED"  # Step-0 不改 status
+    assert s_after["step0_data_sufficiency_status"] == "SUFFICIENT"
+
+
+def test_formal_rejects_when_artifact_sha_drifts(tmp_path, monkeypatch) -> None:
+    """Blocker 5：formal 逐个 SHA256 校验 step0 artifact；漂移 → fail-closed。"""
+    from patent_preexperiment.phase3_p2_1 import runner
+
+    _write_synthetic_sentinel(
+        tmp_path, implementation_code_sha="abc123",
+        step0_data_sufficiency_status="SUFFICIENT",
+        step0_summary_sha256="will_be_set",
+        step0_artifacts={
+            "boundary_frame": "results/raw/phase3_p2_1/bf.parquet",
+            "eligible": "results/raw/phase3_p2_1/elig.parquet",
+            "b3_map": "results/raw/phase3_p2_1/b3.parquet",
+            "trigger_counts": "results/raw/phase3_p2_1/tc.parquet",
+        },
+        step0_artifact_sha256={
+            "boundary_frame": "deadbeef",  # 故意错的 sha
+            "eligible": "deadbeef",
+            "b3_map": "deadbeef",
+            "trigger_counts": "deadbeef",
+        },
+    )
+    out = tmp_path / "results" / "raw" / "phase3_p2_1"
+    out.mkdir(parents=True, exist_ok=True)
+    for name in ("bf", "elig", "b3", "tc"):
+        (out / f"{name}.parquet").write_bytes(b"data")
+    step0 = {
+        "sufficiency": {"sufficient": True},
+        "artifacts": {
+            "paths": {
+                "boundary_frame": "results/raw/phase3_p2_1/bf.parquet",
+                "eligible": "results/raw/phase3_p2_1/elig.parquet",
+                "b3_map": "results/raw/phase3_p2_1/b3.parquet",
+                "trigger_counts": "results/raw/phase3_p2_1/tc.parquet",
+            },
+            "sha256": {
+                "boundary_frame": "deadbeef",
+                "eligible": "deadbeef",
+                "b3_map": "deadbeef",
+                "trigger_counts": "deadbeef",
+            },
+        },
+    }
+    (out / "p2_1a_step0.json").write_text(json.dumps(step0), encoding="utf-8")
+    # 修正 sentinel 里的 step0_summary_sha256 为真实值
+    true_step0_sha = runner._file_sha256(out / "p2_1a_step0.json")
+    s = runner._read_sentinel_strict(tmp_path)
+    s["step0_summary_sha256"] = true_step0_sha
+    runner._write_sentinel(tmp_path, s)
+
+    monkeypatch.setattr(runner, "git_provenance", lambda _r: {
+        "code_sha": "abc123", "worktree_clean": True,
+    })
+    monkeypatch.setattr(runner, "_assert_evidence_only_diff", lambda *_a, **_k: None)
+
+    with pytest.raises(RuntimeError, match="artifact integrity"):
+        runner.run_formal_test(tmp_path)
+
+
+def test_assert_d3_trigger_params_match_called_in_load_pool(tmp_path, monkeypatch) -> None:
+    """Blocker 3：_load_pool 必须调用 assert_d3_trigger_params_match。"""
+    from patent_preexperiment.phase3_p2_1 import runner
+
+    called = {"n": 0}
+
+    class _FakeScfg:
+        history_quantile = 0.95
+        history_window_min = 15
+        history_min_samples = 5
+        min_history_samples = 5
+        recovery_ratio = 0.95
+        recovery_sustained_cycles = 3
+
+    def fake_load_schema(_p):
+        return _FakeScfg()
+
+    def fake_assert(scfg):
+        called["n"] += 1
+
+    monkeypatch.setattr(runner, "load_schema", fake_load_schema)
+    monkeypatch.setattr(
+        "patent_preexperiment.phase3_p2_1.runner.assert_d3_trigger_params_match", fake_assert
+    )
+    # registry/pool 也要 patch 避免 IO
+    monkeypatch.setattr(runner.pd, "read_parquet", lambda _p: pd.DataFrame())
+    monkeypatch.setattr(runner, "load_pool_minutes", lambda *_a, **_k: pd.DataFrame())
+    runner._load_pool(tmp_path)
+    assert called["n"] == 1
