@@ -1,0 +1,361 @@
+# E7-FAST 工商业园区光储充快速闭环验证 —— 预注册配置（冻结）
+# 依据：review/工商业园区光储充快速闭环验证.md（E7-FAST 加速版，原 V2.0 E7 园区系统验证）
+# 冻结纪律：本文件在查看任何 D0/D2/D3 outcome（事件计数、响应指标、系统指标）前冻结。
+#   阈值/规则一经冻结，失败后新增方案必须新版本 + 新测试协议，禁止 post-hoc 调参救场。
+# 不修改 frozen P2/P2.1 证据（phase3_p2/、phase3_p2_1/）；E7-FAST 只读复用其 D1 查表与 Q95 边界逻辑。
+# 治理强度（按 review doc）：D0/D2 不做 formal bootstrap/CI；系统门用工程效果阈值；不使用 sentinel/one-shot。
+#   但配置冻结、术语纪律、禁止在线特征、红灯（§37）仍强制执行。
+
+experiment_id: E7_FAST_v1
+protocol_source: "review/工商业园区光储充快速闭环验证.md"
+landing_protocol: "docs/工商业园区光储充_专利方向确定详细预实验计划书_V2.0.md（E7 加速版）"
+rule_version: e7_fast_v1
+output_version: e7_fast_v1
+commit: auto
+frozen_date: 2026-08-13
+
+# --- 方案主线（review §2；统一术语，禁止“投影/权限”等词）---
+core_flow:
+  step_1: "园区读取：光伏出力 / 园区基础负荷 / 储能当前可充可放功率 / 变压器或PCC限制 / 当前EV总充电功率"
+  step_2: "园区EMS算出本控制周期希望EV总功率增加量或降低量（requested_ev_delta）"
+  step_3: "对每辆正在充电的车读取：实际充电功率 / 充电桩允许功率或电流（有则用）/ 历史实际充电功率 / 明确车辆能力信息（有则用）"
+  step_4: "根据当前能拿到哪些信息，对每辆车分别确定最大允许增加量与最大允许降低量"
+  step_5: "汇总所有车辆得到EV群本周期最大允许增加量与最大允许降低量"
+  step_6: "EMS想调的量超范围时按车辆实际允许范围限制"
+  step_7: "EV承担能够承担的部分"
+  step_8: "剩余部分由BESS补偿；BESS也不足时反映到PCC或变压器约束"
+  step_9: "下一控制周期重新读取最新状态"
+
+# --- 技术结论冻结（review §1；进入 E7-FAST 后不再讨论）---
+frozen_decisions:
+  D1_info_class_to_processing: retain
+  D2_limit_ems_ev_power_adjust: retain_as_core
+  D3_q95_recovery: removed                # 删除，不允许复活（P2.1A formal FAIL）
+  recent_var_variance_state: not_restored  # P1 formal No-Go，不恢复
+  active_multi_vehicle_redistribution: not_main_innovation
+  ml_rl_new_mpc: no
+  acn_master_full_completion: deferred
+  highway_scenario: not_introduced
+  XiTongJueCe: only_for_architecture_bess_params_baseline_library
+
+# --- 数据分区（review §3；专利核心数据 vs 实验环境数据）---
+data:
+  ev_response_source: ACN_Static               # 专利核心数据，REAL
+  pilot_source: ACN_Static_pilot_a              # REAL，部分会话；M2 关键
+  history_response: actual 派生                  # DERIVED_REAL
+  info_availability: actual/pilot/history 缺失情况 # REAL
+  natural_pilot_steps: ACN 真实时序              # REAL，待 D0 审计
+  bms_capability: ACN 缺失                       # 无真实数据；M1 只作可选实施例/从属
+  park_pv: real_public_prioritized_otherwise_transparent
+  park_base_load: real_park_measured_prioritized_otherwise_transparent
+  bess_params: engineering_model
+  transformer_pcc: engineering_scenario
+  ems_request: synthetic_simple_rule            # SYNTHETIC_CONTROLLER
+  source_tables: E0 冻结 datasets/session_response_1min（1 分钟会话表，已构建）
+  reuse_frozen_modules:
+    - "phase3_p2.d1（D1 信息类别 precedence 查表；只读复用，不修改）"
+    - "phase3_p2.boundary（Q95 protective_bound shift(1)+15min 窗；只读复用，不修改）"
+  do_not_modify: [phase3_p2, phase3_p2_1]       # frozen P2/P2.1 证据
+
+# --- 切分与角色（沿用 E0 冻结口径；AGENTS.md 红线）---
+split:
+  rule: "站点内按 session connection_time 排序 60/20/20；整条会话属唯一 split"
+  external_only: [office001]                    # 仅外部验证，禁止用其结果改阈值
+  stress_only: [anomaly_months_2019-12_2020-02_2020-04_2020-12, anomaly_year_2021]
+  d0_counting_scope: "train+validation+test（按 split 分别报告）；gate 主判用 train+validation（拟合集）；test 报告为 single-exposure 可用量；office001 单列 external 不计入 gate"
+  forbidden:
+    - minutes_level_split
+    - event_month_selection
+    - event_rate_boundary_adjust
+    - use_office001_for_threshold
+
+# --- 功率口径（AGENTS.md；与 e0_full.yaml 一致，冻结）---
+power:
+  actual_column: actual_power_kw                # measured→computed→estimated 优先级派生
+  pilot_amp_column: pilot_a                     # 导引/允许电流（A）
+  pilot_kw_column: pilot_power_kw               # pilot_a × rated_v / 1000
+  rated_voltage: {jpl: 192.7, caltech: 240.0, office001: 240.0}
+  non_physical_guard:
+    actual_kw_min: 0.0                          # actual < 0 视为非物理
+    actual_kw_max: 50.0                         # actual > 50 视为非物理
+    pilot_a_max: 100.0                          # pilot > 100A 视为非物理
+
+# --- 信息类别定义（review §3.1；四个布尔，穷尽 16 组合；与 P2 d1_lookup 一致）---
+info_class:
+  booleans: [capability_available, pilot_available, actual_available, history_sufficient]
+  capability_available:
+    definition: "车辆/BMS 明确最大能力信息可得"
+    acn_status: absent                          # ACN 无真实 capability → 全部 False；M1 只作 injection/从属
+  pilot_available:
+    definition: "本分钟有 pilot_a 观测（pilot_available==True）"
+  actual_available:
+    definition: "本分钟 actual_power_kw 非缺失"
+  history_sufficient:
+    definition: "当前 cycle 之前、同一 run 内、非空 actual_power_kw 样本数 >= min_history_samples"
+    min_history_samples: 5                      # 与 P2 d1_lookup.history_sufficiency 一致（冻结）
+  precedence:                                   # 穷尽查表（与 P2 一致；第一条命中即最终 mode）
+    - {if: "capability_available == true", mode: M1_capability_rich}
+    - {if: "pilot_available and actual_available and history_sufficient", mode: M2_pilot_actual}
+    - {if: "pilot_available and actual_available", mode: M4_history_insufficient}
+    - {if: "actual_available and history_sufficient", mode: M3_current_only}
+    - {if: "actual_available", mode: M4_history_insufficient}
+    - {else: fail_closed, mode: M4_history_insufficient}
+  q95_history:
+    window_min: 15                              # 与 P2 history_protective_boundary 一致
+    quantile: 0.95
+    min_samples: 5
+    causality: shift(1)                         # Q95(t) 只用 [t-window, t-1]；当前 cycle 不参与构造自身历史
+    run_definition: "同一 session 内连续 cycle 且 gap_before_min < severe_gap_min(20min)；severe_gap_before=true 重置"
+
+# --- D0 阶段：数据充分性门（review §4-7；先于任何园区闭环代码）---
+d0:
+  outputs:
+    report: "reports/E7_FAST_D0_data_gate.md"
+    info_coverage: "results/raw/e7_fast/d0/d0_info_mode_coverage.csv"
+    pilot_step_events: "results/raw/e7_fast/d0/d0_pilot_step_events.parquet"
+    evidence_registry: "results/raw/e7_fast/d0/d0_evidence_registry.csv"
+
+  # D0-1 信息类别覆盖审计（review §4）
+  d0_1_info_coverage:
+    group_by: [site, station_id, month, field_mode, info_mode, split]
+    stats: [cycle_count, session_count, station_count, month_count, share_of_active_minutes]
+    report_separately: [office001, stress]
+
+  # D0-2 自然 pilot 变化事件库（review §5-6；最重要的数据工作）
+  d0_2_pilot_steps:
+    detection_unit: pilot_a                     # 检测用导引电流（A）
+    record_unit: pilot_power_kw                 # 记录用功率（kW）
+    positive_event:
+      delta_pilot_a_min: 2.0                    # Δpilot >= 2 A
+      relative_ratio_min: 0.15                  # AND Δpilot / pilot_before >= 15%
+    negative_event:
+      delta_pilot_a_max: -2.0                   # Δpilot <= -2 A
+      relative_ratio_min: 0.15                  # AND |Δpilot| / pilot_before >= 15%
+    pre_stability:
+      window_min: 3                             # 事件前至少 3 分钟
+      pilot_no_second_change_a: 1.0             # 窗内 |Δpilot_a| < 1A（无明显第二次变化）
+      actual_non_missing: true                  # actual 非缺失
+      actual_no_big_jump_kw: 2.0                # 窗内 |Δactual_kw| < 2.0（无剧烈跳变）
+    post_observation_lag_min: [1, 3, 5]         # 记录 actual 在 1/3/5 min 后的响应
+    exclusions:
+      first_connect_min: 5                      # 接入后最初 5 min 排除（connected_elapsed_min < 5）
+      severe_gap_in_window: true                # 事件/前置/后置窗内 severe_gap_before 排除
+      non_physical_power: true                  # actual/pilot 非物理值排除
+      offline_done_charging_window_min: 10      # 离线评价：|timestamp - done_charging_time| < 10min 可排除
+      done_charging_is_offline_only: true       # doneCharging 绝不作在线特征（AGENTS.md 红线）
+    per_event_record:
+      keys: [event_id, session_id, station_id, site, timestamp, direction]
+      pilot: [pilot_before_a, pilot_after_a, delta_pilot_a, pilot_before_kw, pilot_after_kw, delta_pilot_kw]
+      actual: [actual_before_kw, actual_1min_kw, actual_3min_kw, actual_5min_kw,
+               delta_actual_1min_kw, delta_actual_3min_kw, delta_actual_5min_kw]
+      history: [history_q95_before_kw, history_count, connected_elapsed_min]
+      response_gain: [response_gain_1m, response_gain_3m, response_gain_5m]   # Δactual/Δpilot（观测描述，非真实 BMS 能力）
+      context: [info_mode_before, split, field_mode, month]
+    response_gain_definition: "delta_actual_lag_kw / delta_pilot_kw（仅观测描述；不得当车辆真实 BMS capability）"
+
+  # D0 数据充分性快速判定（review §7；三级门；不用 formal bootstrap）
+  sufficiency_gate:
+    positive_pilot_up:
+      A_level:                                  # 足以支持主动增加功率实验
+        usable_events_min: 100
+        unique_sessions_min: 30
+        stations_min: 5
+        months_min: 2
+        verdict: GO_active_increase
+      B_level:                                  # 可做但专利收窄
+        usable_events_range: [30, 99]
+        or_concentrated_few_stations_months: true
+        verdict: CONDITIONAL_active_increase_only_as_dependent
+      C_level:                                  # 不够
+        usable_events_max: 29
+        verdict: NO_INDEPENDENT_CLAIM_active_increase
+        allowed_residual: [explicit_capability_increase_when_available, limit_increase_when_info_insufficient, decrease_or_hold]
+    negative_pilot:
+      usable_events_min: 50
+      unique_sessions_min: 20
+      stations_min: 3
+      purpose: response_calibration_only        # 用于园区回放标定，不造新算法
+    counting_split: "train+validation 为 gate 主判集；test 报告 single-exposure 可用量；office001 external 单列不计入 gate"
+    fail_action: "正 step 不足 → 立即收缩 claim，不救数据（review §36 step 5）"
+
+# --- D1 阶段：M1-M4 简化成最终工程规则（review §8-13；唯一允许补的新技术小模块 = M2 数值上限）---
+d1_engineering_rules:
+  M1_capability_rich:
+    real_data: absent                           # ACN 无真实 capability
+    patent_role: dependent_claim_optional_embodiment_only
+    rule:
+      allowed_up: "max(P_cap - current_budget, 0)"
+      allowed_down: "current_budget"
+    go_gate: not_in_main                        # 不进主实验 Go 门
+  M2_pilot_actual:                              # ★ 唯一新补：数值上限
+    condition: "pilot_available and actual_available and history_sufficient"
+    upper_bound: "P_upper = max(P_actual, min(P_pilot, Q95_history))"
+    rule:
+      allowed_up: "max(P_upper - P_actual, 0) = max(min(P_pilot, Q95_history) - P_actual, 0)"
+      allowed_down: "P_actual"
+    plain_language: "不允许把车辆功率增加到 pilot 允许值与历史实际达到高功率水平两者中较大的幻想值，只取两者较小者为上界；同时不低于当前实际运行功率"
+    data_anomaly_downgrade: "pilot 缺失 / pilot < actual - tolerance / history 不足 → 不硬算 M2，直接降级（M3 或 M4）"
+    example: {actual_kw: 4.0, pilot_kw: 7.2, q95_15min_kw: 5.6, upper_kw: 5.6, allowed_up_kw: 1.6}
+    anti_pattern: "pilot - actual = 3.2 → 全部当作可增加能力（禁止）"
+  M3_current_only:
+    condition: "actual_available and history_sufficient and not pilot_available"
+    rule:
+      allowed_up: 0.0                           # 没有 pilot/capability 支撑，不允许 EMS 主动增加
+      allowed_down: "P_actual"
+    plain_language: "没有 pilot/capability 支撑时本周期不允许增加这辆车预算，但允许降低"
+    d3_recovery: never                          # 永远不做 D3 恢复；拿到 pilot/capability → 信息类别自然变 M2/M1 才允许增加
+  M4_history_insufficient:
+    condition: "history 不足 / 仅 pilot+actual 但 history 不足 / 仅 actual 但 history 不足 / 无 actual"
+    rule:
+      allowed_up: 0.0
+      allowed_down: 0.0
+    plain_language: "本控制周期保持原 EV 预算不变（fail-closed）"
+
+# --- D2 阶段：真实 EV 数据验证（review §14-18；先不放 PV/BESS）---
+d2_ev_validation:
+  question: "上述规则在真实 ACN 车辆响应上是否比简单办法更合理？"
+  p_support_definition: "P_support = max(P_actual_5min - P_actual_before, 0)（真实自然事件中观察到的实际增加量；非车辆理论最大能力）"
+  baselines:
+    B0_no_increase:
+      allowed_up: 0.0                           # 完全不增加（最保守）
+    B1_pilot_only:
+      allowed_up: "max(P_pilot - P_actual, 0)"  # 把 pilot 当能力的错误
+    B2_rolling_q95:                             # ★ 最强简单 baseline（review 强调第一天放入）
+      allowed_up: "max(Q95_history - P_actual, 0)"
+    C_candidate_m2:                             # 候选 M2
+      allowed_up: "max(max(P_actual, min(P_pilot, Q95_history)) - P_actual, 0)"
+  metrics:                                      # review §16；只看四个指标
+    over: "max(P_allowed - P_support, 0)        # 越小越好；算法允许增加量比真实事件实际增加还多多少"
+    under: "max(P_support - P_allowed, 0)       # 越小越不保守；没利用到的真实响应"
+    hit_rate: "candidate 说可增加>0 且真实后续确实增加 的比例"
+    coverage: "candidate 实际放行了多少真实上调机会（禁止靠 99% 说不增加得高准确率）"
+  gate:                                         # review §17；不做 CI
+    GO:
+      over_improvement_vs_strongest_baseline_pct_min: 10
+      up_opportunity_coverage_vs_baseline_pct_min: 50
+    CONDITIONAL:
+      over_improvement_pct_range: [5, 10]
+      action: "M2 只作为从属/窄场景"
+    FAIL:
+      over_improvement_pct_max: 5
+      or_rolling_q95_equivalent: true
+      action: "M2 不进入核心；收缩到 M3/M4 信息不足保护；不调 Q95、不换模型、不继续 ML"
+  negative_event_use: "只做响应标定（median gain / p25 p75 / 5min 实际下降量 / 不响应比例），不造新算法；用于园区回放"
+  no_extrapolation_rule:                        # review §22
+    rule: "真实 pilot 事件中观察到的实际变化量 = 本事件可验证的实际响应支持量；candidate 允许量 <= 此量视为未超出；超出部分视为未被真实观察支持"
+    forbid: "不构建神奇 EV 响应仿真器；不声称知道车辆真正最大功率"
+
+# --- D3 阶段：园区系统验证（review §19-31；先做真实事件嵌入短周期回放，过门才做 24h）---
+d3_park_system:
+  phase_order:
+    first: "真实 pilot-event + 园区场景短周期嵌入（单周期/短周期回放）"
+    only_after_gate: "完整 5min 动态回放（pool_state + PV time series + base load + BESS SOC dynamics + transformer）"
+  park_ems:                                     # review §25；最简单规则，不要 MPC
+    grid_power: "P_grid = P_base + P_EV - P_PV"
+    over_transformer: "P_grid > P_limit → EMS 希望 EV 减少 (P_grid - P_limit)"
+    pv_surplus_anti_reverse: "P_grid < 0 → EMS 希望 EV 增加 |P_grid|"
+    in_range: "EV_adjustment = 0"
+    rationale: "越简单越好；不让审查人怀疑效果来自复杂优化器"
+  ev_group_aggregation:                         # review §26
+    group_allowed_up: "sum(各车 allowed_up)"
+    group_allowed_down: "sum(各车 allowed_down)"
+    residual_to_bess: "requested_ev_delta - actual_ev_adjustment"
+    residual_to_pcc: "BESS 不足部分"
+  bess:                                         # review §23；普通物理模型
+    params: [E_BESS, P_charge_max, P_discharge_max, SOC_min, SOC_max, eta_charge, eta_discharge]
+    power_scaling_vs_ev_peak: [0.25, 0.50, 1.00]
+    capacity_hours: 2.0                         # 2h × BESS rated power
+    initial_soc: [0.20, 0.50, 0.80]
+    param_source: "XiTongJueCe BESS SOC/功率/效率/普通 EMS 建模参数作工程范围依据"
+  pcc_transformer:                              # review §24
+    main_normalized: "P_limit = 基线净负荷 P95"
+    stress_levels: [0.9, 1.0, 1.1]
+    fixed_scenario_alt: [500, 750, 1000]        # kW
+    rule: "所有方案使用同一限制"
+  system_arms:                                  # review §27；四个
+    S0_unrestricted: "EMS 要多少给 EV 多少（乐观控制）"
+    S1_conservative: "禁止 EV 增加，只允许降低（最保守 baseline）"
+    S2_rolling_q95: "统一 rolling Q95（最强简单 baseline）"
+    S3_our_scheme: "M1 explicit / M2 pilot+actual+history / M3 actual+history→only decrease / M4 insufficient→hold"
+  system_metrics:                               # review §28；六个
+    unsupported_EV_adjustment: "EMS 给 EV 调整中超过真实事件观察支持的部分（核心）"
+    BESS_compensation: "EV 没完成以后需要 BESS 补多少（核心）"
+    PCC_residual: "BESS 也没补完以后剩多少（核心）"
+    transformer_violation: "是否仍超过变压器限制"
+    accepted_real_EV_flex: "真正利用了多少真实观察到的 EV 调整能力"
+    conservatism: "实际有能力但控制器不敢用掉多少"
+  system_gate:                                  # review §29；工程效果，不做 CI
+    GO:
+      unsupported_or_bess_reduction_vs_strongest_baseline_pct_min: 10
+      pcc_transformer_not_worsened: true
+      more_real_flex_than_S1_conservative: true
+    CONDITIONAL_GO:
+      reduction_pct_range: [5, 10]
+      or_only_under: [pilot_rich, high_concurrency, pv_surplus, transformer_limited]
+      action: "写窄"
+    NO_GO:
+      s3_approx_s2_rolling_q95: true            # 差异 <5%
+      or_only_via_extreme_synthetic_params: true
+      action: "停止当前 performance 方向，不再开第二轮优化"
+  dynamic_replay_data_priority:                 # review §31；仅系统门过门后
+    P0: "已有可快速审计真实园区 PV/load（UCSD 路线可复活，但只在数据随手可得时）"
+    P1: "真实 PV + 透明园区负荷"
+    P2: "PV/负荷均透明模拟（必须写明 EV 响应真实、园区背景混合回放）"
+
+# --- 红灯（review §37；出现任一即停，不美化结果）---
+red_lights:
+  - {trigger: "正 pilot step 几乎没有", action: "删除主动增加主张"}
+  - {trigger: "M2 只比 rolling Q95 好 <5%", action: "M2 降级"}
+  - {trigger: "Candidate 只靠全部禁止上调获胜", action: "不构成有效方案"}
+  - {trigger: "系统收益来自极端 BESS/PV 参数", action: "不升主专利"}
+  - {trigger: "current-only 上调必须靠假设车辆响应", action: "不做该效果主张"}
+  - {trigger: "BESS 补偿降低只存在于模拟", action: "明确写混合回放"}
+  - {trigger: "M1 capability 无真实数据", action: "只做从属"}
+  - {trigger: "需要重新引入 D3 才能有效", action: "直接 No-Go"}
+  - {trigger: "需要 ML 才能超过 rolling baseline", action: "当前周期不做"}
+  - {trigger: "prior art 单一文献覆盖完整动作链", action: "立即收窄/停止"}
+
+# --- 术语纪律（AGENTS.md 红线；违规即退回）---
+term_discipline:
+  pilot_actual_diff: "导引/允许电流与实际响应差异（不得称命令失败/拒绝）"
+  absorbable_margin: "只用自然 pilot 正阶跃验证过增量响应的才能谈可吸收余量"
+  budget_diff: "只用观察值称预算差值（非可回收能力）"
+  response_simulator: "未通过验证的响应仿真器不得输出闭环收益结论"
+  forbidden_words: [投影, 权限, 命令失败, 拒绝, 可回收能力]
+
+# --- 禁止在线特征（AGENTS.md 红线）---
+forbidden_online_features:
+  items: [future_disconnect, final_kwh_delivered, future_done_charging_time,
+          true_soc, true_remaining_demand, accurate_future_departure,
+          bms_power_limit, pcs_reject_reason]
+  note: "上述只能作离线标签或评价；done_charging_time 仅在 D0-2 offline 排除窗内使用"
+
+# --- 推进顺序（review §36；不跳步）---
+execution_order:
+  1: "建立 E7-FAST 目录，不修改 frozen P2/P2.1"
+  2: "D0 信息类别覆盖统计"
+  3: "D0 自然 positive/negative pilot step 事件库"
+  4: "马上做数据充分性门"
+  5: "正 step 不足 → 立即收缩 claim，不救数据"
+  6: "只补 M2 数值上限"
+  7: "真实 EV 事件比较 pilot-only / rolling-Q95 / Candidate"
+  8: "rolling-Q95 同效 → 立即降级或停止"
+  9: "EV gate 通过 → 真实事件→园区光储充短周期嵌入"
+  10: "比较四个 system arm"
+  11: "系统 gate 通过 → 完整 5min 动态回放"
+  12: "同时做窄 prior-art element map"
+  13: "通过后停止扩展，进入交底书和权利要求撰写"
+
+# --- 最终可能结果（review §38）---
+possible_outcomes:
+  A_best: "正 pilot step 足够，M2 比 rolling Q95 明显更少过度上调，园区回放 BESS/PCC 残差下降 → 主方向直接进申请"
+  B_narrow_go: "M2 增量弱但 M3/M4 信息不足禁止无证据增加在系统层明显避免过度 EV 调整 → Claim 1 收缩为不同信息状态不同增降限制"
+  C_stop: "rolling Q95 + no-up 保守规则已解释完系统效果，信息分类无独立工程效果 → 当前 D1+D2 不强行申请"
+
+# --- 输出目录（review §32）---
+outputs:
+  e7_fast_root: "src/patent_preexperiment/e7_fast"
+  results_raw: "results/raw/e7_fast"
+  results_subdirs: [d0, ev_validation, park_replay]
+  reports: [E7_FAST_D0_data_gate.md, E7_FAST_EV_gate.md, E7_FAST_system_gate.md]
+  claim_tree_v3: "reports/patent_definition/claim_tree_v3_e7_fast.md"

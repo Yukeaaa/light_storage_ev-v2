@@ -1,0 +1,16 @@
+item,value,evidence
+config_path,D:\JobWorkspaces\light_storage_ev-v2\patent_preexperiment\configs\e7_fast.yaml,FROZEN
+rule_version,e7_fast_v1,FROZEN
+gate_level,A_level,D0
+gate_verdict,GO_active_increase,D0
+positive_events_train_val,11702,D0
+positive_sessions_train_val,4418,D0
+positive_stations_train_val,62,D0
+positive_months_train_val,18,D0
+negative_events_train_val,20725,D0
+negative_sufficient,True,D0
+test_positive_events,6687,D0
+external_positive_events,548,D0
+coverage_M2_pilot_actual_cycles,13037258,D0-1
+coverage_M3_current_only_cycles,14847750,D0-1
+coverage_M4_history_insufficient_cycles,416649,D0-1
