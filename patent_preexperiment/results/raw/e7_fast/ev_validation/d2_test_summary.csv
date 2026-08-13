@@ -1,0 +1,5 @@
+controller,n_events,over_sum_kw,over_mean_kw,under_sum_kw,hit_rate,coverage
+B0_no_increase,6643,0.0,0.0,4984.9514,0.0,0.0
+B1_pilot_only,6643,6227.3304,0.9374,1971.3247,0.5823,0.6045
+B2_rolling_q95,6643,2477.7888,0.373,3291.662,0.6406,0.3397
+C_candidate_m2,6643,1495.2623,0.2251,3664.772,0.6406,0.2648

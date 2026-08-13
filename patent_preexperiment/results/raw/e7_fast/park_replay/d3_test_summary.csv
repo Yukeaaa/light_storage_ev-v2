@@ -1,0 +1,5 @@
+arm,n_events,unexpected_ev_shortfall_sum,unplanned_bess_correction_sum,pcc_residual_sum,accepted_real_ev_flex_sum
+S0_unrestricted,6643,3627.42,2757.67,869.74,2976.44
+S1_conservative,6643,0.0,0.0,0.0,0.0
+S2_rolling_q95,6643,2477.79,1285.5,1192.29,1693.29
+S3_our_scheme,6643,1495.26,753.17,742.1,1320.18

@@ -253,6 +253,25 @@ d2_ev_validation:
       or_rolling_q95_equivalent: true
       action: "M2 不进入核心；收缩到 M3/M4 信息不足保护；不调 Q95、不换模型、不继续 ML"
     under_must_report: true                       # Under 必须摆主表；Over 改善但 Under 损失大 → 只能说"更保守抑制"，不能说"更准确识别能力"
+
+  # --- test 判定标准（single-exposure；D3 GO 后才允许跑，冻结于跑 test 前）---
+  test_policy:
+    exposure: single                              # 只能跑一次，禁止重复
+    freeze_before_run: true                       # 判定标准在跑 test 前冻结，禁止看了结果再定标准
+    same_thresholds_as_trainval: true             # test Go 门 = train+val 同标准
+    GO:
+      over_improvement_pct_min: 10                # 与 train+val 一致
+      coverage_ratio_pct_min: 50
+    CONDITIONAL:
+      over_improvement_pct_range: [5, 10]
+    FAIL:
+      over_improvement_pct_max: 5
+    on_fail_action: "M2 收窄到从属；主 claim 围绕 M3/M4 信息不足保护 + 系统层 shortfall 减少；不调参救场"
+    on_pass_action: "直接转专利交底书；M2 时间外推验证通过"
+    forbid: "禁止 test FAIL 后调 Q95/换模型/加 ML/恢复 D3 救场"
+    test_also_runs_d3: true                       # 同时跑 D3 test 回放验证系统层时间外推
+    d3_test_gate: "S3 vs S2 shortfall 降 ≥10% 且 unplanned_bess 降 ≥10%（同 train+val）"
+
   negative_event_use: "只做响应标定（median gain / p25 p75 / 5min 实际下降量 / 不响应比例），不造新算法；用于园区回放"
   no_extrapolation_rule:                        # review §22
     rule: "真实 pilot 事件中观察到的实际变化量 = 本事件可验证的实际响应支持量；candidate 允许量 <= 此量视为未超出；超出部分视为未被真实观察支持"

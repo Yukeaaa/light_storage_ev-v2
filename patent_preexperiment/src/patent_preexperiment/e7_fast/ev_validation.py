@@ -73,17 +73,21 @@ def compute_p_support(actual_before: pd.Series, actual_5min: pd.Series) -> pd.Se
     return pd.Series(np.maximum(actual_5min - actual_before, 0.0), index=actual_before.index)
 
 
-def filter_m2_evaluation_set(events: pd.DataFrame, cfg: E7FastConfig) -> pd.DataFrame:
+def filter_m2_evaluation_set(
+    events: pd.DataFrame, cfg: E7FastConfig, *, splits: tuple[str, ...] | None = None
+) -> pd.DataFrame:
     """正式评价集过滤（用户口径 §1）：正向 + info_mode==M2 + q95/actual 有效
-    + train+val + 排除 external。
+    + 指定 splits + 排除 external。
 
     info_mode_before 必须为 M2_pilot_actual（pilot+actual+history sufficient）。
     history_q95_before_kw / actual_before_kw 有效（非 NaN/None）。
+    splits 默认 GATE_SPLITS(train+validation)；test exposure 传 splits=("test",)。
     """
     external_only = set(cfg.split.external_only)
+    use_splits = splits if splits is not None else GATE_SPLITS
     mask = (
         (events["direction"] == "up")
-        & (events["split"].isin(GATE_SPLITS))
+        & (events["split"].isin(use_splits))
         & (~events["site"].isin(external_only))
         & (events["info_mode_before"] == M2)
         & events["history_q95_before_kw"].notna()
@@ -179,16 +183,25 @@ class D2Verdict:
 
 
 def evaluate_ev_gate(
-    events: pd.DataFrame, cfg: E7FastConfig
+    events: pd.DataFrame, cfg: E7FastConfig, *, splits: tuple[str, ...] | None = None
 ) -> tuple[dict[str, ControllerMetrics], D2Verdict]:
-    """对正向 M2 pilot 事件计算四控制器指标并按 review §17 + 用户冻结公式判定 Go 门。"""
-    gate_cfg = cfg.raw["d2_ev_validation"]["gate"]
-    go_over_min = float(gate_cfg["GO"]["over_improvement_vs_strongest_baseline_pct_min"])
+    """对正向 M2 pilot 事件计算四控制器指标并按 review §17 + 用户冻结公式判定 Go 门。
+
+    splits 默认 GATE_SPLITS(train+validation)；test exposure 传 splits=("test",)。
+    """
+    # test exposure 用 test_policy 的冻结标准；train+val 用 gate 的冻结标准（同阈值）
+    if splits is not None and "test" in splits:
+        gate_cfg = cfg.raw["d2_ev_validation"]["test_policy"]
+    else:
+        gate_cfg = cfg.raw["d2_ev_validation"]["gate"]
+    go_over_min = float(gate_cfg["GO"]["over_improvement_pct_min"]
+                        if "over_improvement_pct_min" in gate_cfg["GO"]
+                        else gate_cfg["GO"]["over_improvement_vs_strongest_baseline_pct_min"])
     go_cov_min = float(gate_cfg["GO"]["coverage_ratio_pct_min"])
     cond_range = gate_cfg["CONDITIONAL"]["over_improvement_pct_range"]
     fail_max = float(gate_cfg["FAIL"]["over_improvement_pct_max"])
 
-    pos = filter_m2_evaluation_set(events, cfg)
+    pos = filter_m2_evaluation_set(events, cfg, splits=splits)
 
     if pos.empty:
         verdict = D2Verdict(
