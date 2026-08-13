@@ -1,9 +1,12 @@
 # 03 技术交底书（E7-FAST v3）
 
 > **状态：CURRENT AUTHORITY**（替代 v2 tech_disclosure.md，后者顶部 banner 已标注过时）
-> 项目判定：FILING GO / NARROW CLAIM STRATEGY
-> 证据链：D0/D2/D3/test 全部 GO（commits cd3232c / 8f9e93d / b87edc9 / 48b5205）
+> 项目判定：FILING GO / NARROW CLAIM STRATEGY（D3 corrective audit 后主 Claim 收窄为 M2）
+> 证据链：D0 GO / D2 train+val+test GO / D3 corrective audit train+val FAIL / test CONDITIONAL
+> （commits cd3232c / 8f9e93d / b87edc9 / 48b5205 + D3 corrective audit）
 > 配套权威：`01_claim_tree_v3_e7_fast.md` + `02_prior_art_element_map_v3_e7_fast.md`
+>
+> **★ 2026-08-14 D3 corrective audit 修正**：旧 D3 系统效果数字作废，主 Claim 依赖 D2。
 >
 > **内部工程与专利策略交底文件 · 非法律意见**
 
@@ -41,11 +44,14 @@
 |---|---|---|
 | US10464435B2（ChargePoint）| 历史响应限制 | D 双重共同约束 + E fail-closed + G/H 园区协调 |
 | US20220153162A1 | EMS+charger 协调 | C 历史响应 + D 双重约束 + E fail-closed |
+| **US10230198B2（Schneider）**| **pilot+actual 取较小值** | **★★ D 最危险近邻；缺 E+G** |
+| **US11376981B2（ACN 族）**| **pilot+actual 理解车辆能力** | **缺 D（作为限制）+ E + G** |
 | CN116316754B | 光储充可调度容量评估 | C/D/E + I/J 执行缺口传播 |
 | CN121886483A | 光储充多级协调架构 | 车辆侧 C/D/E 机制 |
 
-**无单一文献覆盖 D+E+G+H 组合**（双重共同约束 + 信息不足 fail-closed + 园区需求-能力差
-执行 + 剩余交 BESS/PCC）。
+**★ 无单一文献覆盖 D+E+G 组合**（双重共同约束 + 信息不足 fail-closed + 请求限幅）。
+**Schneider US10230198B2 是 D 最危险近邻**（已教示 pilot+actual 取较小值），
+创造性必须靠 D+E+G 组合，不能靠 D 单独。BESS/PCC（H）降为弱从属。
 
 ---
 
@@ -60,21 +66,20 @@
 汇总各车允许调整量后，仅将其中可承担部分安排给 EV，剩余园区功率调整需求再由储能和/或
 电网接口处理。
 
-### 4.2 控制流程（Claim 1 八步）
+### 4.2 控制流程（Claim 1 六步；★ corrective audit 后收窄）
 
 ```
-Step 1: 获取园区 PV/基础负荷/BESS 可充放/PCC 或变压器限制/EV 总功率
-Step 2: 确定本周期 EV 调整需求（增加量或降低量）
-Step 3: 获取各车辆当前可获得信息（桩侧允许、实际功率、实际历史）
-Step 4: 按信息类别采用不同增减规则：
-        - 有桩侧允许 + 有效历史 → 上调同时受两者共同限制（M2）
-        - 缺桩侧允许但有历史 → 不主动上调，可降低（M3）
-        - 历史不足 → 保持原安排（M4）
-Step 5: 汇总各车允许增减量 → EV 群最大允许增加/降低量
-Step 6: 园区需求超出 EV 群范围时只执行可承担部分
-Step 7: 剩余交 BESS 补偿；BESS 不足 → PCC 偏差
-Step 8: 下一周期重新获取状态重复
+Step 1: 获取 EMS 确定的电动汽车聚合功率上调请求 ΔP_req
+Step 2: 获取各车辆当前可获得信息（桩侧允许、实际功率、实际历史）
+Step 3: 对有桩侧允许+有效历史的车辆，上调同时受两者共同限制（M2 双重约束）；
+        缺桩侧允许 → 不主动上调（M3）；历史不足 → 保持（M4）
+Step 4: 汇总各车允许增加量 → EV 群最大允许增加量 ΔP_EV,max = Σ_i ΔP_i,allow
+Step 5: 实际采用 ΔP_EV = min(ΔP_req, ΔP_EV,max)（请求限幅）
+Step 6: 下一周期重新获取状态重复
 ```
+
+> **★ corrective audit 后**：BESS/PCC 补偿从 Claim 1 主链移至 Claim 9/10 强从属。
+> Step 7（剩余交 BESS、BESS 不足 → PCC）不再是 Claim 1 必要步骤，仅作实施例背景。
 
 ### 4.3 关键实施例
 
@@ -92,26 +97,29 @@ Step 8: 下一周期重新获取状态重复
 
 ---
 
-## 5. 技术效果（证据支撑，详见 05）
+## 5. 技术效果（证据支撑，详见 05；★ D3 corrective audit 后修正）
 
 ### 5.1 已验证效果
 
-| 效果 | 证据 | 数值（vs 最强简单 baseline rolling-Q95）|
-|---|---|---|
-| 减少超过真实响应支持的上调量 | D2 train+val + test | Over 降低 30%（train+val）→ 40%（test）|
-| 减少 EV 执行缺口 | D3 train+val + test | shortfall 降低 30% → 40% |
-| 减少事后 BESS 临时补偿 | D3 train+val + test | unplanned_bess 降低 15% → 41% |
-| PCC 残差未恶化 | D3 | True |
-| 真实利用 EV 调整能力 | D3 | S3 flex 显著高于"禁止增加"的 S1 |
+| 效果 | 证据 | 数值（vs 最强简单 baseline rolling-Q95）| 判定 |
+|---|---|---|---|
+| 减少超过真实响应支持的上调量 | D2 train+val + test | Over 降低 30%（train+val）→ 40%（test）| **B 级 GO** |
+| 减少 EV 执行缺口 | D3 corrective audit | train+val 0.01%（FAIL），test 4.46%（CONDITIONAL）| **弱/降级** |
+| 减少事后 BESS 临时补偿 | D3 corrective audit | train+val 0.01%（FAIL），test 6.03%（CONDITIONAL）| **弱/降级** |
+| PCC 残差未恶化 | D3 corrective audit | True | ✅ |
+| 真实利用 EV 调整能力 | D3 | S3 flex 显著高于"禁止增加"的 S1 | ✅ |
+
+> **★ corrective audit 修正**：旧 D3 数字（shortfall 降 30%→40%，bess 降 15%→41%）作废。
+> 修正后 D3 系统效果弱（train+val FAIL）→ BESS/PCC 降为弱从属，不作为 Claim 1 必要技术效果。
+> **主 Claim 技术效果依赖 D2**（M2 双重约束减少 Over improvement 30%→40%）。
 
 ### 5.2 效果表述边界（必须遵守，见 06）
 
 **可以写**：
-> 混合回放结果表明，所述控制规则相比仅基于历史实际响应的单一限制，能减少超过真实事件
-> 后续响应支持的电动汽车功率上调量，并进一步减少模型中的储能临时补偿需求和电网接口
-> 剩余功率偏差。
+> 真实充电数据验证表明，所述双重上调限制规则相比仅基于历史实际响应的单一限制，
+> 能减少超过真实事件后续响应支持的电动汽车功率上调量（Over improvement 30%→40%）。
 
-**不可以写**：
+**不可以写**（corrective audit 后加强限制）：
 - "真实工商业园区实测储能补偿降低 41%"（BESS/PCC 是混合回放，非实测）
 - "准确识别车辆最大充电能力"（Candidate 更保守，非更准确）
 - "适用于所有车型/园区"（ACN 主要是 workplace charging）

@@ -2,20 +2,25 @@
 
 > 精简版证据表，供代理师快速理解技术效果支撑。完整数据见
 > `results/raw/e7_fast/` + `reports/E7_FAST_*_gate.md`。
-> 项目判定：**FILING GO / NARROW CLAIM STRATEGY**
+> 项目判定：**FILING GO / NARROW CLAIM STRATEGY**（D3 corrective audit 后主 Claim 收窄为 M2）
+> **★ 2026-08-14 D3 corrective audit 修正**：旧 D3 系统效果数字作废，详见 §4。
 
 ---
 
-## 1. 证据链总览
+## 1. 证据链总览（corrective audit 后）
 
 ```
 D0 数据充分性门        → A 级 GO（11702 正向事件）
-D2 EV 验证 (train+val) → GO（M2 双重约束 vs rolling-Q95）
-D3 系统验证 (train+val)→ GO（S3 vs S2 系统层效果）
-D2+D3 test 单次暴露    → TEST_PASS（未见时段复现，效果更强）
+D2 EV 验证 (train+val) → GO（M2 双重约束 vs rolling-Q95，30.08% Over improvement）
+D3 系统验证 (train+val)→ FAIL（corrective audit 后系统效果 0.01%）
+D2 test 单次暴露       → TEST_PASS（Over improvement 39.65%，D2 不受 bug 影响）
+D3 test corrective 回放→ CONDITIONAL（4.46%，非新 single-exposure）
 ```
 
-全部 commit：cd3232c / 8f9e93d / b87edc9 / 48b5205
+全部 commit：cd3232c / 8f9e93d / b87edc9 / 48b5205 + D3 corrective audit
+
+> **关键**：D2 是项目最硬证据（不受 request-cap bug 影响）。
+> D3 系统效果弱 → BESS/PCC 降为弱从属，主 Claim 依赖 M2（D2 支撑）。
 
 ---
 
@@ -67,39 +72,50 @@ test 比 train+val 更强 → 时间外推稳健。
 
 ## 4. D3 系统验证（S3 vs S2，园区短周期嵌入）
 
-### 4.1 train+validation
+### 4.1 train+validation（★ D3 corrective audit 后；旧数字作废）
+
+> **★ 审查 corrective audit P0 修正**：旧 D3 代码 ev_accepted 未与 park_requested 取 min，
+> 系统效果数字（shortfall 降 30.08%，bess 降 15.27%）**作废**。
+> 修正后 ev_accepted = min(park_requested, arm_allowed_up)。
 
 | arm | ①shortfall | ②unplanned_bess | ③pcc_residual | ④accepted_flex |
 |---|---|---|---|---|
 | S0 乐观 | 10197 | 6958 | 3239 | 5915 |
 | S1 禁止增加 | 0 | 0 | 0 | 0 |
-| **S2 rolling-Q95**（最强 baseline）| 5338 | 2567 | 2771 | 3718 |
-| **S3 M2 方案**（候选）| 3732 | 2175 | 1558 | 3233 |
+| **S2 rolling-Q95** | 3110 | 1986 | 1124 | 3025 |
+| **S3 M2 方案** | 3110 | 1986 | 1124 | 3024 |
 
-| 指标 | S3 vs S2 | 阈值 |
-|---|---|---|
-| ① unexpected_shortfall 降 | **30.08%** | ≥10% ✅ |
-| ② unplanned_bess 降 | **15.27%** | ≥10% ✅ |
-| ③ pcc_residual 未恶化 | True | ✅ |
-| ④ S3 flex > S1×1.1 | True（3233 > 0）| ✅ |
+| 指标 | S3 vs S2 | 阈值 | 判定 |
+|---|---|---|---|
+| ① unexpected_shortfall 降 | **0.01%** | ≥10% | **FAIL** |
+| ② unplanned_bess 降 | **0.01%** | ≥10% | **FAIL** |
+| ③ pcc_residual 未恶化 | True | True | ✅ |
+| ④ S3 flex > S1×1.1 | True | True | ✅ |
 
-### 4.2 test（single-exposure）
+**结论（修正后）**：train+val 系统效果**基本消失**（S2 与 S3 shortfall 几乎相同）。
+原因：request-cap 后 S2/S3 在多数事件上都被 cap 到同一 park_requested，
+车辆侧 allowed_up 差异不再传播到 accepted。
 
-| 指标 | S3 vs S2 | 阈值 |
-|---|---|---|
-| ① shortfall 降 | **39.65%** | ≥10% ✅ |
-| ② unplanned_bess 降 | **41.41%** | ≥10% ✅ |
-| ③ pcc 未恶化 | True | ✅ |
+### 4.2 test（corrective audit 回放；非新 single-exposure）
 
-**结论**：M2 方案接入园区光储充后，减少 **EV 执行缺口 30%→40%**、**事后 BESS 临时补偿
-15%→41%**，PCC 残差未恶化。
+| 指标 | S3 vs S2 | 阈值 | 判定 |
+|---|---|---|---|
+| ① shortfall 降 | **4.46%** | ≥10% | **CONDITIONAL** |
+| ② unplanned_bess 降 | **6.03%** | ≥10% | **CONDITIONAL** |
+| ③ pcc 未恶化 | True | True | ✅ |
 
-**关键区分**：比较的是"**事后** BESS 临时补偿（unplanned_bess_correction）"，
-**不是**笼统的"BESS 总补偿能量"。事前 planned_bess 是正常协调，不算控制失败。
-S3 的 total_bess（12152）与 S2（12543）接近 → planned_bess 未失控增加。
+**结论（修正后）**：test 有微弱系统效果（4-6%），但不达 10% 门 → CONDITIONAL。
+
+### 4.3 D3 corrective audit 对专利的影响
+
+- **D2 不受影响**（D2 不使用 park_requested/BESS/PCC），D2 train+val/test 仍 GO。
+- **D3 系统效果**：train+val FAIL，test CONDITIONAL → **BESS/PCC 降为弱从属**，
+  不作为 Claim 1 必要技术效果。
+- **主 Claim 收窄**为 M2 双重上调限制 + 群汇总 + 请求限幅（不依赖系统效果）。
+- 旧 D3 数字（shortfall 降 30%/40%，bess 降 15%/41%）**作废，不得引用**。
 
 **诚实边界**：BESS/PCC 证据是**混合回放**（EV 响应真实，园区 PV/load/BESS/PCC 为
-工程场景/模型），**不是真实园区实测**。
+工程场景/模型），**不是真实园区实测**。修正后系统效果弱，进一步降低 BESS/PCC 证据权重。
 
 ---
 

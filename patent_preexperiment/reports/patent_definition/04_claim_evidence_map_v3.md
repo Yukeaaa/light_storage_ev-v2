@@ -15,37 +15,41 @@
 
 ---
 
-## Claim ↔ 实验 ↔ 证据等级
+## Claim ↔ 实验 ↔ 证据等级（★ D3 corrective audit 后修正）
 
 | Claim | 内容摘要 | 支撑实验 | 证据等级 | 关键数值 |
 |---|---|---|---|---|
-| **Claim 1**（主链 8 步）| 园区需求→车辆信息→不同增减规则→汇总→限制→BESS/PCC | D0+D2+D3+test | **C** | D2 Over↓30%→40%；D3 shortfall↓30%→40% |
+| **Claim 1**（M2 双重限制+群汇总+请求限幅）| EMS 请求→双重约束上调→群汇总→min(req,sum_allow) | D0+D2+test | **B** | D2 Over↓30%→40%（D2 不受 bug 影响）|
 | Claim 2 | M2 双重约束（上调同时受桩侧允许+历史支持共同限制）| D2+test | **B** | D2 train+val Over↓30%；test Over↓40% |
 | Claim 3 | P_upper = max(P_actual, min(P_charger_allow, P_history)) | D2+test | **B** | 同上（C_candidate_m2 实现）|
 | Claim 4 | 历史支持水平 = 预定窗口内因果化统计上界 | D0+D2 | **B** | Q95 15min 窗 shift(1) 因果化 |
-| Claim 5 | 缺桩侧允许但有历史 → 不主动上调，可降低 | D0+D2 B0 对照 | **C** | D0 M3 覆盖 14.8M cycle；S1(B0) flex=0 对照 |
+| Claim 5 | 缺桩侧允许但有历史 → 不主动上调，可降低 | D0 | **C** | D0 M3 覆盖 14.8M cycle |
 | Claim 6 | 历史不足 → 保持原安排 | D0 | **C** | D0 M4 覆盖 416K cycle |
 | Claim 7 | capability 可得时在能力范围内增减 | 无真实数据 | **D** | ACN 无 BMS capability；仅从属 |
-| Claim 8 | 多车允许增减量汇总 | D3 | **C** | D3 EV 群汇总（单车场景单事件回放）|
-| Claim 9 | BESS 补偿受 SOC/功率/效率约束 | D3 | **C** | D3 BESS 物理模型 SOC 50% 10-90% |
-| Claim 10 | BESS 不足 → PCC 偏差 | D3 | **C** | D3 pcc_residual 未恶化 |
+| Claim 8 | 多车允许增加量汇总 + 请求限幅 min(req,sum) | D2+工程逻辑 | **B** | D2 验证 allowed_up；请求限幅是工程必然 |
+| Claim 9 | BESS 补偿受 SOC/功率/效率约束 | D3 corrective | **D** | train+val 系统效果 FAIL（0.01%）|
+| Claim 10 | BESS 不足 → PCC 偏差 | D3 corrective | **D** | test CONDITIONAL（4.46%/6.03%）|
 | Claim 11 | PV 富余/防逆流场景 | D3-U | **C** | D3-U 主场景（PV surplus=delta_pilot）|
 | Claim 12 | 变压器容量受限/需量场景 | 未单独验证 | **D** | D3-D 闭合验证未做主门；仅从属 |
 
+> **★ corrective audit 修正**：Claim 1 从 C 级升为 B 级（依赖 D2，不依赖 D3 系统效果）；
+> Claim 9/10 从 C 级降为 D 级（系统效果 train+val FAIL）。
+
 ---
 
-## 技术效果证据（I/J 元素）
+## 技术效果证据（I/J 元素；★ corrective audit 后修正）
 
 | 技术效果 | 实验 | 证据等级 | 数值（vs S2 rolling-Q95）|
 |---|---|---|---|
-| I: 减少 EV 已安排但未完成的功率调整（unexpected_shortfall）| D3 train+val | **C**（混合回放）| 降 30.08% |
-| I: test 复现 | D3 test | **C** | 降 39.65% |
-| J: 减少事后 BESS 临时补偿（unplanned_bess_correction）| D3 train+val | **C** | 降 15.27% |
-| J: test 复现 | D3 test | **C** | 降 41.41% |
-| J: PCC 残差未恶化 | D3 | **C** | True |
+| I: 减少 EV 已安排但未完成的功率调整（unexpected_shortfall）| D3 corrective train+val | **D**（弱）| 降 0.01%（FAIL）|
+| I: test corrective 回放 | D3 corrective test | **D** | 降 4.46%（CONDITIONAL）|
+| J: 减少事后 BESS 临时补偿（unplanned_bess_correction）| D3 corrective train+val | **D**（弱）| 降 0.01%（FAIL）|
+| J: test corrective 回放 | D3 corrective test | **D** | 降 6.03%（CONDITIONAL）|
+| J: PCC 残差未恶化 | D3 corrective | **C** | True |
 
-> I/J 均为 **C 级（混合回放）**：EV 响应真实，园区 PV/load/BESS/PCC 为工程场景/模型。
-> 不得声称"真实园区实测"。
+> **★ corrective audit 修正**：I/J 从 C 级降为 D 级（混合回放 + 系统效果弱）。
+> 旧数字（shortfall 降 30%/40%，bess 降 15%/41%）**作废**。
+> **I/J 不作为 Claim 1 必要技术效果**，仅作 Claim 9/10 弱从属背景。
 
 ---
 

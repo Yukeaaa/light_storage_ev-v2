@@ -1,6 +1,6 @@
 # E7-FAST D2+D3 Test Single-Exposure 报告
 
-> 生成时间（UTC）：2026-08-13T10:10:42Z
+> 生成时间（UTC）：2026-08-13T14:40:26Z
 > 配置：`D:\JobWorkspaces\light_storage_ev-v2\patent_preexperiment\configs\e7_fast.yaml`（rule_version=e7_fast_v1，冻结）
 > 依据：用户 D2 冻结口径 §16；test single-exposure，禁止重复
 
@@ -33,24 +33,23 @@
 |---|---:|---:|---:|---:|
 | S0_unrestricted | 3627.42 | 2757.67 | 869.74 | 2976.44 |
 | S1_conservative | 0.00 | 0.00 | 0.00 | 0.00 |
-| S2_rolling_q95 | 2477.79 | 1285.50 | 1192.29 | 1693.29 |
-| S3_our_scheme | 1495.26 | 753.17 | 742.10 | 1320.18 |
+| S2_rolling_q95 | 1075.26 | 755.30 | 319.96 | 1356.50 |
+| S3_our_scheme | 1027.27 | 709.76 | 317.51 | 1293.42 |
 
 | 指标 | 值 | 阈值 |
 |---|---|---|
-| S3 vs S2 shortfall 降 | 39.65% | GO>=10% |
-| S3 vs S2 unplanned_bess 降 | 41.41% | GO>=10% |
-| 判定 | **GO — D3_system_value_valid** | — |
+| S3 vs S2 shortfall 降 | 4.46% | GO>=10% |
+| S3 vs S2 unplanned_bess 降 | 6.03% | GO>=10% |
+| 判定 | **CONDITIONAL — D3_narrow_only** | — |
 
-> S3 vs S2: unexpected_shortfall 降 39.7%>=10.0%，unplanned_bess 降 41.4%>=10.0%，PCC residual 未恶化，S3 flex(1320)>S1(0)×1.1。
+> S3 vs S2: shortfall 降 4.5% / bess 降 6.0%（条件区间 5-10%）；写窄，M2 只作条件实施方式。
 
 ## 4. 总判定
 
-### **TEST_PASS**
+### **TEST_FAIL_OR_CONDITIONAL**
 
-- D2+D3 test 均通过。M2 时间外推验证通过。
-- **直接转专利交底书**（claim_tree_v3_e7_fast.md + prior-art element map）。
-- 不需做 24h 动态回放（除非明确要求）。
+- test 条件通过。M2 收窄到从属；主 claim 围绕 M3/M4 + 系统层 shortfall。
+- 仍可转交底书，但 M2 主动增加只作条件实施方式。
 
 ## 5. 产物文件
 

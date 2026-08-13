@@ -1,5 +1,5 @@
 arm,n_events,unexpected_ev_shortfall_sum,unplanned_bess_correction_sum,pcc_residual_sum,accepted_real_ev_flex_sum,conservatism_sum,total_bess_activity_sum
 S0_unrestricted,10893,10196.94,6958.24,3238.69,5914.77,2764.18,6958.24
 S1_conservative,10893,0.0,0.0,0.0,0.0,8678.96,16111.71
-S2_rolling_q95,10893,5337.8,2566.56,2771.24,3717.9,4961.05,12543.28
-S3_our_scheme,10893,3731.98,2174.53,1557.45,3232.85,5446.11,12152.2
+S2_rolling_q95,10893,3109.92,1986.33,1123.58,3025.08,5653.87,11963.05
+S3_our_scheme,10893,3109.67,1986.19,1123.48,3024.37,5654.58,11963.86

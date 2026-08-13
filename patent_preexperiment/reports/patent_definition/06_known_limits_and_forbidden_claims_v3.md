@@ -1,8 +1,9 @@
 # 06 已知限制与禁用表述 v3（E7-FAST）— 代理师必读
 
-> 本文件明确哪些表述**不得**写入专利申请，哪些证据边界**必须**遵守。
+> 本文件明确哪些表述**不得**写入专利申请/说明书，哪些证据边界**必须**遵守。
 > 违反这些限制将导致申请面临现有技术风险或证据不可信风险。
-> 项目判定：**FILING GO / NARROW CLAIM STRATEGY**
+> 项目判定：**FILING GO / NARROW CLAIM STRATEGY**（D3 corrective audit 后主 Claim 收窄为 M2）
+> **★ 2026-08-14 D3 corrective audit 修正**：见 §4 新增 corrective audit 限制。
 
 ---
 
@@ -23,6 +24,9 @@
 | "投影 / 权限"（术语）| 模糊；review §2 禁用 | "桩侧允许信息"、"预算修正允许区间" |
 | "命令失败 / 拒绝"（术语）| AGENTS.md 红线 | "导引/允许电流与实际响应差异" |
 | "可回收能力"（术语）| AGENTS.md 红线 | "预算差值"（仅观察值）|
+| **★ "减少 EV 执行缺口 30%/40%"** | **D3 corrective audit 后作废**（实际 0.01%/4.46%）| 不主张 shortfall 系统效果 |
+| **★ "减少 BESS 临时补偿 15%/41%"** | **D3 corrective audit 后作废**（实际 0.01%/6.03%）| 不主张 BESS 系统效果 |
+| **★ "系统层效果（BESS/PCC）作为 Claim 1 必要技术效果"** | **corrective audit 后 train+val FAIL** | BESS/PCC 仅 Claim 9/10 弱从属 |
 
 ---
 
@@ -39,27 +43,29 @@
 | EMS 需求 | SYNTHETIC_CONTROLLER | = delta_pilot_kw，独立于方案 |
 | **系统层效果（shortfall/BESS/PCC）** | **混合回放** | **必须称"混合回放结果"**，不得称"实测" |
 
-### 2.2 关键句子模板
+### 2.2 关键句子模板（★ corrective audit 后修正）
 
 **可以写**：
-> "基于真实电动汽车充电时序数据的混合回放验证表明，所述控制规则相比仅基于历史实际响应的
-> 单一限制，能减少超过真实事件后续响应支持的电动汽车功率上调量，并进一步减少模型中的
-> 储能临时补偿需求和电网接口剩余功率偏差。"
+> "基于真实电动汽车充电时序数据的验证表明，所述双重上调限制规则相比仅基于历史实际响应的
+> 单一限制，能减少超过真实事件后续响应支持的电动汽车功率上调量（Over improvement
+> 降低约 30%→40%）。"
 
 **不可以写**：
 > "真实工商业园区实测储能补偿降低 41%。"
 > "本发明准确识别车辆最大充电能力。"
 > "适用于所有 DC 快充/所有 BMS/所有工业园。"
+> **★ "减少 EV 执行缺口 30%/40%" / "减少 BESS 临时补偿 15%/41%"**（corrective audit 后作废）
 
 ---
 
 ## 3. Claim 范围限制
 
-### 3.1 主 Claim 必须保持窄而具体
+### 3.1 主 Claim 必须保持窄而具体（★ corrective audit 后收窄）
 
 - **不**写"一种光储充联合功率优化方法"（宽泛，prior art 拥挤）
-- **不**把 `min(pilot,Q95)` 单独当作创造性来源（易被拆成常规组合）
-- **保护**：D+E+G+H 组合（双重共同约束 + 信息不足 fail-closed + 园区需求-能力差执行 + 剩余交 BESS/PCC）
+- **不**把 `min(pilot,Q95)` 单独当作创造性来源（★★ Schneider US10230198B2 已教示取较小值）
+- **保护**：**D+E+G 组合**（双重共同约束 + 信息不足 fail-closed + 请求限幅 min(req,sum_allow)）
+- **★ BESS/PCC（H）降为弱从属**：corrective audit 后系统效果 train+val FAIL，不作为 Claim 1 必要技术效果
 
 ### 3.2 具体参数放从属
 
@@ -92,16 +98,16 @@
 
 ---
 
-## 5. 项目状态冻结
+## 5. 项目状态冻结（★ corrective audit 后修正）
 
 ```
 E7-FAST EXPERIMENTAL EXPLORATION = CLOSED
 
 D0 = GO (A_level)
-D2_DEV (train+val) = GO
-D3_DEV (train+val) = GO
-D2_TEST = PASS
-D3_TEST = PASS
+D2_DEV (train+val) = GO            ★ 不受 request-cap bug 影响
+D3_DEV (train+val) = FAIL          ★ corrective audit 后（旧 GO 作废）
+D2_TEST = PASS                     ★ 不受 bug 影响，Over improvement 39.65%
+D3_TEST = CONDITIONAL              ★ corrective audit 后（旧 PASS 作废，4.46%）
 
 NEW MODEL DEVELOPMENT = STOP
 D3 RECOVERY = CLOSED (P2.1A FAIL)
@@ -110,6 +116,10 @@ ML/RL = CLOSED
 24H DYNAMIC REPLAY = OPTIONAL IMPLEMENTATION SUPPORT
                      = NOT FILING GATE
 ```
+
+> **★ D3 corrective audit 影响**：D3 系统效果弱 → BESS/PCC（H）降为弱从属；
+> 主 Claim 依赖 D2（M2 双重约束），不依赖 D3 系统效果。
+> 旧 D3 数字（shortfall 降 30%/40%，bess 降 15%/41%）**作废**。
 
 24h 动态回放仅当代理师明确要求"完整日运行实施例（SOC/PV/PCC 曲线）"时再补，
 **不是申请前置条件**。

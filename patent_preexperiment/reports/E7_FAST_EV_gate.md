@@ -1,6 +1,6 @@
 # E7-FAST D2 真实 EV 数据验证门报告
 
-> 生成时间（UTC）：2026-08-13T07:11:21Z
+> 生成时间（UTC）：2026-08-13T14:35:25Z
 > 配置：`D:\JobWorkspaces\light_storage_ev-v2\patent_preexperiment\configs\e7_fast.yaml`（rule_version=e7_fast_v1，冻结）
 > 依据：review §14-18 / §36 step 6-7 + 用户 D2 冻结口径
 

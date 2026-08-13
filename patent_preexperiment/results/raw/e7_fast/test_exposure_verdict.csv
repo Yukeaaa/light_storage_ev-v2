@@ -1,2 +1,2 @@
 d2_test_level,d2_test_verdict,d2_over_improvement_pct,d2_coverage_ratio_pct,d3_test_level,d3_test_verdict,d3_shortfall_reduction_pct,d3_unplanned_bess_reduction_pct,overall
-GO,M2_active_increase_valid,39.65,77.97,GO,D3_system_value_valid,39.65,41.41,TEST_PASS
+GO,M2_active_increase_valid,39.65,77.97,CONDITIONAL,D3_narrow_only,4.46,6.03,TEST_FAIL_OR_CONDITIONAL

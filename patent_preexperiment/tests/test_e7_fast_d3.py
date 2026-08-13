@@ -85,17 +85,35 @@ def test_core_quantities_s2_vs_s3_shortfall():
 
 
 def test_core_quantities_s3_better_than_s2():
-    # pilot_after=4.5 < q95=9 → S3=min(4.5,9)-4=0.5; S2=9-4=5
+    # ★ request-cap 修正后：accepted = min(request, arm_allowed)
+    # pilot_after=4.5 < q95=9 → S3 uncapped=0.5; S2 uncapped=5
+    # request=3 → S2 accepted=min(3,5)=3; S3 accepted=min(3,0.5)=0.5
     # observed_support = max(4.3-4,0)=0.3
-    # S2 shortfall = max(5-0.3,0)=4.7; S3 shortfall = max(0.5-0.3,0)=0.2 → S3 better
+    # S2 shortfall = max(3-0.3,0)=2.7; S3 shortfall = max(0.5-0.3,0)=0.2 → S3 better
     evs = _mk_events([{
         "actual_before_kw": 4.0, "pilot_after_kw": 4.5, "delta_pilot_kw": 3.0,
         "actual_5min_kw": 4.3, "history_q95_before_kw": 9.0,
     }])
     r2 = replay_arm("S2_rolling_q95", evs)
     r3 = replay_arm("S3_our_scheme", evs)
+    assert r2["ev_accepted_delta"].iloc[0] == pytest.approx(3.0)  # capped at request
+    assert r3["ev_accepted_delta"].iloc[0] == pytest.approx(0.5)  # below request
+    assert r2["arm_allowed_up_uncapped"].iloc[0] == pytest.approx(5.0)
     assert r3["unexpected_ev_shortfall"].iloc[0] < r2["unexpected_ev_shortfall"].iloc[0]
     assert r3["unplanned_bess_correction"].iloc[0] <= r2["unplanned_bess_correction"].iloc[0]
+
+
+def test_request_cap_enforced():
+    # ★ 审查 P0：accepted 绝不超过 park_requested
+    # S2 uncapped=5 > request=2 → accepted=2
+    evs = _mk_events([{
+        "actual_before_kw": 4.0, "pilot_after_kw": 10.0, "delta_pilot_kw": 2.0,
+        "actual_5min_kw": 4.0, "history_q95_before_kw": 9.0,
+    }])
+    r2 = replay_arm("S2_rolling_q95", evs)
+    assert r2["arm_allowed_up_uncapped"].iloc[0] == pytest.approx(5.0)
+    assert r2["ev_accepted_delta"].iloc[0] == pytest.approx(2.0)  # capped
+    assert r2["ev_accepted_delta"].iloc[0] <= r2["park_requested_ev_delta"].iloc[0]
 
 
 def test_planned_bess_not_counted_as_unplanned():

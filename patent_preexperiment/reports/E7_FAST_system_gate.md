@@ -1,6 +1,6 @@
 # E7-FAST D3 园区系统验证门报告
 
-> 生成时间（UTC）：2026-08-13T08:25:52Z
+> 生成时间（UTC）：2026-08-13T14:40:09Z
 > 配置：`D:\JobWorkspaces\light_storage_ev-v2\patent_preexperiment\configs\e7_fast.yaml`（rule_version=e7_fast_v1，冻结）
 > 依据：review §19-31 / §36 step 9 + 用户 D3 冻结口径
 
@@ -20,8 +20,8 @@
 |---|---:|---:|---:|---:|---:|---:|
 | S0_unrestricted | 10196.94 | 6958.24 | 3238.69 | 5914.77 | 2764.18 | 6958.24 |
 | S1_conservative | 0.00 | 0.00 | 0.00 | 0.00 | 8678.96 | 16111.71 |
-| S2_rolling_q95 | 5337.80 | 2566.56 | 2771.24 | 3717.90 | 4961.05 | 12543.28 |
-| S3_our_scheme | 3731.98 | 2174.53 | 1557.45 | 3232.85 | 5446.11 | 12152.20 |
+| S2_rolling_q95 | 3109.92 | 1986.33 | 1123.58 | 3025.08 | 5653.87 | 11963.05 |
+| S3_our_scheme | 3109.67 | 1986.19 | 1123.48 | 3024.37 | 5654.58 | 11963.86 |
 
 > ①②③ 为 GO 门核心（越小越好）；④ 防止靠禁止取胜（越大越好）；⑤ 实际有能力但没用掉（越小越好）；⑥ 只诊断，不入 GO 门（Candidate 更谨慎可能 planned_bess 更高，这是正常 trade-off）。
 
@@ -29,25 +29,26 @@
 
 | 指标 | S3 | S2 | 改善 | 阈值 |
 |---|---|---|---|---|
-| ① unexpected_shortfall | 3731.98 | 5337.80 | 30.08% | GO>=10% / COND 5-10% / FAIL<5% |
-| ② unplanned_bess_correction | 2174.53 | 2566.56 | 15.27% | GO>=10% |
+| ① unexpected_shortfall | 3109.67 | 3109.92 | 0.01% | GO>=10% / COND 5-10% / FAIL<5% |
+| ② unplanned_bess_correction | 1986.19 | 1986.33 | 0.01% | GO>=10% |
 | ③ pcc_residual 未恶化 | — | — | True | True |
 | ④ S3 flex > S1×1.1 | — | — | True | True |
 
-### 判定：**GO — D3_system_value_valid** （GO）
+### 判定：**FAIL — D3_no_system_value** （NO-GO / 停止 performance 扩展）
 
-> S3 vs S2: unexpected_shortfall 降 30.1%>=10.0%，unplanned_bess 降 15.3%>=10.0%，PCC residual 未恶化，S3 flex(3233)>S1(0)×1.1。
+> S3 vs S2: shortfall 降 0.0%<5.0% 或系统优势只靠极端参数；停止 performance 扩展。不调 Q95、不加 ML、不恢复 D3。
 
 > **诚实记录**：Candidate 更保守 → planned_bess 可能更高，total_bess_activity 不入门；只比 unplanned_bess_correction（事后临时补偿）。
 
 ## 4. 红灯检查（review §37）
 
-- 无红灯触发。
+- **S3 与 S2 <5% 或系统优势只靠极端参数 → 停止 performance 扩展（红灯）**
 
 ## 5. 下一步决策
 
-- D3 通过（GO）。一次性暴露 D2 test 验证时间外推 → 通过后决定是否做完整 24h 动态回放。
-- 专利方向（用户口径 §18）：园区根据光/储/负荷/电网状态产生 EV 调整需求后，根据充电桩允许信息与车辆历史实际响应共同限制 EV 上调量，减少已安排但未完成的功率调整量，降低由此引起的储能临时补偿和/或 PCC 偏差。
+- D3 不通过。**停止 performance 扩展**，不再开第二轮优化。
+- 不调 Q95、不加 ML、不恢复 D3。
+- 当前 D1+D2 不强行申请；评估 M3/M4 信息不足保护的独立工程效果。
 
 ## 6. 产物文件
 

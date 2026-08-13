@@ -1,2 +1,2 @@
 level,verdict,comparison_baseline,unexpected_shortfall_reduction_pct,unplanned_bess_reduction_pct,pcc_residual_not_worsened,s3_flex_higher_than_s1,n_events
-GO,D3_system_value_valid,S2_rolling_q95,30.08,15.27,True,True,10893
+FAIL,D3_no_system_value,S2_rolling_q95,0.01,0.01,True,True,10893
