@@ -1,5 +1,10 @@
 # 独立/从属权利要求树（Claim Surgery v1 — Patent Gate 2 检索前基线；§6 检索后收窄；§7 Claim Surgery v2）
 
+> **⚠ HISTORICAL（v2）— 不再作为当前权威。**
+> **CURRENT AUTHORITY = `01_claim_tree_v3_e7_fast.md`**（E7-FAST FILING GO / NARROW CLAIM）。
+> 本文件保留审计历史；D3 recovery（actual 接近边界 → 单向恢复）已被 P2.1A formal FAIL 删除，
+> 代理师**不得**将旧 D3 recovery 写回独立权利要求。详见 v3 文件。
+
 > 依据：P1 Patent Gate NO-GO（`results/raw/phase3_p1/P1_patent_gate.md`）；P2 formal
 > frozen outcome = **SUCCESS / NARROW GO**（`results/raw/phase3_p2/P2_patent_gate.md`）。
 >

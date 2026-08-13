@@ -1,9 +1,11 @@
-# patent-preexperiment：光储充专利预实验工程（P2 formal SUCCESS / NARROW GO；P3 HOLD）
+# patent-preexperiment：光储充专利预实验工程（E7-FAST FILING GO / NARROW CLAIM）
 
 > 本 README 的作用不是介绍代码，而是防止项目被误解为普通充电负荷预测、多车调度优化、
 > 用户行为预测或通用光储充仿真平台。读任何代码、改任何配置、汇报任何结论之前，请先读本节。
-> **当前权威**：`reports/patent_definition/claim_tree.md` v2（§7 设备动作链）+
-> `results/raw/phase3_p2/P2_patent_gate.md`。
+> **当前权威**：`reports/patent_definition/01_claim_tree_v3_e7_fast.md`（v3 园区控制链）+
+> `02_prior_art_element_map_v3_e7_fast.md` + E7-FAST D0/D2/D3/test 全 GO。
+> **v2 历史**：`claim_tree.md` / `prior_art_matrix.md` / `tech_disclosure.md` = HISTORICAL
+> （D3 recovery 已被 P2.1A FAIL 删除，不再权威）。
 
 ## 1. 项目要解决的真实问题
 

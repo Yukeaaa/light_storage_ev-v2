@@ -1,5 +1,10 @@
 # 现有技术检索矩阵（Patent Definition Phase 1 + Patent Gate 2，含检索后 FINAL 判定）
 
+> **⚠ HISTORICAL（v2）— 不再作为当前权威。**
+> **CURRENT AUTHORITY = `02_prior_art_element_map_v3_e7_fast.md`**（E7-FAST v3 A-J 元素对照）。
+> 本文件攻击的是"信息分类+history boundary+recovery"，recovery 已删除，靶子已变。
+> 代理师请以 v3 element map 为准。
+
 > 依据：审查结论52 §八/§九 补检索 + P0 杀伤性初筛（`results/raw/P0/P0_patent_kill_screen.md`）
 > + P1 Patent Gate NO-GO（`results/raw/phase3_p1/P1_patent_gate.md`）。
 > 本矩阵是**技术筛选**，非正式新颖性/创造性/FTO 法律意见；最终申请前需专利代理师做
