@@ -258,62 +258,161 @@ d2_ev_validation:
     rule: "真实 pilot 事件中观察到的实际变化量 = 本事件可验证的实际响应支持量；candidate 允许量 <= 此量视为未超出；超出部分视为未被真实观察支持"
     forbid: "不构建神奇 EV 响应仿真器；不声称知道车辆真正最大功率"
 
-# --- D3 阶段：园区系统验证（review §19-31；先做真实事件嵌入短周期回放，过门才做 24h）---
+# --- D3 阶段：园区系统验证（review §19-31 + 用户 D3 冻结口径）---
+# 核心逻辑：比较的是"事后 EV 执行缺口 / 事后 BESS 临时补偿 / PCC 残差"，
+# 不是笼统的"BESS 总补偿能量"。必须区分事前 planned BESS（正常协调）与
+# 事后 unplanned BESS（控制失败补偿）。
 d3_park_system:
   phase_order:
-    first: "真实 pilot-event + 园区场景短周期嵌入（单周期/短周期回放）"
-    only_after_gate: "完整 5min 动态回放（pool_state + PV time series + base load + BESS SOC dynamics + transformer）"
-  park_ems:                                     # review §25；最简单规则，不要 MPC
+    first: "D3-U 真实正 pilot 事件 + 园区短周期嵌入（单事件回放，train+validation）"
+    only_after_gate: "D2 test 一次性暴露 → 完整 5min 动态回放（过系统门且 D2 test 通过后）"
+
+  # --- 5 个核心冻结量（用户口径 §4；代码字段名固定）---
+  core_quantities:
+    park_requested_ev_delta: "园区原本希望 EV 调多少（= delta_pilot_kw；独立于 S2/S3）"
+    ev_accepted_delta: "某控制方案事前实际安排给 EV 多少（= 该 arm 的 allowed_up）"
+    ev_observed_support: "5min 后真实观察到的响应支持量（= P_support = max(actual_5min - actual_before, 0)）"
+    ev_realized_delta: "min(ev_accepted_delta, ev_observed_support)  # 保守回放定义，非车辆真实最大能力"
+    planned_bess_delta: "park_requested_ev_delta - ev_accepted_delta  # 事前已知 EV 不承担、提前转 BESS（正常协调，非控制失败）"
+    unexpected_ev_shortfall: "max(ev_accepted_delta - ev_observed_support, 0)  # ★ EV 执行缺口（接受后没完成）"
+    unplanned_bess_correction: "min(unexpected_ev_shortfall, bess_fast_available_power)  # ★ 事后 BESS 临时补偿"
+    pcc_residual: "unexpected_ev_shortfall - unplanned_bess_correction  # BESS 快速余量不足时落到 PCC 的偏差"
+
+  # --- BESS_compensation 必须明确为 unplanned_bess_correction（用户口径 §5）---
+  bess_compensation_definition:
+    correct: "unplanned_bess_correction = min(unexpected_ev_shortfall, bess_fast_available_power)"
+    forbidden: "park_requested_ev_delta - ev_realized_delta  # 把事前 planned 协调也算成补偿 → Candidate 更保守反而 BESS 总量更高，搞乱技术解释"
+    rationale: "事前已安排给 BESS 的正常协调量不算控制失败；只算 EV 接受后没完成的事后临时补偿"
+
+  # --- 正向/负向分离（用户口径 §6-8）---
+  d3_u_upward:                                  # ★ 主实验 / 主杀伤门
+    name: D3_U_pv_surplus_upward
+    description: "PV 富余 / EV 需要增加；复用 D2 的 M2 正向真实事件；检验 S3 是否产生系统价值"
+    role: main_kill_gate
+    use_events: "D2 M2 评价集正向事件（train+validation，排除 office001/stress）"
+    ev_observed_support_up: "max(actual_5min - actual_before, 0)  # 与 D2 P_support 一致"
+    bess_direction: "charge  # PV 富余 → EV 不吸收的部分由 BESS 充电吸收 → 仍不足则 PCC 反送"
+    bess_fast_available_power_source: "P_BESS_max（charge 方向）"
+  d3_d_downward:                                # 系统闭合验证，不要求 S3 战胜 S2
+    name: D3_D_load_increase_downward
+    description: "负荷增加 / 需要降低 EV；只验证功率平衡链条闭合，不作为 S3 vs S2 胜负证据"
+    role: closure_validation_only
+    rationale: "D2 负向 20725 事件 5min gain median≈0.0045、actual 变化 median≈-0.0106kW、42.33% 无 actual 下降；pilot 降低不意味车辆立刻按幅度降低 → 下降侧不能用 allowed_down 假设 actual 下降"
+    ev_observed_support_down: "max(actual_before - actual_5min, 0)  # 真实观察到的下降量"
+    bess_direction: "discharge  # 需要降 EV 但没降够 → BESS 放电补负荷"
+    do_not_require_s3_beats_s2: true
+
+  # --- 园区需求冻结（用户口径 §11）---
+  park_request:
+    primary: "park_requested_ev_delta = delta_pilot_kw  # 1.0 倍率主场景"
+    sensitivity_factors: [0.5, 1.0, 1.5]         # 过门后才扩；1.0 先跑杀伤门
+    independence: "园区需求 = delta_pilot_kw 独立于 S2/S3（来自真实 pilot step 幅度，非按 Candidate 反推）"
+    rationale: "构造 PV 富余量恰好需要 EV 增加该功率的园区场景；真实车辆当时确实经历过这么大 pilot 上调；后面 actual 是真实响应；不需额外发明 EMS"
+
+  # --- 园区功率平衡（用户口径 §12；光储充负荷网完整出现，不需复杂仿真）---
+  park_balance:
+    p_base_kw: 500.0                             # 固定基础负荷（短周期验证功率平衡传播，非负荷预测）
+    p_ev_kw: "事件 actual_before_kw  # 当前 EV 功率"
+    p_pv_kw: "P_base + P_EV  # 初始 PV = 负荷+EV → P_grid=0"
+    pv_surplus: "ΔP_PV = delta_pilot_kw  # PV 增加 → 形成 PV surplus = delta_pilot_kw"
     grid_power: "P_grid = P_base + P_EV - P_PV"
-    over_transformer: "P_grid > P_limit → EMS 希望 EV 减少 (P_grid - P_limit)"
-    pv_surplus_anti_reverse: "P_grid < 0 → EMS 希望 EV 增加 |P_grid|"
-    in_range: "EV_adjustment = 0"
-    rationale: "越简单越好；不让审查人怀疑效果来自复杂优化器"
-  ev_group_aggregation:                         # review §26
-    group_allowed_up: "sum(各车 allowed_up)"
-    group_allowed_down: "sum(各车 allowed_down)"
-    residual_to_bess: "requested_ev_delta - actual_ev_adjustment"
-    residual_to_pcc: "BESS 不足部分"
-  bess:                                         # review §23；普通物理模型
+    ems_rule: "PV surplus > 0 → EMS 希望 EV 增加 delta_pilot_kw（review §25 防逆流场景）"
+    rationale: "短周期验证功率平衡传播关系（光→充→储→网），不是负荷预测"
+
+  # --- BESS 主实验单场景（用户口径 §13；过门后才做九宫格）---
+  bess:
     params: [E_BESS, P_charge_max, P_discharge_max, SOC_min, SOC_max, eta_charge, eta_discharge]
-    power_scaling_vs_ev_peak: [0.25, 0.50, 1.00]
-    capacity_hours: 2.0                         # 2h × BESS rated power
-    initial_soc: [0.20, 0.50, 0.80]
-    param_source: "XiTongJueCe BESS SOC/功率/效率/普通 EMS 建模参数作工程范围依据"
-  pcc_transformer:                              # review §24
-    main_normalized: "P_limit = 基线净负荷 P95"
-    stress_levels: [0.9, 1.0, 1.1]
-    fixed_scenario_alt: [500, 750, 1000]        # kW
+    primary_scenario:                            # 先固定一个正常场景
+      p_bess_max_ratio: 0.5                      # P_BESS_max = 0.5 × actual_before_kw（EV pool peak 代理，单车场景）
+      initial_soc: 0.50
+      soc_min: 0.10
+      soc_max: 0.90
+      eta_charge: 0.95
+      eta_discharge: 0.95
+      capacity_hours: 2.0                        # E_BESS = 2h × P_BESS_max
+    stress_after_gate:                           # 过门后才做
+      soc: [0.20, 0.50, 0.80]
+      power_ratio: [0.25, 0.50, 1.00]
+    param_source: "XiTongJueCe BESS SOC/功率/效率作工程范围依据"
+    rationale: "第一轮只回答 S3 是否减少事后补偿；BESS 有足够双向调整空间（SOC=50%, 10-90%）"
+
+  # --- PCC/变压器（用户口径 §24；所有方案同一限制）---
+  pcc_transformer:
+    main_fixed: "主场景不设硬上限（短周期单事件验证 EV 执行缺口传播，PCC residual 由 BESS 快速余量决定）"
+    stress_after_gate: [500, 750, 1000]          # kW，过门后做
     rule: "所有方案使用同一限制"
-  system_arms:                                  # review §27；四个
-    S0_unrestricted: "EMS 要多少给 EV 多少（乐观控制）"
-    S1_conservative: "禁止 EV 增加，只允许降低（最保守 baseline）"
-    S2_rolling_q95: "统一 rolling Q95（最强简单 baseline）"
-    S3_our_scheme: "M1 explicit / M2 pilot+actual+history / M3 actual+history→only decrease / M4 insufficient→hold"
-  system_metrics:                               # review §28；六个
-    unsupported_EV_adjustment: "EMS 给 EV 调整中超过真实事件观察支持的部分（核心）"
-    BESS_compensation: "EV 没完成以后需要 BESS 补多少（核心）"
-    PCC_residual: "BESS 也没补完以后剩多少（核心）"
-    transformer_violation: "是否仍超过变压器限制"
-    accepted_real_EV_flex: "真正利用了多少真实观察到的 EV 调整能力"
-    conservatism: "实际有能力但控制器不敢用掉多少"
-  system_gate:                                  # review §29；工程效果，不做 CI
+
+  # --- 四个 system arm（用户口径 §9；不新增第五个）---
+  system_arms:
+    S0_unrestricted:
+      allowed_up: "park_requested_ev_delta  # EMS 要多少给 EV 多少（乐观上限）"
+      allowed_down: "park_requested_ev_delta"
+    S1_conservative:
+      allowed_up: 0.0                            # 禁止 EV 增加（最保守）
+      allowed_down: "actual_before_kw"
+    S2_rolling_q95:                              # ★ 最强简单 baseline
+      allowed_up: "max(q95_before - actual_before, 0)"
+      allowed_down: "actual_before_kw"
+    S3_our_scheme:                               # M2 候选（D3-U 用 M2 事件 → 即 C_candidate_m2）
+      m2_allowed_up: "max(min(pilot_after, q95_before) - actual_before, 0)"
+      m3_allowed_up: 0.0                         # 无 pilot → 不允许增加
+      m4_allowed_up: 0.0                         # 历史不足 → 保持
+      allowed_down: "actual_before_kw"
+      no_d3_recovery: true                       # 永远不做 D3 恢复
+
+  # --- 系统层 6 指标（用户口径 §14；排序固定）---
+  system_metrics:
+    rank_1_unexpected_ev_shortfall:
+      formula: "Σ max(ev_accepted_delta - ev_observed_support, 0)  # ★ 最核心：EV 执行缺口"
+      direction: lower_better
+    rank_2_unplanned_bess_correction:
+      formula: "Σ min(unexpected_ev_shortfall, bess_fast_available_power)  # ★ 事后 BESS 临时补偿"
+      direction: lower_better
+    rank_3_pcc_residual:
+      formula: "Σ (unexpected_ev_shortfall - unplanned_bess_correction)  # BESS 不足时 PCC 偏差"
+      direction: lower_better
+    rank_4_accepted_real_ev_flex:
+      formula: "Σ ev_realized_delta  # 真正利用了多少真实响应能力（禁止靠什么都不让 EV 做取胜）"
+      direction: higher_better
+    rank_5_conservatism:
+      formula: "Σ (ev_observed_support - ev_realized_delta)  # 实际有能力但控制器不敢用掉多少"
+      direction: lower_better
+    rank_6_total_bess_activity:
+      formula: "Σ (planned_bess_delta + unplanned_bess_correction)  # 只作诊断，不入 GO 门"
+      direction: diagnostic_only
+      note: "Candidate 更谨慎可能提前把更多功率分给 BESS → 总 BESS 可能更高，这是正常 trade-off，不入门"
+
+  # --- 系统 Go 门（用户口径 §15；vs S2 rolling-Q95，工程效果不做 CI）---
+  system_gate:
+    comparison_baseline: S2_rolling_q95
     GO:
-      unsupported_or_bess_reduction_vs_strongest_baseline_pct_min: 10
-      pcc_transformer_not_worsened: true
-      more_real_flex_than_S1_conservative: true
-    CONDITIONAL_GO:
+      unexpected_ev_shortfall_reduction_pct_min: 10   # vs S2
+      unplanned_bess_correction_reduction_pct_min: 10 # vs S2（与 shortfall 高度相关，都报告）
+      pcc_residual_not_worsened: true
+      accepted_real_ev_flex_significantly_higher_than_S1: true  # 不能靠"什么都不让 EV 做"取胜
+    CONDITIONAL:
       reduction_pct_range: [5, 10]
-      or_only_under: [pilot_rich, high_concurrency, pv_surplus, transformer_limited]
-      action: "写窄"
+      or_only_under: [pv_surplus, pilot_rich]
+      action: "写窄；M2 只作条件实施方式"
     NO_GO:
-      s3_approx_s2_rolling_q95: true            # 差异 <5%
-      or_only_via_extreme_synthetic_params: true
-      action: "停止当前 performance 方向，不再开第二轮优化"
-  dynamic_replay_data_priority:                 # review §31；仅系统门过门后
+      s3_vs_s2_reduction_pct_max: 5              # 差异 <5%
+      or_only_via_extreme_bess_pv_params: true   # 系统优势只靠极端参数制造
+      action: "停止当前 performance 方向，不再开第二轮优化；不调 Q95、不加 ML、不恢复 D3"
+
+  # --- test 暂不暴露（用户口径 §16）---
+  test_policy:
+    hold_d2_test: true                           # D3 先 train+val；D3 FAIL 不消费 test 直接收缩
+    expose_d2_test_after_d3_go: true             # D3 GO 后再一次性暴露 D2 test 验证时间外推
+    d3_test_replay_only_after_d3_trainval_go: true
+
+  # --- 完整动态回放数据优先级（review §31；仅系统门+D2 test 通过后）---
+  dynamic_replay_data_priority:
     P0: "已有可快速审计真实园区 PV/load（UCSD 路线可复活，但只在数据随手可得时）"
     P1: "真实 PV + 透明园区负荷"
     P2: "PV/负荷均透明模拟（必须写明 EV 响应真实、园区背景混合回放）"
+
+  # --- 专利方向（用户口径 §18）---
+  patent_direction_if_d3_go: "园区根据光伏/负荷/储能/电网状态产生 EV 功率调整需求后，根据充电桩允许信息与车辆历史实际响应共同限制 EV 上调量，从而减少园区已安排给 EV 但车辆后续实际未完成的功率调整量，并降低由该执行缺口引起的储能临时补偿和/或电网接口功率偏差。"
 
 # --- 红灯（review §37；出现任一即停，不美化结果）---
 red_lights:
