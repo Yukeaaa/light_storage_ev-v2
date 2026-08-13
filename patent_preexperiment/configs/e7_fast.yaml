@@ -228,18 +228,31 @@ d2_ev_validation:
     over: "max(P_allowed - P_support, 0)        # 越小越好；算法允许增加量比真实事件实际增加还多多少"
     under: "max(P_support - P_allowed, 0)       # 越小越不保守；没利用到的真实响应"
     hit_rate: "candidate 说可增加>0 且真实后续确实增加 的比例"
-    coverage: "candidate 实际放行了多少真实上调机会（禁止靠 99% 说不增加得高准确率）"
-  gate:                                         # review §17；不做 CI
+    coverage: "Coverage = Σ min(P_allowed, P_support) / Σ P_support  # 功率加权：真实观察到的可增加功率里方法实际放行了多少（禁止靠每事件放一点虚称高覆盖）"
+    coverage_ratio: "CoverageRatio = Coverage_C / Coverage_B2        # C 相对 B2 的覆盖比"
+  evaluation_set:                               # D2 评价集过滤（消除歧义，非调门槛）
+    rule: "正式评价集 = 正向 pilot 事件 且 info_mode_before == M2_pilot_actual 且 history_q95_before_kw 有效 且 actual_before_kw 有效"
+    rationale: "Candidate 需要 pilot+actual+history sufficient；非 M2 事件不入评价"
+    report_filtered_counts: true                # 先报告过滤后事件/session/station/month 数
+    trainval_only: true                         # train+validation 开发；test 物理过滤，最后才看
+    test_summary_generated_last: true           # d2_test_summary.csv 在主判定 commit 后单独生成
+  gate:                                         # review §17；不做 CI，工程效果
+    strongest_baseline: B2_rolling_q95          # review §15 明确 B2 是最重要的强简单 baseline（固定，不按 over 最小自动选）
+    over_improvement_formula: "1 - ΣOver_C / ΣOver_B2   # 求和而非均值（用户冻结公式）"
+    coverage_ratio_formula: "Coverage_C / Coverage_B2   # 功率加权覆盖比"
     GO:
       over_improvement_vs_strongest_baseline_pct_min: 10
-      up_opportunity_coverage_vs_baseline_pct_min: 50
+      coverage_ratio_pct_min: 50
+      session_equal_direction_consistent: true    # 事件总体与 session 等权方向不一致 → 降为 Conditional
     CONDITIONAL:
       over_improvement_pct_range: [5, 10]
+      or_session_equal_direction_reversed: true   # 总体 +15% 但 session 等权≈0 → Conditional
       action: "M2 只作为从属/窄场景"
     FAIL:
       over_improvement_pct_max: 5
       or_rolling_q95_equivalent: true
       action: "M2 不进入核心；收缩到 M3/M4 信息不足保护；不调 Q95、不换模型、不继续 ML"
+    under_must_report: true                       # Under 必须摆主表；Over 改善但 Under 损失大 → 只能说"更保守抑制"，不能说"更准确识别能力"
   negative_event_use: "只做响应标定（median gain / p25 p75 / 5min 实际下降量 / 不响应比例），不造新算法；用于园区回放"
   no_extrapolation_rule:                        # review §22
     rule: "真实 pilot 事件中观察到的实际变化量 = 本事件可验证的实际响应支持量；candidate 允许量 <= 此量视为未超出；超出部分视为未被真实观察支持"

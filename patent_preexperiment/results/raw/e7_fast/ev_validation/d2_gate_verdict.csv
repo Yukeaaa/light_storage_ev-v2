@@ -1,0 +1,2 @@
+level,verdict,strongest_baseline,over_improvement_pct,coverage_ratio_pct,session_equal_over_improvement_pct,session_equal_direction_consistent,n_events,n_sessions,n_stations,n_months,n_p_support_positive
+GO,M2_active_increase_valid,B2_rolling_q95,30.08,86.95,37.1,True,10893,4065,58,18,6550

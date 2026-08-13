@@ -1,0 +1,2 @@
+n_events,response_gain_5m_median,response_gain_5m_p25,response_gain_5m_p75,delta_actual_5min_median_kw,no_response_ratio
+20725,0.0044552478502782435,-0.00027555717054274643,0.5148989898989896,-0.010645833333333243,0.4233051869722557

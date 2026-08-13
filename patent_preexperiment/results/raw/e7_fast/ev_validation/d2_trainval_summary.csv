@@ -1,0 +1,5 @@
+controller,n_events,over_sum_kw,over_mean_kw,over_median_kw,under_sum_kw,under_mean_kw,under_median_kw,hit_rate,coverage,mean_allowed_up_kw,n_p_support_positive
+B0_no_increase,10893,0.0,0.0,0.0,8678.9563,0.7967,0.0165,0.0,0.0,0.0,6550
+B1_pilot_only,10893,14865.3551,1.3647,1.2155,2047.8374,0.188,0.0,0.6014,0.764,1.9734,6550
+B2_rolling_q95,10893,5337.7983,0.49,0.0061,4961.0525,0.4554,0.0,0.6324,0.4284,0.8313,6550
+C_candidate_m2,10893,3731.9813,0.3426,0.003,5446.1057,0.5,0.0,0.6324,0.3725,0.6394,6550

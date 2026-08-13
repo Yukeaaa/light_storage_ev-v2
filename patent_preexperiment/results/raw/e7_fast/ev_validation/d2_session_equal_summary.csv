@@ -1,0 +1,5 @@
+controller,session_equal_over_mean_kw
+B0_no_increase,0.0
+B1_pilot_only,1.3131
+B2_rolling_q95,0.4086
+C_candidate_m2,0.257
