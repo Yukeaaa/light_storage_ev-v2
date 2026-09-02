@@ -1,0 +1,33 @@
+# CORE-SEARCH R2-C1 —— SERVICE-TARGET VALIDITY + OPPORTUNITY GATE（预注册，冻结）
+# 依据：R2-C DATA GATE = GO 之后，R2-C 正式阶段第一门。不建 Candidate、不训练模型、不报收益。
+# 目标：1) userInput(kWhRequested/requestedDeparture via modifiedAt≤t) 是否可信作为服务目标；
+#       2) 哪些量可称"服务完成度/服务风险"，哪些只能叫 proxy；
+#       3) 真实 session 中是否存在足够多"此刻削 A 而非 B 会产生不同后续服务结果"的决策机会。
+# 红线：delivered/requested=0.595 只能称"请求电量完成比"，绝不称"服务损失 40.5%"。
+
+experiment_id: CORE_SEARCH_R2C1
+rule_version: core_search_r2c1
+frozen_date: 2026-09-02
+protocol_source: "CORE_SEARCH Round 2 → R2-C 正式阶段第一门"
+r2_c_data_gate: "patent_preexperiment/reports/core_search/CORE_SEARCH_R2_C_DATA_GATE.md"
+
+rated_power_kw: 7.2          # 物理可实现性上限（L2 30A×240V，ENGINEERING 假设）
+
+service_target:
+  ratio_name: "请求电量完成比 (delivered/requested)"
+  ratio_clip: [0.0, 2.0]
+
+validity_gate:
+  min_userinput_coverage: 0.50        # matched 中 userInput 覆盖下限
+  ratio_iqr_min: 0.10                 # 请求电量完成比需有足够方差（否则无选择价值）
+  physical_realizable_min: 0.50       # kWhRequested 物理可实现占比下限
+  depart_informative: true            # requestedDeparture 需携带信息（|偏差|中位 < 会话时长中位的一半）
+
+opportunity_gate:
+  min_concurrent_sessions: 2
+  kwh_requested_divergence_min_kwh: 5.0   # 并发会话 kWhRequested IQR 下限
+  opportunity_bins_min: 100               # 有决策机会的小时 bin 数下限
+
+outputs:
+  results_root: "results/raw/core_search/r2_c1"
+  report: "reports/core_search/CORE_SEARCH_R2_C1_GATE.md"
