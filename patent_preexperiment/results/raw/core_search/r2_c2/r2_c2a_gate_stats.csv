@@ -1,0 +1,15 @@
+,value
+n_caltech_matched,11820
+n_train,7092
+n_validation,2364
+t_slack_median_h,2.3354166666666667
+has_slack_rate,0.7098984771573604
+auc_baseline,0.7045326139090954
+auc_candidate,0.6786210952974259
+delta_auc,-0.025911518611669515
+spearman_baseline,0.340835438719727
+spearman_candidate,0.3069615305543366
+delta_spearman,-0.033873908165390376
+false_safe_baseline,0.12976022566995768
+false_safe_candidate,0.14950634696755993
+verdict,STOP

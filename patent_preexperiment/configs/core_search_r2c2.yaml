@@ -1,0 +1,73 @@
+# CORE-SEARCH R2-C2 —— 服务损失感知的削减分配（预注册，冻结）
+# 依据：R2-C1 GO 之后，R2-C2 拆成两步：R2-C2a（在线恢复风险可预测性门）+ R2-C2b（六臂 allocation replay）。
+# 反事实纪律：不使用人为"补能折扣函数"；用真实 doneCharging→disconnect 充后停车余量作离线恢复机会标签。
+# 术语纪律：delivered/requested 仅称"请求电量完成比"；E_uncovered 仅称"时序补能余量未覆盖的削减电量 proxy"。
+
+experiment_id: CORE_SEARCH_R2C2
+rule_version: core_search_r2c2
+frozen_date: 2026-09-02
+protocol_source: "CORE_SEARCH Round 2 → R2-C 正式阶段（R2-C1 GO 后）"
+
+# --- 服务代价 / 反事实标签（全部离线，绝不入 policy）---
+service_label:
+  temporal_slack: "max(disconnectTime - doneChargingTime, 0)"   # 充后停车余量（小时）
+  recover_need: "E_curtail / P_at_t"                              # 削减电量按削减前功率补回所需时间
+  uncovered_proxy: "max(E_curtail - P_at_t * temporal_slack, 0)"  # 时序补能余量未覆盖的削减电量 proxy
+
+# --- 单车削减上界（从 pilot-stable binding down 冻结，禁止凭空设 0/满功率）---
+curtailment_bound:
+  down_step_bound_primary_kw: 4.89        # Q90 of commanded down-step (pilot_before-pilot_after)，主上界
+  down_step_bound_sensitivity_kw: 2.50    # Q75，敏感性
+  actual_down_q90_kw: 3.51                # 参考：实际 drop Q90 (actual_before-actual_1min)
+  per_vehicle_max: "min(P_actual_i, down_step_bound)"
+
+# --- R2-C2a：ONLINE RECOVERY-RISK PREDICTABILITY GATE ---
+r2_c2a:
+  question: "在线安全信息能否比 reported_service_slack 明显更好地识别真实 post-charge temporal slack？"
+  label:
+    temporal_slack_h: "max(disconnect-doneCharging,0)"
+    has_slack_threshold_min: 15.0           # T_slack >= 15min → 有恢复余量
+  reference_time: "latest userInput modifiedAt（决策时刻 t）"
+  online_features:
+    - connection_age_min          # modifiedAt - connection
+    - reported_remaining_min      # requestedDeparture - modifiedAt
+    - reported_minutes_available  # minutesAvailable（用户申报停留时长）
+    - requested_kwh
+    - reported_need_min           # kWhRequested / rated_power * 60
+  baseline: "reported_service_slack = minutesAvailable - kWhRequested/rated_power*60"
+  candidate: "OLS(T_slack ~ online_features)，fit on train，eval on validation"
+  metric:
+    primary: "Spearman(predicted_slack, T_slack)"
+    secondary: "AUC(has_slack = T_slack>=15min)"
+  gate:
+    primary_metric: "delta_auc"      # 候选 AUC - baseline AUC
+    stop_max: 0.05                   # ΔAUC <= 0.05 → STOP
+    go_min: 0.15                     # ΔAUC >= 0.15 且 false-safe 改善 → GO
+    require_false_safe_improve: true
+
+# --- R2-C2b：FORMAL ALLOCATION REPLAY（仅 R2-C2a GO 后执行）---
+r2_c2b:
+  scenario:
+    delta_t_min: 5
+    curtailment_frac: 0.15          # 主判：15% × P_EV,t
+    sensitivity_frac: [0.10, 0.20]
+    realized_equals_requested: true   # 主分析 realized=requested；r>1 仅 diagnostic
+    only_bins_with_down_headroom: true
+  arms:
+    B0: "random"
+    B1: "highest-current-first"
+    B2: "largest-down-headroom-first"      # strongest candidate baseline
+    B3: "longest-connected-first"
+    B4: "reported-service-slack-first"     # 危险且必要的 baseline
+    C: "service-risk-aware"                # 用 R2-C2a 学到的在线恢复风险
+  metrics:
+    - uncovered_energy_proxy
+    - completion_ratio_stress             # synthetic no-catch-up: (delivered-E_curt)/requested
+    - sessions_affected
+    - new_below_08 / new_below_05
+  core_gate: "相同 realized curtailment 下，C vs strongest baseline 服务风险下降（<5% DEAD / >20% 强候选）"
+
+outputs:
+  results_root: "results/raw/core_search/r2_c2"
+  report_a: "reports/core_search/CORE_SEARCH_R2_C2A_GATE.md"
+  report_b: "reports/core_search/CORE_SEARCH_R2_C2B_REPLAY.md"
