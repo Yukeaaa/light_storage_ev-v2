@@ -1,0 +1,2 @@
+verdict,primary_n,primary_under80,primary_p10,primary_r1m_median,primary_r1m_iqr,sensitivity_n,sensitivity_under80,sensitivity_p10,sensitivity_reversed
+CLOSED,204,0.0,1.0,1.239356198428129,0.3816688613158121,364,0.013736263736263736,1.0001769624205112,False

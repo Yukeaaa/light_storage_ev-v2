@@ -1,0 +1,81 @@
+# CORE-SEARCH Round 2 —— 预注册配置（冻结）
+# 依据：CORE_SEARCH_DECISION_01_EV_FLEX_SCALE.md（Round 1 关闭）+ Round 2 方向处置
+# 目标：不依赖大规模 EV 功率替代、利用现有真实响应/会话/信息状态寻找明显系统效果。
+# 本文件只冻结 R2-P0-B0（存在性杀伤门）与 R2-A 处置；R2-C 本阶段仅做 DATA + IDENTIFIABILITY GATE。
+# 冻结纪律：阈值在查看 R2-P0-B0 outcome 前冻结；失败后新增方案必须新版本，禁止 post-hoc 调参。
+
+experiment_id: CORE_SEARCH_R2
+rule_version: core_search_r2
+frozen_date: 2026-09-02
+protocol_source: "review/CORE-PATENT SEARCH：系统级核心专利筛选阶段.md（Round 2 衍生）"
+decision_1: "patent_preexperiment/reports/core_search/CORE_SEARCH_DECISION_01_EV_FLEX_SCALE.md"
+
+# --- R2-A 处置（已关闭，不设门控再实验）---
+r2_a_disposition:
+  status: CLOSED
+  reason: |
+    premise falsified —— 自然 binding down 事件的 1min→5min 回落主要来自后续 pilot 回升
+    （t+5 62.1% 已回升>1A），而非车辆侧回弹；pilot 持续压低时 retention_5m≈1.0。
+  interpretation: |
+    现有数据不能支持将 observed power recovery 解释为车辆侧回弹机制；
+    pilot 后续变化来自外部充电控制轨迹，其生成逻辑在 ACN 数据中不可观测，
+    因此不作为当前核心专利机制继续研究。
+  retained_asset: |
+    REAL RESPONSE ASSET — asymmetric controllability
+    DOWN: pilot 持续 binding → actual 快速且高度持续跟随（retention≈1.0, under80≈0%）
+    UP:   pilot 提高 → actual 基本不增加（r_5m≈0）
+  reopen_forbidden: true
+
+# --- R2-P0-B0：pilot-stable 下调事件上的真实响应幅度异质性（存在性杀伤门）---
+r2_p0_b0:
+  question: "pilot 持续压低后，车辆下调是否还存在值得预测的欠交付异质性？"
+  data_source: "P0-A binding down 事件(train+val) + session_response_1min pilot 轨迹重建"
+  pilot_stability:
+    primary_max_dev_a: 1.0        # 主判集：t..t+5 内 |pilot_k - pilot_after| < 1A
+    sensitivity_max_dev_a: 2.0    # 敏感性：<2A
+    horizon_min: 5
+  metrics:
+    response_fraction_lag_min: [1, 3, 5]
+    response_fraction_clip: [0.0, 2.0]
+    under_delivery_threshold: 0.8
+  # 三区门（under80 = P(r_1m < 0.8)；p10 = r_1m 的第 10 百分位）
+  gate:
+    closed:
+      under80_max: 0.10
+      p10_min: 0.90
+    conditional:
+      under80_range: [0.10, 0.20]
+      p10_range: [0.80, 0.90]
+    open:
+      under80_min: 0.20
+      p10_max: 0.80
+      require_structure: true    # 欠交付必须存在可重复的在线可观测结构
+    sensitivity_no_reversal: true  # <2A 敏感性集不得方向性反转
+  outputs:
+    results_root: "results/raw/core_search/r2_p0b0"
+    report: "reports/core_search/CORE_SEARCH_R2_P0B0.md"
+
+# --- R2-C：DATA + IDENTIFIABILITY GATE（本阶段不建 policy、不训练模型、不报收益）---
+r2_c_data_gate:
+  question: "现有观察数据能否定义不依赖不可观测反事实、足够可信的服务代价评价量？"
+  outputs:
+    results_root: "results/raw/core_search/r2_c_data_gate"
+    report: "reports/core_search/CORE_SEARCH_R2_C_DATA_GATE.md"
+  online_safe_features:
+    - connection_age
+    - current_actual
+    - current_pilot
+    - actual_history
+    - pilot_history
+    - cumulative_delivered_energy_to_t
+    - userInput_modifiedAt_le_t   # modifiedAt <= 决策时刻，逐样本校验
+  offline_only_labels:
+    - disconnect_time
+    - done_charging_time
+    - final_kwh_delivered
+    - future_actual
+    - future_pilot
+  identifiability_note: |
+    自然数据无"被削减 vs 未被削减"反事实世界；不得把自然事件中的额外功率下降
+    直接解释为控制造成的服务损失。先验证可观测风险/机会指标
+    (remaining connection time / time-to-done / t→disconnect 补能机会，仅作离线标签)。
