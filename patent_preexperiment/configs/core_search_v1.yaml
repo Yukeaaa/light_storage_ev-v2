@@ -1,0 +1,452 @@
+# CORE-PATENT SEARCH 系统级核心专利筛选阶段 —— 预注册配置（冻结）
+# 依据：
+#   review/CORE-PATENT SEARCH：系统级核心专利筛选阶段.md
+#   review/园区load、pv相关数据集.md
+#   review/数据体系.md
+# 权威总计划：patent_preexperiment/core_search/CORE_SEARCH_MASTER_PLAN.md
+# 数据资产：patent_preexperiment/core_search/CORE_DATASET_REGISTRY.md
+#
+# 冻结纪律：本文件在查看任何 P0-A/P0-B outcome（事件计数、响应指标、柔性量纲）前冻结。
+#   阈值/规则一经冻结，失败后新增方案必须新版本 + 新测试协议，禁止 post-hoc 调参救场。
+# 不修改 frozen P2/P2.1/E7-FAST 证据（phase3_p2/、phase3_p2_1/、e7_fast/）；本阶段只读复用其派生数据。
+# CORE-A/B/C 的详细参数在 P0 过门后用 core_search_v2.yaml 细化，本文件只冻结骨架 + 门标准。
+
+experiment_id: CORE_SEARCH_v1
+protocol_source: "review/CORE-PATENT SEARCH：系统级核心专利筛选阶段.md"
+master_plan: "patent_preexperiment/core_search/CORE_SEARCH_MASTER_PLAN.md"
+dataset_registry: "patent_preexperiment/core_search/CORE_DATASET_REGISTRY.md"
+landing_protocol: "docs/工商业园区光储充_专利方向确定详细预实验计划书_V2.0.md（系统级筛选工作流，不改实验编号与门标准）"
+rule_version: core_search_v1
+output_version: core_search_v1
+commit: auto
+frozen_date: 2026-08-14
+
+# --- 旧资产处置（冻结，不删除）---
+frozen_assets:
+  e7_fast_m2:
+    d2_vehicle_side_mechanism: VALID            # EV 侧机制成立
+    core_patent_status: NO_GO                   # 系统价值未达核心专利
+    d3_system_value: CLOSED                     # train+val 0.01% FAIL
+    d3_recovery: CLOSED                         # P2.1A formal FAIL
+    rescue_24h: CLOSED
+    q95_retuning: CLOSED
+    ml_rescue: CLOSED
+    future_use:
+      - "新系统实验的 EV flexibility baseline（B2 rolling-Q95 / M2 pilot+Q95）"
+      - "信息不足时的 fallback"
+      - "证明被动历史边界优化未必产生系统收益的反例"
+      - "后续新核心专利的可能从属模块"
+  do_not_modify: [phase3_p2, phase3_p2_1, e7_fast]   # frozen 证据，只读复用
+
+# --- 系统 KPI 判断标准（冻结；最终门永远是系统 KPI，不是预测误差）---
+system_kpi_thresholds:
+  dead_pct_max: 5                               # <5% DEAD
+  engineering_minor_pct_range: [5, 10]          # 5-10% 工程小改进，不作为核心专利
+  observe_pct_range: [10, 15]                   # 10-15% 观察
+  worth_deep_pct_range: [15, 20]                # 15-20% 值得深入
+  strong_core_candidate_pct_min: 20             # >20% 强核心候选
+  note: "必须是系统 KPI（BESS 功率/能量/吞吐/峰值、PCC越限、EV削减/交付、PV弃光、EV渗透率、BESS备用），不是预测误差"
+
+# --- 数据资产引用（详见 CORE_DATASET_REGISTRY.md）---
+data:
+  real_core:
+    acn_static: "ACN-Data-Static（85877 文件/4.49 亿行/2018-05~2020-12）"
+    acn_api: "ACN API 会话元数据（51234 sessions；含 disconnect/doneCharging/kWhDelivered，只能离线评价）"
+  derived_real:
+    session_1min: "datasets/session_response_1min（E0-Full 构建）"
+    pool_5min: "datasets/pool_state_5min"
+    pool_15min: "datasets/pool_state_15min"
+    pilot_step_pos: "E7-FAST D0 正向 pilot-step 库（train+val 11702 / test 6643）"
+    pilot_step_neg: "E7-FAST D0 负向 pilot-step 库（20725 事件，尚未充分挖掘）"
+    m2_events: "E7-FAST D2 M2 评价事件集（train+val 10893 / test 6643）"
+    split: "data_registry/e0_full_split_registry.parquet（站点内 60/20/20）"
+  real_external_to_acquire:
+    emsx: "EMSx 70 工业站 15min load/PV/forecast（先下 6-10 代表站）"
+    building_1min: "1min 建筑 load+PV（Building C，2019）"
+  engineering:
+    bess: "BESS 功率/容量/SOC/效率模型（XiTongJueCe + EMSx 配套参数）"
+    pcc: "PCC/变压器额定约束"
+  synthetic:
+    rule: "仅 stress test / penetration scaling / 参数敏感性，不作核心真实证据"
+  power:
+    actual_column: actual_power_kw              # measured→computed→estimated 优先级派生
+    pilot_amp_column: pilot_a
+    pilot_kw_column: pilot_power_kw
+    rated_voltage: {jpl: 192.7, caltech: 240.0, office001: 240.0}
+    non_physical_guard: {actual_kw_min: 0.0, actual_kw_max: 50.0, pilot_a_max: 100.0}
+
+# --- 切分与角色（沿用 E0 冻结口径；AGENTS.md 红线）---
+split:
+  rule: "站点内按 session connection_time 排序 60/20/20；整条会话属唯一 split"
+  external_only: [office001]                    # 仅外部验证，禁止用其结果改阈值
+  stress_only: [anomaly_months_2019-12_2020-02_2020-04_2020-12, anomaly_year_2021]
+  forbidden:
+    - minutes_level_split
+    - event_month_selection
+    - event_rate_boundary_adjust
+    - use_office001_for_threshold
+
+# =============================================================================
+# P0-A：真实 EV 响应时间谱（零新增数据，第 3-6 天）
+# =============================================================================
+p0_a_ev_response:
+  question: "EV 到底是不是一种具有可利用时间动态的柔性资源？"
+  data_source: "ACN 派生（pilot-step 库 + 1min session table），零新增数据"
+  counting_scope: "train+validation 为 gate 主判集；test 报告 single-exposure 可用量；office001 external 单列不计入 gate"
+
+  # binding 分类（严格区分，不能用全部 negative step 粗统计）
+  binding_classification:
+    tolerance_kw: 0.5                           # 功率容差（kW）
+    binding_decrease: "pilot_after_kw < actual_before_kw - tolerance_kw   # 新桩侧允许值确实压到原实际功率以下"
+    non_binding_decrease: "pilot_after_kw >= actual_before_kw - tolerance_kw   # actual 不降也不说明 EV 不响应"
+    binding_increase: "pilot_after_kw > actual_before_kw + tolerance_kw   # 且确有允许增加空间"
+    non_binding_increase: "pilot_after_kw <= actual_before_kw + tolerance_kw"
+
+  # 响应时间窗与指标
+  response_lag_min: [1, 3, 5]                   # 记录 actual 在 1/3/5 min 后的响应
+  per_event_metrics:
+    - delta_command_kw                          # pilot_after - pilot_before
+    - delta_actual_1m_kw / delta_actual_3m_kw / delta_actual_5m_kw
+    - response_fraction_1m / response_fraction_3m / response_fraction_5m
+  response_fraction_down: "r_lag = (P_before - P_lag) / (P_before - P_pilot_after)   # 下降响应分数"
+  response_fraction_up: "r_lag = (P_lag - P_before) / (P_pilot_after - P_before)   # 上升响应分数"
+  fraction_clip: "[0, 2]   # 限制到合理区间只用于诊断，不掩盖异常"
+
+  # 事件筛选（复用 E7-FAST D0-2 口径）
+  event_detection:
+    detection_unit: pilot_a
+    record_unit: pilot_power_kw
+    positive_event: {delta_pilot_a_min: 2.0, relative_ratio_min: 0.15}
+    negative_event: {delta_pilot_a_max: -2.0, relative_ratio_min: 0.15}
+    pre_stability:
+      window_min: 3
+      pilot_no_second_change_a: 1.0
+      actual_non_missing: true
+      actual_no_big_jump_kw: 2.0
+    exclusions:
+      first_connect_min: 5
+      severe_gap_in_window: true
+      non_physical_power: true
+      offline_done_charging_window_min: 10
+      done_charging_is_offline_only: true       # doneCharging 绝不作在线特征
+
+  # 分层（必须看）
+  stratify_by:
+    - site
+    - station_id
+    - month
+    - session_phase                             # 充电阶段（初/中/尾）
+    - actual_before_kw                          # 事件前实际功率档
+    - step_magnitude                            # step 幅度档
+    - previous_pilot_state                      # 事件前 pilot 状态
+
+  # 同 session 多次 step 一致性
+  session_repeatability:
+    within_session: "同一 session 多次 step 的 first response → later response 一致性"
+    metric: "第一次 response_gain 对第二次有没有预测价值"
+
+  # P0-A 输出
+  outputs:
+    results_root: "results/raw/core_search/p0_a"
+    binding_events: "binding_events.parquet"
+    response_summary: "response_1_3_5m_summary.csv"
+    station_summary: "station_response_summary.csv"
+    repeatability: "session_repeatability.csv"
+    report: "reports/core_search/CORE_P0_A_EV_RESPONSE.md"
+
+  # P0-A 判断门（结构化冻结值；算法必须从此读取，禁止在代码硬编码）
+  gate:
+    sufficiency:
+      usable_events_min: 100
+      unique_sessions_min: 30
+      stations_min: 5
+      months_min: 2
+    no_go_deterministic_1m:
+      full_response_median_min: 0.9
+      full_response_std_max: 0.1
+    time_dynamic_diff_threshold: 0.05
+    heterogeneity_iqr_threshold: 0.05
+    repeatability_corr_threshold: 0.1
+    # --- 人类可读判定说明（非机器解析，仅供报告引用）---
+    GO_description: |
+      binding 事件充分（train+val usable_events>=100 / sessions>=30 / stations>=5 / months>=2）
+      且（1/3/5min 响应明显不同 OR 车辆间响应幅度稳定异质性 OR repeatability corr 明显）
+    NO_GO_deterministic_description: |
+      真正 binding 后绝大多数车辆在 1min 内几乎完全、确定性响应
+      （median>0.9 且 std<0.1）→ BESS先接EV慢慢接力 方向直接降级；CORE-A 不启动
+
+# =============================================================================
+# P0-B：EV 群真实短时柔性规模（零新增数据，第 3-6 天）
+# =============================================================================
+p0_b_ev_flex_scale:
+  question: "EV 是否真的足以改变 BESS 尺寸/运行？"
+  data_source: "ACN 真实 5/15min pool，零新增数据，不用园区 load"
+  counting_scope: "train+validation 为 gate 主判集；test 报告 single-exposure"
+
+  # 每控制周期计算
+  per_period_metrics:
+    - P_EV_actual                               # 当前 EV 总功率
+    - P_down_5m / P_up_5m                       # 5min 可靠下调/上调空间
+    - P_down_15m / P_up_15m                     # 15min 可靠下调/上调空间
+    - active_sessions                           # 在充会话数
+    - responsive_sessions                       # 可响应会话数
+
+  # 多档柔性口径（不追求神奇真实能力，建立多档）
+  flex_tiers:
+    F0_optimistic:
+      definition: "pilot/rated headroom（乐观上界）"
+      up: "max(P_pilot - P_actual, 0)"
+      down: "P_actual"
+    F1_historical_simple:
+      definition: "rolling-Q95"
+      up: "max(Q95_history - P_actual, 0)"
+      down: "P_actual"
+    F2_m2_verified:
+      definition: "pilot + historical actual（M2）"
+      up: "max(min(P_pilot, Q95_history) - P_actual, 0)"
+      down: "P_actual"
+    F3_conservative:
+      definition: "没有足够证据不允许增加"
+      up: 0.0
+      down: "P_actual"
+    down_side_calibration: "下降侧根据 P0-A 得到的 binding response 使用真实响应率（不用 pilot headroom 假设 actual 必降）"
+
+  # 量纲比较（最重要）
+  dimensional_comparison:
+    stats:
+      - EV总功率
+      - 柔性功率（up/down，5m/15m，F0-F3 各档）
+      - 柔性占EV功率比例
+    benchmark: "与 100-200kW BESS 同量级？"
+    go_example: "EV peak 400kW / reliable down flex 160kW / reliable up flex 90kW → 同量级，值得进系统层"
+    no_go_example: "EV peak 400kW / reliable flex 15kW → 量纲上即值得怀疑，用EV少配BESS 方向停止"
+
+  # 分层统计
+  stratify_by: [site, hour_of_day, month, concurrent_session_count]
+
+  # P0-B 输出
+  outputs:
+    results_root: "results/raw/core_search/p0_b"
+    flex_pool_5min: "flex_pool_5min.parquet"
+    flex_pool_15min: "flex_pool_15min.parquet"
+    flexibility_distribution: "flexibility_distribution.csv"
+    flexibility_by_hour: "flexibility_by_hour.csv"
+    flexibility_by_concurrency: "flexibility_by_concurrency.csv"
+    report: "reports/core_search/CORE_P0_B_EV_FLEX_SCALE.md"
+
+  # P0-B 判断门（量纲门，结构化冻结值）
+  gate:
+    bess_comparison_kw_low: 100.0
+    bess_comparison_kw_high: 200.0
+    go_reliable_flex_peak_min_kw: 100.0   # 可靠柔性峰值至少与最小 BESS(100kW) 同量级
+    GO_description: "柔性功率与 BESS(100-200kW) 同量级，且 F2/F3 仍有可观柔性"
+    NO_GO_description: "柔性功率 << EV总功率 且 << BESS 量级 → CORE-B/C 不启动"
+
+# =============================================================================
+# Decision #1（第 6 天）
+# =============================================================================
+decision_1:
+  inputs: [P0-A gate, P0-B gate]
+  go: "启动 CORE-A/B/C + SYSTEM-BENCH v1"
+  no_go: "EV 柔性量纲不足 → 立即改路线，不烧时间搭大系统仿真"
+
+# =============================================================================
+# SYSTEM-BENCH v1（第 6-9 天，P0 过门后）
+# =============================================================================
+system_bench:
+  versions:
+    v15min:
+      components: "真实工业 load/PV（EMSx）+ ACN 真实 EV pool + BESS 物理模型 + PCC limit"
+      use: "CORE-B / CORE-C"
+    v1min:
+      components: "真实建筑 load/PV（1min）+ ACN 真实 EV response + BESS 物理模型"
+      use: "CORE-A"
+
+  # 统一系统方程（最简单）
+  equations:
+    pcc: "P_PCC = P_base + P_EV + P_BESS_ch - P_BESS_dis - P_PV"
+    bess_soc: "SOC_min <= SOC_t <= SOC_max"
+    bess_charge: "0 <= P_ch <= P_ch_max"
+    bess_discharge: "0 <= P_dis <= P_dis_max"
+    energy_conservation_unit_test: required      # 能量守恒必须有单测（防 D3 语义不一致）
+
+  # 物理约束断言（从第一版就写）
+  physical_assertions:
+    - "accepted <= requested                     # command/accepted/realized 必须明确区分"
+    - "ev_realized <= ev_accepted"
+    - "bess_power <= bess_limit"
+
+  # hybrid replay 匹配规则（冻结）
+  hybrid_replay:
+    time_match: "weekday<->weekday / weekend<->weekend"
+    clock_time: "保持当地时钟（08:00 EV <-> 08:00 load）"
+    ev_penetration: "r_EV = P_EV_peak / P_base_peak"
+    penetration_levels: [0.10, 0.20, 0.30, 0.40]  # scale ACN EV pool
+    not_co_located: "统一称 hybrid system replay，不假装共址"
+
+  # 验收（至少跑通）
+  acceptance:
+    reference_controllers: [BESS-only, EV-simple]
+    energy_conservation_test: required
+
+  # 统一 scenario matrix（第一轮冻结）
+  scenario_matrix:
+    external_sites: "6-10 个 EMSx representative sites"
+    ev_penetration: [0.10, 0.20, 0.30, 0.40]
+    bess_power_ratio: [0.1, 0.25, 0.5]          # × base-load peak
+    soc_init: 0.50                               # GO 后才做 [0.20, 0.80]
+    weather_weekday: "自然数据，不做人工极端压力场景作主门"
+
+  # 统一输出表（所有方向同一张表）
+  unified_output:
+    keys: [site_id, date, policy]
+    pcc: [pcc_violation_kw, pcc_violation_kwh, max_pcc_kw]
+    bess: [bess_peak_kw, bess_charge_kwh, bess_discharge_kwh, bess_throughput_kwh]
+    ev: [ev_delivered_kwh, ev_curtailed_kwh]
+    pv: [pv_curtailed_kwh]
+    control: [control_actions]
+
+# =============================================================================
+# CORE-A：EV+BESS 多时间尺度协同（第 9-14 天；P0 过门后用 v2 细化）
+# =============================================================================
+core_a_handoff:
+  question: "BESS 是否可以只承担 EV 尚未响应的快速部分，而把持续功率逐步转移给 EV？"
+  data: "1min 真实建筑 load/PV + ACN 1/3/5min response"
+  arms:
+    A0_bess_only: "所有 PCC 偏差都由 BESS"
+    A1_instant_ev: "假定 EV 指令立即生效（理论乐观上界）"
+    A2_fixed_delay: "最简单固定响应时间接力"
+    A3_candidate: "用 P0-A 真实 1/3/5min 响应特性动态转移"
+  primary_kpi: [pcc_violation, bess_peak_kw, bess_throughput_kwh]
+  protection_kpi: [ev_curtailed_energy, ev_delivery_loss, control_action_count]
+  gate:
+    GO: "PCC 不恶化 且 BESS peak 或 throughput vs strongest simple baseline 下降 >=15%"
+    strong: "下降 >20% → 强核心候选"
+    no_go: "只赢 BESS-only、打不过 fixed-delay → No-Go"
+  detail_config: "P0 过门后在 core_search_v2.yaml 细化"
+
+# =============================================================================
+# CORE-B：利用 EV 柔性降低最小 BESS 功率/容量（商业价值最高）
+# =============================================================================
+core_b_bess_sizing:
+  question: "满足同样 PCC/EV 服务约束到底最少要多少储能？"
+  data: "EMSx 70 工业站 15min + ACN 15min EV pool"
+  sizing_search:
+    pmax_kw: [0, 50, 100, 150, 200, 250, 300, 350, 400, 450, 500]
+    energy_hours: [0.5, 1.0, 2.0, 4.0]
+    feasibility: "PCC violation <= threshold AND EV delivery >= threshold AND SOC feasible"
+  arms:
+    B0_rigid: "EV 全部按原始轨迹/刚性负荷"
+    B1_simple_peak_shave: "简单峰值削 EV"
+    B2_rolling_flex: "简单 rolling EV flexibility"
+    B_candidate: "使用 P0-B 真实柔性 + 系统协调"
+  most_valuable_output:
+    - "最小 BESS 功率 450->300kW"
+    - "最小 BESS 能量 900->650kWh"
+    - "同 BESS 下 EV penetration 20%->35%"
+  gate:
+    GO: "最小 BESS P/E vs strongest baseline 下降 >=15%"
+    strong: "下降 >20% → 优先晋级核心专利候选"
+  detail_config: "P0 过门后在 core_search_v2.yaml 细化"
+
+# =============================================================================
+# CORE-C：动态 BESS reserve
+# =============================================================================
+core_c_dynamic_reserve:
+  question: "是否有必要永远保留固定 SOC/功率备用？"
+  data: "EMSx 真实 forecast（不需人造 forecast error）"
+  arms:
+    baseline_fixed: [0.10, 0.20, 0.30]          # fixed reserve
+    candidate: "reserve(t) = f(load forecast uncertainty, PV forecast uncertainty, EV flexibility uncertainty)"
+  first_version: "rolling forecast error quantile，绝对不上 ML"
+  kpi: "同一可靠度（PCC violation rate）下比较 available BESS capacity / PV curtailment / EV curtailment / BESS throughput"
+  gate:
+    GO: "PCC 风险相同，平均被锁死 BESS reserve 减少 >=20%；或同 reserve 资源 PCC violation 下降 >20%"
+  detail_config: "P0 过门后在 core_search_v2.yaml 细化"
+
+# =============================================================================
+# 第二批候选（暂不编码）
+# =============================================================================
+deferred:
+  core_d_transformer_thermal:
+    reason: "需 ambient / thermal model / transformer 参数，先不抢资源"
+  core_e_deliverable_flex:
+    reason: "需 P0-A/P0-B 结果，可能从前三条自然生长"
+  demand_control:
+    role: "系统 baseline/场景，不作为独立第一候选"
+
+# =============================================================================
+# Core Patent Score（P0 过后对三方向评分）
+# =============================================================================
+core_patent_score:
+  weights:
+    system_kpi_improvement: 35
+    cross_site_stability: 15
+    real_data_ratio: 15
+    tech_chain_completeness: 10
+    increment_over_simple_baseline: 10
+    engineering_implementability: 5
+    patent_differentiation: 10
+    total: 100
+  veto_1: "核心系统 KPI <10% → 不进入核心专利（无论总分多高）"
+  veto_2: "收益主要来自极端 synthetic 参数 → 不进入"
+
+# =============================================================================
+# prior art 介入时机
+# =============================================================================
+prior_art:
+  before_p0: "30-60 分钟快速扫，有没有单一文献几乎完全同链。有则注意，不阻止实验"
+  after_system_p0_15pct: "马上做 targeted prior-art（检索导致效果的具体控制链，不是 EV+BESS/光储充/MPC 粗词）"
+  rule: "不再因领域有人做过就自杀方向"
+
+# =============================================================================
+# 第 14 天决策会
+# =============================================================================
+decision_meeting_d14:
+  outcomes:
+    STRONG_GO: ">20% 系统改善，跨多站稳定"
+    CONDITIONAL_GO: "15-20%，有清晰机制"
+    STOP: "<15% 或只有极端场景有效"
+  max_keep: "1-2 条"
+
+# =============================================================================
+# 纪律（冻结，违规即退回）
+# =============================================================================
+discipline:
+  final_gate_is_system_kpi: "predictor/boundary/classification metric 只是中间证据，最终门永远是系统 KPI（M2 教训）"
+  physical_constraint_from_v1: "command/accepted/realized 必须明确区分，accepted <= requested 从第一版就写断言"
+  strongest_baseline_first: "不许做完 candidate 才找 baseline"
+  synthetic_only_for_stress: "核心结果至少来自 REAL EV + REAL external load/PV + physical BESS"
+  no_academic_flashy: "简单动态 reserve 规则能降 25% 被锁备用就值得深入，不必塞 RL"
+
+term_discipline:
+  pilot_actual_diff: "导引/允许电流与实际响应差异（不得称命令失败/拒绝）"
+  absorbable_margin: "只用自然 pilot 正阶跃验证过增量响应的才能谈可吸收余量"
+  budget_diff: "只用观察值称预算差值（非可回收能力）"
+  response_simulator: "未通过验证的响应仿真器不得输出闭环收益结论"
+  forbidden_words: [投影, 权限, 命令失败, 拒绝, 可回收能力]
+
+forbidden_online_features:
+  items: [future_disconnect, final_kwh_delivered, future_done_charging_time,
+          true_soc, true_remaining_demand, accurate_future_departure,
+          bms_power_limit, pcs_reject_reason]
+  note: "上述只能作离线标签或评价；done_charging_time 仅在 offline 排除窗内使用"
+
+preregistration:
+  rule: "阈值在训练/验证集确定；测试集冻结后只跑一次，禁止在测试集上逐图调参"
+  on_fail: "失败后新增方案必须新版本 + 新测试协议"
+
+statistics:
+  paired_comparison: "同会话/池/日/预算下配对比较"
+  bootstrap: "会话/日级 cluster bootstrap 95%CI，不把分钟点当独立样本"
+  report: "绝对量与相对量同报；必须报最差站点/月份/会话；每实验至少抽取 20 个失败案例"
+
+# =============================================================================
+# 输出目录
+# =============================================================================
+outputs:
+  code_root: "src/patent_preexperiment/core_search"
+  results_raw: "results/raw/core_search"
+  results_subdirs: [p0_a, p0_b, emsx, building_1min, system_bench, core_a, core_b, core_c]
+  reports_root: "reports/core_search"
+  core_search_root: "patent_preexperiment/core_search"
