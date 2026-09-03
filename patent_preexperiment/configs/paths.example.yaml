@@ -6,5 +6,6 @@ data_root: "D:\\path\\to\\光储充\\数据"
 acn_project: "${data_root}\\ACN-data\\acn_project"
 static_root: "${data_root}\\ACN-data\\ACN-Data-Static\\time series data"
 acn_full: "${data_root}\\ACN-data\\acn_full"
+emsx: "${data_root}\\EMSx"
 
 output_root: "D:\\path\\to\\light_storage_ev-v2\\patent_preexperiment\\results"

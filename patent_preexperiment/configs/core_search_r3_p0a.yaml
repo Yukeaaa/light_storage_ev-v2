@@ -1,0 +1,32 @@
+# CORE-SEARCH R3-P0-A —— 真实 forecast-error / reserve-opportunity 数据门（预注册，冻结）
+# 依据：CORE_SEARCH_ROUND3_CANDIDATES.md R3-A/R3-B 的第一道杀伤门。
+# 问题：固定 Q95 备用是否长期过度保守？reserve requirement 是否随状态(小时)变化足够大？
+# 数据：EMSx 真实 load/PV + 历史 forecast（15/30/60min 前瞻），净负荷 forecast error。
+# 术语：net-load = actual_consumption - actual_pv；error = net_actual[t+h] - net_forecast_h[t]。
+
+experiment_id: CORE_SEARCH_R3P0A
+rule_version: core_search_r3_p0a
+frozen_date: 2026-09-02
+protocol_source: "CORE_SEARCH Round 3 → R3-P0-A"
+
+data:
+  sites: [3, 8, 10, 70]     # 已下载代表站（低/中/高负荷，见 metadata.csv max_load）
+  site_meta: "metadata.csv"
+
+horizons:
+  15min: {lag_steps: 1, load_col: load_00, pv_col: pv_00}
+  30min: {lag_steps: 2, load_col: load_01, pv_col: pv_01}
+  60min: {lag_steps: 4, load_col: load_03, pv_col: pv_03}
+
+metrics:
+  reserve_quantile: 0.95       # 备用口径：净负荷 forecast error 绝对值的 Q95
+
+gate:
+  reserve_variation_ratio_min: 2.0   # 小时级 Q95 的 max/min >= 2 → 动态备用有肉
+  idle_fraction_min: 0.70            # |error| < 0.5*Q95 的时间占比 >= 0.7 → 固定备用大量闲置
+  go: "多数站点(>=50%) reserve_variation_ratio>=2 且 idle_fraction>=0.7"
+  no_go: "reserve 几乎不随状态变化(variation_ratio<1.5)"
+
+outputs:
+  results_root: "results/raw/core_search/r3_p0a"
+  report: "reports/core_search/CORE_SEARCH_R3_P0A_GATE.md"
