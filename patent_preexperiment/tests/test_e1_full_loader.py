@@ -19,8 +19,8 @@ import pandas as pd
 import pytest
 
 from patent_preexperiment.e1_full.loader import (
-    MAIN_ROLE,
     MAIN_LAYER,
+    MAIN_ROLE,
     MAIN_SPLITS,
     load_main_evidence_minutes,
     main_evidence_universe,

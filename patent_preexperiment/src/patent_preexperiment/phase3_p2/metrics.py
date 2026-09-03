@@ -18,21 +18,19 @@ from typing import Any
 import numpy as np
 import pandas as pd
 
-from patent_preexperiment.phase3_p2.schema import (
-    LOCKED,
-    M1,
-    M2,
-    M3,
-    M4,
-    NORMAL,
-    PROTECTIVE,
-    SchemaConfig,
-)
 from patent_preexperiment.phase3_p2.actions import (
     ACCEPTED,
     BOUNDARY_UNAVAILABLE,
     CLIPPED_LOWER,
     CLIPPED_UPPER,
+)
+from patent_preexperiment.phase3_p2.schema import (
+    M1,
+    M2,
+    M3,
+    M4,
+    PROTECTIVE,
+    SchemaConfig,
 )
 
 _EPS = 1e-9
@@ -138,9 +136,10 @@ class PoolAgg:
             diff_lp = (sub["final_cf_locked"] - sub["final_cf_protective"]).abs() > _EPS
             self.n_diff_lock_prot += int(diff_lp.sum())
             both = sub["final_cf_normal"].notna() & sub["final_cf_protective"].notna()
-            diff_pn = both & (
-                (sub.loc[both, "final_cf_normal"] - sub.loc[both, "final_cf_protective"]).abs() > _EPS
-            )
+            final_cf_diff = sub.loc[both, "final_cf_normal"] - sub.loc[
+                both, "final_cf_protective"
+            ]
+            diff_pn = final_cf_diff.abs() > _EPS
             self.n_diff_prot_normal += int(diff_pn.sum())
 
     def add_traces(self, traces: pd.DataFrame) -> None:

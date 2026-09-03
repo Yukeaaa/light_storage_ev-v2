@@ -19,9 +19,21 @@ def main() -> None:
     baseline = build_design_baseline(IMPL / "data_registry" / "design_baseline.json")
     check = check_core_data(IMPL / "data_registry" / "k0_data_check.json")
 
-    print(json.dumps({"commit": baseline["commit"], "data_version": baseline["data_version"]}, ensure_ascii=False))
+    print(
+        json.dumps(
+            {"commit": baseline["commit"], "data_version": baseline["data_version"]},
+            ensure_ascii=False,
+        )
+    )
     print("manifest rows:", {k: v["rows"] for k, v in check["manifests"].items()})
-    print("match_status ok:", check["match_status"]["ok"], "| gold ok:", check["gold"]["ok"], "| PASSED:", check["passed"])
+    print(
+        "match_status ok:",
+        check["match_status"]["ok"],
+        "| gold ok:",
+        check["gold"]["ok"],
+        "| PASSED:",
+        check["passed"],
+    )
 
 
 if __name__ == "__main__":

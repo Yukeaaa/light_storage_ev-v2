@@ -83,7 +83,7 @@ def replay_arm(
     ev_realized = pd.Series(
         np.minimum(ev_accepted, ev_observed_support), index=actual_before.index
     )
-    # planned_bess = request - accepted；因 accepted <= request，>=0 自然成立（不再需 clip 掩盖负数）
+    # accepted <= request, so planned_bess is non-negative without clipping.
     planned_bess = pd.Series(
         park_requested - ev_accepted, index=actual_before.index
     )

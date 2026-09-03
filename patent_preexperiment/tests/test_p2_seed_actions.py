@@ -21,7 +21,15 @@ from patent_preexperiment.phase3_p2.actions import (
     seed_byte,
     seed_map_for,
 )
-from patent_preexperiment.phase3_p2.schema import LOCKED, M2, M3, M4, NORMAL, PROTECTIVE, load_schema
+from patent_preexperiment.phase3_p2.schema import (
+    LOCKED,
+    M2,
+    M3,
+    M4,
+    NORMAL,
+    PROTECTIVE,
+    load_schema,
+)
 
 PP = Path(__file__).resolve().parents[1]
 SCFG = load_schema(PP / "configs" / "phase3_p2_action_schema.yaml")

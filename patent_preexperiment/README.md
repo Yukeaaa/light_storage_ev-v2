@@ -3,7 +3,9 @@
 > 本 README 的作用不是介绍代码，而是防止项目被误解为普通充电负荷预测、多车调度优化、
 > 用户行为预测或通用光储充仿真平台。读任何代码、改任何配置、汇报任何结论之前，请先读本节。
 > **当前权威**：`reports/patent_definition/01_claim_tree_v3_e7_fast.md`（v3 园区控制链）+
-> `02_prior_art_element_map_v3_e7_fast.md` + E7-FAST D0/D2/D3/test 全 GO。
+> `02_prior_art_element_map_v3_e7_fast.md` + `03_tech_disclosure_e7_fast_v3.md`。
+> 当前结论为 **FILING GO / NARROW CLAIM STRATEGY**：D2 EV 层 M2 双重上调限制为主证据；
+> D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景。
 > **v2 历史**：`claim_tree.md` / `prior_art_matrix.md` / `tech_disclosure.md` = HISTORICAL
 > （D3 recovery 已被 P2.1A FAIL 删除，不再权威）。
 
@@ -16,40 +18,37 @@
 本项目的发明不是回答"剩下 3 kW 应该给谁"，而是回答更底层的问题：**在当前数据条件下，
 有没有资格继续把这辆车当作 7 kW 的可执行负荷？** 若响应证据不足，就不盲信。
 
-最终发明中心（P2 formal SUCCESS / NARROW GO 后；**以 `reports/patent_definition/claim_tree.md`
-v2 §7 设备动作链为权威**）：
+最终发明中心（E7-FAST corrective audit 后；**以 `reports/patent_definition/01_claim_tree_v3_e7_fast.md`
+为权威**）：
 
-> 获取当前充电信息 → 确定信息类别（capability / pilot+actual / current-only / 历史不足）
-> → 按信息类别选择功率边界生成方式 → 生成 EV 功率边界 → 形成预算修正允许区间 → 将 EMS
-> 请求的预算修正量限制在该区间（accepted / clipped_upper / clipped_lower）→ 持续获得实际
-> 充电响应 → 实际响应满足预定边界接触条件 → 单向改变预算修正允许区间 → 后续按新区间执行。
-> **边界作用于"预算修正动作范围"，而非直接输出充电功率或直接限制桩口功率设定值；实际
-> 响应用于恢复这个动作范围。**
+> EMS/园区控制器提出 EV 群功率上调请求后，对每辆正在充电的 EV，根据当前可获得的桩侧允许
+> 信息、实际功率与历史实际响应，计算本周期允许增加量；具备 pilot+actual+history 的 M2 车辆
+> 使用 `min(当前桩侧允许值, 历史实际响应支持水平)` 形成双重上限；缺少当前桩侧允许信息或历史
+> 不足的车辆采用保护性/锁定处理；EV 群实际接受量再受园区请求限幅。
 
-> **⚠ P2 是 mechanism evidence，不是 performance evidence**：站级收益 / 储能补偿减少 /
-> 主动重分配 / 真实 EMS request 语义均**未验证**。M2（pilot+actual）分支为 dispatch-only
-> （无 numerical boundary_value），CLAIM 1 v2 主权利要求优先围绕 M3/M4 + D2 + D3 收紧。
+> **证据边界**：M2 双重约束在真实 EV 数据上降低未经支持的上调高估；不得称“准确识别车辆能力”。
+> D3 recovery 已移除；BESS/PCC 系统层效果弱，不作为 Claim 1 必要技术效果。
 
-## 2. 当前专利主轴（P2 formal 后：D1/D2/D3 设备动作链，NARROW GO）
+## 2. 当前专利主轴（E7-FAST v3：M2 双重上调限制，NARROW CLAIM）
 
 原主轴 V2.1"充电响应状态识别 → 短时可执行功率区间 → 支持域内有界修正 → 支持域外保护回退"中，
 **active bounded correction 降为从属/可选实施方式**（P-004 维持 D）；broad active D1-R/D1-A
-不恢复。**P1 formal No-Go** 已把 recent_var / variance 状态判定移出核心；**P2 formal
-SUCCESS** 验证的是 **D1（信息类别分级选择边界生成方式）+ D2（边界→预算修正动作允许区间）
-+ D3（实测响应驱动单向恢复）** 的设备动作链（见 `claim_tree.md` §7.1）。术语纪律（AGENTS.md，
-违规即退回）：
+不恢复。**P1 formal No-Go** 已把 recent_var / variance 状态判定移出核心；**P2.1A formal FAIL**
+已删除 D3 recovery；**E7-FAST** 将主权利要求收窄到 M2 双重上调限制 + EV 群请求限幅。
+术语纪律（AGENTS.md，违规即退回）：
 
 - pilot 与 actual 的差异只能称"导引/允许电流与实际响应差异"，**不得**称"命令失败/拒绝"；
 - 只用自然 pilot 正阶跃验证过增量响应的，才谈"可吸收余量"；
 - 只用观察值称"预算差值"而非"可回收能力"；
 - 未通过 E4.1 验证的响应仿真器不得输出闭环收益结论。
 
-## 3. 已经证明与尚未证明（截至 P2 formal frozen outcome）
+## 3. 已经证明与尚未证明（截至 E7-FAST v3 corrective audit）
 
 > **阶段线**：Final R1 Patent Gate（PROTECTIVE GO）→ **P1 formal No-Go**（recent_var
 > 状态判定移出核心）→ Patent Gate 2（NARROW CONDITIONAL GO）→ **P2 formal
-> SUCCESS / NARROW GO**（D1/D2/D3 设备动作链机制成立）。P3 HOLD。下方表格中 Final R1
-> 及之前条目为历史背景，P1/P2 为当前权威。
+> SUCCESS / NARROW GO**（设备动作链机制成立）→ **P2.1A D3 falsification FAIL**
+> → **E7-FAST D0/D2 GO，D3 train+val FAIL / test CONDITIONAL**。下方表格中 Final R1
+> 及之前条目为历史背景，v3 patent definition 为当前权威。
 
 ### 已证明（冻结样本、冻结阈值、负对照下）
 
@@ -67,11 +66,12 @@ SUCCESS** 验证的是 **D1（信息类别分级选择边界生成方式）+ D2�
 | **P1 formal No-Go**：recent_var 状态判定作为核心规则 external formal FAIL（215 会话/15,954 cycle，主效应方向反）；variance-defined S1/S2/S3 移出核心 | P1 formal | `results/raw/phase3_p1/P1_patent_gate.md` |
 | **Patent Gate 2 = NARROW CONDITIONAL GO**：A/B/C/D 单模块全高拥挤，闭环未公开；主风险 ACN 族 | 检索后冻结 | `results/raw/patent_gate2/patent_gate2_final.md` |
 | **P2 formal = SUCCESS / NARROW GO**：D1/D2/D3 设备动作链机制成立（M1=1.0 / M2=1.0 / M4=0.0；M3 natural JPL 1,060 traces / 1,060 sessions；n_diff_prot_normal=72,067） | P2 formal frozen outcome | `results/raw/phase3_p2/P2_patent_gate.md` |
+| **P2.1A = formal FAIL**：D3 recovery 作为独立机制删除，不作为权利要求或从属主张 | P2.1A falsification | `results/raw/phase3_p2_1/P2_1A_outcome_report.md` |
+| **E7-FAST D2 EV gate = GO**：M2 `min(pilot,Q95)` 相对 rolling-Q95 单独使用，train+val Over improvement 30.08%，test 39.65%，CoverageRatio 77.97%–86.95% | E7-FAST EV validation | `reports/E7_FAST_EV_gate.md`、`reports/E7_FAST_TEST_CONSUMED.md` |
+| **E7-FAST D3 system gate = FAIL/CONDITIONAL**：corrective audit 后 train+val 系统效果 0.01%，test 回放 4.46%/6.03%；旧 D3 系统收益数字作废 | E7-FAST corrective audit | `reports/E7_FAST_system_gate.md`、`reports/patent_definition/05_experiment_evidence_summary_v3.md` |
 
-门判定：**当前 = P2 formal SUCCESS / NARROW GO（mechanism realizability only）；P3 HOLD。**
-Final R1 Patent Gate = PROTECTIVE GO + D2/D3 融合架构为历史阶段线；P1 formal No-Go 已把
-recent_var 状态判定移出核心；Patent Gate 2 NARROW CONDITIONAL GO 已收窄到 D1/D2/D3
-三点组合。
+门判定：**当前 = FILING GO / NARROW CLAIM STRATEGY**。主证据是 M2 双重上调限制的 D2 EV 层；
+Final R1/P1/P2 为历史阶段线；D3 recovery 已移除；BESS/PCC 系统层只作弱从属或背景。
 
 ### 尚未证明（全部为 D 级假设，禁止对外断言）
 
@@ -82,6 +82,7 @@ recent_var 状态判定移出核心；Patent Gate 2 NARROW CONDITIONAL GO 已收
 - 可减少储能补偿；
 - 可提高光伏消纳；
 - 任何闭环收益 / 站级经济效益 / 全车型普遍适用。
+- D3 recovery / Q95 触边恢复具有独立控制价值。
 
 以上全部挂账在 `data_registry/claim_evidence_registry.csv`（含 A5 后升级的 C-007 与
 Patent Definition 阶段新增 P-001～P-004），汇报时引用 `claim_id` 并遵守
@@ -154,38 +155,30 @@ review/          每轮审查结论归档（审查结论2..7）
 
 ## 9. 当前工程治理状态
 
-- **当前最新（P2 formal 后）**：**P2 = SUCCESS / NARROW GO**（mechanism realizability
-  only）；P-001/P-002/P-003 升 C（P-002 由 D 升 C，controller mechanism）；P-004 维持 D；
-  CLAIM 1 v2 改写为 10 步可执行设备动作链（`claim_tree.md` §7）；**P3 HOLD**。
-  - **P2 是 mechanism evidence，不是 performance evidence**：站级收益 / 储能补偿 / 主动
-    重分配 / 真实 EMS request 语义均未验证；M2 分支 dispatch-only（无 numerical
-    boundary_value）；M3 recovery 为段内**单向**恢复（非双向降级↔恢复）。
-  - 下一步仅批准攻击性 falsification（**P2.1A D3 falsification + P2.1B D2 closed-loop/HIL**，
-    见 `tech_disclosure.md` §7 / `claim_tree.md` §6.4），任一失败 → Project No-Go。
+- **当前最新（E7-FAST v3 corrective audit 后）**：**FILING GO / NARROW CLAIM STRATEGY**。
+  当前权威是 `reports/patent_definition/01_claim_tree_v3_e7_fast.md`、
+  `02_prior_art_element_map_v3_e7_fast.md`、`03_tech_disclosure_e7_fast_v3.md`。
+  - 主证据：D2 EV 层 M2 双重上调限制，train+val/test 均 GO。
+  - 降级/删除：D3 recovery 已由 P2.1A formal FAIL 删除；D3/BESS/PCC 系统效果经 corrective
+    audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景。
+  - 禁止引用：旧 D3 系统收益数字（shortfall 降 30%/40%，BESS 临时补偿降 15%/41%）已作废。
 - **历史阶段线**：审查结论52 Final R1 Patent Gate（PROTECTIVE GO + D2/D3 融合）→
   P1 formal No-Go（recent_var 移出核心）→ Patent Gate 2（NARROW CONDITIONAL GO）→
-  P2 formal（SUCCESS / NARROW GO）。
+  P2 formal（SUCCESS / NARROW GO）→ P2.1A D3 falsification FAIL → E7-FAST v3 收窄。
 - 审查结论33/34 准入 R1 扩展审计；结论45/46 A5 protocol v1.2 FINAL FREEZE（`9302a7d`）；
   结论47–51 A5 正式运行（baseline `34f04f6`，Evidence commit `a827df3`）。
 - K1.2.2 审查通过（`review/审查结论5.md`），E0-Full 数据构建完成。
 
-## 10. 下一阶段（P2 formal 后：P2.1 攻击性验证 + 专利代理师检索）
+## 10. 下一阶段（E7-FAST v3 后）
 
-1. **P2.1A — D3 Falsification gate**：recovery 是否只是 rolling-Q95 自相关伪证据？
-   negative control（恒功率/persistence baseline、随机时点匹配、lag-shuffle）；
-   核心指标 = D3 条件对后续可支持上界的预测增益（超过简单功率持续性）。无增量辨识力
-   → **D3 No-Go**。
-2. **P2.1B — D2 Technical-Effect gate（最小闭环/HIL）**：独立 EMS request generator +
-   独立 EV response emulator；比较 unrestricted vs D1+D2 vs D1+D2+D3。指标：
-   infeasible command rate / boundary violation / unsupported positive correction rate /
-   tracking residual。无真实技术效果 → **D2 No-Go**。不做经济收益。
-3. **专利代理师检索**：ACN 族 element-by-element 对照（`claim_tree.md` §7.2）+ EP/CNIPA
-   库 + ISO 15118 动态功率限制标准演进；正式新颖性/创造性/FTO 法律意见。
-4. 权威 claim 以 `reports/patent_definition/claim_tree.md` v2（§7 设备动作链）+
-   `results/raw/phase3_p2/P2_patent_gate.md` 为准；`tech_disclosure.md` 骨架部分表述
-   已过时（见其顶部 banner），按 claim_tree v2 收缩。
+1. **专利代理师检索**：按 v3 claim tree 做 ACN 族、Schneider/ISO 15118/EMS 调度相关近邻的
+   element-by-element 对照，取得正式新颖性/创造性/FTO 法律意见。
+2. **交底书收口**：只围绕 M2 双重上调限制 + EV 群请求限幅组织 Claim 1；BESS/PCC 只能作为
+   弱从属/工程背景；不得写入旧 D3 系统收益数字。
+3. **CORE-SEARCH Round 4（可选）**：若继续找系统级核心候选，先找真实物理边界遥测
+   （actual power + SOC，最好 command + temperature/limit），再谈控制算法。
 
-现有技术边界（Patent Gate 2 FINAL）：单模块 A/B/C/D 全高拥挤；主风险 ACN 族
+现有技术边界：单模块 A/B/C/D 全高拥挤；主风险 ACN 族
 （US10926659 / US20200254896A1，同数据源最近邻，observation→conservative constraint→
-scheduling constraint→feasibility relaxation）；规避锚 = D1 信息类别分级 + D2 权限约束
-vs 直接设限 + D3 响应驱动权限恢复的三点组合（技术化、可落设备动作）。
+scheduling constraint→feasibility relaxation）。v3 规避锚 = M2 双重上调限制
+（当前桩侧允许值 + 历史实际响应支持水平）+ EV 群请求限幅；D3 recovery 不再作为规避锚。

@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pandas as pd
 
-from patent_preexperiment.phase3_p2.actions import budget_kw, seed_byte
+from patent_preexperiment.phase3_p2.actions import seed_byte
 from patent_preexperiment.phase3_p2.schema import SchemaConfig
 
 _MINUTE_COLUMNS = [
@@ -64,7 +64,11 @@ def make_session(
     if len(severe) != n:
         raise ValueError(f"severe_gap 长度 {len(severe)} != n_minutes {n}")
 
-    pilot = np.full(n, np.nan, dtype=float) if pilot_power_kw is None else np.full(n, pilot_power_kw)
+    pilot = (
+        np.full(n, np.nan, dtype=float)
+        if pilot_power_kw is None
+        else np.full(n, pilot_power_kw)
+    )
     return pd.DataFrame(
         {
             "session_id": [session_id] * n,

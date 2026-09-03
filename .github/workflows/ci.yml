@@ -18,5 +18,7 @@ jobs:
           cache: "pip"
       - name: Install
         run: pip install -e ".[dev]"
+      - name: Run ruff
+        run: ruff check
       - name: Run tests
         run: pytest

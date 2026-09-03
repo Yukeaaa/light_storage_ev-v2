@@ -17,7 +17,6 @@ from typing import Any
 
 import pandas as pd
 
-from patent_preexperiment.config.yamlutil import load_yaml
 from patent_preexperiment.e1_full.gate import git_provenance
 from patent_preexperiment.phase3_p2.metrics import k1_verdict, k2_verdict, k3_verdict
 from patent_preexperiment.phase3_p2.pipeline import (

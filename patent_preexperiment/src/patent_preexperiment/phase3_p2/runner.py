@@ -28,7 +28,6 @@ from typing import Any
 
 import pandas as pd
 
-from patent_preexperiment.config.yamlutil import load_yaml
 from patent_preexperiment.e1_full.gate import git_provenance
 from patent_preexperiment.phase3_p2.pipeline import (
     ReplayTransform,
@@ -140,7 +139,9 @@ def run_formal_test(impl_root: Path, *, chunk_sessions: int = 800) -> dict[str, 
         ("caltech_test_measured_pilot", "caltech", "measured_pilot", "test"),
         ("caltech_test_current_only", "caltech", "current_only", "test"),
     ]:
-        pool = load_pool_minutes(minute_root, registry, site=site, field_mode=field_mode, split=split)
+        pool = load_pool_minutes(
+            minute_root, registry, site=site, field_mode=field_mode, split=split
+        )
         pools[name] = pool
         pool_meta[name] = {
             "site": site,

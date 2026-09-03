@@ -6,7 +6,6 @@ import json
 from pathlib import Path
 
 import pandas as pd
-import pytest
 
 from patent_preexperiment.phase3_p2.metrics import (
     PoolAgg,
@@ -22,9 +21,20 @@ from patent_preexperiment.phase3_p2.pipeline import (
     seeds_for_pool,
 )
 from patent_preexperiment.phase3_p2.recovery import trace_records
-from patent_preexperiment.phase3_p2.schema import LOCKED, M1, M2, M3, M4, NORMAL, PROTECTIVE, load_schema
+from patent_preexperiment.phase3_p2.schema import (
+    LOCKED,
+    M1,
+    M2,
+    M3,
+    M4,
+    NORMAL,
+    PROTECTIVE,
+    load_schema,
+)
 from tests._p2_helpers import (
     low_budget_session_ids as _low_budget_session_ids,
+)
+from tests._p2_helpers import (
     make_session,
     stable_current_only_session,
     stable_pilot_session,

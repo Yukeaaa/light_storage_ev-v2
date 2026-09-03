@@ -67,7 +67,9 @@ class LookupResult:
     reason_code: str
 
 
-def lookup_mode(precedence: tuple[tuple[str, str | None], ...], env: dict[str, bool]) -> LookupResult:
+def lookup_mode(
+    precedence: tuple[tuple[str, str | None], ...], env: dict[str, bool]
+) -> LookupResult:
     """对单个信息面查 precedence 表：第一条命中的 if 规则 → 对应 mode。
 
     `else: fail_closed` 必须存在且位于最后；没有 else 或没有规则命中 → 确定性失败。
@@ -82,7 +84,9 @@ def lookup_mode(precedence: tuple[tuple[str, str | None], ...], env: dict[str, b
     raise ValueError("D1 precedence 没有 else fail_closed 兜底（schema 校验应已拦截）")
 
 
-def build_info_mode_table(scfg: SchemaConfig) -> tuple[dict[InfoVars, LookupResult], list[str], list[str]]:
+def build_info_mode_table(
+    scfg: SchemaConfig,
+) -> tuple[dict[InfoVars, LookupResult], list[str], list[str]]:
     """穷尽 16 种信息组合 → (info_mode, reason)。返回表 + mode/reason 的 16 长度数组。
 
     - `table`：按 InfoVars 查模式（供单点求值 / 测试）。
@@ -112,7 +116,12 @@ def build_info_mode_table(scfg: SchemaConfig) -> tuple[dict[InfoVars, LookupResu
 
 def info_code(capability: Any, pilot: Any, actual: Any, history: Any) -> int:
     """四个信息布尔 → 0..15 下标（cap*8+pilot*4+actual*2+history）。"""
-    return int(bool(capability)) * 8 + int(bool(pilot)) * 4 + int(bool(actual)) * 2 + int(bool(history))
+    return (
+        int(bool(capability)) * 8
+        + int(bool(pilot)) * 4
+        + int(bool(actual)) * 2
+        + int(bool(history))
+    )
 
 
 def boundary_mode_for(mode: str, scfg: SchemaConfig) -> str:

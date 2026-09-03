@@ -272,11 +272,21 @@ def load_schema(path: str | Path) -> SchemaConfig:
         probe_modulus=len(probe_grid),
         recovery_ratio=_parse_recovery_ratio(recovery_condition),
         recovery_sustained_cycles=int(_expect_key(recovery_trigger, "sustained_cycles")),
-        m1_target=float(_expect_key(primary_metrics["M1_D1_branch_realizability"], "target")),
-        m2_target=float(_expect_key(primary_metrics["M2_D2_action_bound_realizability"], "target")),
-        m4_target=float(_expect_key(primary_metrics["M4_unsupported_release_prevention"], "target")),
-        m3_min_traces=int(_expect_key(primary_metrics["M3_D3_recovery_trace_existence"], "minimum_traces")),
-        m3_min_sessions=int(_expect_key(primary_metrics["M3_D3_recovery_trace_existence"], "minimum_sessions")),
+        m1_target=float(
+            _expect_key(primary_metrics["M1_D1_branch_realizability"], "target")
+        ),
+        m2_target=float(
+            _expect_key(primary_metrics["M2_D2_action_bound_realizability"], "target")
+        ),
+        m4_target=float(
+            _expect_key(primary_metrics["M4_unsupported_release_prevention"], "target")
+        ),
+        m3_min_traces=int(
+            _expect_key(primary_metrics["M3_D3_recovery_trace_existence"], "minimum_traces")
+        ),
+        m3_min_sessions=int(
+            _expect_key(primary_metrics["M3_D3_recovery_trace_existence"], "minimum_sessions")
+        ),
         sentinel_name=sentinel_name,
         raw=cast(dict[str, Any], raw),
     )
