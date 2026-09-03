@@ -7,15 +7,11 @@
 >
 > **三大原则**：真实数据先行、系统效果先行、强简单 baseline 先行。
 >
-> **最新状态（2026-09-03 R4-A0b）**：Round 4 双线数据门已完成；R4-C0 ACN EVSE
-> infrastructure event audit = STOP 并正式关闭，不进入 R4-C1，不做子集/极端事件救援。R4-A0
-> 原 Iontech/Aachen 本地聚合源为 DATA_PENDING；R4-A0b 已落地 RWTH Aachen 官方 M5BAT 数据集
-> （DOI 10.18154/RWTH-2025-06555），判定 **DATA_SOURCE_RESOLVED / LEVEL B**。
-> R4-A1 A1-0/A1a 已完成，但 A1S/A1S-2 纠错审计已关闭该线：S1 supplementary
-> UTC+1/UTC+2 归一产生伪强 tracking 信号；S0 raw-label 只能作为 preferred pairing，未通过
-> 论文 power RMSE/MAD exact reproduction。`09419f3` A1a STRONG_A1B = SUSPENDED，
-> A1b/system layer = BLOCKED。当前结论：**DATA_SEMANTICS_OR_METRIC_UNRESOLVED / R4-A STOP**；
-> 不得称 BESS 物理降额，不启动 Round 5。
+> **最新状态（2026-09-03 Decision #07）**：Round 4 已正式关闭。R4-A BESS tracking/capability
+> = STOP（timestamp/metric semantics unresolved；`09419f3` STRONG suspended；A1b/system layer
+> blocked）；R4-C EVSE availability = CLOSED（operational magnitude insufficient）；R4-B transformer
+> thermal = DEFER / real thermal telemetry only；R4-D PV/PCS availability = NOT STARTED / adequate
+> real state data required。当前结论：**core-patent status = NO-GO / Round 5 NOT STARTED**。
 >
 > **与 V2.0 协议的关系**：本阶段不改 V2.0 的实验编号（E0–E8）与门标准，而是新增一条
 > "系统级核心专利筛选"工作流。V2.0 已完成的 EV 侧机制证据（P2 NARROW GO）作为本阶段的

@@ -1,9 +1,7 @@
 # CORE_SEARCH_DECISION_06_R4_DATA_GATE — Round 4 路线选择
 
-> 后续更新（R4-A0b）：R4-C0 STOP 结论维持并正式关闭；R4-A0 原 Iontech/Aachen 本地聚合源
-> DATA_PENDING 不再代表官方源不可取得。RWTH Aachen 官方 M5BAT 数据集已落地，审计结论为
-> DATA_SOURCE_RESOLVED / LEVEL B，仅支持 tracking-capability gate，不支持 BESS 物理降额或系统层启动。
-> 详见 `reports/core_search/CORE_SEARCH_R4_A0b_RWTH_OFFICIAL_AUDIT.md`。
+> 后续更新（Decision #07）：Round 4 已正式关闭；R4-A STOP、R4-C CLOSED、R4-B DEFER、
+> R4-D NOT STARTED，不启动 Round 5。详见 `reports/core_search/CORE_SEARCH_DECISION_07_ROUND4_CLOSE.md`。
 
 > 生成时间（UTC）：2026-09-03T09:36:10Z
 > 依据：CORE_SEARCH_R4_C0_GATE.md + CORE_SEARCH_R4_A0_DATA_AUDIT.md

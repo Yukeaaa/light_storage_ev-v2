@@ -9,7 +9,8 @@
 > R4-A1 A1-0/A1a 已跑，但 A1S/A1S-2 纠错审计已关闭该线：S1 supplementary UTC+1/UTC+2
 > 归一产生伪强 tracking 信号；S0 raw-label 只能作为 preferred pairing，未通过论文 power
 > RMSE/MAD exact reproduction。`09419f3` 的 A1a STRONG_A1B 判定已 **SUSPENDED**；最终
-> **DATA_SEMANTICS_OR_METRIC_UNRESOLVED / R4-A STOP**，A1b/system layer **BLOCKED**，不启动 Round 5。
+> **DATA_SEMANTICS_OR_METRIC_UNRESOLVED / R4-A STOP**。Decision #07 已正式关闭 Round 4：
+> R4-C CLOSED，R4-B DEFER，R4-D NOT STARTED，A1b/system layer **BLOCKED**，不启动 Round 5。
 > E7-FAST/M2 仅保留为 **VALID MODULE / narrow defensive package HOLD**：D2 EV 层 M2 双重上调限制有效，
 > 但不足以支撑系统级核心专利 GO；D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test
 > CONDITIONAL，只能作弱从属/背景。
@@ -86,6 +87,7 @@ E7-FAST/M2 历史候选包的发明中心（**VALID MODULE / HOLD，不是当前
 | **R4-A1 A1-0/A1a**：官方时区归一对齐 PASS；15min active shortfall ratio 0.696 = STRONG_A1B；raw-label diagnostic 0.015 = STOP | R4-A tracking magnitude, suspended | `reports/core_search/CORE_SEARCH_R4_A1_TRACKING_GATE.md` |
 | **R4-A1S semantics audit**：论文 Test 2 anchors 支持 S0 raw-label preferred；S1 时区归一产生伪强信号；A1a STRONG suspended，A1b/system layer blocked | R4-A corrective audit | `reports/core_search/CORE_SEARCH_R4_A1S_SEMANTICS_AUDIT.md` |
 | **R4-A1S-2 paper metric reproduction**：固定 S0 后，event anchors 通过、energy 单一变体通过，但 power RMSE/MAD 未能按 ±15% 复现；R4-A STOP | R4-A corrective audit close | `reports/core_search/CORE_SEARCH_R4_A1S2_PAPER_METRIC_REPRO.md` |
+| **Decision #07 Round 4 close**：R4-A STOP、R4-C CLOSED、R4-B DEFER、R4-D NOT STARTED；不启动 Round 5 | Round 4 close | `reports/core_search/CORE_SEARCH_DECISION_07_ROUND4_CLOSE.md` |
 
 门判定：**当前 core patent = NO-GO / 无成熟 GO 核心专利**。M2 双重上调限制是 VALID MODULE，
 可作为 narrow defensive package HOLD；Final R1/P1/P2/E7-FAST v3 均为历史阶段线。
@@ -177,7 +179,8 @@ review/          每轮审查结论归档（审查结论2..7）
   `reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md`、
   `reports/core_search/CORE_SEARCH_DECISION_06_R4_DATA_GATE.md`、
   `reports/core_search/CORE_SEARCH_R4_A0b_RWTH_OFFICIAL_AUDIT.md`、
-  `reports/core_search/CORE_SEARCH_R4_A1S2_PAPER_METRIC_REPRO.md`。
+  `reports/core_search/CORE_SEARCH_R4_A1S2_PAPER_METRIC_REPRO.md`、
+  `reports/core_search/CORE_SEARCH_DECISION_07_ROUND4_CLOSE.md`。
   - E7-FAST/M2：D2 EV 层 M2 双重上调限制为 VALID MODULE，可作为 narrow defensive package HOLD。
   - 降级/删除：D3 recovery 已由 P2.1A formal FAIL 删除；D3/BESS/PCC 系统效果经 corrective
     audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景。
@@ -189,11 +192,11 @@ review/          每轮审查结论归档（审查结论2..7）
   结论47–51 A5 正式运行（baseline `34f04f6`，Evidence commit `a827df3`）。
 - K1.2.2 审查通过（`review/审查结论5.md`），E0-Full 数据构建完成。
 
-## 10. 下一阶段（R4-A0b 后）
+## 10. 下一阶段（Decision #07 后）
 
-1. **R4-C 正式关闭**：R4-C0 operational 量纲未达门，不进入 R4-C1，不做子集/极端事件救援。
-2. **R4-A STOP**：RWTH 官方源达到 LEVEL B，但 A1S-2 未能在固定 S0 下复现论文 power RMSE/MAD；不做 corrected A1a，不做 A1b。
-3. **不启动 Round 5 / 不进入系统层**：R4-A 未达可决策 tracking gate；缺 temperature/status/power limit/alarm，不得称 BESS 物理降额。
+1. **Round 4 closed**：R4-A STOP，R4-C CLOSED，R4-B DEFER，R4-D NOT STARTED。
+2. **不重开 R4-A/R4-C**：不得用 raw-label 1.5%、S1 69.6%、新 timestamp shift、metric variant、ML 或子集救援。
+3. **不启动 Round 5**：先做问题级复盘，只有新的真实数据支撑物理机制时才允许设计新数据门。
 
 现有技术边界：单模块 A/B/C/D 全高拥挤；主风险 ACN 族
 （US10926659 / US20200254896A1，同数据源最近邻，observation→conservative constraint→
