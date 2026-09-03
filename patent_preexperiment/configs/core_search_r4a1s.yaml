@@ -1,0 +1,47 @@
+# CORE-SEARCH R4-A1S -- timestamp/execution semantics adjudication.
+# Corrective audit only. Does not tune thresholds, run A1b, or enter system layer.
+
+experiment_id: CORE_SEARCH_R4A1S
+rule_version: core_search_r4a1s_v1
+frozen_date: 2026-09-03
+protocol_source: "CORE_SEARCH R4-A1 semantic correction after published Test 2 anchors"
+
+dataset:
+  name: "RWTH Aachen M5BAT schedule dataset"
+  doi: "10.18154/RWTH-2025-06555"
+  dataset_dir: "${data_root}\\RWTH\\Dataset"
+  test_id: 2
+
+hypotheses:
+  S0_raw_label:
+    schedule_offset_hours: 0
+    measurement_offset_hours: 0
+    description: "raw timestamp label direct pairing"
+  S1_supplementary_timezone:
+    schedule_offset_hours: 1
+    measurement_offset_hours: 2
+    description: "supplementary UTC+1/UTC+2 normalization"
+
+published_anchors:
+  rmse_kw: 13.87
+  mean_absolute_deviation_kw: 3.31
+  cumulative_unfulfilled_energy_kwh: 238.0
+  first_major_curtailment_hour: 61.0
+  single_window_deviation_kwh: 52.5
+
+tolerances:
+  continuous_relative: 0.15
+  first_major_curtailment_interval_tolerance: 1
+  dominance_ratio_required: 5.0
+  unfulfilled_schedule_abs_kw_floor: 1.0
+
+audit_rules:
+  primary: "published-anchor adjudication"
+  if_s0_dominates_s1: "raw-label execution alignment becomes authoritative; A1a STRONG_A1B suspended"
+  if_s1_dominates_s0: "retain timezone-normalized semantics and investigate A1a metric"
+  if_neither_reproduces: "DATA_SEMANTICS_UNRESOLVED; R4-A STOP; no A1b"
+
+outputs:
+  metrics_csv: "results/raw/core_search/r4_a1s/rwth_m5bat_a1s_hypothesis_metrics.csv"
+  intervals_csv: "results/raw/core_search/r4_a1s/rwth_m5bat_a1s_intervals.csv"
+  report: "reports/core_search/CORE_SEARCH_R4_A1S_SEMANTICS_AUDIT.md"

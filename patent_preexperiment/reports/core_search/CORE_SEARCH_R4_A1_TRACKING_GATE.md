@@ -1,5 +1,10 @@
 # CORE_SEARCH_R4_A1_TRACKING_GATE：RWTH M5BAT tracking magnitude
 
+> 后续纠错：R4-A1S 使用作者论文 Test 2 published anchors 裁决 timestamp/execution 语义，判定
+> S0 raw-label execution alignment 为权威口径；本报告中基于 S1 supplementary UTC+1/UTC+2
+> 归一得到的 A1a STRONG_A1B = **SUSPENDED**，不得作为 A1b 或系统层依据。
+> 详见 `reports/core_search/CORE_SEARCH_R4_A1S_SEMANTICS_AUDIT.md`。
+
 > 生成时间（UTC）：2026-09-03T10:16:17Z
 > 纪律：A1-0 + A1a only；不执行 A1b，不进入系统层，不称 BESS 物理降额。
 

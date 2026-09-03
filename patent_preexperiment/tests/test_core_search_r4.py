@@ -7,6 +7,7 @@ import pandas as pd
 from patent_preexperiment.core_search.r4_decision import choose_r4_route
 from patent_preexperiment.core_search.r4a0b_rwth import _data_level
 from patent_preexperiment.core_search.r4a1_tracking import _direction, _max_run, _top_n_share
+from patent_preexperiment.core_search.r4a1s_semantics import _adjudicate, _relative_error
 from patent_preexperiment.core_search.r4c0_evse import _eventize_fault_rows, _fault_family, _gate
 
 
@@ -95,3 +96,15 @@ def test_r4a1_helpers():
     assert _direction(0.0) == "idle"
     assert _max_run(pd.Series([True, True, False, True])) == 2
     assert _top_n_share(pd.Series([1.0, 2.0, 7.0]), 1) == 0.7
+
+
+def test_r4a1s_adjudicates_dominant_s0():
+    cfg = {"tolerances": {"dominance_ratio_required": 5.0}}
+    metrics = [
+        {"hypothesis": "S0_raw_label", "anchor_score": 1.0},
+        {"hypothesis": "S1_supplementary_timezone", "anchor_score": 10.0},
+    ]
+    decision = _adjudicate(metrics, cfg)
+    assert decision["verdict"] == "S0_RAW_LABEL_AUTHORITATIVE"
+    assert decision["a1b_status"] == "BLOCKED"
+    assert _relative_error(11.0, 10.0) == 0.1
