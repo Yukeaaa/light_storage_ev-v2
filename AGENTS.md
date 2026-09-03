@@ -38,7 +38,7 @@
 - 当前仓库已完成 `patent_preexperiment/` 工程骨架与主要实验产物：`configs/`、`data_registry/`、`datasets/`（git 忽略，可重建）、`src/`、`experiments/`、`results/raw/`、`reports/`、`tests/` 均已存在。
 - E0-Full D0 数据链验收十门 PASS；E1/E3/R1/P1/P2/P2.1/E7-FAST 与 CORE-SEARCH 多轮报告已归档。当前项目状态以 CORE-SEARCH 决策链为权威：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。E7-FAST/M2 只作为已验证车辆侧模块（VALID MODULE）和窄防御性候选包 HOLD：D2 EV 层 M2 双重上调限制有效，但不足以支撑系统级核心专利 GO。`patent_preexperiment/reports/patent_definition/01_claim_tree_v3_e7_fast.md`、`02_prior_art_element_map_v3_e7_fast.md`、`03_tech_disclosure_e7_fast_v3.md` 是 E7-FAST 阶段历史包，不再是当前核心专利权威。
 - D3 recovery 已由 P2.1A formal FAIL 移除；D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景，不得引用旧 D3 系统收益数字。
-- CORE-SEARCH 最新状态：Round 3 已关闭（R3-A/R3-C STOP，R3-D 仅在有真实 thermal data 时重开）；Round 4 data-first physical mechanism search 已冻结问题级候选与数据可行性，R4-A Iontech/Aachen BESS field audit pending，R4-C ACN infrastructure-event audit pending。
+- CORE-SEARCH 最新状态：Round 3 已关闭（R3-A/R3-C STOP，R3-D 仅在有真实 thermal data 时重开）；Round 4 Decision #06 已完成。R4-C0 ACN EVSE infrastructure event audit = STOP（多站事件存在，但 L1 operational lost-capacity 中位为 0，≥15% 事件占比约 9.85%）；R4-A0 Iontech/Aachen BESS audit = DATA_PENDING（本地无可审计 metadata/raw schema）。结论：**ROUND4_STOP_OR_DATA_PENDING**，不进入系统层，不靠 ML/子集/极端事件救活。
 
 ## 环境与工具链
 

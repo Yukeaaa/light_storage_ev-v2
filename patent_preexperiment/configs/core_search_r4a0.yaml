@@ -1,0 +1,66 @@
+# CORE-SEARCH R4-A0 -- Iontech/Aachen BESS data field and semantic audit.
+# No full pipeline, no EMS, no physical derating claim before field semantics pass.
+
+experiment_id: CORE_SEARCH_R4A0
+rule_version: core_search_r4a0_v1
+frozen_date: 2026-09-03
+protocol_source: "CORE_SEARCH Round 4 data-first physical mechanism search"
+
+candidate_dataset:
+  name: "Iontech/Aachen hybrid BESS field trial"
+  local_search_roots:
+    - "${data_root}"
+    - "${data_root}\\Iontech"
+    - "${data_root}\\iontech"
+    - "${data_root}\\Aachen"
+    - "${data_root}\\aachen"
+  required_first_download:
+    - README
+    - metadata
+    - column descriptions
+    - minimal raw files
+    - dispatch/schedule files
+  filename_keywords:
+    - iontech
+    - aachen
+    - bess
+    - battery
+    - dispatch
+    - schedule
+    - soc
+  identity_keywords:
+    - iontech
+    - aachen
+  exclude_path_parts:
+    - .venv
+    - venv
+    - site-packages
+    - __pycache__
+
+field_requirements:
+  actual_bess_power:
+    keywords: [actual, power, bess, battery, pcs]
+  soc:
+    keywords: [soc, state_of_charge]
+  command_setpoint:
+    keywords: [command, setpoint, reference, target]
+  dispatch_schedule:
+    keywords: [dispatch, schedule, plan, optimization]
+  temperature:
+    keywords: [temp, temperature, cell, module, rack, ambient]
+  charge_discharge_limit:
+    keywords: [limit, pmax, max_power, charge_limit, discharge_limit]
+  alarms_status:
+    keywords: [alarm, status, derating, protection, fault]
+  grid_interaction:
+    keywords: [grid, pcc, meter, exchange]
+
+level_rules:
+  A: "actual + command/setpoint + SOC + temp/limit/alarm"
+  B: "actual + command/schedule + SOC; tracking capability only; no physical derating claim"
+  C: "actual + SOC only; R4-A core path STOP"
+  DATA_PENDING: "local Iontech/Aachen files not found or metadata insufficient"
+
+outputs:
+  registry: "data_registry/iontech_aachen_registry.json"
+  report: "reports/core_search/CORE_SEARCH_R4_A0_DATA_AUDIT.md"

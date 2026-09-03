@@ -1,0 +1,45 @@
+{
+  "experiment_id": "CORE_SEARCH_R4A0",
+  "rule_version": "core_search_r4a0_v1",
+  "generated_at_utc": "2026-09-03T09:32:54Z",
+  "dataset": "Iontech/Aachen hybrid BESS field trial",
+  "local_files_found": 0,
+  "candidate_files_sample": [],
+  "field_hits": {
+    "actual_bess_power": {
+      "present": false,
+      "matched_keywords": []
+    },
+    "soc": {
+      "present": false,
+      "matched_keywords": []
+    },
+    "command_setpoint": {
+      "present": false,
+      "matched_keywords": []
+    },
+    "dispatch_schedule": {
+      "present": false,
+      "matched_keywords": []
+    },
+    "temperature": {
+      "present": false,
+      "matched_keywords": []
+    },
+    "charge_discharge_limit": {
+      "present": false,
+      "matched_keywords": []
+    },
+    "alarms_status": {
+      "present": false,
+      "matched_keywords": []
+    },
+    "grid_interaction": {
+      "present": false,
+      "matched_keywords": []
+    }
+  },
+  "data_level": "DATA_PENDING",
+  "level_meaning": "local Iontech/Aachen files not found or metadata insufficient",
+  "time_semantics_status": "NOT_AUDITABLE_WITHOUT_METADATA"
+}

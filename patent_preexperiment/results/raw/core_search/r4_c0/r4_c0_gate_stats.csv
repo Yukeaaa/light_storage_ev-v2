@@ -1,0 +1,24 @@
+,value
+verdict,STOP
+stop_reasons,['median operational lost-capacity fraction <5%']
+station_count,49
+top1_event_share,0.11363636363636363
+top2_event_share,0.21717171717171718
+top3_event_share,0.3181818181818182
+loss_fraction_l1_p50,0.0
+loss_fraction_l1_event_share_ge_15pct,0.09848484848484848
+active_fault_event_share,0.2702020202020202
+multi_station_disabled_minutes,955
+event_count,396
+session_count,421
+duration_median_min,2.0
+duration_p75_min,15.25
+duration_p90_min,83.5
+duration_max_min,989.0
+concurrency_p50,1.0
+concurrency_p90,1.0
+concurrency_max,7.0
+state_loss_sync_share,0.2398989898989899
+precursor_5m_share,0.20202020202020202
+precursor_15m_share,0.32323232323232326
+precursor_30m_share,0.37626262626262624

@@ -7,6 +7,10 @@
 >
 > **三大原则**：真实数据先行、系统效果先行、强简单 baseline 先行。
 >
+> **最新状态（2026-09-03 Decision #06）**：Round 4 双线数据门已完成；R4-C0 ACN EVSE
+> infrastructure event audit = STOP，R4-A0 Iontech/Aachen BESS audit = DATA_PENDING。
+> 当前结论：**ROUND4_STOP_OR_DATA_PENDING**，不进入系统层，不靠 ML/子集/极端事件救活。
+>
 > **与 V2.0 协议的关系**：本阶段不改 V2.0 的实验编号（E0–E8）与门标准，而是新增一条
 > "系统级核心专利筛选"工作流。V2.0 已完成的 EV 侧机制证据（P2 NARROW GO）作为本阶段的
 > EV flexibility baseline 与反例证据复用，不删除、不复活。

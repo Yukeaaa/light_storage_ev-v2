@@ -1,0 +1,66 @@
+# CORE-SEARCH R4-C0 -- EVSE infrastructure availability/capacity-loss data gate.
+# Frozen before running event audit. No classifier, no controller, no system bench.
+
+experiment_id: CORE_SEARCH_R4C0
+rule_version: core_search_r4c0_v1
+frozen_date: 2026-09-03
+protocol_source: "CORE_SEARCH Round 4 data-first physical mechanism search"
+
+data:
+  session_response_root: "datasets/session_response_1min"
+  source_columns:
+    - session_id
+    - station_id
+    - site
+    - garage
+    - split
+    - timestamp_utc
+    - actual_power_kw
+    - pilot_power_kw
+    - pilot_available
+    - state_norm
+    - gap_flag
+    - severe_gap_before
+  abnormal_states:
+    hard_disabled:
+      - "DISABLED CHARGER"
+    pilot_violation:
+      - "DISABLED PILOT VIOLATION"
+      - "PILOT VIOLATION"
+  nominal_capacity_kw: 7.2
+
+eventization:
+  same_station: true
+  same_fault_family: true
+  max_gap_min: 2
+
+capacity_loss:
+  primary: L1_operational
+  l0_nominal: "nominal_capacity_kw per affected station-minute"
+  l1_operational: "pre-onset stable operational capacity from same station pilot/actual"
+  stable_lookback_min: 15
+  min_stable_samples: 3
+  operational_capacity_kw: "max(pilot_power_kw, actual_power_kw) for non-fault active station-minute"
+  active_threshold_kw: 0.1
+
+onset_dynamics:
+  before_min: 15
+  after_min: 5
+  precursor_windows_min: [5, 15, 30]
+
+gate:
+  stop:
+    max_top2_event_share: 0.80
+    min_l1_loss_fraction_p50: 0.05
+    min_active_fault_event_share: 0.20
+  conditional:
+    l1_loss_fraction_range: [0.05, 0.15]
+  go:
+    min_station_count: 5
+    min_l1_loss_fraction_event_share_ge_15pct: 0.20
+    min_concurrent_multi_station_minutes: 10
+  note: "No GO from only one or two stations or only rare extreme events. L1 is primary; L0 is upper bound only."
+
+outputs:
+  results_root: "results/raw/core_search/r4_c0"
+  report: "reports/core_search/CORE_SEARCH_R4_C0_GATE.md"
