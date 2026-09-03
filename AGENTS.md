@@ -38,7 +38,7 @@
 - 当前仓库已完成 `patent_preexperiment/` 工程骨架与主要实验产物：`configs/`、`data_registry/`、`datasets/`（git 忽略，可重建）、`src/`、`experiments/`、`results/raw/`、`reports/`、`tests/` 均已存在。
 - E0-Full D0 数据链验收十门 PASS；E1/E3/R1/P1/P2/P2.1/E7-FAST 与 CORE-SEARCH 多轮报告已归档。当前项目状态以 CORE-SEARCH 决策链为权威：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。E7-FAST/M2 只作为已验证车辆侧模块（VALID MODULE）和窄防御性候选包 HOLD：D2 EV 层 M2 双重上调限制有效，但不足以支撑系统级核心专利 GO。`patent_preexperiment/reports/patent_definition/01_claim_tree_v3_e7_fast.md`、`02_prior_art_element_map_v3_e7_fast.md`、`03_tech_disclosure_e7_fast_v3.md` 是 E7-FAST 阶段历史包，不再是当前核心专利权威。
 - D3 recovery 已由 P2.1A formal FAIL 移除；D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景，不得引用旧 D3 系统收益数字。
-- CORE-SEARCH 最新状态：Round 4 Decision #07 已关闭。R4-A BESS tracking/capability = **STOP**（A1S-2：S1 时区归一伪强；S0 preferred 但 paper power RMSE/MAD 未能 ±15% 复现；`09419f3` STRONG 永久 suspended；A1b/system layer BLOCKED）；R4-C EVSE availability = **CLOSED**（事件存在但 operational magnitude 不足，不进 R4-C1，不做子集/极端事件救援）；R4-B transformer thermal = **DEFER / real thermal telemetry only**；R4-D PV/PCS availability = **NOT STARTED / adequate real state data required**。当前仍是 **core-patent status = NO-GO / 不启动 Round 5**。
+- CORE-SEARCH 最新状态：Round 4 Decision #07 已关闭。R4-A BESS tracking/capability = **STOP**（A1S-2：S1 时区归一伪强；S0 preferred 但 paper power RMSE/MAD 未能 ±15% 复现；`09419f3` STRONG 永久 suspended；A1b/system layer BLOCKED）；R4-C EVSE availability = **CLOSED**（事件存在但 operational magnitude 不足，不进 R4-C1，不做子集/极端事件救援）；R4-B transformer thermal = **DEFER / real thermal telemetry only**；R4-D PV/PCS availability = **NOT STARTED / adequate real state data required**。Round 1-4 retrospective 已冻结 Round 5 七条启动条件，当前仍是 **core-patent status = NO-GO / 不启动 Round 5**。
 
 ## 环境与工具链
 
