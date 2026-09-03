@@ -1,7 +1,12 @@
-# 01 Claim Tree v3（E7-FAST）— CURRENT AUTHORITY
+# 01 Claim Tree v3（E7-FAST）— HISTORICAL/HOLD
 
-> **状态：CURRENT AUTHORITY（替代 v2 claim_tree.md）**
-> 项目判定：**FILING GO / NARROW CLAIM STRATEGY**（D3 corrective audit 后降级为 M2 主 Claim + BESS/PCC 弱从属）
+> **2026-09-03 SUPERSEDED FOR CORE-PATENT STATUS**：本文件是 E7-FAST/M2 阶段的窄防御性候选包，
+> 只表示 D2 vehicle-side mechanism VALID / package HOLD。当前项目状态以 CORE-SEARCH 决策链为权威：
+> **core-patent status = NO-GO / 当前无成熟 GO 核心专利**。不得再把本文件的 FILING GO 口径解释为
+> 系统级核心专利 GO。
+
+> **状态：E7-FAST PACKAGE AUTHORITY ONLY（替代 v2 claim_tree.md；已被 CORE-SEARCH core status 超越）**
+> 历史候选包判定：**FILING GO / NARROW CLAIM STRATEGY**（D3 corrective audit 后降级为 M2 主 Claim + BESS/PCC 弱从属）
 > 依据：D0 GO + D2 train+val/test GO + D3 corrective audit train+val FAIL / test CONDITIONAL
 > （commits cd3232c / 8f9e93d / b87edc9 / 48b5205 + D3 corrective audit）
 >

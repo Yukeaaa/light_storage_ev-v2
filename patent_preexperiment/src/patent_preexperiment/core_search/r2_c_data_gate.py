@@ -24,16 +24,23 @@ from patent_preexperiment.core_search.r2_config import R2Config, load_r2_config
 from patent_preexperiment.io.paths import get_paths
 
 _PATENT_ROOT = Path(__file__).resolve().parents[3]
-_ACN_PROJECT = Path(get_paths()["acn_project"])
-_ACN_FULL = Path(get_paths()["acn_full"])
-_MAPPING = _ACN_PROJECT / "manifests" / "static_api_mapping.csv"
-_METADATA_ROOT = _ACN_FULL / "metadata"
 
 
-def _load_api_metadata() -> pd.DataFrame:
+def _mapping_path(paths: dict[str, str] | None = None) -> Path:
+    resolved = paths or get_paths()
+    return Path(resolved["acn_project"]) / "manifests" / "static_api_mapping.csv"
+
+
+def _metadata_root(paths: dict[str, str] | None = None) -> Path:
+    resolved = paths or get_paths()
+    return Path(resolved["acn_full"]) / "metadata"
+
+
+def _load_api_metadata(metadata_root: str | Path | None = None) -> pd.DataFrame:
     """加载全部 API 会话元数据（每行一个 session）。"""
     rows: list[dict[str, object]] = []
-    for f in sorted(_METADATA_ROOT.glob("**/*.jsonl.gz")):
+    root = Path(metadata_root) if metadata_root is not None else _metadata_root()
+    for f in sorted(root.glob("**/*.jsonl.gz")):
         with gzip.open(f, "rt", encoding="utf-8") as fh:
             for line in fh:
                 line = line.strip()
@@ -87,11 +94,15 @@ def _userinput_stats(api: pd.DataFrame) -> pd.DataFrame:
     return pd.DataFrame(rows)
 
 
-def run_r2_c_data_gate(cfg: R2Config | None = None) -> dict[str, object]:
+def run_r2_c_data_gate(
+    cfg: R2Config | None = None,
+    *,
+    paths: dict[str, str] | None = None,
+) -> dict[str, object]:
     cfg = cfg or load_r2_config()
-    mapping = pd.read_csv(_MAPPING)
+    mapping = pd.read_csv(_mapping_path(paths))
     matched = mapping[mapping["match_status"] == "matched"].copy()
-    api = _load_api_metadata()
+    api = _load_api_metadata(_metadata_root(paths))
     ui = _userinput_stats(api)
 
     # 与 matched 对齐（严格会话验证只用 matched）

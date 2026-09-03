@@ -1,8 +1,12 @@
-# 05 实验证据摘要 v3（E7-FAST）— 代理师可读
+# 05 实验证据摘要 v3（E7-FAST）— HISTORICAL/HOLD
+
+> **2026-09-03 SUPERSEDED FOR CORE-PATENT STATUS**：本文件仅作为 E7-FAST/M2 阶段证据摘要，
+> 支撑 D2 vehicle-side mechanism VALID / narrow defensive package HOLD。当前项目状态以
+> CORE-SEARCH 决策链为权威：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。
 
 > 精简版证据表，供代理师快速理解技术效果支撑。完整数据见
 > `results/raw/e7_fast/` + `reports/E7_FAST_*_gate.md`。
-> 项目判定：**FILING GO / NARROW CLAIM STRATEGY**（D3 corrective audit 后主 Claim 收窄为 M2）
+> 历史候选包判定：**FILING GO / NARROW CLAIM STRATEGY**（D3 corrective audit 后主 Claim 收窄为 M2）
 > **★ 2026-08-14 D3 corrective audit 修正**：旧 D3 系统效果数字作废，详见 §4。
 
 ---

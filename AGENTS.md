@@ -36,8 +36,9 @@
 
 - 顺序：E0 数据冻结 → E1 问题强度 → E2 可执行响应区间 → E3 重分配机会 → E4 闭环回放 → E5/E6（条件）→ E7 UCSD → E8 专利决策。E0.1–E0.5（数据注册表+哈希、1 分钟会话表、控制池表、split 注册表、普通控制器/分配器基线单测）全部通过才进 E1；基线单测失败时暂停所有候选比较。
 - 当前仓库已完成 `patent_preexperiment/` 工程骨架与主要实验产物：`configs/`、`data_registry/`、`datasets/`（git 忽略，可重建）、`src/`、`experiments/`、`results/raw/`、`reports/`、`tests/` 均已存在。
-- E0-Full D0 数据链验收十门 PASS；E1/E3/R1/P1/P2/P2.1/E7-FAST 与 CORE-SEARCH 多轮报告已归档。当前专利口径以 `patent_preexperiment/reports/patent_definition/01_claim_tree_v3_e7_fast.md`、`02_prior_art_element_map_v3_e7_fast.md`、`03_tech_disclosure_e7_fast_v3.md` 为权威：**FILING GO / NARROW CLAIM STRATEGY**，但主证据收窄到 M2 双重上调限制（D2 EV 层）。D3 recovery 已由 P2.1A formal FAIL 移除；D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景，不得引用旧 D3 系统收益数字。
-- CORE-SEARCH 最新状态：Round 3 已关闭（R3-A/R3-C STOP，R3-D 仅在有真实 thermal data 时重开），下一步若继续应按 Round 4 data-first physical mechanism search 先找真实物理边界遥测，再谈控制算法。
+- E0-Full D0 数据链验收十门 PASS；E1/E3/R1/P1/P2/P2.1/E7-FAST 与 CORE-SEARCH 多轮报告已归档。当前项目状态以 CORE-SEARCH 决策链为权威：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。E7-FAST/M2 只作为已验证车辆侧模块（VALID MODULE）和窄防御性候选包 HOLD：D2 EV 层 M2 双重上调限制有效，但不足以支撑系统级核心专利 GO。`patent_preexperiment/reports/patent_definition/01_claim_tree_v3_e7_fast.md`、`02_prior_art_element_map_v3_e7_fast.md`、`03_tech_disclosure_e7_fast_v3.md` 是 E7-FAST 阶段历史包，不再是当前核心专利权威。
+- D3 recovery 已由 P2.1A formal FAIL 移除；D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景，不得引用旧 D3 系统收益数字。
+- CORE-SEARCH 最新状态：Round 3 已关闭（R3-A/R3-C STOP，R3-D 仅在有真实 thermal data 时重开）；Round 4 data-first physical mechanism search 已冻结问题级候选与数据可行性，R4-A Iontech/Aachen BESS field audit pending，R4-C ACN infrastructure-event audit pending。
 
 ## 环境与工具链
 

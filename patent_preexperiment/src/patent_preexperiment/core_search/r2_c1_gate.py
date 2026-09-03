@@ -18,11 +18,9 @@ import numpy as np
 import pandas as pd
 
 from patent_preexperiment.config.yamlutil import load_yaml
-from patent_preexperiment.core_search.r2_c_data_gate import _load_api_metadata
-from patent_preexperiment.io.paths import get_paths
+from patent_preexperiment.core_search.r2_c_data_gate import _load_api_metadata, _mapping_path
 
 _PATENT_ROOT = Path(__file__).resolve().parents[3]
-_MAPPING = Path(get_paths()["acn_project"]) / "manifests" / "static_api_mapping.csv"
 _CONFIG = _PATENT_ROOT / "configs" / "core_search_r2c1.yaml"
 
 
@@ -114,7 +112,7 @@ def run_r2_c1(
     validity = validity or dict(cfg["validity_gate"])
     opportunity = opportunity or dict(cfg["opportunity_gate"])
 
-    mapping = pd.read_csv(_MAPPING)
+    mapping = pd.read_csv(_mapping_path())
     matched = set(mapping[mapping["match_status"] == "matched"]["sessionID"].astype(str))
     api = _load_api_metadata()
     sess = _extract_session_targets(api)

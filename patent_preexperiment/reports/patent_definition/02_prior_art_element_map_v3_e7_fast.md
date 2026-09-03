@@ -1,6 +1,10 @@
-# 02 Prior-Art Element Map v3（E7-FAST）— CURRENT AUTHORITY
+# 02 Prior-Art Element Map v3（E7-FAST）— HISTORICAL/HOLD
 
-> **状态：CURRENT AUTHORITY（替代 v2 prior_art_matrix.md）**
+> **2026-09-03 SUPERSEDED FOR CORE-PATENT STATUS**：本文件是 E7-FAST/M2 阶段的要素对照，
+> 只服务于 vehicle-side mechanism VALID / narrow defensive package HOLD。当前项目状态以
+> CORE-SEARCH 决策链为权威：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。
+
+> **状态：E7-FAST PACKAGE AUTHORITY ONLY（替代 v2 prior_art_matrix.md）**
 > 旧 `prior_art_matrix.md` 攻击的是"信息分类+history boundary+recovery"，已过时
 > （recovery 删除）。本 v3 攻击 v3 claim_tree 的 A-J 元素组合。
 >

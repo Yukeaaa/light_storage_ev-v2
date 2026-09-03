@@ -1,7 +1,11 @@
-# 03 技术交底书（E7-FAST v3）
+# 03 技术交底书（E7-FAST v3）— HISTORICAL/HOLD
 
-> **状态：CURRENT AUTHORITY**（替代 v2 tech_disclosure.md，后者顶部 banner 已标注过时）
-> 项目判定：FILING GO / NARROW CLAIM STRATEGY（D3 corrective audit 后主 Claim 收窄为 M2）
+> **2026-09-03 SUPERSEDED FOR CORE-PATENT STATUS**：本文件是 E7-FAST/M2 阶段的窄防御性候选
+> 交底包，只表示 D2 vehicle-side mechanism VALID / package HOLD。当前项目状态以 CORE-SEARCH
+> 决策链为权威：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。
+
+> **状态：E7-FAST PACKAGE AUTHORITY ONLY**（替代 v2 tech_disclosure.md，后者顶部 banner 已标注过时）
+> 历史候选包判定：FILING GO / NARROW CLAIM STRATEGY（D3 corrective audit 后主 Claim 收窄为 M2）
 > 证据链：D0 GO / D2 train+val+test GO / D3 corrective audit train+val FAIL / test CONDITIONAL
 > （commits cd3232c / 8f9e93d / b87edc9 / 48b5205 + D3 corrective audit）
 > 配套权威：`01_claim_tree_v3_e7_fast.md` + `02_prior_art_element_map_v3_e7_fast.md`

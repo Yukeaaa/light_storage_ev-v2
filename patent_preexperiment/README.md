@@ -1,11 +1,16 @@
-# patent-preexperiment：光储充专利预实验工程（E7-FAST FILING GO / NARROW CLAIM）
+# patent-preexperiment：光储充专利预实验工程（CORE NO-GO / MODULE HOLD）
 
 > 本 README 的作用不是介绍代码，而是防止项目被误解为普通充电负荷预测、多车调度优化、
 > 用户行为预测或通用光储充仿真平台。读任何代码、改任何配置、汇报任何结论之前，请先读本节。
-> **当前权威**：`reports/patent_definition/01_claim_tree_v3_e7_fast.md`（v3 园区控制链）+
-> `02_prior_art_element_map_v3_e7_fast.md` + `03_tech_disclosure_e7_fast_v3.md`。
-> 当前结论为 **FILING GO / NARROW CLAIM STRATEGY**：D2 EV 层 M2 双重上调限制为主证据；
-> D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景。
+> **当前权威**：`core_search/CORE_SEARCH_MASTER_PLAN.md` + `reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md`
+> + `core_search/CORE_SEARCH_ROUND4_CANDIDATES.md`。当前结论是 **core-patent status = NO-GO**：
+> 暂无成熟 GO 核心专利，工作线已转入 Round 4 data-first physical mechanism search。
+> E7-FAST/M2 仅保留为 **VALID MODULE / narrow defensive package HOLD**：D2 EV 层 M2 双重上调限制有效，
+> 但不足以支撑系统级核心专利 GO；D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test
+> CONDITIONAL，只能作弱从属/背景。
+> **E7-FAST v3 历史包**：`reports/patent_definition/01_claim_tree_v3_e7_fast.md`、
+> `02_prior_art_element_map_v3_e7_fast.md`、`03_tech_disclosure_e7_fast_v3.md` = HISTORICAL/HOLD，
+> 不再作为当前核心专利权威。
 > **v2 历史**：`claim_tree.md` / `prior_art_matrix.md` / `tech_disclosure.md` = HISTORICAL
 > （D3 recovery 已被 P2.1A FAIL 删除，不再权威）。
 
@@ -18,8 +23,7 @@
 本项目的发明不是回答"剩下 3 kW 应该给谁"，而是回答更底层的问题：**在当前数据条件下，
 有没有资格继续把这辆车当作 7 kW 的可执行负荷？** 若响应证据不足，就不盲信。
 
-最终发明中心（E7-FAST corrective audit 后；**以 `reports/patent_definition/01_claim_tree_v3_e7_fast.md`
-为权威**）：
+E7-FAST/M2 历史候选包的发明中心（**VALID MODULE / HOLD，不是当前核心专利 GO**）：
 
 > EMS/园区控制器提出 EV 群功率上调请求后，对每辆正在充电的 EV，根据当前可获得的桩侧允许
 > 信息、实际功率与历史实际响应，计算本周期允许增加量；具备 pilot+actual+history 的 M2 车辆
@@ -29,12 +33,13 @@
 > **证据边界**：M2 双重约束在真实 EV 数据上降低未经支持的上调高估；不得称“准确识别车辆能力”。
 > D3 recovery 已移除；BESS/PCC 系统层效果弱，不作为 Claim 1 必要技术效果。
 
-## 2. 当前专利主轴（E7-FAST v3：M2 双重上调限制，NARROW CLAIM）
+## 2. 当前专利主轴（CORE-SEARCH：系统级核心专利重筛）
 
 原主轴 V2.1"充电响应状态识别 → 短时可执行功率区间 → 支持域内有界修正 → 支持域外保护回退"中，
 **active bounded correction 降为从属/可选实施方式**（P-004 维持 D）；broad active D1-R/D1-A
 不恢复。**P1 formal No-Go** 已把 recent_var / variance 状态判定移出核心；**P2.1A formal FAIL**
-已删除 D3 recovery；**E7-FAST** 将主权利要求收窄到 M2 双重上调限制 + EV 群请求限幅。
+已删除 D3 recovery；**E7-FAST/M2** 只保留为车辆侧已验证模块和窄防御性候选包 HOLD。
+当前核心工作线是 CORE-SEARCH：Round 1-3 已关闭/停止既有统计控制路线，Round 4 转向真实物理边界变化。
 术语纪律（AGENTS.md，违规即退回）：
 
 - pilot 与 actual 的差异只能称"导引/允许电流与实际响应差异"，**不得**称"命令失败/拒绝"；
@@ -42,13 +47,13 @@
 - 只用观察值称"预算差值"而非"可回收能力"；
 - 未通过 E4.1 验证的响应仿真器不得输出闭环收益结论。
 
-## 3. 已经证明与尚未证明（截至 E7-FAST v3 corrective audit）
+## 3. 已经证明与尚未证明（截至 CORE-SEARCH Round 4）
 
 > **阶段线**：Final R1 Patent Gate（PROTECTIVE GO）→ **P1 formal No-Go**（recent_var
 > 状态判定移出核心）→ Patent Gate 2（NARROW CONDITIONAL GO）→ **P2 formal
 > SUCCESS / NARROW GO**（设备动作链机制成立）→ **P2.1A D3 falsification FAIL**
-> → **E7-FAST D0/D2 GO，D3 train+val FAIL / test CONDITIONAL**。下方表格中 Final R1
-> 及之前条目为历史背景，v3 patent definition 为当前权威。
+> → **E7-FAST D0/D2 GO，D3 train+val FAIL / test CONDITIONAL** → **CORE-SEARCH Round 1-3
+> 关闭，core-patent status = NO-GO** → Round 4 data-first physical mechanism search。
 
 ### 已证明（冻结样本、冻结阈值、负对照下）
 
@@ -69,9 +74,11 @@
 | **P2.1A = formal FAIL**：D3 recovery 作为独立机制删除，不作为权利要求或从属主张 | P2.1A falsification | `results/raw/phase3_p2_1/P2_1A_outcome_report.md` |
 | **E7-FAST D2 EV gate = GO**：M2 `min(pilot,Q95)` 相对 rolling-Q95 单独使用，train+val Over improvement 30.08%，test 39.65%，CoverageRatio 77.97%–86.95% | E7-FAST EV validation | `reports/E7_FAST_EV_gate.md`、`reports/E7_FAST_TEST_CONSUMED.md` |
 | **E7-FAST D3 system gate = FAIL/CONDITIONAL**：corrective audit 后 train+val 系统效果 0.01%，test 回放 4.46%/6.03%；旧 D3 系统收益数字作废 | E7-FAST corrective audit | `reports/E7_FAST_system_gate.md`、`reports/patent_definition/05_experiment_evidence_summary_v3.md` |
+| **CORE-SEARCH Round 3 CLOSED**：R3-A/R3-C STOP，R3-D 仅在有真实 thermal data 时重开；当前无成熟 GO 核心专利 | CORE-SEARCH decision | `reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md` |
+| **CORE-SEARCH Round 4 候选冻结**：R4-A BESS 真实能力边界/降额第一优先；R4-C EVSE/充电设施降额与故障可立即审计 | Round 4 candidates | `core_search/CORE_SEARCH_ROUND4_CANDIDATES.md` |
 
-门判定：**当前 = FILING GO / NARROW CLAIM STRATEGY**。主证据是 M2 双重上调限制的 D2 EV 层；
-Final R1/P1/P2 为历史阶段线；D3 recovery 已移除；BESS/PCC 系统层只作弱从属或背景。
+门判定：**当前 core patent = NO-GO / 无成熟 GO 核心专利**。M2 双重上调限制是 VALID MODULE，
+可作为 narrow defensive package HOLD；Final R1/P1/P2/E7-FAST v3 均为历史阶段线。
 
 ### 尚未证明（全部为 D 级假设，禁止对外断言）
 
@@ -155,10 +162,11 @@ review/          每轮审查结论归档（审查结论2..7）
 
 ## 9. 当前工程治理状态
 
-- **当前最新（E7-FAST v3 corrective audit 后）**：**FILING GO / NARROW CLAIM STRATEGY**。
-  当前权威是 `reports/patent_definition/01_claim_tree_v3_e7_fast.md`、
-  `02_prior_art_element_map_v3_e7_fast.md`、`03_tech_disclosure_e7_fast_v3.md`。
-  - 主证据：D2 EV 层 M2 双重上调限制，train+val/test 均 GO。
+- **当前最新（CORE-SEARCH Round 4）**：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。
+  当前权威是 `core_search/CORE_SEARCH_MASTER_PLAN.md`、
+  `reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md`、
+  `core_search/CORE_SEARCH_ROUND4_CANDIDATES.md`。
+  - E7-FAST/M2：D2 EV 层 M2 双重上调限制为 VALID MODULE，可作为 narrow defensive package HOLD。
   - 降级/删除：D3 recovery 已由 P2.1A formal FAIL 删除；D3/BESS/PCC 系统效果经 corrective
     audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景。
   - 禁止引用：旧 D3 系统收益数字（shortfall 降 30%/40%，BESS 临时补偿降 15%/41%）已作废。
@@ -169,14 +177,13 @@ review/          每轮审查结论归档（审查结论2..7）
   结论47–51 A5 正式运行（baseline `34f04f6`，Evidence commit `a827df3`）。
 - K1.2.2 审查通过（`review/审查结论5.md`），E0-Full 数据构建完成。
 
-## 10. 下一阶段（E7-FAST v3 后）
+## 10. 下一阶段（CORE-SEARCH Round 4）
 
-1. **专利代理师检索**：按 v3 claim tree 做 ACN 族、Schneider/ISO 15118/EMS 调度相关近邻的
-   element-by-element 对照，取得正式新颖性/创造性/FTO 法律意见。
-2. **交底书收口**：只围绕 M2 双重上调限制 + EV 群请求限幅组织 Claim 1；BESS/PCC 只能作为
-   弱从属/工程背景；不得写入旧 D3 系统收益数字。
-3. **CORE-SEARCH Round 4（可选）**：若继续找系统级核心候选，先找真实物理边界遥测
-   （actual power + SOC，最好 command + temperature/limit），再谈控制算法。
+1. **R4-A field audit**：下载并审计 Iontech/Aachen BESS 遥测，确认是否至少含 actual power + SOC，
+   最好含 command/setpoint + temperature/limit。
+2. **R4-C infrastructure-event audit**：审计 ACN EVSE derating/fault 事件是否可在线观测、是否影响实际交付、
+   覆盖/切分是否足够。
+3. **E7-FAST/M2 处置**：仅作为已验证车辆侧模块和窄防御性候选包 HOLD；不得包装成当前核心专利 GO。
 
 现有技术边界：单模块 A/B/C/D 全高拥挤；主风险 ACN 族
 （US10926659 / US20200254896A1，同数据源最近邻，observation→conservative constraint→

@@ -1,8 +1,12 @@
-# 06 已知限制与禁用表述 v3（E7-FAST）— 代理师必读
+# 06 已知限制与禁用表述 v3（E7-FAST）— HISTORICAL/HOLD
+
+> **2026-09-03 SUPERSEDED FOR CORE-PATENT STATUS**：本文件仅作为 E7-FAST/M2 阶段禁用表述清单，
+> 约束 D2 vehicle-side mechanism VALID / narrow defensive package HOLD。当前项目状态以
+> CORE-SEARCH 决策链为权威：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。
 
 > 本文件明确哪些表述**不得**写入专利申请/说明书，哪些证据边界**必须**遵守。
 > 违反这些限制将导致申请面临现有技术风险或证据不可信风险。
-> 项目判定：**FILING GO / NARROW CLAIM STRATEGY**（D3 corrective audit 后主 Claim 收窄为 M2）
+> 历史候选包判定：**FILING GO / NARROW CLAIM STRATEGY**（D3 corrective audit 后主 Claim 收窄为 M2）
 > **★ 2026-08-14 D3 corrective audit 修正**：见 §4 新增 corrective audit 限制。
 
 ---

@@ -22,11 +22,9 @@ import pandas as pd
 
 from patent_preexperiment.config.yamlutil import load_yaml
 from patent_preexperiment.core_search.r2_c1_gate import _extract_session_targets
-from patent_preexperiment.core_search.r2_c_data_gate import _load_api_metadata
-from patent_preexperiment.io.paths import get_paths
+from patent_preexperiment.core_search.r2_c_data_gate import _load_api_metadata, _mapping_path
 
 _PATENT_ROOT = Path(__file__).resolve().parents[3]
-_MAPPING = Path(get_paths()["acn_project"]) / "manifests" / "static_api_mapping.csv"
 _CONFIG = _PATENT_ROOT / "configs" / "core_search_r2c2.yaml"
 
 _RATED_KW = 7.2
@@ -35,7 +33,7 @@ _SLACK_MIN = 15.0  # has_slack 阈值（分钟）
 
 def _build_dataset() -> pd.DataFrame:
     """构建 session 级 slack 标签 + 在线特征（caltech matched，时序切分）。"""
-    mapping = pd.read_csv(_MAPPING)
+    mapping = pd.read_csv(_mapping_path())
     m = mapping[mapping["match_status"] == "matched"].copy()
     site_map = dict(zip(m["sessionID"].astype(str), m["site_api"].astype(str), strict=True))
     matched = set(m["sessionID"].astype(str))

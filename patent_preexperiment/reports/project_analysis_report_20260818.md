@@ -1,5 +1,13 @@
 # light_storage_ev-v2 项目全面分析报告
 
+> **HISTORICAL SNAPSHOT — 2026-08-18，禁止作为当前状态依据。**
+> 本文件保留为当日代码/文档结构分析快照；2026-09-03 之后的当前项目状态以
+> `core_search/CORE_SEARCH_MASTER_PLAN.md`、`reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md`
+> 和 `core_search/CORE_SEARCH_ROUND4_CANDIDATES.md` 为准。
+>
+> 当前 core-patent status = **NO-GO / 当前无成熟 GO 核心专利**；E7-FAST/M2 仅为
+> VALID MODULE / narrow defensive package HOLD。
+
 > 生成日期：2026-08-18 ｜ 分析对象：`D:\JobWorkspaces\light_storage_ev-v2`
 > 说明：本报告为代码/文档结构与流程梳理，不构成专利法律意见。
 
@@ -16,9 +24,8 @@
 > 发明的核心不是"这 3 kW 给谁"，而是：**在当前数据下，有没有资格继续把这台车当作 7 kW 的可执行负荷？
 > 若响应证据不足，就不得盲信、不得做无证据支持的功率上调。**
 
-当前阶段判定（按 v3 corrective audit 后权威口径）：**FILING GO / NARROW CLAIM STRATEGY**。
-主证据收窄到 D2 EV 层 M2 双重上调限制；D3/BESS/PCC 系统效果 train+val FAIL、test
-CONDITIONAL，只能作弱从属/背景。
+历史快照判定（2026-08-18 口径）：E7-FAST/M2 曾整理为窄候选包。该判断已被后续
+CORE-SEARCH 决策链超越：当前 core-patent status = **NO-GO**。
 
 ---
 
@@ -27,7 +34,7 @@ CONDITIONAL，只能作弱从属/背景。
 ```
 light_storage_ev-v2/
 ├── AGENTS.md                        # 权威入口：数据口径、实验治理红线、执行现状、环境工具链（必读）
-├── .github/workflows/ci.yml         # Python 3.12：pytest + ruff
+├── .github/workflows/ci.yml         # 当时 CI/工具链快照；当前以仓库实际文件为准
 ├── data/readme.md                   # 数据说明占位（真实数据在仓库外）
 ├── docs/                            # 协议文档（唯一执行沙盒）
 │   ├── 工商业园区光储充_专利方向确定详细预实验计划书_V2.0.md   # ★唯一权威执行协议（E0–E8、门标准）
@@ -201,7 +208,7 @@ python experiments/p1/step0/run.py ...      # P1/P2 系列均有独立 CLI
    可改向量化/并行；`p1/step0` 等历史分支长期保留增加维护负担。
 4. **报告生成多为手写 Markdown 拼接**（如 e7_fast runner `_write_report`），格式与措辞高度模板化，后续
    若需多语言/HTML/PDF 输出需要重构。
-5. **历史文档很多**：v2/P2/R1 报告保留审计足迹，但对外与后续开发只能引用 v3 CURRENT AUTHORITY。
+5. **历史文档很多**：v2/P2/R1/E7-FAST v3 报告保留审计足迹；当前状态只能引用 CORE-SEARCH 决策链。
 6. **系统层证据弱**：D3 corrective audit 后系统效果不支撑 Claim 1，BESS/PCC 只能作弱从属或背景。
 
 ---
@@ -212,13 +219,14 @@ python experiments/p1/step0/run.py ...      # P1/P2 系列均有独立 CLI
 2. **再读** `docs/...V2.0.md` 的"预注册/门标准/实验编号"章节 + `README.md`；
 3. **看结构**：`src/` 按 `io → response → e0_full → e1/e3 → p2 → e7_fast` 顺序读；
 4. **跑验证**：安装依赖 → `pytest` → `ruff`（全绿再动代码）；
-5. **理解"当前状态"**：看 `reports/patent_definition/…v3_e7_fast.md`（CURRENT AUTHORITY 3 份）+
-   `results/raw/phase3_p2/P2_patent_gate.md` + 最新 3 个 commit message；
+5. **理解当前状态**：看 `core_search/CORE_SEARCH_MASTER_PLAN.md`、
+   `reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md`、
+   `core_search/CORE_SEARCH_ROUND4_CANDIDATES.md`；
 6. **参与实验**：严格按"新配置版本 + 新 gate 报告 + clean worktree + once-only"流程，禁止直接改测试集。
 
 ---
 
-## 附：当前专利判定快照（截至 2026-08-18，git HEAD=e5304c7）
+## 附：历史专利判定快照（截至 2026-08-18，git HEAD=e5304c7）
 
 - **阶段线**：P1 formal No-Go → Patent Gate 2 NARROW CONDITIONAL GO → P2 formal SUCCESS/NARROW GO →
   P2.1A D3 falsification FAIL → **E7-FAST D0/D2 GO + D3 train+val FAIL/test CONDITIONAL →
@@ -228,3 +236,6 @@ python experiments/p1/step0/run.py ...      # P1/P2 系列均有独立 CLI
 - **D3 recovery 已移除**（P2.1A FAIL），由"信息类别自然变化"替代
 - **旧 D3 系统收益数字作废**：不得引用 shortfall 降 30%/40%、BESS 临时补偿降 15%/41%。
 - 待办：专利代理师正式检索 + 法律意见（本工程仅给证据链，不给法律结论）
+
+> 2026-09-03 修正：上述快照不代表当前 core patent 结论。当前 CORE-SEARCH 结论为
+> core-patent status = NO-GO；E7-FAST/M2 仅作为 VALID MODULE / HOLD。

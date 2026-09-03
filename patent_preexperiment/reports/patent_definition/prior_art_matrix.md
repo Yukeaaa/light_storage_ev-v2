@@ -1,7 +1,8 @@
 # 现有技术检索矩阵（Patent Definition Phase 1 + Patent Gate 2，含检索后 FINAL 判定）
 
 > **⚠ HISTORICAL（v2）— 不再作为当前权威。**
-> **CURRENT AUTHORITY = `02_prior_art_element_map_v3_e7_fast.md`**（E7-FAST v3 A-J 元素对照）。
+> **CURRENT CORE-PATENT AUTHORITY = CORE-SEARCH 决策链**；`02_prior_art_element_map_v3_e7_fast.md`
+> 仅为 E7-FAST/M2 历史候选包要素对照（VALID MODULE / HOLD）。
 > 本文件攻击的是"信息分类+history boundary+recovery"，recovery 已删除，靶子已变。
 > 代理师请以 v3 element map 为准。
 
