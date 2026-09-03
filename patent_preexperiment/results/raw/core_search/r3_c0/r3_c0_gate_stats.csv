@@ -1,0 +1,13 @@
+,value
+n_windows_total,35040
+n_train,21024
+n_val,7008
+pcap_q90,287.00266666666676
+pcap_q85,254.52486666666667
+pcap_q95,349.5542
+trigger,1287
+false_alarm,381
+delayable,906
+unavoidable,0
+opportunity_fraction,1.0
+verdict,GO

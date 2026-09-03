@@ -1,0 +1,46 @@
+# CORE-SEARCH R3-C0 —— 需量窗口机会存在性门（预注册，冻结）
+# 依据：CORE_SEARCH_DECISION_03_R3A_STOP.md → 转 R3-C；先过机会存在性门，不建控制器。
+# 问题：真实 1min 负荷里，多少"瞬时超限"其实是 15min 平均不超的 false alarm，
+#       以及多少"真超限"其实可以延迟到窗口后段才动作？
+# 数据：Building C 真实 1min load+PV（Zenodo 19006030），EMSx 15min 不能做窗口内伪 1min。
+# 术语：demand-ceiling scenario，非真实用户合同需量。
+
+experiment_id: CORE_SEARCH_R3C0
+rule_version: core_search_r3c0
+frozen_date: 2026-09-03
+protocol_source: "CORE_SEARCH Round 3 → R3-C 第一道机会门"
+
+data:
+  building: "building_1min/edificio_C_pro_power_2019.csv"
+  load_col: L_Tot
+  pv_col: PV_Tot
+  unit: "W（换算为 kW）"
+
+window:
+  length_min: 15
+  aligned_to_clock: true    # 固定 15min billing window，时钟对齐
+
+demand_ceiling:
+  primary: "Q90 of train 15min demand(mean)"
+  sensitivity: ["Q85", "Q95"]
+  note: "demand-ceiling scenario，非真实合同需量；不为制造机会调整 cap"
+
+classification:
+  trigger: "max(1min) > Pcap"          # 瞬时超限
+  false_alarm: "trigger 且 mean <= Pcap"   # A：瞬时超但窗口平均不超
+  violation: "mean > Pcap"
+  m_unavoidable: "首个累计电量 > Pcap*15min 的分钟"   # 再等就来不及的分钟
+  delayable: "violation 且 m_unavoidable >= 8"          # B：可延迟动作
+  unavoidable: "violation 且 m_unavoidable < 8"         # C：必须早动作
+
+gate:
+  delayable_threshold_min: 8      # m_unavoidable >= 8 → delayable
+  primary_metric: "opportunity = (false_alarm + delayable) / trigger_windows"
+  stop_max: 0.10
+  weak_range: [0.10, 0.20]
+  worth_range: [0.20, 0.30]
+  strong_min: 0.30
+
+outputs:
+  results_root: "results/raw/core_search/r3_c0"
+  report: "reports/core_search/CORE_SEARCH_R3_C0_GATE.md"
