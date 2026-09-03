@@ -1,4 +1,8 @@
-# 04 Claim-Evidence Map v3（E7-FAST）
+# 04 Claim-Evidence Map v3（E7-FAST）— HISTORICAL/HOLD
+
+> **2026-09-03 SUPERSEDED FOR CORE-PATENT STATUS**：本文件仅作为 E7-FAST/M2 阶段 claim-evidence
+> 对照，约束 D2 vehicle-side mechanism VALID / narrow defensive package HOLD。当前项目状态以
+> CORE-SEARCH 决策链为权威：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。
 
 > 每条 Claim 对应哪组实验 + 证据等级。代理师撰写时引用实验编号。
 > 证据等级：**B**=真实数据验证+test 复现；**C**=机制成立/混合回放；**D**=假设/无真实数据/仅从属。
@@ -19,20 +23,21 @@
 
 | Claim | 内容摘要 | 支撑实验 | 证据等级 | 关键数值 |
 |---|---|---|---|---|
-| **Claim 1**（M2 双重限制+群汇总+请求限幅）| EMS 请求→双重约束上调→群汇总→min(req,sum_allow) | D0+D2+test | **B** | D2 Over↓30%→40%（D2 不受 bug 影响）|
+| **Claim 1**（M2 双重限制+群汇总+请求限幅）| EMS 请求→双重约束上调→群汇总→min(req,sum_allow) | D0+D2+test+工程机制 | **B+C mixed** | M2 车辆侧 Over↓30%→40%；群汇总/request-cap 为工程机制 |
 | Claim 2 | M2 双重约束（上调同时受桩侧允许+历史支持共同限制）| D2+test | **B** | D2 train+val Over↓30%；test Over↓40% |
 | Claim 3 | P_upper = max(P_actual, min(P_charger_allow, P_history)) | D2+test | **B** | 同上（C_candidate_m2 实现）|
 | Claim 4 | 历史支持水平 = 预定窗口内因果化统计上界 | D0+D2 | **B** | Q95 15min 窗 shift(1) 因果化 |
 | Claim 5 | 缺桩侧允许但有历史 → 不主动上调，可降低 | D0 | **C** | D0 M3 覆盖 14.8M cycle |
 | Claim 6 | 历史不足 → 保持原安排 | D0 | **C** | D0 M4 覆盖 416K cycle |
 | Claim 7 | capability 可得时在能力范围内增减 | 无真实数据 | **D** | ACN 无 BMS capability；仅从属 |
-| Claim 8 | 多车允许增加量汇总 + 请求限幅 min(req,sum) | D2+工程逻辑 | **B** | D2 验证 allowed_up；请求限幅是工程必然 |
+| Claim 8 | 多车允许增加量汇总 + 请求限幅 min(req,sum) | 工程机制 | **C** | request-cap correctness；无同等级真实系统效果验证 |
 | Claim 9 | BESS 补偿受 SOC/功率/效率约束 | D3 corrective | **D** | train+val 系统效果 FAIL（0.01%）|
 | Claim 10 | BESS 不足 → PCC 偏差 | D3 corrective | **D** | test CONDITIONAL（4.46%/6.03%）|
 | Claim 11 | PV 富余/防逆流场景 | D3-U | **C** | D3-U 主场景（PV surplus=delta_pilot）|
 | Claim 12 | 变压器容量受限/需量场景 | 未单独验证 | **D** | D3-D 闭合验证未做主门；仅从属 |
 
-> **★ corrective audit 修正**：Claim 1 从 C 级升为 B 级（依赖 D2，不依赖 D3 系统效果）；
+> **★ corrective audit 修正**：Claim 1 拆分为 M2 vehicle-side restriction = B，group aggregation /
+> request cap = C（工程机制），overall evidence = B+C mixed；Claim 8 收敛为 C。
 > Claim 9/10 从 C 级降为 D 级（系统效果 train+val FAIL）。
 
 ---
