@@ -1,0 +1,52 @@
+# CORE-SEARCH R4-A1S-2 -- exact paper metric reproduction under fixed S0 pairing.
+# Corrective audit only: no new timestamp shift, no candidate, no threshold tuning.
+
+experiment_id: CORE_SEARCH_R4A1S2
+rule_version: core_search_r4a1s2_v1
+frozen_date: 2026-09-03
+protocol_source: "CORE_SEARCH R4-A1S follow-up: paper metric reproduction under S0 only"
+
+dataset:
+  name: "RWTH Aachen M5BAT schedule dataset"
+  doi: "10.18154/RWTH-2025-06555"
+  dataset_dir: "${data_root}\\RWTH\\Dataset"
+  test_id: 2
+  pairing: "S0_raw_label_direct_pairing"
+
+published_anchors:
+  rmse_kw: 13.87
+  mean_absolute_deviation_kw: 3.31
+  cumulative_unfulfilled_energy_kwh: 238.0
+  first_major_curtailment_hour: 61.0
+  single_window_deviation_kwh: 52.5
+
+tolerances:
+  continuous_relative: 0.15
+  first_major_curtailment_interval_tolerance: 1
+  required_continuous_hits: 3
+  required_event_hits: 2
+
+paper_definition_evidence:
+  power_metric_text: "Fig. 9 compares optimized schedule with measured power at the grid connection point and reports RMSE and mean absolute deviation."
+  energy_metric_text: "Fig. 11 panel b shows unfulfilled energy delivery to the grid in 15-minute resolution, defined as total energy deviation in the quarter-hour."
+  event_metric_text: "Fig. 10 reports a curtailment around hour 61 and a -52.50 kWh single 15-minute interval energy deviation."
+  extraction_status: "pdfminer text extraction; formulas not explicitly specified in extracted text"
+
+metric_variants:
+  power:
+    - p_15min_mean
+    - p_1s_forward_fill_all
+    - p_1s_forward_fill_exclude_first_15s
+    - p_1s_forward_fill_exclude_first_30s
+    - p_1s_forward_fill_exclude_first_60s
+  energy:
+    - e_15min_unfulfilled_all_nonzero_schedule
+    - e_15min_unfulfilled_first_61h_nonzero_schedule
+    - e_15min_abs_deviation_first_61h
+    - e_15min_abs_deviation_ge_3_61kwh_first_61h
+    - e_15min_abs_deviation_ge_5kwh_first_61h
+    - e_15min_abs_deviation_ge_10kwh_all
+
+outputs:
+  metrics_csv: "results/raw/core_search/r4_a1s2/rwth_m5bat_a1s2_metric_variants.csv"
+  report: "reports/core_search/CORE_SEARCH_R4_A1S2_PAPER_METRIC_REPRO.md"

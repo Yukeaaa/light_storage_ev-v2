@@ -185,11 +185,11 @@ def _adjudicate(metrics: list[dict[str, Any]], cfg: dict[str, Any]) -> dict[str,
     required = float(cfg["tolerances"]["dominance_ratio_required"])
     if best["hypothesis"] == "S0_raw_label" and dominance >= required:
         return {
-            "verdict": "S0_RAW_LABEL_AUTHORITATIVE",
-            "a1a_status": "SUSPENDED_PENDING_RERUN_UNDER_S0",
+        "verdict": "S0_RAW_LABEL_PREFERRED_REPRO_REQUIRED",
+        "a1a_status": "SUSPENDED_PENDING_A1S2_PAPER_METRIC_REPRODUCTION",
             "a1b_status": "BLOCKED",
             "system_layer_status": "BLOCKED",
-            "reason": "S0 dominates S1 against published Test 2 anchors",
+            "reason": "S0 dominates S1 but absolute paper-metric reproduction is incomplete",
             "dominance_ratio": dominance,
         }
     if best["hypothesis"] == "S1_supplementary_timezone" and dominance >= required:
@@ -268,12 +268,13 @@ def _write_report(path: Path, cfg: dict[str, Any], result: dict[str, Any]) -> No
         f"system layer status：**{decision['system_layer_status']}**\n",
         "S0 未完全复现论文连续指标的具体统计口径，但它在 RMSE/MAD/unfulfilled energy、",
         "hour-61 重大偏差位置与单窗口偏差量级上压倒性接近 S1。S1 产生的是另一套物理世界，",
-        "因此 09419f3 的 STRONG_A1B 不可作为后续 A1b 依据。\n",
+        "因此 09419f3 的 STRONG_A1B 不可作为后续 A1b 依据；S0 只能暂称 preferred pairing，",
+        "需经 A1S-2 exact paper metric reproduction 后才能升级为 authoritative。\n",
         "## 6. Consequence\n",
         "- A1a STRONG_A1B = SUSPENDED。",
-        "- raw-label execution alignment becomes authoritative for rerun. 极低 raw-label shortfall",
-        "  将作为 corrected A1a 的预期核验对象，而不是事后救援。",
-        "- A1b、控制器、系统层全部 BLOCKED，直到 corrected A1a 完成。\n",
+        "- S1 supplementary timezone normalization = REJECTED for execution pairing。",
+        "- S0 raw-label pairing = PREFERRED / PAPER-METRIC REPRODUCTION REQUIRED。",
+        "- A1b、控制器、系统层全部 BLOCKED，直到 A1S-2 完成。\n",
         "## 7. 产物\n",
         f"- `{cfg['outputs']['metrics_csv']}`",
         f"- `{cfg['outputs']['intervals_csv']}`",

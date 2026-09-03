@@ -7,6 +7,7 @@ import pandas as pd
 from patent_preexperiment.core_search.r4_decision import choose_r4_route
 from patent_preexperiment.core_search.r4a0b_rwth import _data_level
 from patent_preexperiment.core_search.r4a1_tracking import _direction, _max_run, _top_n_share
+from patent_preexperiment.core_search.r4a1s2_paper_metrics import _decision as _a1s2_decision
 from patent_preexperiment.core_search.r4a1s_semantics import _adjudicate, _relative_error
 from patent_preexperiment.core_search.r4c0_evse import _eventize_fault_rows, _fault_family, _gate
 
@@ -105,6 +106,17 @@ def test_r4a1s_adjudicates_dominant_s0():
         {"hypothesis": "S1_supplementary_timezone", "anchor_score": 10.0},
     ]
     decision = _adjudicate(metrics, cfg)
-    assert decision["verdict"] == "S0_RAW_LABEL_AUTHORITATIVE"
+    assert decision["verdict"] == "S0_RAW_LABEL_PREFERRED_REPRO_REQUIRED"
     assert decision["a1b_status"] == "BLOCKED"
     assert _relative_error(11.0, 10.0) == 0.1
+
+
+def test_r4a1s2_requires_power_energy_and_event_pass():
+    cfg = {"tolerances": {"required_event_hits": 2}}
+    rows = [
+        {"family": "power", "within_15pct": True, "secondary_within_15pct": False},
+        {"family": "energy", "within_15pct": True},
+        {"family": "event", "within_15pct": True},
+        {"family": "event", "within_15pct": True},
+    ]
+    assert _a1s2_decision(rows, cfg)["verdict"] == "DATA_SEMANTICS_OR_METRIC_UNRESOLVED"

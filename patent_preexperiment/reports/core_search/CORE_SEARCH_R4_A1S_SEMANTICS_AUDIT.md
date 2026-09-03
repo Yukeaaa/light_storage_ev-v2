@@ -1,6 +1,10 @@
 # CORE_SEARCH_R4_A1S_SEMANTICS_AUDIT：timestamp/execution semantics adjudication
 
-> 生成时间（UTC）：2026-09-03T14:02:30Z
+> 后续 A1S-2：S0 raw-label 只能作为 preferred pairing，未能在固定 S0 下复现论文 power
+> RMSE/MAD 的 ±15% gate。最终状态为 DATA_SEMANTICS_OR_METRIC_UNRESOLVED / R4-A STOP；
+> 不运行 corrected A1a/A1b。详见 `reports/core_search/CORE_SEARCH_R4_A1S2_PAPER_METRIC_REPRO.md`。
+
+> 生成时间（UTC）：2026-09-03T14:19:26Z
 > 纪律：纠错审计；不改 threshold，不执行 A1b，不进入系统层。
 
 ## 1. 背景
@@ -35,23 +39,24 @@ timestamp/execution pairing 语义。
 
 ## 5. Adjudication
 
-verdict：**S0_RAW_LABEL_AUTHORITATIVE**
-reason：S0 dominates S1 against published Test 2 anchors
+verdict：**S0_RAW_LABEL_PREFERRED_REPRO_REQUIRED**
+reason：S0 dominates S1 but absolute paper-metric reproduction is incomplete
 dominance_ratio：139.858
-A1a status：**SUSPENDED_PENDING_RERUN_UNDER_S0**
+A1a status：**SUSPENDED_PENDING_A1S2_PAPER_METRIC_REPRODUCTION**
 A1b status：**BLOCKED**
 system layer status：**BLOCKED**
 
 S0 未完全复现论文连续指标的具体统计口径，但它在 RMSE/MAD/unfulfilled energy、
 hour-61 重大偏差位置与单窗口偏差量级上压倒性接近 S1。S1 产生的是另一套物理世界，
-因此 09419f3 的 STRONG_A1B 不可作为后续 A1b 依据。
+因此 09419f3 的 STRONG_A1B 不可作为后续 A1b 依据；S0 只能暂称 preferred pairing，
+需经 A1S-2 exact paper metric reproduction 后才能升级为 authoritative。
 
 ## 6. Consequence
 
 - A1a STRONG_A1B = SUSPENDED。
-- raw-label execution alignment becomes authoritative for rerun. 极低 raw-label shortfall
-  将作为 corrected A1a 的预期核验对象，而不是事后救援。
-- A1b、控制器、系统层全部 BLOCKED，直到 corrected A1a 完成。
+- S1 supplementary timezone normalization = REJECTED for execution pairing。
+- S0 raw-label pairing = PREFERRED / PAPER-METRIC REPRODUCTION REQUIRED。
+- A1b、控制器、系统层全部 BLOCKED；A1S-2 已将 R4-A 关闭。
 
 ## 7. 产物
 

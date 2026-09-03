@@ -1,0 +1,14 @@
+family,metric_variant,anchor_name,value,secondary_value,relative_error,secondary_relative_error,within_15pct,secondary_within_15pct,n
+power,p_15min_mean,rmse_kw,23.22833617915682,11.649243431651906,0.6747178211360361,2.5194088917377355,False,False,288
+power,p_1s_forward_fill_all,rmse_kw,157.57205255898788,14.82843746384119,10.360638252270215,3.479890472459574,False,False,259200
+power,p_1s_forward_fill_exclude_first_15s,rmse_kw,27.04465736037223,4.9558140088153255,0.9498671492698076,0.4972247760771376,False,False,254880
+power,p_1s_forward_fill_exclude_first_30s,rmse_kw,25.147542158525155,4.836315621715329,0.8130888362310855,0.46112254432487276,False,False,250560
+power,p_1s_forward_fill_exclude_first_60s,rmse_kw,25.538702083584113,4.865319807028203,0.8412907053773695,0.4698851380749857,False,False,241920
+energy,e_15min_unfulfilled_all_nonzero_schedule,cumulative_unfulfilled_energy_kwh,540.3841886233303,,1.2705218009383625,,False,False,1
+energy,e_15min_unfulfilled_first_61h_nonzero_schedule,cumulative_unfulfilled_energy_kwh,307.3308027004811,,0.2913058936995005,,False,False,1
+energy,e_15min_abs_deviation_first_61h,cumulative_unfulfilled_energy_kwh,557.5495957116915,,1.3426453601331576,,False,False,1
+energy,e_15min_abs_deviation_ge_3_61kwh_first_61h,cumulative_unfulfilled_energy_kwh,449.03511281161843,,0.8867021546706657,,False,False,1
+energy,e_15min_abs_deviation_ge_5kwh_first_61h,cumulative_unfulfilled_energy_kwh,424.9110844875409,,0.7853406911241214,,False,False,1
+energy,e_15min_abs_deviation_ge_10kwh_all,cumulative_unfulfilled_energy_kwh,224.3050868113137,,0.05754165205330372,,True,False,1
+event,first_major_curtailment_hour,first_major_curtailment_hour,61.0,,0.0,,True,False,1
+event,largest_single_window_abs_deviation,single_window_deviation_kwh,49.11027777777781,,0.06456613756613695,,True,False,1
