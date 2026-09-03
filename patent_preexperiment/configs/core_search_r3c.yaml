@@ -1,0 +1,63 @@
+# CORE-SEARCH R3-C —— 需量窗口预算控制系统层预注册（冻结）
+# 依据：CORE_SEARCH_R3_C0_GATE.md = GO。四臂同 BESS 物理模型、同 SOC、同 recharge，连续全年 replay。
+# 核心 KPI：相同 demand-cap violation 下，BESS throughput/peak 减少多少。
+# 红线：不能只拿"动作次数少"作 GO；先 reliability-equivalent，再比资源消耗。
+# 数据：Building C 真实 1min load+PV（净负荷 = L_Tot - PV_Tot）。
+
+experiment_id: CORE_SEARCH_R3C
+rule_version: core_search_r3c
+frozen_date: 2026-09-03
+protocol_source: "CORE_SEARCH Round 3 → R3-C 系统层（R3-C0 GO 后）"
+
+data:
+  building: "building_1min/edificio_C_pro_power_2019.csv"
+  load_col: L_Tot
+  pv_col: PV_Tot
+  net_load: "L_Tot - PV_Tot (kW)"
+
+demand:
+  window_min: 15
+  pcap_primary: "Q90 of train 15min net-load mean"
+  pcap_sensitivity: ["Q85", "Q95"]
+
+bess:
+  soc_min: 0.10
+  soc_max: 0.90
+  soc_init: 0.50
+  eta_charge: 0.95
+  eta_discharge: 0.95
+  sizing_rule: "Pmax = Q99 of train (net_load - Pcap)+; Emax = Q95 of train per-window excess energy"
+  sensitivity: [{pmax_mult: 0.5, emax_mult: 0.5}, {pmax_mult: 2.0, emax_mult: 2.0}]
+
+recharge_rule: |
+  共享规则：d=0 且 P_net < Pcap 且 SOC < SOCmax 时，
+  c = min(Pmax, Pcap - P_net, (SOCmax - SOC)*60*eta_charge)，
+  且不使当前窗口累计电量超过 E_cap。
+
+arms:
+  B0: "instantaneous threshold：P_net > Pcap → discharge = P_net - Pcap"
+  B1: "remaining-average-budget：按累计能量算剩余分钟允许平均功率，超则削减"
+  B2: "persistence-to-window-end forecast：以当前净负荷持续到窗口末预测最终平均，超限才动作"
+  C:  "latest-safe feasibility boundary：剩余预算 × BESS 后续 Pmax/SOC/Eavail 联合边界，到界才动"
+
+metrics:
+  violation_kwh: "sum over windows max(final_avg - Pcap, 0) * 0.25"
+  violation_count: "窗口数(最终平均 > Pcap)"
+  throughput_kwh: "全年 BESS 总放电电量"
+  peak_kw: "全年 BESS 最大放电功率"
+  control_actions: "放电动作分钟数"
+
+gate:
+  primary_metric: "throughput_kwh（同 violation 水平下）"
+  reliability_first: "C violation 不得劣于 strongest baseline"
+  strongest_baseline: "B1/B2 中 throughput 更小者"
+  dead_pct_max: 5
+  engineering_pct: [5, 10]
+  observe_pct: [10, 15]
+  worth_pct: [15, 20]
+  strong_pct: 20
+  dev_go: "C 相对 strongest 的 throughput 下降 >= 15% 且 violation 不劣化"
+
+outputs:
+  results_root: "results/raw/core_search/r3c"
+  report: "reports/core_search/CORE_SEARCH_R3C_GATE.md"
