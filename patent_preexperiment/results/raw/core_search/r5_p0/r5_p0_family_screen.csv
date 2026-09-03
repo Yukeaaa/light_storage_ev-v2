@@ -1,0 +1,5 @@
+family,best_public_lead,criteria_pass,verdict,primary_blocker,next_allowed_action
+P1 Transformer dynamic thermal capacity,Zenodo/DynaLoad in-service 40 MVA transformer,5/7,DATA-SEED ONLY,missing explicit protection/status/thermal-limit and requirement/constraint execution end,inspect metadata or obtain thermal limit/protection telemetry
+P2 PV inverter / PCS available-power boundary,AEMO/ERCOT dispatch feeds plus PVDAQ/Solar Data Prize,5/7 split-source,SPLIT-SOURCE HOLD,no single source with setpoint/limit/state/actual/irradiance or DC input chain,search same-source PV/PCS availability telemetry
+P3 DC charger power-module available capacity,UCLA OCPP / INL EV Project / EV WATTS public leads,3/7,PUBLIC DATA NO-GO,missing module temperature fault derating explicit limit and commanded/actual power chain,seek operator or OEM module-level telemetry
+P4 BESS rack/PCS protection-limited envelope,Mafate microgrid / UCSD / Pecan Street public leads,4/7,PUBLIC DATA NO-GO,missing command setpoint explicit limit alarm status at rack PCS BMS level,seek vendor or owner SCADA export with explicit BMS/PCS limits

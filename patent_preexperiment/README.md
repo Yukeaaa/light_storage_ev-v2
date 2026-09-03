@@ -11,7 +11,8 @@
 > RMSE/MAD exact reproduction。`09419f3` 的 A1a STRONG_A1B 判定已 **SUSPENDED**；最终
 > **DATA_SEMANTICS_OR_METRIC_UNRESOLVED / R4-A STOP**。Decision #07 已正式关闭 Round 4：
 > R4-C CLOSED，R4-B DEFER，R4-D NOT STARTED，A1b/system layer **BLOCKED**。Round 1-4
-> retrospective 已冻结 Round 5 启动条件；当前不启动 Round 5。
+> retrospective 已冻结 Round 5 启动条件；R5-P0 pre-launch data scouting 初筛 P1-P4 后，
+> 0 个 family 满足 7/7，当前不启动 Round 5。
 > E7-FAST/M2 仅保留为 **VALID MODULE / narrow defensive package HOLD**：D2 EV 层 M2 双重上调限制有效，
 > 但不足以支撑系统级核心专利 GO；D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test
 > CONDITIONAL，只能作弱从属/背景。
@@ -90,6 +91,7 @@ E7-FAST/M2 历史候选包的发明中心（**VALID MODULE / HOLD，不是当前
 | **R4-A1S-2 paper metric reproduction**：固定 S0 后，event anchors 通过、energy 单一变体通过，但 power RMSE/MAD 未能按 ±15% 复现；R4-A STOP | R4-A corrective audit close | `reports/core_search/CORE_SEARCH_R4_A1S2_PAPER_METRIC_REPRO.md` |
 | **Decision #07 Round 4 close**：R4-A STOP、R4-C CLOSED、R4-B DEFER、R4-D NOT STARTED；不启动 Round 5 | Round 4 close | `reports/core_search/CORE_SEARCH_DECISION_07_ROUND4_CLOSE.md` |
 | **Round 1-4 retrospective / R5 criteria**：冻结候选空间矩阵与 Round 5 七条启动条件；优先真实热/电/保护遥测和功率电子可用能力数据门 | problem-level retrospective | `reports/core_search/CORE_SEARCH_ROUND1_4_RETROSPECTIVE_AND_R5_CRITERIA.md` |
+| **R5-P0 pre-launch data scouting**：P1/P2/P3/P4 公开数据可得性初筛；0 个 family 满足 7/7，Round 5 继续 NOT STARTED | data feasibility scouting | `reports/core_search/CORE_SEARCH_R5_P0_DATA_SCOUTING.md` |
 
 门判定：**当前 core patent = NO-GO / 无成熟 GO 核心专利**。M2 双重上调限制是 VALID MODULE，
 可作为 narrow defensive package HOLD；Final R1/P1/P2/E7-FAST v3 均为历史阶段线。
@@ -183,7 +185,8 @@ review/          每轮审查结论归档（审查结论2..7）
   `reports/core_search/CORE_SEARCH_R4_A0b_RWTH_OFFICIAL_AUDIT.md`、
   `reports/core_search/CORE_SEARCH_R4_A1S2_PAPER_METRIC_REPRO.md`、
   `reports/core_search/CORE_SEARCH_DECISION_07_ROUND4_CLOSE.md`、
-  `reports/core_search/CORE_SEARCH_ROUND1_4_RETROSPECTIVE_AND_R5_CRITERIA.md`。
+  `reports/core_search/CORE_SEARCH_ROUND1_4_RETROSPECTIVE_AND_R5_CRITERIA.md`、
+  `reports/core_search/CORE_SEARCH_R5_P0_DATA_SCOUTING.md`。
   - E7-FAST/M2：D2 EV 层 M2 双重上调限制为 VALID MODULE，可作为 narrow defensive package HOLD。
   - 降级/删除：D3 recovery 已由 P2.1A formal FAIL 删除；D3/BESS/PCC 系统效果经 corrective
     audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景。
@@ -199,7 +202,7 @@ review/          每轮审查结论归档（审查结论2..7）
 
 1. **Round 4 closed**：R4-A STOP，R4-C CLOSED，R4-B DEFER，R4-D NOT STARTED。
 2. **不重开 R4-A/R4-C**：不得用 raw-label 1.5%、S1 69.6%、新 timestamp shift、metric variant、ML 或子集救援。
-3. **不启动 Round 5**：必须先按 retrospective 的七条准入条件筛 3-5 个 problem families，且先做数据可得性搜索。
+3. **不启动 Round 5**：R5-P0 初筛 0 个 family 满足 7/7；下一步只能做 targeted data acquisition。
 
 现有技术边界：单模块 A/B/C/D 全高拥挤；主风险 ACN 族
 （US10926659 / US20200254896A1，同数据源最近邻，observation→conservative constraint→
