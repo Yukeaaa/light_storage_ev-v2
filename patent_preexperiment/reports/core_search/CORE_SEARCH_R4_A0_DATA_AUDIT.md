@@ -1,5 +1,10 @@
 # CORE_SEARCH_R4_A0_DATA_AUDIT：Iontech/Aachen BESS 字段与语义审计
 
+> 后续更新：R4-A0b 已用 RWTH Aachen 官方 M5BAT 数据集（DOI 10.18154/RWTH-2025-06555）消除
+> R4-A 的官方源 DATA_PENDING；本报告仅保留为原 Iontech/Aachen 本地聚合源扫描记录。当前 R4-A
+> 状态以 `reports/core_search/CORE_SEARCH_R4_A0b_RWTH_OFFICIAL_AUDIT.md` 为准：
+> DATA_SOURCE_RESOLVED / LEVEL B / tracking-capability only。
+
 > 生成时间（UTC）：2026-09-03T09:32:54Z
 > 配置：configs/core_search_r4a0.yaml（rule_version=core_search_r4a0_v1，冻结）
 > 纪律：只审计 README/metadata/raw schema；不建 pipeline，不把 actual<schedule 直接称 physical derating。

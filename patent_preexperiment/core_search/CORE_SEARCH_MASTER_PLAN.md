@@ -7,9 +7,12 @@
 >
 > **三大原则**：真实数据先行、系统效果先行、强简单 baseline 先行。
 >
-> **最新状态（2026-09-03 Decision #06）**：Round 4 双线数据门已完成；R4-C0 ACN EVSE
-> infrastructure event audit = STOP，R4-A0 Iontech/Aachen BESS audit = DATA_PENDING。
-> 当前结论：**ROUND4_STOP_OR_DATA_PENDING**，不进入系统层，不靠 ML/子集/极端事件救活。
+> **最新状态（2026-09-03 R4-A0b）**：Round 4 双线数据门已完成；R4-C0 ACN EVSE
+> infrastructure event audit = STOP 并正式关闭，不进入 R4-C1，不做子集/极端事件救援。R4-A0
+> 原 Iontech/Aachen 本地聚合源为 DATA_PENDING；R4-A0b 已落地 RWTH Aachen 官方 M5BAT 数据集
+> （DOI 10.18154/RWTH-2025-06555），判定 **DATA_SOURCE_RESOLVED / LEVEL B**。
+> 当前结论：**R4-A_TRACKING_HOLD / no system layer**；只允许 tracking-capability gate，
+> 不得称 BESS 物理降额，不启动 Round 5。
 >
 > **与 V2.0 协议的关系**：本阶段不改 V2.0 的实验编号（E0–E8）与门标准，而是新增一条
 > "系统级核心专利筛选"工作流。V2.0 已完成的 EV 侧机制证据（P2 NARROW GO）作为本阶段的

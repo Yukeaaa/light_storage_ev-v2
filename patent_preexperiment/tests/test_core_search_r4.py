@@ -5,6 +5,7 @@ from __future__ import annotations
 import pandas as pd
 
 from patent_preexperiment.core_search.r4_decision import choose_r4_route
+from patent_preexperiment.core_search.r4a0b_rwth import _data_level
 from patent_preexperiment.core_search.r4c0_evse import _eventize_fault_rows, _fault_family, _gate
 
 
@@ -72,3 +73,16 @@ def test_r4_decision_priority():
     assert choose_r4_route({"verdict": "STOP"}, {"data_level": "DATA_PENDING"})[
         "decision"
     ] == "ROUND4_STOP_OR_DATA_PENDING"
+
+
+def test_r4a0b_level_b_requires_aligned_schedule():
+    fields = {
+        "actual_bess_power": {"present": True},
+        "dispatch_schedule": {"present": True},
+        "soc": {"present": True},
+        "temperature": {"present": False},
+        "charge_discharge_limit": {"present": False},
+        "alarms_status": {"present": False},
+    }
+    assert _data_level(fields, [{"raw_timestamp_aligned": True}], 4, 4) == "B"
+    assert _data_level(fields, [{"raw_timestamp_aligned": False}], 4, 4) == "C"

@@ -1,0 +1,274 @@
+{
+  "experiment_id": "CORE_SEARCH_R4A0b",
+  "rule_version": "core_search_r4a0b_v1",
+  "generated_at_utc": "2026-09-03T10:04:47Z",
+  "dataset": "RWTH Aachen M5BAT schedule dataset",
+  "doi": "10.18154/RWTH-2025-06555",
+  "record_url": "https://publications.rwth-aachen.de/record/1015732",
+  "local_root": "D:\\Users\\Micko\\Documents\\工作\\华润集控\\光储充\\数据\\RWTH",
+  "data_source_status": "DATA_SOURCE_RESOLVED",
+  "expected_files": [
+    "test_1_measurement_data.csv",
+    "test_1_schedule_data.csv",
+    "test_2_measurement_data.csv",
+    "test_2_schedule_data.csv"
+  ],
+  "local_files_found": 4,
+  "missing_files": [],
+  "field_hits": {
+    "actual_bess_power": {
+      "present": true,
+      "matched_keywords": [
+        "bess_power_ac",
+        "power_ac",
+        "power_dc"
+      ]
+    },
+    "dispatch_schedule": {
+      "present": true,
+      "matched_keywords": [
+        "schedule_data",
+        "optimized schedules"
+      ]
+    },
+    "soc": {
+      "present": true,
+      "matched_keywords": [
+        "bess_soc",
+        "lmo1_soc",
+        "lmo2_soc",
+        "lmo3_soc",
+        "lmo4_soc"
+      ]
+    },
+    "temperature": {
+      "present": false,
+      "matched_keywords": []
+    },
+    "charge_discharge_limit": {
+      "present": false,
+      "matched_keywords": []
+    },
+    "alarms_status": {
+      "present": false,
+      "matched_keywords": []
+    }
+  },
+  "schema_summary": [
+    {
+      "file": "test_1_measurement_data.csv",
+      "rows": 259201,
+      "columns": [
+        "timestamp",
+        "bess_soc",
+        "bess_power_ac",
+        "lmo1_power_ac",
+        "lmo2_power_ac",
+        "lmo3_power_ac",
+        "lmo4_power_ac",
+        "lmo1_power_dc",
+        "lmo2_power_dc",
+        "lmo3_power_dc",
+        "lmo4_power_dc",
+        "lmo1_soc",
+        "lmo2_soc",
+        "lmo3_soc",
+        "lmo4_soc"
+      ],
+      "column_count": 15,
+      "start_timestamp": "2023-08-14 12:00:00",
+      "end_timestamp": "2023-08-17 12:00:00",
+      "sampling_interval_seconds_mode": 1.0,
+      "sampling_frequency": "1 second",
+      "units": {
+        "timestamp": "timestamp; timezone differs by file family per supplementary PDF",
+        "bess_soc": "%",
+        "bess_power_ac": "kW",
+        "lmo1_power_ac": "kW",
+        "lmo2_power_ac": "kW",
+        "lmo3_power_ac": "kW",
+        "lmo4_power_ac": "kW",
+        "lmo1_power_dc": "kW",
+        "lmo2_power_dc": "kW",
+        "lmo3_power_dc": "kW",
+        "lmo4_power_dc": "kW",
+        "lmo1_soc": "%",
+        "lmo2_soc": "%",
+        "lmo3_soc": "%",
+        "lmo4_soc": "%"
+      }
+    },
+    {
+      "file": "test_1_schedule_data.csv",
+      "rows": 288,
+      "columns": [
+        "timestamp",
+        "bess_soc",
+        "bess_power_ac",
+        "lmo1_power_ac",
+        "lmo2_power_ac",
+        "lmo3_power_ac",
+        "lmo4_power_ac",
+        "lmo1_power_dc",
+        "lmo2_power_dc",
+        "lmo3_power_dc",
+        "lmo4_power_dc",
+        "trafo_lmo1_lmo2_power",
+        "trafo_lmo3_lmo4_power",
+        "lmo1_energy",
+        "lmo2_energy",
+        "lmo3_energy",
+        "lmo4_energy"
+      ],
+      "column_count": 17,
+      "start_timestamp": "2022-10-05 00:00:00",
+      "end_timestamp": "2022-10-07 23:45:00",
+      "sampling_interval_seconds_mode": 900.0,
+      "sampling_frequency": "15 minutes",
+      "units": {
+        "timestamp": "timestamp; timezone differs by file family per supplementary PDF",
+        "bess_soc": "%",
+        "bess_power_ac": "kW",
+        "lmo1_power_ac": "kW",
+        "lmo2_power_ac": "kW",
+        "lmo3_power_ac": "kW",
+        "lmo4_power_ac": "kW",
+        "lmo1_power_dc": "kW",
+        "lmo2_power_dc": "kW",
+        "lmo3_power_dc": "kW",
+        "lmo4_power_dc": "kW",
+        "trafo_lmo1_lmo2_power": "kW",
+        "trafo_lmo3_lmo4_power": "kW",
+        "lmo1_energy": "kWh",
+        "lmo2_energy": "kWh",
+        "lmo3_energy": "kWh",
+        "lmo4_energy": "kWh"
+      }
+    },
+    {
+      "file": "test_2_measurement_data.csv",
+      "rows": 259201,
+      "columns": [
+        "timestamp",
+        "bess_soc",
+        "bess_power_ac",
+        "lmo1_power_ac",
+        "lmo2_power_ac",
+        "lmo3_power_ac",
+        "lmo4_power_ac",
+        "lmo1_power_dc",
+        "lmo2_power_dc",
+        "lmo3_power_dc",
+        "lmo4_power_dc",
+        "lmo1_soc",
+        "lmo2_soc",
+        "lmo3_soc",
+        "lmo4_soc"
+      ],
+      "column_count": 15,
+      "start_timestamp": "2024-05-28 12:00:00",
+      "end_timestamp": "2024-05-31 12:00:00",
+      "sampling_interval_seconds_mode": 1.0,
+      "sampling_frequency": "1 second",
+      "units": {
+        "timestamp": "timestamp; timezone differs by file family per supplementary PDF",
+        "bess_soc": "%",
+        "bess_power_ac": "kW",
+        "lmo1_power_ac": "kW",
+        "lmo2_power_ac": "kW",
+        "lmo3_power_ac": "kW",
+        "lmo4_power_ac": "kW",
+        "lmo1_power_dc": "kW",
+        "lmo2_power_dc": "kW",
+        "lmo3_power_dc": "kW",
+        "lmo4_power_dc": "kW",
+        "lmo1_soc": "%",
+        "lmo2_soc": "%",
+        "lmo3_soc": "%",
+        "lmo4_soc": "%"
+      }
+    },
+    {
+      "file": "test_2_schedule_data.csv",
+      "rows": 288,
+      "columns": [
+        "timestamp",
+        "bess_soc",
+        "bess_power_ac",
+        "lmo1_power_ac",
+        "lmo2_power_ac",
+        "lmo3_power_ac",
+        "lmo4_power_ac",
+        "lmo1_power_dc",
+        "lmo2_power_dc",
+        "lmo3_power_dc",
+        "lmo4_power_dc",
+        "trafo_lmo1_lmo2_power",
+        "trafo_lmo3_lmo4_power",
+        "lmo1_energy",
+        "lmo2_energy",
+        "lmo3_energy",
+        "lmo4_energy"
+      ],
+      "column_count": 17,
+      "start_timestamp": "2024-05-28 12:00:00",
+      "end_timestamp": "2024-05-31 11:45:00",
+      "sampling_interval_seconds_mode": 900.0,
+      "sampling_frequency": "15 minutes",
+      "units": {
+        "timestamp": "timestamp; timezone differs by file family per supplementary PDF",
+        "bess_soc": "%",
+        "bess_power_ac": "kW",
+        "lmo1_power_ac": "kW",
+        "lmo2_power_ac": "kW",
+        "lmo3_power_ac": "kW",
+        "lmo4_power_ac": "kW",
+        "lmo1_power_dc": "kW",
+        "lmo2_power_dc": "kW",
+        "lmo3_power_dc": "kW",
+        "lmo4_power_dc": "kW",
+        "trafo_lmo1_lmo2_power": "kW",
+        "trafo_lmo3_lmo4_power": "kW",
+        "lmo1_energy": "kWh",
+        "lmo2_energy": "kWh",
+        "lmo3_energy": "kWh",
+        "lmo4_energy": "kWh"
+      }
+    }
+  ],
+  "alignment_summary": [
+    {
+      "test_id": 1,
+      "measurement_start": "2023-08-14 12:00:00",
+      "measurement_end": "2023-08-17 12:00:00",
+      "schedule_start": "2022-10-05 00:00:00",
+      "schedule_end": "2022-10-07 23:45:00",
+      "overlap_seconds": 0.0,
+      "measurement_rows_on_schedule_timestamps": 0,
+      "raw_timestamp_aligned": false,
+      "alignment_semantics_status": "NOT_ALIGNED"
+    },
+    {
+      "test_id": 2,
+      "measurement_start": "2024-05-28 12:00:00",
+      "measurement_end": "2024-05-31 12:00:00",
+      "schedule_start": "2024-05-28 12:00:00",
+      "schedule_end": "2024-05-31 11:45:00",
+      "overlap_seconds": 258300.0,
+      "measurement_rows_on_schedule_timestamps": 288,
+      "raw_timestamp_aligned": true,
+      "alignment_semantics_status": "RAW_LABEL_ALIGNED_WITH_TIMEZONE_CAVEAT"
+    }
+  ],
+  "schedule_semantics": {
+    "source": "M5Use scheduling optimization framework",
+    "optimization_type": "MILP",
+    "time_resolution": "15 minutes",
+    "execution_semantics": "operation plans used for physical system execution and comparison with measurement data",
+    "reoptimization_during_execution": "NOT_IDENTIFIED_IN_AUDIT",
+    "timestamp_timezone_note": "schedule UTC+1; measurement UTC+2 per supplementary field table"
+  },
+  "data_level": "B",
+  "level_meaning": "actual + optimized dispatch schedule + SOC with at least one aligned test; tracking capability only",
+  "research_question": "在相同 SOC 和外部 dispatch requirement 下，真实 BESS 的 schedule-tracking shortfall 是否存在显著、重复、状态相关的结构。"
+}

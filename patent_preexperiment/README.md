@@ -4,8 +4,9 @@
 > 用户行为预测或通用光储充仿真平台。读任何代码、改任何配置、汇报任何结论之前，请先读本节。
 > **当前权威**：`core_search/CORE_SEARCH_MASTER_PLAN.md` + `reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md`
 > + `core_search/CORE_SEARCH_ROUND4_CANDIDATES.md`。当前结论是 **core-patent status = NO-GO**：
-> 暂无成熟 GO 核心专利。Round 4 Decision #06 已完成：R4-C0 STOP，R4-A0 DATA_PENDING，
-> 结论为 **ROUND4_STOP_OR_DATA_PENDING**，不进入系统层。
+> 暂无成熟 GO 核心专利。Round 4 Decision #06 已完成，R4-C0 STOP 并正式关闭；R4-A0b
+> 已用 RWTH Aachen 官方 M5BAT 数据集消除 DATA_PENDING，判定 **DATA_SOURCE_RESOLVED / LEVEL B**。
+> R4-A 只允许 tracking-capability gate，不得称 BESS 物理降额；不进入系统层，不启动 Round 5。
 > E7-FAST/M2 仅保留为 **VALID MODULE / narrow defensive package HOLD**：D2 EV 层 M2 双重上调限制有效，
 > 但不足以支撑系统级核心专利 GO；D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test
 > CONDITIONAL，只能作弱从属/背景。
@@ -77,7 +78,8 @@ E7-FAST/M2 历史候选包的发明中心（**VALID MODULE / HOLD，不是当前
 | **E7-FAST D2 EV gate = GO**：M2 `min(pilot,Q95)` 相对 rolling-Q95 单独使用，train+val Over improvement 30.08%，test 39.65%，CoverageRatio 77.97%–86.95% | E7-FAST EV validation | `reports/E7_FAST_EV_gate.md`、`reports/E7_FAST_TEST_CONSUMED.md` |
 | **E7-FAST D3 system gate = FAIL/CONDITIONAL**：corrective audit 后 train+val 系统效果 0.01%，test 回放 4.46%/6.03%；旧 D3 系统收益数字作废 | E7-FAST corrective audit | `reports/E7_FAST_system_gate.md`、`reports/patent_definition/05_experiment_evidence_summary_v3.md` |
 | **CORE-SEARCH Round 3 CLOSED**：R3-A/R3-C STOP，R3-D 仅在有真实 thermal data 时重开；当前无成熟 GO 核心专利 | CORE-SEARCH decision | `reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md` |
-| **CORE-SEARCH Round 4 Decision #06**：R4-C0 STOP；R4-A0 DATA_PENDING；不进入系统层 | R4 data gate | `reports/core_search/CORE_SEARCH_DECISION_06_R4_DATA_GATE.md` |
+| **CORE-SEARCH Round 4 Decision #06**：R4-C0 STOP；R4-A0 原聚合源 DATA_PENDING；不进入系统层 | R4 data gate | `reports/core_search/CORE_SEARCH_DECISION_06_R4_DATA_GATE.md` |
+| **R4-A0b RWTH official audit**：官方源已落地，actual power + optimized schedule + SOC，test_2 原始 timestamp 标签对齐；无 temperature/status/limit/alarm，LEVEL B tracking-only | R4-A official data gate | `reports/core_search/CORE_SEARCH_R4_A0b_RWTH_OFFICIAL_AUDIT.md` |
 
 门判定：**当前 core patent = NO-GO / 无成熟 GO 核心专利**。M2 双重上调限制是 VALID MODULE，
 可作为 narrow defensive package HOLD；Final R1/P1/P2/E7-FAST v3 均为历史阶段线。
@@ -164,10 +166,11 @@ review/          每轮审查结论归档（审查结论2..7）
 
 ## 9. 当前工程治理状态
 
-- **当前最新（CORE-SEARCH Round 4）**：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。
+- **当前最新（CORE-SEARCH Round 4 / R4-A0b）**：**core-patent status = NO-GO / 当前无成熟 GO 核心专利**。
   当前权威是 `core_search/CORE_SEARCH_MASTER_PLAN.md`、
   `reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md`、
-  `reports/core_search/CORE_SEARCH_DECISION_06_R4_DATA_GATE.md`。
+  `reports/core_search/CORE_SEARCH_DECISION_06_R4_DATA_GATE.md`、
+  `reports/core_search/CORE_SEARCH_R4_A0b_RWTH_OFFICIAL_AUDIT.md`。
   - E7-FAST/M2：D2 EV 层 M2 双重上调限制为 VALID MODULE，可作为 narrow defensive package HOLD。
   - 降级/删除：D3 recovery 已由 P2.1A formal FAIL 删除；D3/BESS/PCC 系统效果经 corrective
     audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景。
@@ -179,12 +182,11 @@ review/          每轮审查结论归档（审查结论2..7）
   结论47–51 A5 正式运行（baseline `34f04f6`，Evidence commit `a827df3`）。
 - K1.2.2 审查通过（`review/审查结论5.md`），E0-Full 数据构建完成。
 
-## 10. 下一阶段（Decision #06 后）
+## 10. 下一阶段（R4-A0b 后）
 
-1. **不进入 R4-C1/R4-A1 系统层**：R4-C0 operational 量纲未达门，R4-A0 缺最小必要数据。
-2. **若继续 R4-A**：先取得 Iontech/Aachen 或同等级 BESS telemetry metadata/raw schema，再重跑 A0；
-   未达 LEVEL A 不启动 physical derating gate。
-3. **若继续新搜索**：必须回到 data-first physical mechanism search，新增数据门；不得靠 ML、子集或极端事件救活。
+1. **R4-C 正式关闭**：R4-C0 operational 量纲未达门，不进入 R4-C1，不做子集/极端事件救援。
+2. **R4-A 仅允许 tracking-capability gate**：RWTH 官方源达到 LEVEL B，不得称 BESS 物理降额；下一步只能验证 schedule-tracking shortfall 是否相对 SOC-only baseline 有 15–20% 增量。
+3. **不启动 Round 5 / 不进入系统层**：R4-A 未达 LEVEL A，缺 temperature/status/power limit/alarm；若 tracking gate 不过，关闭 R4-A。
 
 现有技术边界：单模块 A/B/C/D 全高拥挤；主风险 ACN 族
 （US10926659 / US20200254896A1，同数据源最近邻，observation→conservative constraint→

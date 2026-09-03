@@ -1,0 +1,46 @@
+# CORE-SEARCH R4-A0b -- RWTH Aachen official M5BAT dataset landing audit.
+# Data gate only: no EMS/system bench and no physical derating claim before Level A evidence.
+
+experiment_id: CORE_SEARCH_R4A0b
+rule_version: core_search_r4a0b_v1
+frozen_date: 2026-09-03
+protocol_source: "CORE_SEARCH Round 4 R4-A official-source landing audit"
+
+candidate_dataset:
+  name: "RWTH Aachen M5BAT schedule dataset"
+  doi: "10.18154/RWTH-2025-06555"
+  record_url: "https://publications.rwth-aachen.de/record/1015732"
+  local_root: "${data_root}\\RWTH"
+  dataset_dir: "${data_root}\\RWTH\\Dataset"
+  supplementary_pdf: "${data_root}\\RWTH\\Supplementary_file.pdf"
+  expected_files:
+    - test_1_measurement_data.csv
+    - test_1_schedule_data.csv
+    - test_2_measurement_data.csv
+    - test_2_schedule_data.csv
+
+field_requirements:
+  actual_bess_power:
+    keywords: [bess_power_ac, power_ac, power_dc]
+  dispatch_schedule:
+    keywords: [schedule_data, optimized schedules, 15-minute resolution schedules]
+  soc:
+    keywords: [bess_soc, lmo1_soc, lmo2_soc, lmo3_soc, lmo4_soc]
+  temperature:
+    keywords: [temperature, temp]
+  charge_discharge_limit:
+    keywords: [limit, pmax, max_power, charge_limit, discharge_limit]
+  alarms_status:
+    keywords: [alarm, status, fault, protection, derating]
+
+level_rules:
+  A: "actual + schedule/setpoint + SOC + temp/limit/alarm/status with aligned timestamps"
+  B: "actual + optimized dispatch schedule + SOC with at least one aligned test; tracking capability only"
+  C: "actual + SOC only, or schedule semantics/timestamps unusable; R4-A core path STOP"
+  DATA_PENDING: "official source not locally available or expected files missing"
+
+outputs:
+  registry: "data_registry/rwth_m5bat_2025_registry.json"
+  schema_csv: "results/raw/core_search/r4_a0b/rwth_m5bat_2025_schema.csv"
+  alignment_csv: "results/raw/core_search/r4_a0b/rwth_m5bat_2025_alignment.csv"
+  report: "reports/core_search/CORE_SEARCH_R4_A0b_RWTH_OFFICIAL_AUDIT.md"
