@@ -1,0 +1,65 @@
+# CORE-SEARCH R3-A —— 动态 BESS 备用系统层预注册（冻结）
+# 依据：CORE_SEARCH_ROUND3_CANDIDATES.md R3-A + R3-P0-A GO。
+# 核心 KPI：相同 PCC/缺额风险下，锁定的 BESS 功率/能量减少多少。
+# strongest simple baseline 必须包含 B1 hour-of-day Q95 / B2 rolling Q95，不能只打 B0 fixed Q95。
+# 纪律：DEV 4 站只作 mechanism set；最终 CORE GO 必须在 6 个 holdout 站复现（单次 exposure，不改 Candidate）。
+
+experiment_id: CORE_SEARCH_R3A
+rule_version: core_search_r3a
+frozen_date: 2026-09-03
+protocol_source: "CORE_SEARCH Round 3 → R3-A 系统层（R3-P0-A GO 后）"
+
+sites:
+  dev: [3, 8, 10, 70]              # development / mechanism set（已用于 R3-P0-A）
+  holdout: [2, 14, 28, 42, 52, 62] # metadata-only 选择，结果冻结前不可见
+  holdout_selected_from_metadata_only: true
+
+horizon:
+  name: "15min"
+  load_col: load_00
+  pv_col: pv_00
+  lag_steps: 1
+
+split:
+  rule: "每个站点内按时间 60/20/20 train/validation/test"
+  dev_gate: "train 拟合 reserve 参数，validation 评价"
+  holdout: "6 站 test 单次 exposure，不改 Candidate"
+
+reserve_policies:
+  B0: "global fixed Q95"              # 全天固定一个 reserve
+  B1: "hour-of-day Q95"               # 每小时一个历史 Q95（strong baseline）
+  B2: "rolling empirical Q95"         # 仅用当前时刻之前历史（causal，strong baseline）
+  C:  "hour base × recent-error regime correction"   # 第一版不用 ML
+
+candidate_C:
+  hour_base: "hour-of-day Q95（train）"
+  regime_signal: "rolling std of net-load error，最近 16 步(4h)，causal(shift)"
+  regime_thresholds: "train 上 regime_signal 的 Q33 / Q66"
+  release_factors: {low: 0.5, normal: 0.75, high: 1.0}   # 冻结常数
+
+windows:
+  B2_rolling_steps: 96       # 24h
+  C_regime_steps: 16         # 4h
+
+metrics:
+  target_coverage: 0.95
+  dt_h: 0.25                 # 15min
+  primary: "locked_reserve_kwh_at_95 = Q95(|e|/R) * sum(R) * dt"   # 同可靠性下的锁定量
+  secondary: [locked_kw_avg_at_95, coverage_rate, shortfall_kwh]
+
+gate:
+  primary_metric: "locked_reserve_kwh_at_95"
+  strongest_baseline: "B1/B2 中 locked_reserve_kwh_at_95 更小者"
+  dead_pct_max: 5
+  engineering_pct: [5, 10]
+  observe_pct: [10, 15]
+  worth_pct: [15, 20]
+  strong_pct: 20
+  dev_go: "C 相对 strongest baseline 的 locked_reserve_kwh_at_95 下降 >= 15%"
+  dev_stop: "C 相对 strongest baseline 下降 <= 10%"
+  dev_conditional: "10% < 下降 < 15%"
+
+outputs:
+  results_root: "results/raw/core_search/r3a"
+  report_dev: "reports/core_search/CORE_SEARCH_R3A_DEV_GATE.md"
+  report_holdout: "reports/core_search/CORE_SEARCH_R3A_HOLDOUT_GATE.md"
