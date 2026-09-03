@@ -6,7 +6,9 @@
 > + `core_search/CORE_SEARCH_ROUND4_CANDIDATES.md`。当前结论是 **core-patent status = NO-GO**：
 > 暂无成熟 GO 核心专利。Round 4 Decision #06 已完成，R4-C0 STOP 并正式关闭；R4-A0b
 > 已用 RWTH Aachen 官方 M5BAT 数据集消除 DATA_PENDING，判定 **DATA_SOURCE_RESOLVED / LEVEL B**。
-> R4-A 只允许 tracking-capability gate，不得称 BESS 物理降额；不进入系统层，不启动 Round 5。
+> R4-A1 A1-0/A1a 已跑：官方时区归一口径 A1a 为 STRONG_A1B，但 raw-label diagnostic 为 STOP，
+> 说明 tracking magnitude 对 timestamp 语义高度敏感；A1b 前必须人工复核时区/执行语义。R4-A
+> 只允许 tracking-capability gate，不得称 BESS 物理降额；不进入系统层，不启动 Round 5。
 > E7-FAST/M2 仅保留为 **VALID MODULE / narrow defensive package HOLD**：D2 EV 层 M2 双重上调限制有效，
 > 但不足以支撑系统级核心专利 GO；D3/BESS/PCC 系统效果经 corrective audit 后 train+val FAIL、test
 > CONDITIONAL，只能作弱从属/背景。
@@ -80,6 +82,7 @@ E7-FAST/M2 历史候选包的发明中心（**VALID MODULE / HOLD，不是当前
 | **CORE-SEARCH Round 3 CLOSED**：R3-A/R3-C STOP，R3-D 仅在有真实 thermal data 时重开；当前无成熟 GO 核心专利 | CORE-SEARCH decision | `reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md` |
 | **CORE-SEARCH Round 4 Decision #06**：R4-C0 STOP；R4-A0 原聚合源 DATA_PENDING；不进入系统层 | R4 data gate | `reports/core_search/CORE_SEARCH_DECISION_06_R4_DATA_GATE.md` |
 | **R4-A0b RWTH official audit**：官方源已落地，actual power + optimized schedule + SOC，test_2 原始 timestamp 标签对齐；无 temperature/status/limit/alarm，LEVEL B tracking-only | R4-A official data gate | `reports/core_search/CORE_SEARCH_R4_A0b_RWTH_OFFICIAL_AUDIT.md` |
+| **R4-A1 A1-0/A1a**：官方时区归一对齐 PASS；15min active shortfall ratio 0.696 = STRONG_A1B；raw-label diagnostic 0.015 = STOP，A1b 前需人工复核 timestamp 语义 | R4-A tracking magnitude | `reports/core_search/CORE_SEARCH_R4_A1_TRACKING_GATE.md` |
 
 门判定：**当前 core patent = NO-GO / 无成熟 GO 核心专利**。M2 双重上调限制是 VALID MODULE，
 可作为 narrow defensive package HOLD；Final R1/P1/P2/E7-FAST v3 均为历史阶段线。
@@ -170,7 +173,8 @@ review/          每轮审查结论归档（审查结论2..7）
   当前权威是 `core_search/CORE_SEARCH_MASTER_PLAN.md`、
   `reports/core_search/CORE_SEARCH_DECISION_05_ROUND3_CLOSE.md`、
   `reports/core_search/CORE_SEARCH_DECISION_06_R4_DATA_GATE.md`、
-  `reports/core_search/CORE_SEARCH_R4_A0b_RWTH_OFFICIAL_AUDIT.md`。
+  `reports/core_search/CORE_SEARCH_R4_A0b_RWTH_OFFICIAL_AUDIT.md`、
+  `reports/core_search/CORE_SEARCH_R4_A1_TRACKING_GATE.md`。
   - E7-FAST/M2：D2 EV 层 M2 双重上调限制为 VALID MODULE，可作为 narrow defensive package HOLD。
   - 降级/删除：D3 recovery 已由 P2.1A formal FAIL 删除；D3/BESS/PCC 系统效果经 corrective
     audit 后 train+val FAIL、test CONDITIONAL，只能作弱从属/背景。
@@ -185,8 +189,8 @@ review/          每轮审查结论归档（审查结论2..7）
 ## 10. 下一阶段（R4-A0b 后）
 
 1. **R4-C 正式关闭**：R4-C0 operational 量纲未达门，不进入 R4-C1，不做子集/极端事件救援。
-2. **R4-A 仅允许 tracking-capability gate**：RWTH 官方源达到 LEVEL B，不得称 BESS 物理降额；下一步只能验证 schedule-tracking shortfall 是否相对 SOC-only baseline 有 15–20% 增量。
-3. **不启动 Round 5 / 不进入系统层**：R4-A 未达 LEVEL A，缺 temperature/status/power limit/alarm；若 tracking gate 不过，关闭 R4-A。
+2. **R4-A 仅允许 tracking-capability gate**：RWTH 官方源达到 LEVEL B，不得称 BESS 物理降额；A1a 官方时区口径显示 material shortfall，但 raw-label diagnostic 很弱，A1b 前必须人工复核 timestamp 语义。
+3. **不启动 Round 5 / 不进入系统层**：R4-A 未达 LEVEL A，缺 temperature/status/power limit/alarm；若 A1b 相对 strongest simple baseline 不过，关闭 R4-A。
 
 现有技术边界：单模块 A/B/C/D 全高拥挤；主风险 ACN 族
 （US10926659 / US20200254896A1，同数据源最近邻，observation→conservative constraint→

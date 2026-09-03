@@ -1,0 +1,41 @@
+# CORE-SEARCH R4-A1 -- RWTH M5BAT tracking-capability gate.
+# Runs A1-0 timezone-normalized alignment and A1a tracking magnitude only.
+
+experiment_id: CORE_SEARCH_R4A1
+rule_version: core_search_r4a1_v1
+frozen_date: 2026-09-03
+protocol_source: "CORE_SEARCH R4-A tracking-capability after R4-A0b LEVEL B"
+
+dataset:
+  name: "RWTH Aachen M5BAT schedule dataset"
+  doi: "10.18154/RWTH-2025-06555"
+  dataset_dir: "${data_root}\\RWTH\\Dataset"
+  schedule_timezone_utc_offset_hours: 1
+  measurement_timezone_utc_offset_hours: 2
+  tests: [1, 2]
+
+a1_0_alignment_gate:
+  min_usable_test_count: 1
+  min_schedule_interval_coverage_share: 0.95
+  expected_samples_per_interval: 900
+  min_sample_completeness_share: 0.95
+  primary_alignment: "timezone_normalized_utc"
+  diagnostic_alignment: "raw_label_only"
+
+a1a_magnitude_gate:
+  active_schedule_abs_kw_floor: 100.0
+  relative_error_floor_kw: 100.0
+  large_shortfall_abs_kw: 100.0
+  large_shortfall_relative: 0.10
+  transition_exclusion_seconds: 60
+  verdict_thresholds:
+    stop_lt: 0.10
+    weak_lt: 0.15
+    worth_lt: 0.20
+
+outputs:
+  prereg: "reports/core_search/CORE_SEARCH_R4_A1_PREREG.md"
+  intervals_csv: "results/raw/core_search/r4_a1/rwth_m5bat_a1_intervals.csv"
+  alignment_csv: "results/raw/core_search/r4_a1/rwth_m5bat_a1_alignment.csv"
+  summary_csv: "results/raw/core_search/r4_a1/rwth_m5bat_a1_summary.csv"
+  report: "reports/core_search/CORE_SEARCH_R4_A1_TRACKING_GATE.md"

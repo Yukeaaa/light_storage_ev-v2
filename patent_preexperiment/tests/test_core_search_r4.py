@@ -6,6 +6,7 @@ import pandas as pd
 
 from patent_preexperiment.core_search.r4_decision import choose_r4_route
 from patent_preexperiment.core_search.r4a0b_rwth import _data_level
+from patent_preexperiment.core_search.r4a1_tracking import _direction, _max_run, _top_n_share
 from patent_preexperiment.core_search.r4c0_evse import _eventize_fault_rows, _fault_family, _gate
 
 
@@ -86,3 +87,11 @@ def test_r4a0b_level_b_requires_aligned_schedule():
     }
     assert _data_level(fields, [{"raw_timestamp_aligned": True}], 4, 4) == "B"
     assert _data_level(fields, [{"raw_timestamp_aligned": False}], 4, 4) == "C"
+
+
+def test_r4a1_helpers():
+    assert _direction(-1.0) == "charge"
+    assert _direction(1.0) == "discharge"
+    assert _direction(0.0) == "idle"
+    assert _max_run(pd.Series([True, True, False, True])) == 2
+    assert _top_n_share(pd.Series([1.0, 2.0, 7.0]), 1) == 0.7

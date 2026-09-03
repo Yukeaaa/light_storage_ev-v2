@@ -11,8 +11,10 @@
 > infrastructure event audit = STOP 并正式关闭，不进入 R4-C1，不做子集/极端事件救援。R4-A0
 > 原 Iontech/Aachen 本地聚合源为 DATA_PENDING；R4-A0b 已落地 RWTH Aachen 官方 M5BAT 数据集
 > （DOI 10.18154/RWTH-2025-06555），判定 **DATA_SOURCE_RESOLVED / LEVEL B**。
-> 当前结论：**R4-A_TRACKING_HOLD / no system layer**；只允许 tracking-capability gate，
-> 不得称 BESS 物理降额，不启动 Round 5。
+> R4-A1 A1-0/A1a 已完成：官方时区归一口径 A1-0 PASS、A1a STRONG_A1B
+> （equivalent shortfall ratio 0.696），但 raw-label diagnostic 为 STOP（0.015）。当前结论：
+> **R4-A_TRACKING_HOLD / timestamp semantics review required / no system layer**；只允许
+> tracking-capability gate，不得称 BESS 物理降额，不启动 Round 5。
 >
 > **与 V2.0 协议的关系**：本阶段不改 V2.0 的实验编号（E0–E8）与门标准，而是新增一条
 > "系统级核心专利筛选"工作流。V2.0 已完成的 EV 侧机制证据（P2 NARROW GO）作为本阶段的
