@@ -76,10 +76,11 @@ P1 只接受同一 transformer / same timeline 的数据链。最小字段：
 只有同时满足：
 
 ```text
-schema 7/7
+data-contract schema PASS
 + independently verified semantics
 + real constraint/state variation exists
 + preliminary system-scale effect exists
++ R5 seven-criteria = 7/7 on the same causal chain
 ```
 
 才允许把 Round 5 从 NOT STARTED 改为 STARTED。
