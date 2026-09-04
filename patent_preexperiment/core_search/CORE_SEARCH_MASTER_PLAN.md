@@ -11,9 +11,9 @@
 > = STOP（timestamp/metric semantics unresolved；`09419f3` STRONG suspended；A1b/system layer
 > blocked）；R4-C EVSE availability = CLOSED（operational magnitude insufficient）；R4-B transformer
 > thermal = DEFER / real thermal telemetry only；R4-D PV/PCS availability = NOT STARTED / adequate
-> real state data required。Round 1-4 retrospective 已冻结 Round 5 七条启动条件；R5-P0 pre-launch
-> data scouting 初筛 P1-P4 后，0 个 family 满足 7/7。当前结论：**core-patent status = NO-GO /
-> Round 5 NOT STARTED**。
+> real state data required。Round 1-4 retrospective 已冻结 Round 5 七条启动条件；R5-P0/P0b
+> pre-launch data scouting 初筛并 targeted search P1/P2 后，0 个 family 满足 7/7。当前结论：
+> **core-patent status = NO-GO / Round 5 NOT STARTED**。
 >
 > **与 V2.0 协议的关系**：本阶段不改 V2.0 的实验编号（E0–E8）与门标准，而是新增一条
 > "系统级核心专利筛选"工作流。V2.0 已完成的 EV 侧机制证据（P2 NARROW GO）作为本阶段的
