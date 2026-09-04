@@ -17,12 +17,12 @@ P1 transformer thermal 与 P2 PV/PCS 有可继续做数据门的近邻候选；P
 
 ## 2. Family Screen
 
-| family | best public lead | criteria pass | verdict | reason |
-|---|---|---:|---|---|
-| P1 Transformer dynamic thermal capacity | Zenodo/DynaLoad in-service 40 MVA transformer | 5/7 | **DATA-SEED ONLY** | 有 current、ambient、top/bottom oil、hotspot；缺 explicit protection/status/thermal-limit 与执行约束端 |
-| P2 PV inverter / PCS available-power boundary | AEMO/ERCOT dispatch feeds + PVDAQ/Solar Data Prize | 5/7 split-source | **SPLIT-SOURCE HOLD** | market feeds 有 dispatch/limit/actual，PVDAQ 有 irradiance/DC/AC；未发现同一数据源含 setpoint/limit/state/actual/irradiance 全链 |
-| P3 DC charger power-module available capacity | UCLA/OCPP、INL/EV Project、EV WATTS 等 | 3/7 | **PUBLIC DATA NO-GO** | 公开源多为 session/OCPP/status，缺模块级 temperature/fault/derating/limit 与 commanded/actual 同链 |
-| P4 BESS rack/PCS protection-limited envelope | Mafate microgrid、UCSD、Pecan Street | 4/7 | **PUBLIC DATA NO-GO** | 有真实 battery/microgrid actual 或 physical state 近邻，但缺 command/setpoint、SOC、explicit limit/alarm/status 全链 |
+| family | best public lead | family evidence coverage | single-source eligibility | verdict | reason |
+|---|---|---:|---|---|---|
+| P1 Transformer dynamic thermal capacity | Zenodo/DynaLoad in-service 40 MVA transformer | 5/7 | FAIL | **DATA-SEED ONLY** | 有 current、ambient、top/bottom oil、hotspot；缺 explicit protection/status/thermal-limit 与执行约束端 |
+| P2 PV inverter / PCS available-power boundary | AEMO/ERCOT dispatch feeds + PVDAQ/Solar Data Prize | 6/7 across split sources | FAIL | **SPLIT-SOURCE HOLD** | market feeds 有 dispatch/limit/actual，PVDAQ 有 irradiance/DC/AC；未发现同一数据源含 setpoint/limit/state/actual/irradiance 全链 |
+| P3 DC charger power-module available capacity | UCLA/OCPP、INL/EV Project、EV WATTS 等 | 3/7 | FAIL | **PUBLIC DATA NO-GO** | 公开源多为 session/OCPP/status，缺模块级 temperature/fault/derating/limit 与 commanded/actual 同链 |
+| P4 BESS rack/PCS protection-limited envelope | Mafate microgrid、UCSD、Pecan Street | 4/7 | FAIL | **PUBLIC DATA NO-GO** | 有真实 battery/microgrid actual 或 physical state 近邻，但缺 command/setpoint、SOC、explicit limit/alarm/status 全链 |
 
 详表见 `results/raw/core_search/r5_p0/r5_p0_family_screen.csv`。
 
@@ -66,13 +66,14 @@ Round 5 七条启动条件逐 family 结果：
 | family | C1 real data | C2 requirement+actual | C3 physical state | C4 system magnitude | C5 baseline | C6 semantics | C7 non-isomorphic | pass |
 |---|---|---|---|---|---|---|---|---:|
 | P1 | PASS | PARTIAL | PASS | PARTIAL | PASS | PASS | PASS | 5/7 |
-| P2 | PASS | PASS | PARTIAL | PASS | PASS | PASS | PASS | 5/7 split-source |
+| P2 | PASS | PASS | PARTIAL | PASS | PASS | PASS | PASS | 6/7 across split sources; single-source FAIL |
 | P3 | PASS | FAIL | FAIL | PARTIAL | PARTIAL | PASS | PASS | 3/7 |
 | P4 | PASS | FAIL | PARTIAL | PARTIAL | PASS | PARTIAL | PASS | 4/7 |
 
 ## 5. Freeze Rules
 
 - 0 个 family 满足 7/7，因此 Round 5 继续 NOT STARTED。
+- Round 5 七条条件必须在同一可因果对齐的数据源/设备链上判定；不同数据源的 PASS 不得相加形成 7/7。
 - P1 只有在补到真实 thermal limit/protection/status 或等价约束端后，才可进入数据门。
 - P2 只有在同一数据源内看到 setpoint/limit/state/actual/irradiance 或 DC input 全链后，才可进入数据门。
 - P3 只有拿到 DC charger module-level operator/OEM telemetry 后，才可重评。
