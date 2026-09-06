@@ -1,5 +1,7 @@
 # RD-2_M5BAT单元级执行偏差与状态相关性_任务卡
 
+> **状态（2026-09-06）：已执行，硬门 FAIL → STOP**。CI 下界 −0.374 < 0（improvement +0.214 kW），按 §5 预注册规则无救援。结果见 `RD-2_执行偏差分析结果.md`；RD-1+RD-2 双 STOP，M5BAT 线对 E4 素材贡献穷尽。
+
 > 建立（UTC）：2026-09-06
 > 性质：B 轨 discovery task，RD-1 STOP AT A1 的继任任务（RD-1 终判见 `RD-1_A0A1_口径冻结与一致性核验.md` §8）。**本卡在看任何单元级 schedule-vs-actual 残差结果之前冻结**（预注册）。不是核心专利证据程序；Round 5 = NOT STARTED 不变。
 > 口径继承：`configs/research_discovery/rd1_a0.yaml`（rd1_a0_v1）全部语义冻结继续有效。
