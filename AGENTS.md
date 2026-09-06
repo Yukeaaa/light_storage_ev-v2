@@ -45,3 +45,7 @@
 - 仓库根有 `venv/`（Python 3.12.7），当前工程配置在 `patent_preexperiment/pyproject.toml`：Python ≥3.11、src 布局、pytest（testpaths=tests, pythonpath=src）、ruff（line-length=100, select E/F/I/UP/B）、mypy strict；依赖 pandas/pyarrow/PyYAML/matplotlib，dev 依赖含 pytest/ruff/mypy。
 - 常规验证在 `patent_preexperiment/` 下运行：`..\venv\Scripts\python.exe -m pytest` 与 `..\venv\Scripts\ruff.exe check`。CI 应同时执行 pytest 与 ruff，避免测试绿但质量门不绿。
 - acn_project 的构建脚本（`ACN-data/*.py`）依赖 `ACN-data\.venv` 里的 pandas/pyarrow/acnportal，复现基准时用那个环境。
+
+## 文档命名约定（2026-09-06 起）
+
+- 新增报告/文档一律用中文文件名，保留 CORE-SEARCH、R5-P2 等编号与判定锚点（如 `CORE-SEARCH_R5_P2_OpenCEM数据准入前审计_REJECT判定.md`）；正文优先中文，注意可读性。已有英文命名的历史文件不回溯改名。
