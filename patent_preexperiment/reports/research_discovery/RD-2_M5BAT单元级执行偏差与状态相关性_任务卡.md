@@ -29,7 +29,7 @@
 ## 3. 数据与样本平面（冻结）
 
 - 仅 **test_2**（schedule 与 measurement 原始标签对齐）；test_1 schedule 不对齐，排除。
-- 分析单元：15 min schedule 区间 × 4 单元 = **1,088 个单元-区间**（288 × 4，去除无 actual 覆盖者后以实际计）。样本量小，功效有限——结论措辞必须与此匹配。
+- 分析单元：15 min schedule 区间 × 4 单元 = 288 × 4 = **1,152 个单元-区间**（去除无 actual 覆盖者后以实际计；执行结果确认全区间无缺失）。样本量小，功效有限——结论措辞必须与此匹配。
 - 区间 actual = 该区间内 1 s 实测的均值；**剔除每个区间首 60 s**（依据 A1 站级瞬态发现：设置点阶跃后站/单元表 1–2 s 不同步，60 s 为固定卫生窗，非调参对象）。
 - 残差定义：`residual_i(t) = actual_mean_i(t) − schedule_i(t)`（kW；另报 rated 归一值 /630，标 estimated）。
 - 方向：按区间 schedule 符号分 discharge(≥0)/charge(<0)；schedule=0 的区间 actual 即残差，计入。
