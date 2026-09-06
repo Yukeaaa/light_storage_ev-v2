@@ -1,5 +1,7 @@
 # RD-1_M5BAT多单元响应异质性_任务卡
 
+> **状态（2026-09-06）：STOP AT A1** —— 站级一致性硬门 FAIL（原 station↔unit 归因链不成立），终判见 `RD-1_A0A1_口径冻结与一致性核验.md` §8。单元平面方向由继任任务 RD-2 重新预注册承接；本卡 A2–A5 不再执行。
+
 > 建立（UTC）：2026-09-06
 > 轨道：B 轨 research discovery（见 `../patent_definition/04_专利目标冻结_多设备动态可用能力边界与协同功率控制.md` §7）。不挂 R5，不是核心专利证据程序，不启动 Round 5。
 > 数据：RWTH M5BAT 官方数据集 DOI 10.18154/RWTH-2025-06555，本地 `D:\Users\Micko\Documents\工作\华润集控\光储充\数据\RWTH\Dataset\`（4 个 CSV；另有 `Supplementary_file.pdf`、`AppliedEnergy_1024855.pdf`）。本地可访问性 2026-09-06 确认。

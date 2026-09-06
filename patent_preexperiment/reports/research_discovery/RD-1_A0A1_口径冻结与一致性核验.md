@@ -71,3 +71,22 @@ A1 处置            = 待门所有者决定：按 gate 原文 STOP，或按单�
 ## 7. 复现
 
 `configs/research_discovery/rd1_a0.yaml` + 本报告 §2–§4 的查询逻辑；指标数值见 `results/raw/research_discovery/rd1_a1_consistency_metrics.csv`。数据本地路径与哈希来源见 R4-A0b（DOI 10.18154/RWTH-2025-06555）。
+
+## 8. 最终判定（2026-09-06 用户裁定）
+
+```text
+RD-1 = STOP AT A1
+
+A0 = PASS
+A1 = FAIL FOR ORIGINAL STATION-LEVEL ATTRIBUTION GATE
+```
+
+原因不是数据坏 / 单元不同步 / 符号错误，而是：站级测量边界含稳定辅电/损耗与瞬态项；schedule 站级列与单元列属于不同功率平面——**原任务要求的 station ↔ unit attribution chain 不成立**。原隐含结构 `station schedule ≈ Σ unit schedule ≈ Σ unit actual ≈ station actual` 本身是错的；这是本 STOP 的语义发现，不构成过门理由。
+
+裁定要点（门所有者原话口径）：
+
+1. **不得事后修改硬门对象**。容差未预注册已如实披露；此时把"站级闭合"改成"单元平面足够干净"属 post-hoc rescue，禁止。
+2. A0 新事实（开销模型、净交换语义）支持**新任务定义**，不支持原任务过门。
+3. 单元平面目前**不能直接验证完整 E4**（缺站级触发、责任判定、定向转移、回灌四环），只能验证"计划→执行→偏差→状态解释"段。
+
+单元平面方向不丢弃，作为新任务 **RD-2** 重新预注册后执行（见 `RD-2_M5BAT单元级执行偏差与状态相关性_任务卡.md`）。RD-1 的 A0 语义冻结（rd1_a0.yaml）对 RD-2 继续有效。
