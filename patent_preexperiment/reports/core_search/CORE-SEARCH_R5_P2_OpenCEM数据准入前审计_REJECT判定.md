@@ -14,7 +14,7 @@ R5 eligibility = FAIL（single-source）
 Round 5 = NOT STARTED（不变）
 ```
 
-OpenCEM 是公开源里第一个把 P2 合同六端字段**全部以真实时间序列形式存在**的数据集（schema gate 命名层 PASS）。但实证查询显示 limit 端（`ongridactivepowerset` 等）**恒为 0/恒定**，且 `remotectrlstatus` 恒定——**系统不存在外部命令路径**，全年自发运行。P2 的核心证据要求是约束/可用性变化与实际能力的可观测差异；没有变化的 limit 不能提供该证据。OpenCEM 不能触发 Round 5，P2 intake 仍为空。
+OpenCEM 是公开源里第一个把 P2 合同六端字段**全部以真实时间序列形式存在**的数据集（schema gate 命名层 PASS）。但实证查询显示 limit 端（`ongridactivepowerset` 等）**恒为 0/恒定**，`remotectrlstatus` 全期无变化——公开数据时间线上未观察到可识别的外部有功命令/curtailment 激活事件。P2 的核心证据要求是约束/可用性变化与实际能力的可观测差异；没有变化的 limit 不能提供该证据。OpenCEM 不能触发 Round 5，P2 intake 仍为空。
 
 ## 2. 数据源事实（一手核实）
 
@@ -37,7 +37,7 @@ OpenCEM 是公开源里第一个把 P2 合同六端字段**全部以真实时间
 | 合同字段组 | OpenCEM 候选 | schema 层 | 实证 |
 |---|---|---|---|
 | identity/time | `read_ts`(UTC) + `inverter`(1/2)；specs 表（机型/序列/硬件与 BMS 版本） | PASS | PASS |
-| requirement/limit | settings 表：`ongridactivepowerset`(W)、`ongridreactivepowerset`、`maxlinepower`(W)、`maxchgcurrset`/`chgcurrbypvset`/`chgcurrbylineset`/`chgfullcurrset`(A)、`powerturboen` 等 | 字段存在 | **FAIL：恒定/伪迹，无真实变化，无外部命令路径**（见 §4） |
+| requirement/limit | settings 表：`ongridactivepowerset`(W)、`ongridreactivepowerset`、`maxlinepower`(W)、`maxchgcurrset`/`chgcurrbypvset`/`chgcurrbylineset`/`chgfullcurrset`(A)、`powerturboen` 等 | 字段存在 | **FAIL：恒定/无真实变化；公开时间线未观察到外部命令激活事件**（见 §4） |
 | execution（AC 实际） | analog 表：`outw_a/b/c`、`outsumw/outsumva`、`generatedpowerp/s/q_a/b/c`、`gridpowerw_a/b/c`、`linepowerw_a` | PASS | PASS |
 | physical availability（DC/PV 输入） | `pv1volt/pv1curr/pv1power`（pv2/pv3 结构性空）、`battvolt/battcurr/battsoc/battchgpower` | PASS | PASS |
 | state/status | status 表：`deroperationstate/derconnectstate/deralarmstatus/derinverterstate/derbattstate/remotectrlstatus`、`sysalarmflag`、`outstatus/chgstatus`；fault_history 表 | 字段存在 | 部分真实变化（告警/输出状态/故障），der* 单值未解码 |
@@ -52,9 +52,9 @@ OpenCEM 是公开源里第一个把 P2 合同六端字段**全部以真实时间
 - `ongridactivepowerset`：**distinct=1，恒 0**（2,225,971 行非空全为 0）。有功设定从未启用。
 - `ongridreactivepowerset`：**恒 0**。
 - `maxchgcurrset`≡80 A、`chgcurrbypvset`≡80 A、`chgcurrbylineset`≡15 A、`chgfullcurrset`≡3 A、`powerturboen`≡0：**全年恒定**。
-- `maxlinepower` ∈ {5600, 6200} W：inv1 内 106,333 个变点、与同时刻 `battvolt` 无相关（两值横跨同一电压区间 47.7–57.5 V）→ **寄存器抖动/派生伪象，非可信限值轨迹**；且语义上是市电功率配置，不是 curtailment 命令。
+- `maxlinepower` ∈ {5600, 6200} W：inv1 内 106,333 个变点。其 P2 active-power-limit 生效语义无法独立复核，且取值切换与已检查的候选物理状态（同时刻 `battvolt`，47.7–57.5 V 横跨两值）无明确对应；因此**不接受为可信的 P2 requirement/limit 事件轨迹**——只判定不可用，不判定其为数据伪象（厂家寄存器语义未解码，见 §5）。
 - 全表仅 10/174 列有任何变化：时钟（presenttime）、保留数组、若干一次性二值配置（outpriority/chgpriority/batteodvolt/battfullsoc/battpackrateah 等）。**无任何运营上变化的功率设定/限值/curtailment 命令。**
-- `remotectrlstatus` 恒定 → **无外部命令路径**：系统全年自发运行，不存在 dispatch/curtailment 输入。
+- `remotectrlstatus` 全期无变化，且 `ongridactivepowerset` 全期为 0：公开时间线中未观察到可识别的外部有功命令/curtailment 激活事件，无法建立变化的 external-requirement 因果端。语义未解码前，不把"没观察到"升级为"架构上不存在"（不排除本地控制器/未记录接口/未发布命令表）。
 
 结论：因果链第一环（external requirement / explicit limit）在 OpenCEM 的运行史里没有真实变化事件，后续 effect gate 无从谈起。
 
@@ -71,7 +71,7 @@ OpenCEM 是公开源里第一个把 P2 合同六端字段**全部以真实时间
 |---|---|
 | 1 Schema gate | PASS（命名层；公开源中首个 P2 六组字段全有的源） |
 | 2 Semantics gate | NOT PASS（寄存器数组未解码，需厂家协议文档；因 3 已 FAIL 不再推进） |
-| 3 Event-existence gate | **FAIL**（requirement/limit 端无真实变化，无外部命令路径，§4） |
+| 3 Event-existence gate | **FAIL**（requirement/limit 端无真实变化；公开时间线未观察到外部命令激活事件，§4） |
 | 4 Effect gate | 未到达 |
 | 5 R5 seven-criteria | FAIL（single-source；因果链首端无真实变体） |
 
@@ -86,7 +86,7 @@ allowed:
 - PV 天空图像 + 测量 + 文本上下文的多模态参考；benchmark/calibration
 
 not allowed:
-- 作为 P2 requirement/limit 证据（恒 0，无约束轨迹，无外部命令路径）
+- 作为 P2 requirement/limit 证据（恒 0；公开时间线未观察到约束变化/外部命令激活事件）
 - 作为 problem-existence / 因果设备状态 / 闭环系统收益证据
 - 在未解码寄存器语义前引用 fault/alarm 数组结论
 - 拼接其他源凑 P2 因果链（同 R5 不相加规则）
