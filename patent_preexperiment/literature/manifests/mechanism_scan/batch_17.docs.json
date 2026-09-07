@@ -1,0 +1,41 @@
+[
+ {
+  "lit_id": 52,
+  "sublib": "大模型",
+  "filename": "统筹发展与安全：智能体治理的范式转换、路径探索与制度回应.pdf",
+  "doc_type": "期刊专题组文",
+  "pub_no": "电子政务2026(7)",
+  "org": "中国信通院等",
+  "year": "2026",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|智能体治理政策解读：身份/权限/协议治理",
+  "path": "converted\\大模型\\统筹发展与安全：智能体治理的范式转换、路径探索与制度回应.md",
+  "bytes": 209259
+ },
+ {
+  "lit_id": 60,
+  "sublib": "大模型",
+  "filename": "多智能体强化学习理论及其应用综述.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "模式识别与人工智能37(10)",
+  "org": "西安交通大学等",
+  "year": "2024",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|MARL五大理论困境与解法综述",
+  "path": "converted\\大模型\\多智能体强化学习理论及其应用综述.md",
+  "bytes": 186499
+ },
+ {
+  "lit_id": 93,
+  "sublib": "大模型",
+  "filename": "基于大模型与智能体协同的电力交易数据交互方法及系统.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN120765383A",
+  "org": "广东电力交易中心",
+  "year": "2025",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|交易数据交互",
+  "path": "converted_ocr\\大模型\\基于大模型与智能体协同的电力交易数据交互方法及系统.fulltext.md",
+  "bytes": 64037
+ }
+]

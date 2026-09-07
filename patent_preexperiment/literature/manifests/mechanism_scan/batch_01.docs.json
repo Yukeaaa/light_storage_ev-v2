@@ -1,0 +1,54 @@
+[
+ {
+  "lit_id": 1,
+  "sublib": "顶层",
+  "filename": "电动汽车光储充一体化电站运营管理和设施规划综述.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "交通运输工程学报(网络首发)",
+  "org": "合肥工业大学等",
+  "year": "2026",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|光储充站规划+运营两域综述，多时间尺度滚动调度趋势",
+  "path": "converted\\顶层\\电动汽车光储充一体化电站运营管理和设施规划综述.md",
+  "bytes": 141856
+ },
+ {
+  "lit_id": 11,
+  "sublib": "顶层",
+  "filename": "光储充一体化电站建设关键技术研究.pdf",
+  "doc_type": "期刊论文",
+  "pub_no": "电力与能源38(6)",
+  "org": "上海电力设计院",
+  "year": "2017",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|2017年早期光储充站方案与谷充峰放经济运行",
+  "path": "converted\\顶层\\光储充一体化电站建设关键技术研究.md",
+  "bytes": 37682
+ },
+ {
+  "lit_id": 56,
+  "sublib": "大模型",
+  "filename": "电力人工智能技术研究框架、应用现状及展望.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "电网技术49(5)",
+  "org": "中国电科院",
+  "year": "2025",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|EPAI五向技术图谱+成熟度评估",
+  "path": "converted\\大模型\\电力人工智能技术研究框架、应用现状及展望.md",
+  "bytes": 139241
+ },
+ {
+  "lit_id": 57,
+  "sublib": "大模型",
+  "filename": "电力设备数智化发展历程与大语言模型智能体应用展望.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "高电压技术51(8)",
+  "org": "清华/南网数研院",
+  "year": "2025",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|设备运维LLM智能体五层框架设想",
+  "path": "converted\\大模型\\电力设备数智化发展历程与大语言模型智能体应用展望.md",
+  "bytes": 141280
+ }
+]

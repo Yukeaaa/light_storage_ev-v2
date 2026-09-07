@@ -1,0 +1,80 @@
+[
+ {
+  "lit_id": 2,
+  "sublib": "顶层",
+  "filename": "光储充建一体站微电网研究综述.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "电力科学与技术学报39(1)",
+  "org": "长沙理工大学",
+  "year": "2024",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|光储充放+智能建筑一体站综述，指出储能浮充闲置统筹难",
+  "path": "converted\\顶层\\光储充建一体站微电网研究综述.md",
+  "bytes": 78655
+ },
+ {
+  "lit_id": 19,
+  "sublib": "顶层",
+  "filename": "一种光储充协同调度方法.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN118739352A",
+  "org": "山东浪潮智慧能源",
+  "year": "2024",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|监控数据异常检测+知识库修复+功率调整任务",
+  "path": "converted_ocr\\顶层\\一种光储充协同调度方法.fulltext.md",
+  "bytes": 76503
+ },
+ {
+  "lit_id": 20,
+  "sublib": "顶层",
+  "filename": "一种光储充并网装置协议转换与通信适配系统.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN120729963A",
+  "org": "辽宁东科电力",
+  "year": "2025",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|异构协议转换+边缘通信适配",
+  "path": "converted_ocr\\顶层\\一种光储充并网装置协议转换与通信适配系统.fulltext.md",
+  "bytes": 84251
+ },
+ {
+  "lit_id": 35,
+  "sublib": "顶层",
+  "filename": "基于IPSO的光储充一体化充电场站日前调度优化方法.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN121332532A",
+  "org": "国网安徽蚌埠供电",
+  "year": "2025",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|动态电价+多目标IPSO日前调度",
+  "path": "converted_ocr\\顶层\\基于IPSO的光储充一体化充电场站日前调度优化方法.fulltext.md",
+  "bytes": 63557
+ },
+ {
+  "lit_id": 99,
+  "sublib": "大模型",
+  "filename": "基于提示词增强与动态编排的智能体系统构建方法及装置.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN122346481A",
+  "org": "中国电科院等",
+  "year": "2026",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|智能体编排+NL2SQL",
+  "path": "converted_ocr\\大模型\\基于提示词增强与动态编排的智能体系统构建方法及装置.fulltext.md",
+  "bytes": 73456
+ },
+ {
+  "lit_id": 104,
+  "sublib": "大模型",
+  "filename": "配电网重构的大模型动态调用启发式优化方法及求解器.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN122047017A",
+  "org": "浙江大学/国网浙江电科院",
+  "year": "2026",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|LLM调度中枢+启发式模型库配网重构",
+  "path": "converted_ocr\\大模型\\配电网重构的大模型动态调用启发式优化方法及求解器.fulltext.md",
+  "bytes": 81042
+ }
+]

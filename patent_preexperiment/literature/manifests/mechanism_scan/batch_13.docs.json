@@ -1,0 +1,67 @@
+[
+ {
+  "lit_id": 32,
+  "sublib": "顶层",
+  "filename": "光储充一体化装置能源管理系统.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN122092292A",
+  "org": "山东平安电气集团",
+  "year": "2026",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|六模块EMS(采集/预测/优化/控制/健康/策略学习)",
+  "path": "converted_ocr\\顶层\\光储充一体化装置能源管理系统.fulltext.md",
+  "bytes": 96147
+ },
+ {
+  "lit_id": 66,
+  "sublib": "大模型",
+  "filename": "大模型技术在电力行业的应用展望.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "图学学报45(6)",
+  "org": "保定电院/国网冀北",
+  "year": "2024",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|大模型在调度/巡检/客服三场景应用",
+  "path": "converted\\大模型\\大模型技术在电力行业的应用展望.md",
+  "bytes": 84542
+ },
+ {
+  "lit_id": 68,
+  "sublib": "大模型",
+  "filename": "大模型在电力行业的应用与挑战.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "发电技术46(4)",
+  "org": "浙江大学/华电电科院",
+  "year": "2025",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|LLM落地四类实现技术+应用综述",
+  "path": "converted\\大模型\\大模型在电力行业的应用与挑战.md",
+  "bytes": 81395
+ },
+ {
+  "lit_id": 70,
+  "sublib": "大模型",
+  "filename": "一种人工智能能力综合评价系统及方法.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN121639034A",
+  "org": "华北电力大学",
+  "year": "2025",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|AI能力四维指标评价系统",
+  "path": "converted_ocr\\大模型\\一种人工智能能力综合评价系统及方法.fulltext.md",
+  "bytes": 103974
+ },
+ {
+  "lit_id": 106,
+  "sublib": "大模型",
+  "filename": "面向云上电力信息系统的多智能体协同决策的运维平台.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN121213059A",
+  "org": "国网陕西信通/西电",
+  "year": "2025",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|云上运维平台",
+  "path": "converted_ocr\\大模型\\面向云上电力信息系统的多智能体协同决策的运维平台.fulltext.md",
+  "bytes": 93484
+ }
+]

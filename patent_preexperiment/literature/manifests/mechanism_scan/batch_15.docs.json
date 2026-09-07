@@ -1,0 +1,93 @@
+[
+ {
+  "lit_id": 44,
+  "sublib": "可信",
+  "filename": "状态感知的可信执行环境内核模糊测试方法.pdf",
+  "doc_type": "期刊论文",
+  "pub_no": "信息安全研究12(3)",
+  "org": "辽宁工程技术大学",
+  "year": "2026",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|TEE内核状态感知模糊测试",
+  "path": "converted\\可信\\状态感知的可信执行环境内核模糊测试方法.md",
+  "bytes": 70890
+ },
+ {
+  "lit_id": 46,
+  "sublib": "可信",
+  "filename": "基于可信计算和主动决策的新能源电力系统日前调度方法.pdf",
+  "doc_type": "期刊论文",
+  "pub_no": "河南科学41(2)",
+  "org": "国网新疆/中科院沈阳计算所",
+  "year": "2023",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|用户可信度访问控制+弃风减排日前调度",
+  "path": "converted\\可信\\基于可信计算和主动决策的新能源电力系统日前调度方法.md",
+  "bytes": 71294
+ },
+ {
+  "lit_id": 67,
+  "sublib": "大模型",
+  "filename": "人工智能大模型在电力系统运行控制中的应用综述及展望.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "武汉大学学报(工学版)56(11)",
+  "org": "武汉大学",
+  "year": "2023",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|GPT-4解析+五维运行调控展望",
+  "path": "converted\\大模型\\人工智能大模型在电力系统运行控制中的应用综述及展望.md",
+  "bytes": 63233
+ },
+ {
+  "lit_id": 84,
+  "sublib": "大模型",
+  "filename": "一种用于电力设备的知识数据库构建方法及系统.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN121705378A",
+  "org": "国网河南荥阳供电",
+  "year": "2025",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|RAG设备知识库",
+  "path": "converted_ocr\\大模型\\一种用于电力设备的知识数据库构建方法及系统.fulltext.md",
+  "bytes": 67992
+ },
+ {
+  "lit_id": 94,
+  "sublib": "大模型",
+  "filename": "基于大模型的新能源发电设备健康管理平台.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN120725657A",
+  "org": "中国能建西南院等",
+  "year": "2025",
+  "evidence": "ocr",
+  "prior_hint": "片段级|S3概念邻域:孪生仿真驱动的动态健康基准/阈值随工况调整(非偏差确认)|数字孪生动态健康基准平台",
+  "path": "converted_ocr\\大模型\\基于大模型的新能源发电设备健康管理平台.fulltext.md",
+  "bytes": 62775
+ },
+ {
+  "lit_id": 95,
+  "sublib": "大模型",
+  "filename": "基于大模型的电力交易数据分析报告自动生成方法及系统.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN121745062A",
+  "org": "广东电力交易中心",
+  "year": "2026",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|交易分析报告生成",
+  "path": "converted_ocr\\大模型\\基于大模型的电力交易数据分析报告自动生成方法及系统.fulltext.md",
+  "bytes": 62193
+ },
+ {
+  "lit_id": 101,
+  "sublib": "大模型",
+  "filename": "基于电力大模型的变电站智能巡视数据分析方法.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN122022771A",
+  "org": "国网河南信通等",
+  "year": "2026",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|变电站巡视诊断",
+  "path": "converted_ocr\\大模型\\基于电力大模型的变电站智能巡视数据分析方法.fulltext.md",
+  "bytes": 62338
+ }
+]

@@ -1,0 +1,80 @@
+[
+ {
+  "lit_id": 7,
+  "sublib": "顶层",
+  "filename": "园区级光储充一体化系统关键技术研究.pdf",
+  "doc_type": "期刊文章",
+  "pub_no": "科技与创新2025(8)",
+  "org": "福建网能科技等",
+  "year": "2025",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|园区光储充构成与6种运行模式工程介绍",
+  "path": "converted\\顶层\\园区级光储充一体化系统关键技术研究.md",
+  "bytes": 21988
+ },
+ {
+  "lit_id": 12,
+  "sublib": "顶层",
+  "filename": "光储充一体化电站能量管理关键技术研究.pdf",
+  "doc_type": "期刊论文",
+  "pub_no": "中国高新科技2024(22)",
+  "org": "阳光电源(南京)",
+  "year": "2024",
+  "evidence": "markitdown",
+  "prior_hint": "片段级|S4弱覆盖:配变越限→储能优先承接→按功率差额逐台降桩功率|工程级联调整，与站级预算跟踪/功率重分配邻域最近，无偏差归因与边界语义",
+  "path": "converted\\顶层\\光储充一体化电站能量管理关键技术研究.md",
+  "bytes": 19624
+ },
+ {
+  "lit_id": 13,
+  "sublib": "顶层",
+  "filename": "基于光储充一体化及分体式充电的新能源充电系统研究_李国军.pdf",
+  "doc_type": "期刊论文",
+  "pub_no": "电力设备管理(推断)",
+  "org": "中铁工程机械研究院",
+  "year": "2026",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|1kV直流母线光储充+640kW分体式充电集成工程",
+  "path": "converted\\顶层\\基于光储充一体化及分体式充电的新能源充电系统研究_李国军.md",
+  "bytes": 15626
+ },
+ {
+  "lit_id": 28,
+  "sublib": "顶层",
+  "filename": "一种基于边缘物联代理的分布式光储充调控系统.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN110855006A",
+  "org": "许继电气",
+  "year": "2019",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|边缘代理就地计算可用功率并调配光储充",
+  "path": "converted_ocr\\顶层\\一种基于边缘物联代理的分布式光储充调控系统.fulltext.md",
+  "bytes": 22341
+ },
+ {
+  "lit_id": 47,
+  "sublib": "可信",
+  "filename": "可信数据空间发展行动计划（2024—2028年）.pdf",
+  "doc_type": "政策文件",
+  "pub_no": "国家数据局等(推断)",
+  "org": "国家层面",
+  "year": "2024",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|可信数据空间五年行动纲领",
+  "path": "converted\\可信\\可信数据空间发展行动计划（2024—2028年）.md",
+  "bytes": 22320
+ },
+ {
+  "lit_id": 50,
+  "sublib": "可信",
+  "filename": "南网构建能源可信数据新生态.pdf",
+  "doc_type": "新闻报道",
+  "pub_no": "中国能源报2025-09-01(2版)",
+  "org": "中国能源报",
+  "year": "2025",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|南网能源可信数据空间试点进展(车桩网供需互动场景)",
+  "path": "converted\\可信\\南网构建能源可信数据新生态.md",
+  "bytes": 8473
+ }
+]

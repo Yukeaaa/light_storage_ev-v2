@@ -1,0 +1,28 @@
+[
+ {
+  "lit_id": 53,
+  "sublib": "大模型",
+  "filename": "多智能体强化学习：从基础理论到前沿算法.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "电子学报53(12)",
+  "org": "河海大学/东北大学",
+  "year": "2025",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|MARL理论到LLM-MARL/安全MARL前沿综述",
+  "path": "converted\\大模型\\多智能体强化学习：从基础理论到前沿算法.md",
+  "bytes": 377629
+ },
+ {
+  "lit_id": 105,
+  "sublib": "大模型",
+  "filename": "针对电力通信网运维的大模型提示词生成方法.pdf",
+  "doc_type": "发明专利申请",
+  "pub_no": "CN122088451A",
+  "org": "国网河南信通",
+  "year": "2026",
+  "evidence": "ocr",
+  "prior_hint": "无覆盖|无覆盖|通信网运维提示词生成",
+  "path": "converted_ocr\\大模型\\针对电力通信网运维的大模型提示词生成方法.fulltext.md",
+  "bytes": 81742
+ }
+]

@@ -1,0 +1,15 @@
+[
+ {
+  "lit_id": 43,
+  "sublib": "可信",
+  "filename": "基于等可信容量的含风光储微电网电源优化规划研究.pdf",
+  "doc_type": "博士学位论文",
+  "pub_no": "武汉大学",
+  "org": "武汉大学",
+  "year": "2014(判读)",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|可信容量(capacity credit)等可信配置规划——术语撞车:可信容量≠可信能力边界",
+  "path": "converted\\可信\\基于等可信容量的含风光储微电网电源优化规划研究.md",
+  "bytes": 460005
+ }
+]

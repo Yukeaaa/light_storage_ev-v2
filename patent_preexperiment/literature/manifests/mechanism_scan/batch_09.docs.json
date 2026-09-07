@@ -1,0 +1,41 @@
+[
+ {
+  "lit_id": 15,
+  "sublib": "顶层",
+  "filename": "双碳背景下新型工商业园区光储充微电网系统.pdf",
+  "doc_type": "企业软文",
+  "pub_no": "电气时代2025(1)百强特刊",
+  "org": "石家庄科林电气",
+  "year": "2025",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|商用云边端EMS+功率池按最大输出能力动态分配形态旁证",
+  "path": "converted\\顶层\\双碳背景下新型工商业园区光储充微电网系统.md",
+  "bytes": 10809
+ },
+ {
+  "lit_id": 54,
+  "sublib": "大模型",
+  "filename": "多智能体风险决策理论与方法研究综述.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "计算机学报48(10)",
+  "org": "国防科大/清华",
+  "year": "2025",
+  "evidence": "markitdown",
+  "prior_hint": "片段级|仅把'策略-期望偏差'列为风险来源之一，无任何环节机制|多智能体风险决策三层面综述，含电网电压控制安全层案例",
+  "path": "converted\\大模型\\多智能体风险决策理论与方法研究综述.md",
+  "bytes": 221910
+ },
+ {
+  "lit_id": 62,
+  "sublib": "大模型",
+  "filename": "人工智能在储能技术中的应用进展.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "工程热物理学报46(12)",
+  "org": "中科院工程热物理所",
+  "year": "2025",
+  "evidence": "markitdown",
+  "prior_hint": "片段级|S3域:SOC/SOH/剩余容量估计属能力状态刻画，无偏差修正/方向化|AI+储能全生命周期综述，运行控制章含SOC/SOH估计与老化反馈快充",
+  "path": "converted\\大模型\\人工智能在储能技术中的应用进展.md",
+  "bytes": 224753
+ }
+]

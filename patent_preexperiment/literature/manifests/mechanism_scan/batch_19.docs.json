@@ -1,0 +1,41 @@
+[
+ {
+  "lit_id": 59,
+  "sublib": "大模型",
+  "filename": "新型配电系统运行专用大模型关键技术展望.pdf",
+  "doc_type": "期刊综述",
+  "pub_no": "中国电机工程学报46(11)",
+  "org": "四川大学等",
+  "year": "2026",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|配网专用大模型三层能力体系(感知/决策/应用)",
+  "path": "converted\\大模型\\新型配电系统运行专用大模型关键技术展望.md",
+  "bytes": 153833
+ },
+ {
+  "lit_id": 64,
+  "sublib": "大模型",
+  "filename": "面向新型电力系统的人工智能趋势与挑战.pdf",
+  "doc_type": "期刊评述",
+  "pub_no": "中国科学:技术科学56(1)",
+  "org": "华北电力大学/南网科研院",
+  "year": "2026",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖|新型电力系统AI全景评述",
+  "path": "converted\\大模型\\面向新型电力系统的人工智能趋势与挑战.md",
+  "bytes": 152799
+ },
+ {
+  "lit_id": 102,
+  "sublib": "大模型",
+  "filename": "基于知识图谱与大模型的电力设备故障分析.pdf",
+  "doc_type": "硕士学位论文扉页",
+  "pub_no": "华北电力大学",
+  "org": "华北电力大学",
+  "year": "2025",
+  "evidence": "ocr",
+  "prior_hint": "未评估|扉页无技术内容|硕士论文扉页(信息不足)",
+  "path": "converted_ocr\\大模型\\基于知识图谱与大模型的电力设备故障分析.fulltext.md",
+  "bytes": 149975
+ }
+]

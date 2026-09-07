@@ -1,0 +1,15 @@
+[
+ {
+  "lit_id": 51,
+  "sublib": "大模型",
+  "filename": "智能发电控制的多目标优化策略及其均衡强化学习理论.pdf",
+  "doc_type": "博士学位论文",
+  "pub_no": "华南理工大学",
+  "org": "华南理工大学",
+  "year": "2015",
+  "evidence": "markitdown",
+  "prior_hint": "无覆盖|无覆盖(分配因子/MORL为S4最近泛化形态但机制本体不同)|AGC升级SGC：Nash-Q(λ)/CEQ(λ)/MORL(λ)多目标功率分配+RTDS验证",
+  "path": "converted\\大模型\\智能发电控制的多目标优化策略及其均衡强化学习理论.md",
+  "bytes": 558126
+ }
+]
