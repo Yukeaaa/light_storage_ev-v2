@@ -7,6 +7,11 @@
 - 损坏文件 1 篇（三工具均无法读取）。
 逐篇详细摘要见 reports/literature/02、03 号附录。
 
+口径（2026-09-07 修订）：台账含"证据层级"列——扉页级行（ocr_frontpage）的
+"无覆盖"仅表示扉页摘要未披露该机制，不得解读为对应专利全文不存在该机制；
+核心结论口径为"当前证据层级下未观察到已确认连续两环"，不是"108 篇全文均不存在"
+（见 reports/literature/01 号 §3）。
+
 复现：venv/Scripts/python.exe patent_preexperiment/literature/tools/build_ledger.py
 """
 
@@ -144,9 +149,18 @@ D = [
 
 HEADER = [
     "lit_id", "子库", "文件名", "类型", "公开号_出处", "机构", "年份", "作者_申请人",
-    "处理链路", "sha256_12", "相关度", "威胁评估", "五步链覆盖要点", "一句话要点",
-    "待核实", "备注",
+    "处理链路", "证据层级", "sha256_12", "相关度", "威胁评估", "五步链覆盖要点",
+    "一句话要点", "待核实", "备注",
 ]
+
+# 证据层级映射（2026-09-07 口径修订）：扉页级行的"无覆盖"仅表示扉页摘要未披露
+# 该机制，不得解读为对应专利全文不存在该机制（01 号报告 §3 口径）。
+EVIDENCE_LEVEL = {
+    "converted_fulltext": "全文级",
+    "duplicate_sha256": "全文级(重复件)",
+    "ocr_frontpage": "扉页级",
+    "failed_unreadable": "损坏",
+}
 
 
 def main() -> None:
@@ -166,7 +180,8 @@ def main() -> None:
             {
                 "lit_id": lit_id, "子库": sub, "文件名": fname, "类型": dtype,
                 "公开号_出处": pub, "机构": org, "年份": year, "作者_申请人": resp,
-                "处理链路": proc, "sha256_12": sha, "相关度": rel, "威胁评估": threat,
+                "处理链路": proc, "证据层级": EVIDENCE_LEVEL.get(proc, ""),
+                "sha256_12": sha, "相关度": rel, "威胁评估": threat,
                 "五步链覆盖要点": chain, "一句话要点": summ, "待核实": follow, "备注": note,
             }
         )
