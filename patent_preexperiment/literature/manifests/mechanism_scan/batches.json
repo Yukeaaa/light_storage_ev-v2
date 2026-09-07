@@ -1,14 +1,9 @@
 {
  "generated_at": "2026-09-07",
  "method": "first-fit decreasing, cap 450KB, max 10 docs",
- "n_docs": 105,
+ "n_docs": 106,
  "n_batches": 19,
  "skipped": [
-  [
-   "31",
-   "全文级(OCR)",
-   "文件缺失: D:\\JobWorkspaces\\light_storage_ev-v2\\patent_preexperiment\\literature\\converted_ocr\\顶层\\一种计及电池电化学状态与热约束的构网型储能自适应支撑控制方法及系统.fulltext.md"
-  ],
   [
    "63",
    "全文级(重复件)",
@@ -364,7 +359,7 @@
   {
    "batch": 5,
    "n_docs": 10,
-   "total_kb": 284,
+   "total_kb": 298,
    "docs": [
     {
      "lit_id": 5,
@@ -432,17 +427,17 @@
      "bytes": 36893
     },
     {
-     "lit_id": 69,
-     "sublib": "大模型",
-     "filename": "基于AI多智能体的电力自动化安全测试平台研究与应用.pdf",
-     "doc_type": "企业应用论文",
-     "pub_no": "出处未识别",
-     "org": "国网上海信通",
-     "year": "2025后",
-     "evidence": "markitdown",
-     "prior_hint": "无覆盖|无覆盖|LLM多智能体自动化渗透测试平台",
-     "path": "converted\\大模型\\基于AI多智能体的电力自动化安全测试平台研究与应用.md",
-     "bytes": 23152
+     "lit_id": 27,
+     "sublib": "顶层",
+     "filename": "一种基于边缘智能调控的光储充四可系统及方法.pdf",
+     "doc_type": "发明专利申请",
+     "pub_no": "CN120824740A",
+     "org": "广东信通通信",
+     "year": "2025",
+     "evidence": "ocr",
+     "prior_hint": "无覆盖|无覆盖|云边端三层架构+终端毫秒级故障自治",
+     "path": "converted_ocr\\顶层\\一种基于边缘智能调控的光储充四可系统及方法.fulltext.md",
+     "bytes": 37166
     },
     {
      "lit_id": 71,
@@ -501,7 +496,7 @@
   {
    "batch": 6,
    "n_docs": 10,
-   "total_kb": 440,
+   "total_kb": 443,
    "docs": [
     {
      "lit_id": 6,
@@ -543,17 +538,17 @@
      "bytes": 43192
     },
     {
-     "lit_id": 36,
+     "lit_id": 31,
      "sublib": "顶层",
-     "filename": "基于云边协同的配电网分层分业务数据流设计方法及装置.pdf",
+     "filename": "一种计及电池电化学状态与热约束的构网型储能自适应支撑控制方法及系统.pdf",
      "doc_type": "发明专利申请",
-     "pub_no": "CN119204281A",
-     "org": "国网冀北电科院",
-     "year": "2024",
+     "pub_no": "CN122203352A",
+     "org": "武汉普斯迪电力科技",
+     "year": "2026",
      "evidence": "ocr",
-     "prior_hint": "无覆盖|无覆盖|分层分业务数据流架构设计",
-     "path": "converted_ocr\\顶层\\基于云边协同的配电网分层分业务数据流设计方法及装置.fulltext.md",
-     "bytes": 42737
+     "prior_hint": "片段级|S3标量降额:P_cap=P_rated·k_SOC·k_SOH·k_T|已知第一最近现有技术，扉页与10号复核结论一致(非knockout)",
+     "path": "converted_ocr\\顶层\\一种计及电池电化学状态与热约束的构网型储能自适应支撑控制方法及系统.fulltext.md",
+     "bytes": 45873
     },
     {
      "lit_id": 39,
@@ -637,8 +632,8 @@
   },
   {
    "batch": 7,
-   "n_docs": 6,
-   "total_kb": 108,
+   "n_docs": 7,
+   "total_kb": 130,
    "docs": [
     {
      "lit_id": 7,
@@ -717,6 +712,19 @@
      "prior_hint": "无覆盖|无覆盖|南网能源可信数据空间试点进展(车桩网供需互动场景)",
      "path": "converted\\可信\\南网构建能源可信数据新生态.md",
      "bytes": 8473
+    },
+    {
+     "lit_id": 69,
+     "sublib": "大模型",
+     "filename": "基于AI多智能体的电力自动化安全测试平台研究与应用.pdf",
+     "doc_type": "企业应用论文",
+     "pub_no": "出处未识别",
+     "org": "国网上海信通",
+     "year": "2025后",
+     "evidence": "markitdown",
+     "prior_hint": "无覆盖|无覆盖|LLM多智能体自动化渗透测试平台",
+     "path": "converted\\大模型\\基于AI多智能体的电力自动化安全测试平台研究与应用.md",
+     "bytes": 23152
     }
    ]
   },
@@ -815,7 +823,7 @@
   {
    "batch": 10,
    "n_docs": 10,
-   "total_kb": 398,
+   "total_kb": 403,
    "docs": [
     {
      "lit_id": 17,
@@ -844,17 +852,17 @@
      "bytes": 40389
     },
     {
-     "lit_id": 27,
+     "lit_id": 36,
      "sublib": "顶层",
-     "filename": "一种基于边缘智能调控的光储充四可系统及方法.pdf",
+     "filename": "基于云边协同的配电网分层分业务数据流设计方法及装置.pdf",
      "doc_type": "发明专利申请",
-     "pub_no": "CN120824740A",
-     "org": "广东信通通信",
-     "year": "2025",
+     "pub_no": "CN119204281A",
+     "org": "国网冀北电科院",
+     "year": "2024",
      "evidence": "ocr",
-     "prior_hint": "无覆盖|无覆盖|云边端三层架构+终端毫秒级故障自治",
-     "path": "converted_ocr\\顶层\\一种基于边缘智能调控的光储充四可系统及方法.fulltext.md",
-     "bytes": 37166
+     "prior_hint": "无覆盖|无覆盖|分层分业务数据流架构设计",
+     "path": "converted_ocr\\顶层\\基于云边协同的配电网分层分业务数据流设计方法及装置.fulltext.md",
+     "bytes": 42737
     },
     {
      "lit_id": 37,
