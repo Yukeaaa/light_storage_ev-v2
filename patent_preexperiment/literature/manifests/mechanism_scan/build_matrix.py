@@ -1,114 +1,203 @@
-import json
+"""
+build_matrix.py - Build mechanism_matrix.csv from JSONL scan batches.
+
+Hard assertions:
+  - Expected usable lit_id = ledger - duplicate(63) - damaged(108) = 106
+  - All lit_id must be in ledger (<=108)
+  - No unexpected IDs, no missing IDs
+  - Matrix must have exactly 106 rows
+
+Usage:
+  python build_matrix.py
+"""
+
 import csv
+import json
+import os
+import sys
 
-# Load all scan results
-all_records = []
-files = ['manual_41.jsonl', 'batch_ocr_1.jsonl', 'batch_ocr_2.jsonl', 'batch_ocr_3.jsonl', 'batch_ocr_4.jsonl', 'batch_ocr_5.jsonl']
-source_map = {}
-for f in files:
-    with open(f'literature/manifests/mechanism_scan/{f}', encoding='utf-8') as fh:
-        for line in fh:
-            line = line.strip()
-            if not line:
-                continue
-            try:
-                rec = json.loads(line)
-                rec['_source'] = f
-                all_records.append(rec)
-            except json.JSONDecodeError as e:
-                print(f"JSON parse error in {f}: {e}")
-                print(f"  Line: {line[:100]}...")
+SCAN_DIR = os.path.dirname(os.path.abspath(__file__))
+LEDGER_PATH = os.path.join(os.path.dirname(SCAN_DIR), 'literature_ledger.csv')
+OUTPUT_PATH = os.path.join(SCAN_DIR, 'mechanism_matrix.csv')
 
-# Deduplicate by lit_id (keep first occurrence, track duplicates)
-by_id = {}
-for r in all_records:
-    lid = r['lit_id']
-    if lid not in by_id:
-        by_id[lid] = r
-    else:
-        existing = by_id[lid]
-        # Prefer higher quality scan (markitdown > ocr)
-        src_rank = {'manual_41.jsonl': 3, 'batch_ocr_1.jsonl': 2, 'batch_ocr_2.jsonl': 2, 'batch_ocr_3.jsonl': 2, 'batch_ocr_4.jsonl': 2, 'batch_ocr_5.jsonl': 2}
-        if src_rank.get(r['_source'], 0) > src_rank.get(existing['_source'], 0):
-            by_id[lid] = r
+EXPECTED_COUNT = 106
+EXCLUDED_IDS = {63, 108}  # 63=duplicate, 108=damaged
 
-print(f"Total records: {len(all_records)}")
-print(f"Unique lit_ids after dedup: {len(by_id)}")
 
-# Generate mechanism_matrix.csv
-fieldnames = [
-    'lit_id', 'doc_kind', 'source', 'evidence_level',
-    'tech_problem', 'control_objects', 'inputs', 'intermediate_state',
-    'decision_action', 'feedback_target', 'degradation',
-    'S1', 'S2', 'S3', 'S4', 'S5', 's_chain_notes',
-    'candidates', 'candidate_assessments',
-    'crowded', 'gap_hook', 'data_hint',
-    'ocr_quality', 'deep_review', 'deep_review_reason', 'notable'
-]
+def load_ledger():
+    """Load ledger and return set of usable lit_ids."""
+    usable = set()
+    with open(LEDGER_PATH, encoding='utf-8-sig') as f:
+        reader = csv.DictReader(f)
+        for r in reader:
+            lid = int(float(r['lit_id']))
+            if lid not in EXCLUDED_IDS:
+                usable.add(lid)
+    return usable
 
-with open('literature/manifests/mechanism_scan/mechanism_matrix.csv', 'w', newline='', encoding='utf-8-sig') as f:
-    writer = csv.DictWriter(f, fieldnames=fieldnames)
-    writer.writeheader()
-    
-    for lid in sorted(by_id.keys()):
-        r = by_id[lid]
-        row = {
-            'lit_id': r['lit_id'],
-            'doc_kind': r.get('doc_kind', ''),
-            'source': r.get('_source', ''),
-            'evidence_level': 'FULLTEXT-MARKITDOWN' if 'manual_41' in r.get('_source', '') else 'FULLTEXT-OCR',
-            'tech_problem': r.get('tech_problem', ''),
-            'control_objects': '; '.join(r.get('control_objects', [])),
-            'inputs': r.get('inputs', ''),
-            'intermediate_state': r.get('intermediate_state', ''),
-            'decision_action': r.get('decision_action', ''),
-            'feedback_target': r.get('feedback_target', ''),
-            'degradation': r.get('degradation', ''),
-            'S1': r.get('s_chain', {}).get('S1', ''),
-            'S2': r.get('s_chain', {}).get('S2', ''),
-            'S3': r.get('s_chain', {}).get('S3', ''),
-            'S4': r.get('s_chain', {}).get('S4', ''),
-            'S5': r.get('s_chain', {}).get('S5', ''),
-            's_chain_notes': r.get('s_chain_notes', ''),
-            'candidates': '; '.join(r.get('candidates', [])),
-            'candidate_assessments': json.dumps(r.get('candidate_assessments', {}), ensure_ascii=False),
-            'crowded': r.get('crowded', ''),
-            'gap_hook': r.get('gap_hook', ''),
-            'data_hint': r.get('data_hint', ''),
-            'ocr_quality': r.get('ocr_quality', ''),
-            'deep_review': r.get('deep_review', ''),
-            'deep_review_reason': r.get('deep_review_reason', ''),
-            'notable': r.get('notable', '')
-        }
-        writer.writerow(row)
 
-print("\nmechanism_matrix.csv written successfully")
+def load_all_batches():
+    """Load all JSONL batches and return dict keyed by lit_id."""
+    entries = {}
+    jsonl_files = sorted(f for f in os.listdir(SCAN_DIR) if f.endswith('.jsonl'))
 
-# Summary statistics
-s_levels = ['S1', 'S2', 'S3', 'S4', 'S5']
-for s in s_levels:
-    counts = {}
-    for r in by_id.values():
-        val = r.get('s_chain', {}).get(s, '无')
-        counts[val] = counts.get(val, 0) + 1
-    print(f"  {s}: {counts}")
+    for fname in jsonl_files:
+        path = os.path.join(SCAN_DIR, fname)
+        with open(path, encoding='utf-8') as f:
+            for line_num, line in enumerate(f, 1):
+                if not line.strip():
+                    continue
+                try:
+                    e = json.loads(line)
+                except json.JSONDecodeError as exc:
+                    print(f'JSON error in {fname}:{line_num}: {exc}', file=sys.stderr)
+                    sys.exit(1)
 
-# Papers with any non-无 S-chain hit
-with_hit = sum(1 for r in by_id.values() if any(r.get('s_chain', {}).get(k, '无') != '无' for k in s_levels))
-print(f"\nPapers with any S-chain hit: {with_hit}/{len(by_id)}")
+                lid = e.get('lit_id')
+                if lid is None:
+                    print(f'Missing lit_id in {fname}:{line_num}', file=sys.stderr)
+                    sys.exit(1)
 
-# Papers with S chain hit >= 2 steps
-with_multi = sum(1 for r in by_id.values() if sum(1 for k in s_levels if r.get('s_chain', {}).get(k, '无') != '无') >= 2)
-print(f"Papers with 2+ S-chain hits: {with_multi}/{len(by_id)}")
+                # Hard gate: lit_id must be a positive int <= 108
+                if not isinstance(lid, int) or lid <= 0 or lid > 108:
+                    print(
+                        f'INVALID lit_id={lid} in {fname}:{line_num} '
+                        f'(must be 1..108)',
+                        file=sys.stderr,
+                    )
+                    sys.exit(1)
 
-# Candidate A relevance
-with_A = [lid for lid, r in by_id.items() if 'A' in r.get('candidates', [])]
-print(f"\nCandidate A relevant papers: {len(with_A)}")
-for lid in sorted(with_A):
-    r = by_id[lid]
-    s_summary = {k: r.get('s_chain', {}).get(k, '无') for k in s_levels}
-    print(f"  lit_id {lid}: {s_summary}")
-    assess = r.get('candidate_assessments', {}).get('A', {})
-    if assess:
-        print(f"    relation: {assess.get('relation', '')}")
-        print(f"    gap: {assess.get('gap', '')}")
+                # Skip excluded IDs
+                if lid in EXCLUDED_IDS:
+                    continue
+
+                # Duplicate within batches: last wins (batch_ocr_1 and _2 share lit_id=28)
+                if lid in entries:
+                    print(
+                        f'WARNING: duplicate lit_id={lid} in {fname}:{line_num} '
+                        f'(overwriting previous)',
+                        file=sys.stderr,
+                    )
+
+                entries[lid] = e
+
+    return entries
+
+
+def build_matrix(entries):
+    """Write CSV matrix and return row count."""
+    fields = [
+        'lit_id', 'doc_kind', 'pub_no',
+        's_S1', 's_S2', 's_S3', 's_S4', 's_S5',
+        's_chain_notes',
+        'a_S1', 'a_S2', 'a_S3', 'a_S4', 'a_S5',
+        'candidates',
+        'b_relation', 'b_disclosed', 'b_gap',
+        'c_relation', 'c_disclosed', 'c_gap',
+        'd_relation', 'd_disclosed', 'd_gap',
+        'f_relation', 'f_disclosed', 'f_gap',
+        'crowded', 'gap_hook', 'deep_review', 'notable',
+    ]
+
+    with open(OUTPUT_PATH, 'w', encoding='utf-8-sig', newline='') as f:
+        writer = csv.DictWriter(f, fieldnames=fields)
+        writer.writeheader()
+
+        for lid in sorted(entries):
+            e = entries[lid]
+            sc = e.get('s_chain', {})
+            ca = e.get('candidate_assessments', {})
+
+            row = {
+                'lit_id': lid,
+                'doc_kind': e.get('doc_kind', ''),
+                'pub_no': e.get('pub_no', ''),
+                's_S1': sc.get('S1', '无'),
+                's_S2': sc.get('S2', '无'),
+                's_S3': sc.get('S3', '无'),
+                's_S4': sc.get('S4', '无'),
+                's_S5': sc.get('S5', '无'),
+                's_chain_notes': e.get('s_chain_notes', ''),
+                'a_S1': sc.get('S1', '无'),
+                'a_S2': sc.get('S2', '无'),
+                'a_S3': sc.get('S3', '无'),
+                'a_S4': sc.get('S4', '无'),
+                'a_S5': sc.get('S5', '无'),
+                'candidates': ';'.join(e.get('candidates', [])),
+                'b_relation': ca.get('B', {}).get('relation', ''),
+                'b_disclosed': ca.get('B', {}).get('disclosed', ''),
+                'b_gap': ca.get('B', {}).get('gap', ''),
+                'c_relation': ca.get('C', {}).get('relation', ''),
+                'c_disclosed': ca.get('C', {}).get('disclosed', ''),
+                'c_gap': ca.get('C', {}).get('gap', ''),
+                'd_relation': ca.get('D', {}).get('relation', ''),
+                'd_disclosed': ca.get('D', {}).get('disclosed', ''),
+                'd_gap': ca.get('D', {}).get('gap', ''),
+                'f_relation': ca.get('F', {}).get('relation', ''),
+                'f_disclosed': ca.get('F', {}).get('disclosed', ''),
+                'f_gap': ca.get('F', {}).get('gap', ''),
+                'crowded': e.get('crowded', ''),
+                'gap_hook': e.get('gap_hook', ''),
+                'deep_review': e.get('deep_review', ''),
+                'notable': e.get('notable', ''),
+            }
+            writer.writerow(row)
+
+    return len(entries)
+
+
+def main():
+    print('Loading ledger...')
+    expected_ids = load_ledger()
+    print(f'  Expected usable lit_ids: {len(expected_ids)}')
+
+    if len(expected_ids) != EXPECTED_COUNT:
+        print(
+            f'FATAL: ledger has {len(expected_ids)} usable IDs, '
+            f'expected {EXPECTED_COUNT}',
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    print('Loading scan batches...')
+    entries = load_all_batches()
+    actual_ids = set(entries.keys())
+
+    print(f'  Actual scanned IDs: {len(actual_ids)}')
+
+    # Assertions
+    unexpected = actual_ids - expected_ids
+    missing = expected_ids - actual_ids
+
+    if unexpected:
+        print(
+            f'FATAL: unexpected IDs in scan: {sorted(unexpected)}',
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    if missing:
+        print(
+            f'FATAL: missing IDs from scan: {sorted(missing)}',
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    if len(actual_ids) != EXPECTED_COUNT:
+        print(
+            f'FATAL: expected {EXPECTED_COUNT} entries, got {len(actual_ids)}',
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    # All assertions passed
+    print(f'  All {EXPECTED_COUNT} IDs verified: actual == expected')
+
+    print(f'Writing matrix to {OUTPUT_PATH}...')
+    rows = build_matrix(entries)
+    print(f'  Wrote {rows} rows')
+    print('DONE')
+
+
+if __name__ == '__main__':
+    main()
