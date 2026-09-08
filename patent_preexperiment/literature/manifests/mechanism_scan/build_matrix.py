@@ -1,11 +1,13 @@
 """
 build_matrix.py - Build mechanism_matrix.csv from JSONL scan batches.
 
-Hard assertions:
+Hard assertions (V2.1):
   - Expected usable lit_id = ledger - duplicate(63) - damaged(108) = 106
   - All lit_id must be in ledger (<=108)
   - No unexpected IDs, no missing IDs
   - Matrix must have exactly 106 rows
+  - Duplicate lit_id -> FATAL (not warning + last wins)
+  - Ledger cross-verify: pub_no in scan must match ledger pub_no for same lit_id
 
 Usage:
   python build_matrix.py
@@ -25,19 +27,24 @@ EXCLUDED_IDS = {63, 108}  # 63=duplicate, 108=damaged
 
 
 def load_ledger():
-    """Load ledger and return set of usable lit_ids."""
+    """Load ledger and return (usable_ids set, id->pub_no mapping)."""
     usable = set()
+    id_pubno = {}
     with open(LEDGER_PATH, encoding='utf-8-sig') as f:
         reader = csv.DictReader(f)
         for r in reader:
             lid = int(float(r['lit_id']))
             if lid not in EXCLUDED_IDS:
                 usable.add(lid)
-    return usable
+                id_pubno[lid] = r.get('pub_no', '').strip()
+    return usable, id_pubno
 
 
-def load_all_batches():
-    """Load all JSONL batches and return dict keyed by lit_id."""
+def load_all_batches(ledger_pubno):
+    """Load all JSONL batches and return dict keyed by lit_id.
+
+    V2.1: duplicate lit_id -> FATAL; pub_no cross-verify against ledger.
+    """
     entries = {}
     jsonl_files = sorted(f for f in os.listdir(SCAN_DIR) if f.endswith('.jsonl'))
 
@@ -71,14 +78,29 @@ def load_all_batches():
                 if lid in EXCLUDED_IDS:
                     continue
 
-                # Duplicate within batches: last wins (batch_ocr_1 and _2 share lit_id=28)
+                # V2.1: Duplicate lit_id -> FATAL
                 if lid in entries:
+                    prev_fname = entries[lid].get('_source_file', 'unknown')
                     print(
-                        f'WARNING: duplicate lit_id={lid} in {fname}:{line_num} '
-                        f'(overwriting previous)',
+                        f'FATAL: duplicate lit_id={lid} in {fname}:{line_num} '
+                        f'(previously in {prev_fname}). '
+                        f'Duplicate is not allowed — fix scan source.',
                         file=sys.stderr,
                     )
+                    sys.exit(1)
 
+                # V2.1: Ledger cross-verify pub_no
+                scan_pubno = e.get('pub_no', '').strip()
+                ledger_pubno_val = ledger_pubno.get(lid, '').strip()
+                if scan_pubno and ledger_pubno_val and scan_pubno != ledger_pubno_val:
+                    print(
+                        f'FATAL: lit_id={lid} pub_no mismatch in {fname}:{line_num}: '
+                        f'scan="{scan_pubno}" vs ledger="{ledger_pubno_val}"',
+                        file=sys.stderr,
+                    )
+                    sys.exit(1)
+
+                e['_source_file'] = fname
                 entries[lid] = e
 
     return entries
@@ -148,7 +170,7 @@ def build_matrix(entries):
 
 def main():
     print('Loading ledger...')
-    expected_ids = load_ledger()
+    expected_ids, ledger_pubno = load_ledger()
     print(f'  Expected usable lit_ids: {len(expected_ids)}')
 
     if len(expected_ids) != EXPECTED_COUNT:
@@ -160,7 +182,7 @@ def main():
         sys.exit(1)
 
     print('Loading scan batches...')
-    entries = load_all_batches()
+    entries = load_all_batches(ledger_pubno)
     actual_ids = set(entries.keys())
 
     print(f'  Actual scanned IDs: {len(actual_ids)}')
