@@ -1,9 +1,48 @@
 # A-B-C-F 横向组合与专利组合架构评审 V1
 
-**版本**：V1（2026-09-09）
+**版本**：V1（2026-09-09，修订 2026-09-09 追加三项边界硬化）
 **性质**：PD 轨横向架构评审；不扩文献检索面、不做新实验、不改权利要求语言
 **依据**：A/B/C/F 各候选 knockout 文档 + 定向深挖报告 + C-OpenCEM 验证报告 + 07 号机制拆解 + 12 号反审
 **目标回答**：四个候选是四件独立专利，还是一个主干系统里的不同层？哪些应独立申请，哪些适合改进/组合/防御？
+
+---
+
+## 修订记录
+
+### 修订 1：A/B 状态对象不复刻红线
+
+B 的输入冻结为 `current resource flexibility descriptor`，不得将 A 的 `directional_capability_state` 换名后重新定义。B 独占的是 duration/horizon/energy coupling + heterogeneous reference mapping + common-constraint clipping + commitment reservation + residual envelope，而非"设备能力怎么来的"。
+
+### 修订 2：C/F5 输入输出契约冻结
+
+- **C 输入**：设备通信/告警/运行/数据状态；**C 输出**：该设备允许参与哪些控制类别/方向/范围
+- **F5 输入**：候选动作 + physical_verdict + action risk + actor/agent privilege + target-device admissibility；**F5 输出**：AUTO / HUMAN / REJECT
+
+F5 处理的是"一个已经通过物理可行性验证的具体动作，是否具有执行授权"，而非把设备资格翻译为 REJECT。
+
+### 修订 3：F6/A-M6 法律区别改为"更新对象不同"
+
+```
+F6：更新本次控制事务/动作状态（AUTHORIZED → SENT → ACKED/FAILED/UNCERTAIN → ROLLBACK/DEGRADED/HUMAN）
+A-M6：更新设备持续能力知识（capability_state → maintain/shrink/recover）
+```
+
+冻结边界：**F6 不更新设备未来可用能力；A-M6 不负责本次控制事务的撤销与安全退出**。时间尺度（秒级 vs 分钟级）仅作为典型实施例说明，不作为主要法律区别。
+
+### 修订 4：B 定位为"第二层独立改进专利"
+
+B1→B5 能单独成立，不是 A 的从属。注册表定位为：
+
+```
+A  核心基础专利
+C  核心基础专利
+B  第二层独立改进专利
+F  外围安全/智能化独立专利
+```
+
+### 修订 5：A+C 第 1 波说明书协调起草
+
+共享实施例可以有，但各自必要技术特征必须隔离：A 不要求资格状态机存在，C 不要求能力归因/能力状态存在。两案在接近的时间窗口内协调完成，避免组合绑定与自碰撞。
 
 ---
 
