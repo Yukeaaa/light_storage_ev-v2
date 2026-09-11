@@ -162,4 +162,26 @@ for name, f, keys in (("A", Af, C_ONLY), ("C", Cf, A_ONLY)):
     print(f"  {name} 正文(含权项+说明书): " + ("无越界 ✅" if not hits else "命中 -> " + ", ".join(hits)))
 
 print()
+print("=" * 60)
+print("【验收 4】内部交叉引用与内部评审语言残留")
+print("=" * 60)
+for name, f in (("A", Af), ("C", Cf)):
+    hits = []
+    for pat in [r"第\s*\d+\s*节", r"删除本节", r"本节内容", r"本说明书", r"权\s*\d+\s*的", r"退守位"]:
+        c = len(re.findall(pat, f))
+        if c:
+            hits.append(f"{pat}={c}")
+    print(f"  {name}: " + ("无残留 ✅" if not hits else "命中 -> " + ", ".join(hits)))
+
+print()
+print("=" * 60)
+print("【验收 5】说明书摘要字符数（含标点，受理上限 300）")
+print("=" * 60)
+for name, f in (("A", Af), ("C", Cf)):
+    seg = f.split("## 说明书摘要")[1].split("## 说明书附图")[0]
+    n = len(re.sub(r"\s", "", seg))
+    print(f"  {name}: {n} 字 -> " + ("合规 ✅" if n <= 300 else "超限 ❌"))
+
+
+print()
 print("结论: 权项保真 A=%s C=%s" % ("PASS" if okA else "FAIL", "PASS" if okC else "FAIL"))
