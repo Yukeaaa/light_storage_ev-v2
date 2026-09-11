@@ -1,0 +1,1019 @@
+{
+  "note": "合成场景机制验证，非效果结论；阈值须实验前冻结",
+  "config": {
+    "scenario": {
+      "t_event_start": 30.0,
+      "t_event_end": 80.0
+    },
+    "site": {
+      "r0": {
+        "p_rated": 100.0,
+        "soc": 0.55,
+        "temp_c": 26.0,
+        "ramp": 20.0
+      },
+      "r1": {
+        "p_rated": 100.0,
+        "soc": 0.4,
+        "temp_c": 25.0,
+        "ramp": 20.0
+      },
+      "r2": {
+        "p_rated": 60.0,
+        "soc": 0.45,
+        "temp_c": 24.0,
+        "ramp": 10.0
+      }
+    },
+    "schedule": {
+      "base_setpoint_kw": {
+        "R0": 30.0,
+        "R1": 20.0,
+        "R2": -25.0
+      }
+    },
+    "plant": {
+      "response_tau_s": 8.0,
+      "response_delay_s": 1.0,
+      "meas_noise_kw": 0.25
+    },
+    "attribution": {
+      "deviation_band_kw": 2.0,
+      "response_window_s": 12.0,
+      "persistence_n": 5
+    },
+    "capability": {
+      "init_confidence": 0.5,
+      "conf_step": 0.1
+    },
+    "recovery": {
+      "stage_fractions": [
+        0.5,
+        0.75,
+        1.0
+      ],
+      "confirm_n": 4,
+      "post_recover_confidence": 0.4
+    },
+    "physical": {
+      "soc_min_discharge": 0.1,
+      "soc_max_charge": 0.9,
+      "temp_max_c": 45.0
+    },
+    "carrier": {
+      "strategy": "weighted",
+      "weights": {
+        "contribution": 1.0,
+        "confidence": 0.3,
+        "soc_margin": 0.2
+      }
+    },
+    "metrics": {
+      "residual_window_offset_s": 25.0
+    }
+  },
+  "episodes": [
+    {
+      "name": "S0_normal",
+      "policy": "A",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 363,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.0
+    },
+    {
+      "name": "S0_normal",
+      "policy": "B0_no_gate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 363,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.0
+    },
+    {
+      "name": "S0_normal",
+      "policy": "B1_static_derate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 363,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.0
+    },
+    {
+      "name": "S0_normal",
+      "policy": "B2_error_rolling",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 363,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.0
+    },
+    {
+      "name": "S1_comm_freeze",
+      "policy": "A",
+      "emur_numer": 0,
+      "emur_denom": 50,
+      "emur_rate": 0.0,
+      "emur_by_class": {
+        "COMM_FREEZE": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.0
+    },
+    {
+      "name": "S1_comm_freeze",
+      "policy": "B0_no_gate",
+      "emur_numer": 50,
+      "emur_denom": 50,
+      "emur_rate": 1.0,
+      "emur_by_class": {
+        "COMM_FREEZE": {
+          "numer": 50,
+          "denom": 50,
+          "rate": 1.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 8.132052322478915
+    },
+    {
+      "name": "S1_comm_freeze",
+      "policy": "B1_static_derate",
+      "emur_numer": 0,
+      "emur_denom": 50,
+      "emur_rate": 0.0,
+      "emur_by_class": {
+        "COMM_FREEZE": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.0
+    },
+    {
+      "name": "S1_comm_freeze",
+      "policy": "B2_error_rolling",
+      "emur_numer": 0,
+      "emur_denom": 50,
+      "emur_rate": 0.0,
+      "emur_by_class": {
+        "COMM_FREEZE": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.0
+    },
+    {
+      "name": "S2_transient",
+      "policy": "A",
+      "emur_numer": 0,
+      "emur_denom": 50,
+      "emur_rate": 0.0,
+      "emur_by_class": {
+        "TRANSIENT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 1.1555668343705103
+    },
+    {
+      "name": "S2_transient",
+      "policy": "B0_no_gate",
+      "emur_numer": 50,
+      "emur_denom": 50,
+      "emur_rate": 1.0,
+      "emur_by_class": {
+        "TRANSIENT": {
+          "numer": 50,
+          "denom": 50,
+          "rate": 1.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.39080228748674845
+    },
+    {
+      "name": "S2_transient",
+      "policy": "B1_static_derate",
+      "emur_numer": 0,
+      "emur_denom": 50,
+      "emur_rate": 0.0,
+      "emur_by_class": {
+        "TRANSIENT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 1.1555668343705103
+    },
+    {
+      "name": "S2_transient",
+      "policy": "B2_error_rolling",
+      "emur_numer": 0,
+      "emur_denom": 50,
+      "emur_rate": 0.0,
+      "emur_by_class": {
+        "TRANSIENT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 1.1555668343705103
+    },
+    {
+      "name": "S3_local_limit_up",
+      "policy": "A",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 0.2530977124285269,
+      "resid_energy_kwh": 0.0017576230029758813,
+      "bound_err_mean_kw": 0.6395289729867137,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 3.0322072685579466
+    },
+    {
+      "name": "S3_local_limit_up",
+      "policy": "B0_no_gate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 0.2530977124285269,
+      "resid_energy_kwh": 0.0017576230029758813,
+      "bound_err_mean_kw": 0.6565283099906655,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.41123139460821195
+    },
+    {
+      "name": "S3_local_limit_up",
+      "policy": "B1_static_derate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 20.0,
+      "resid_energy_kwh": 0.1388888888888889,
+      "bound_err_mean_kw": 70.0,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 8.264462809917354
+    },
+    {
+      "name": "S3_local_limit_up",
+      "policy": "B2_error_rolling",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 20.0,
+      "resid_energy_kwh": 0.1388888888888889,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 8.264462809917354
+    },
+    {
+      "name": "S4_external_constraint",
+      "policy": "A",
+      "emur_numer": 0,
+      "emur_denom": 50,
+      "emur_rate": 0.0,
+      "emur_by_class": {
+        "EXTERNAL_CONSTRAINT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 8.264462809917354
+    },
+    {
+      "name": "S4_external_constraint",
+      "policy": "B0_no_gate",
+      "emur_numer": 50,
+      "emur_denom": 50,
+      "emur_rate": 1.0,
+      "emur_by_class": {
+        "EXTERNAL_CONSTRAINT": {
+          "numer": 50,
+          "denom": 50,
+          "rate": 1.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.41123139460821195
+    },
+    {
+      "name": "S4_external_constraint",
+      "policy": "B1_static_derate",
+      "emur_numer": 0,
+      "emur_denom": 50,
+      "emur_rate": 0.0,
+      "emur_by_class": {
+        "EXTERNAL_CONSTRAINT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 8.264462809917354
+    },
+    {
+      "name": "S4_external_constraint",
+      "policy": "B2_error_rolling",
+      "emur_numer": 0,
+      "emur_denom": 50,
+      "emur_rate": 0.0,
+      "emur_by_class": {
+        "EXTERNAL_CONSTRAINT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 8.264462809917354
+    },
+    {
+      "name": "S5_local_limit_down",
+      "policy": "A",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 0.2269230163716159,
+      "resid_energy_kwh": 0.001575854280358444,
+      "bound_err_mean_kw": 0.6075134687916872,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 3.046280367629275
+    },
+    {
+      "name": "S5_local_limit_down",
+      "policy": "B0_no_gate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 0.2269230163716159,
+      "resid_energy_kwh": 0.001575854280358444,
+      "bound_err_mean_kw": 0.6075134687916872,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 0.4261493237964168
+    },
+    {
+      "name": "S5_local_limit_down",
+      "policy": "B1_static_derate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 20.0,
+      "resid_energy_kwh": 0.1388888888888889,
+      "bound_err_mean_kw": 35.0,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 8.264462809917354
+    },
+    {
+      "name": "S5_local_limit_down",
+      "policy": "B2_error_rolling",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 20.0,
+      "resid_energy_kwh": 0.1388888888888889,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 8.264462809917354
+    },
+    {
+      "name": "S6_cascade",
+      "policy": "A",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 293,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 11.6187719690763,
+      "resid_energy_kwh": 0.08068591645191876,
+      "bound_err_mean_kw": 0.6395289729867137,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 1,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 5.216918114999781
+    },
+    {
+      "name": "S6_cascade",
+      "policy": "B0_no_gate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 293,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 11.6187719690763,
+      "resid_energy_kwh": 0.08068591645191876,
+      "bound_err_mean_kw": 0.6565283099906655,
+      "bad_cmd_rate": 0.4,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 2.758763202598925
+    },
+    {
+      "name": "S6_cascade",
+      "policy": "B1_static_derate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 293,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 20.0,
+      "resid_energy_kwh": 0.1388888888888889,
+      "bound_err_mean_kw": 70.0,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 8.264462809917354
+    },
+    {
+      "name": "S6_cascade",
+      "policy": "B2_error_rolling",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 293,
+      "noise_rate": 0.0,
+      "resid_mean_kw": 20.0,
+      "resid_energy_kwh": 0.1388888888888889,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 8.264462809917354
+    },
+    {
+      "name": "S7_recovery_ok",
+      "policy": "A",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": 15.0,
+      "recovery_steps": 3,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 5.342157406573229
+    },
+    {
+      "name": "S7_recovery_ok",
+      "policy": "B0_no_gate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": 15.0,
+      "recovery_steps": 3,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 1.1364639318652932
+    },
+    {
+      "name": "S7_recovery_ok",
+      "policy": "B1_static_derate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 10.574412947932638
+    },
+    {
+      "name": "S7_recovery_ok",
+      "policy": "B2_error_rolling",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 313,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 10.574412947932638
+    },
+    {
+      "name": "S8_recovery_fail",
+      "policy": "A",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 272,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 17.024699111159332
+    },
+    {
+      "name": "S8_recovery_fail",
+      "policy": "B0_no_gate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 272,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 9.20312220017869
+    },
+    {
+      "name": "S8_recovery_fail",
+      "policy": "B1_static_derate",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 272,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 29.917355371900825
+    },
+    {
+      "name": "S8_recovery_fail",
+      "policy": "B2_error_rolling",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 272,
+      "noise_rate": 0.0,
+      "resid_mean_kw": null,
+      "resid_energy_kwh": null,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_mean_kw": 29.917355371900825
+    }
+  ],
+  "summary": {
+    "A": {
+      "emur": {
+        "numer": 0,
+        "denom": 150,
+        "rate": 0.0
+      },
+      "noise": {
+        "numer": 0,
+        "denom": 2806,
+        "rate": 0.0
+      },
+      "emur_by_class": {
+        "COMM_FREEZE": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        },
+        "TRANSIENT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        },
+        "EXTERNAL_CONSTRAINT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "resid_mean_kw": 4.032930899292148,
+      "resid_energy_kwh": 0.028006464578417697,
+      "bound_err_mean_kw": 0.6288571382550382,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 1,
+      "recovery_delay_s": 15.0,
+      "recovery_steps": 3,
+      "recovery_false_steps": 0
+    },
+    "B0_no_gate": {
+      "emur": {
+        "numer": 150,
+        "denom": 150,
+        "rate": 1.0
+      },
+      "noise": {
+        "numer": 0,
+        "denom": 2806,
+        "rate": 0.0
+      },
+      "emur_by_class": {
+        "COMM_FREEZE": {
+          "numer": 50,
+          "denom": 50,
+          "rate": 1.0
+        },
+        "TRANSIENT": {
+          "numer": 50,
+          "denom": 50,
+          "rate": 1.0
+        },
+        "EXTERNAL_CONSTRAINT": {
+          "numer": 50,
+          "denom": 50,
+          "rate": 1.0
+        }
+      },
+      "resid_mean_kw": 4.032930899292148,
+      "resid_energy_kwh": 0.028006464578417697,
+      "bound_err_mean_kw": 0.640190029591006,
+      "bad_cmd_rate": 0.044444444444444446,
+      "cascade_count": 0,
+      "recovery_delay_s": 15.0,
+      "recovery_steps": 3,
+      "recovery_false_steps": 0
+    },
+    "B1_static_derate": {
+      "emur": {
+        "numer": 0,
+        "denom": 150,
+        "rate": 0.0
+      },
+      "noise": {
+        "numer": 0,
+        "denom": 2806,
+        "rate": 0.0
+      },
+      "emur_by_class": {
+        "COMM_FREEZE": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        },
+        "TRANSIENT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        },
+        "EXTERNAL_CONSTRAINT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "resid_mean_kw": 20.0,
+      "resid_energy_kwh": 0.1388888888888889,
+      "bound_err_mean_kw": 58.333333333333336,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0
+    },
+    "B2_error_rolling": {
+      "emur": {
+        "numer": 0,
+        "denom": 150,
+        "rate": 0.0
+      },
+      "noise": {
+        "numer": 0,
+        "denom": 2806,
+        "rate": 0.0
+      },
+      "emur_by_class": {
+        "COMM_FREEZE": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        },
+        "TRANSIENT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        },
+        "EXTERNAL_CONSTRAINT": {
+          "numer": 0,
+          "denom": 50,
+          "rate": 0.0
+        }
+      },
+      "resid_mean_kw": 20.0,
+      "resid_energy_kwh": 0.1388888888888889,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0
+    }
+  }
+}

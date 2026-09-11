@@ -155,6 +155,13 @@ A Claim 阶段        = CLOSED（2026-09-10）
                     主指标：①非能力原因导致的错误能力边界更新率 ②真实能力受限后的站级剩余未补偿功率/能量
                     ⚠️ 本计划**不是** R5 启动；Round 5 = NOT STARTED 不变；A-M3–M6 = UNVALIDATED 为待建立目标
                     ⚠️ **不再用 M5BAT / RD-2 承担 A 的效果证明**（RD-2 结果不进入专利证据链）
+                    → **A 算法参考实现 + 可控真值场景台 V0.1 ✅ 已出**（`reports/patent_definition/A_算法原型与可控真值场景台_V0.1.md`）
+                      · 代码：`src/patent_preexperiment/a_ev/`（模块 1 归因 / 2 能力状态 / 3 缺口映射 / 4 承接选择 / 5 回写与分级恢复）
+                      · 场景台：`a_ev/scenario.py`（3 资源 + PCC；**事件真值注入**；A-EV-1 同幅值四原因对照；ScenarioSpec 可 JSON 序列化→可直接驱动 HIL）
+                      · 基线：B0 无归因门 / B1 静态降额 / B2 误差滚动；配置 `configs/a_ev_v0.yaml`（阈值=**候选值**）；入口 `experiments/a_ev/run.py`
+                      · 质量门全过：ruff、**mypy strict（10 文件 0 错）**、16 项单测
+                      · 合成场景机制自检（**非效果结论**）：EMUR A=0.00 vs B0=1.00 ｜ RESID A=4.03 kW vs B1/B2=20.00 kW ｜ 恢复时延 15.0 s、恢复误触发 0
+                      · 下一步：阈值冻结 V1.0 → HIL 接入（用 ScenarioSpec 驱动真机）→ 公开数据接入
 ```
 
 > **A 证据状态（须与上述双线区分）**：A-M3–M6 = **UNVALIDATED**。说明书全文只写**可实施机制**，不写效果；实验通过其自身门槛前，结果**不得**进入任何申请文本。
@@ -201,6 +208,7 @@ reports/patent_definition/16_A权利要求语言v2定稿_反馈对象闭合.md  
 reports/patent_definition/17_A说明书骨架_V1.md                     # A 说明书骨架（已执行完毕；历史规划件，产物 = 18 号）
 reports/patent_definition/18_A说明书全文_V1.md                     # A 说明书全文 V1（§1–§16 + 附录 A 内部证据档）
 reports/patent_definition/A_有效性验证实验设计_V0.1.md               # A-EV 计划（线 2；含数据合同/三层证据/A-EV-1~5/门槛）
+reports/patent_definition/A_算法原型与可控真值场景台_V0.1.md          # A 算法参考实现 + 场景台说明（含 4 处口径留痕）
 reports/patent_pool/C_独立权架构反审_V1.md                        # C 机制冻结基线（内部版本 V2）
 reports/patent_pool/C_控制资格状态机_Claim_Draft_v1.2.md          # C 权利要求权威稿
 reports/patent_pool/C_Claim_v1_lit45_逐限定项反打.md              # C 主引证压力测试

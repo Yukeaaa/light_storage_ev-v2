@@ -1,0 +1,50 @@
+# A-EV 场景台配置 V0
+#
+# ⚠️ 本文件中的全部阈值与参数均为**候选值**，须在正式有效性实验开始前冻结为 V1.0；
+#    冻结后不得依结果调整（A-EV 计划 §7、项目预注册纪律）。
+#
+# 定位：A 案算法参考实现与可控真值场景台的运行参数。合成场景，非效果证据。
+
+scenario:
+  t_event_start: 30.0     # s，事件注入起点
+  t_event_end: 80.0       # s，事件解除时点（S8 恢复失败场景会覆盖为不解除）
+
+site:
+  r0: {p_rated: 100.0, soc: 0.55, temp_c: 26.0, ramp: 20.0}   # BESS，双向
+  r1: {p_rated: 100.0, soc: 0.40, temp_c: 25.0, ramp: 20.0}   # BESS，双向（首选承接资源）
+  r2: {p_rated: 60.0,  soc: 0.45, temp_c: 24.0, ramp: 10.0}   # 充电设备，仅吸收（单向下向）
+
+schedule:
+  # 站点基值：R0 放电 30，R1 放电 20，R2 吸收 25 → 站点净 +25 kW
+  base_setpoint_kw: {R0: 30.0, R1: 20.0, R2: -25.0}
+
+plant:
+  response_tau_s: 8.0        # 一阶响应时间常数（暂态场景）
+  response_delay_s: 1.0      # 指令下发到响应开始
+  meas_noise_kw: 0.25        # 测量噪声标准差
+
+attribution:
+  deviation_band_kw: 2.0     # 偏差判定带（判据 1 之外的"是否构成偏差"）
+  response_window_s: 12.0    # 控制响应观察窗（判据 3）
+  persistence_n: 5           # 持续/重复性判据（判据 5）：连续周期数
+
+capability:
+  init_confidence: 0.5       # 初始可信度（说明书 §10.3）
+  conf_step: 0.1             # 每次经确认证据的置信度增量
+
+recovery:
+  stage_fractions: [0.5, 0.75, 1.0]   # 分级恢复的各级目标（× 额定）
+  confirm_n: 4                        # 每级恢复所需连续确认周期数（恢复迟滞）
+  post_recover_confidence: 0.4        # 恢复后的可信度
+
+physical:
+  soc_min_discharge: 0.10    # 低于此值不允许向上（放电）承接
+  soc_max_charge: 0.90       # 高于此值不允许向下（充电）承接
+  temp_max_c: 45.0           # 超过此温度不允许承接
+
+carrier:
+  strategy: weighted                      # contribution | confidence | min_switch | soc_margin | weighted
+  weights: {contribution: 1.0, confidence: 0.3, soc_margin: 0.2}
+
+metrics:
+  residual_window_offset_s: 25.0   # 剩余缺口统计窗口起点（相对事件注入时刻）
