@@ -168,6 +168,12 @@ A Claim 阶段        = CLOSED（2026-09-10）
                       · 三场景集留档：evaluation（12 场景×7 策略，新增 S10/S11/A_sup）/ robustness（48 条件）/ commissioning（p95=12s→建议窗 15s，数值仍属候选）
                       · 质量门：pytest 全过（a_ev 43 项）、a_ev 包 ruff 0 错、mypy strict 11 文件 0 错；结果 config_hash 与配置一致
                       · 下一步：HIL adapter 实现（BESS-PCS 先行，按 V0.3 §5 规范）→ HIL commissioning（per-resource 响应窗落定）→ `--freeze` 落 V1.0 数值并加锁 → formal A-EV
+                    → **A-EV HIL 数据合同与准入门 V0.1 ✅（2026-09-12 第二轮复审后）——synthetic 算法阶段封板**（`reports/patent_definition/A_HIL数据合同与准入门_V0.1.md`）
+                      · 可机器执行的准入检查：`a_ev/hil_contract.py` + `configs/a_ev_hil_contract.yaml`——HIL 第一阶段强制字段清单（command_id/requested/translated/accepted/write_ack/control_owner/override_source/override_reason/applied_timestamp/P_meas/PCC + 约束类字段）逐一声明责任域与支撑机制；`admit()` 输出逐机制 VERIFIABLE/DERIVED/NOT_VERIFIABLE + 整体 ADMITTED/CONDITIONAL/REJECTED
+                      · 判定规则预注册：缺层 ⇒ 对应机制显式标记不可验证（不事后猜）；推导口径 ⇒ CONDITIONAL（commissioning 实测验证推导链后升级）；时钟超预算 / 控制权多主 / 核心（requested、p_meas）缺失 ⇒ REJECTED
+                      · 当前登记口径 = **CONDITIONAL**：accepted_setpoint 走推导（BMS 限值 + PCS 限功率寄存器 + 控制日志），commissioning 期间实测验证
+                      · REPORTED_LIMIT 边界冻结为设计决定：BMS 上报限值只封 Reported 包络，**不写 ExecutionLearned**（"设备自报能做到多少" ≠ "执行证据证明能做到多少"，两层独立保留）
+                      · 定级（评审第二轮）：架构 PASS / 真实设备接入 CONDITIONAL PASS——真实 PCS 通讯/控制未验证、HIL 闭环未开始正式验证、真实站效果 UNVALIDATED；**不再改 synthetic 算法（封板），边际收益全部转入 HIL adapter**
 ```
 
 > **A 证据状态（须与上述双线区分）**：A-M3–M6 = **UNVALIDATED**。说明书全文只写**可实施机制**，不写效果；实验通过其自身门槛前，结果**不得**进入任何申请文本。
@@ -199,10 +205,10 @@ A Claim 阶段        = CLOSED（2026-09-10）
 - 骨架已落实三条义务（§6 五类判据 / §8 换算聚合 / §10.3 初始化），并含**骨架阶段强检验**：**删除 C 的全部内容（含 §15 组合实施方式）后，A 仍能单独完整实施**；§9 承接选择**不得**以"设备参与控制资格"为前提。背景技术按 10 号 §4 引用位。
 - **不再开第三轮 A 权项架构讨论** —— 16 号已放行 A Claim v2；14 / 15 / 16 号已覆盖全部 P1/P2 与 Open items 1–5。
 
-**线 2（有效性证据）**：按 `patent_definition/A_有效性验证实验设计_V0.1.md` 推进；**A-EV V0.2 PRE-FREEZE = CLOSED + V0.3 工程架构修订完成（软件侧，2026-09-12）**，现状权威 = `patent_definition/A_工程架构与设备适配层_V0.3.md`。
+**线 2（有效性证据）**：按 `patent_definition/A_有效性验证实验设计_V0.1.md` 推进；**A-EV：V0.2 PRE-FREEZE CLOSED → V0.3 工程架构修订 → HIL 准入门落地（2026-09-12），synthetic 算法阶段封板**，现状权威 = `patent_definition/A_HIL数据合同与准入门_V0.1.md`。
 
-- 软件侧已完成：算法参考实现（signed deviation 全链 / 消融 / S9）、动态可行功率区间（[Pmin,Pmax]，替换 bidirectional 布尔）、命令链四层留痕（requested/accepted/reported）、能力证据与 PCC 站级残差双通道解耦（模块 6 监督后备，工程层）、阈值两步冻结闭环（formal 强制验锁、无标量回落）、设备适配层与控制权边界规范。
-- 执行顺序（剩余）：HIL adapter 实现（BESS-PCS 先行，按 V0.3 §5 规范；前置条件核对：HIL 可得性 / 人工 `Pmax` 接口 / 时钟同步 / 采集分辨率 / 真实站合作方）→ 首套台架（2 PCS + PCC 表 + EMS）→ HIL commissioning 标定（per-resource 响应窗落定）→ V1.0 数值冻结（`--freeze` + hash）→ formal A-EV（A-EV-1 负对照 → A-EV-1~5）→ 真实站 shadow → 受控闭环。
+- 软件侧已完成：算法参考实现（signed deviation 全链 / 消融 / S9）、动态可行功率区间（[Pmin,Pmax]）、命令链四层留痕（requested/accepted/reported）、能力证据与 PCC 站级残差双通道解耦（模块 6 监督后备，工程层）、阈值两步冻结闭环（formal 强制验锁、无标量回落）、设备适配层与控制权边界规范、**可机器执行的 HIL 数据合同与准入门**。
+- 执行顺序（剩余）：**字段可得性现场核对**（`admit()` 从预登记口径替换为实测口径；accepted 推导链在 commissioning 实测验证）→ BESS-PCS adapter 实现（按 V0.3 §5 规范 + 合同字段清单）→ 首套台架五问（2 PCS + PCC 表 + EMS）→ HIL commissioning 标定（per-resource 响应窗落定）→ 准入门升级 ADMITTED → V1.0 数值冻结（`--freeze` + hash）→ formal A-EV（A-EV-1 负对照 → A-EV-1~5）→ 真实站 shadow → 受控闭环。
 - **本计划不是 R5 启动**；Round 5 = NOT STARTED 不变。结果若达"真实部署问题 + 效果证据"标准，可提交 **R5 intake gate** 评估，7/7 判定权在治理轨。
 
 **不要把 B/F 提前拉进第一波全文起草** —— B 为第 2 波、F 为第 3 波条件触发（F 的触发条件 = 新公开专利 ≥3 篇触及 F4/F5/F6）。
@@ -215,7 +221,8 @@ reports/patent_definition/16_A权利要求语言v2定稿_反馈对象闭合.md  
 reports/patent_definition/17_A说明书骨架_V1.md                     # A 说明书骨架（已执行完毕；历史规划件，产物 = 18 号）
 reports/patent_definition/18_A说明书全文_V1.md                     # A 说明书全文 V1（§1–§16 + 附录 A 内部证据档）
 reports/patent_definition/A_有效性验证实验设计_V0.1.md               # A-EV 计划（线 2；含数据合同/三层证据/A-EV-1~5/门槛）
-reports/patent_definition/A_工程架构与设备适配层_V0.3.md             # A-EV 现状权威：四工程阻断项关闭 + 适配层/控制权边界规范
+reports/patent_definition/A_HIL数据合同与准入门_V0.1.md              # A-EV 现状权威：HIL 准入门（可机器执行）+ synthetic 封板 + 定级表
+reports/patent_definition/A_工程架构与设备适配层_V0.3.md             # 四工程阻断项关闭 + 适配层/控制权边界规范
 reports/patent_definition/A_算法原型与可控真值场景台_V0.2.md          # V0.2 pre-freeze CLOSED（评审 9 项对照 + 锁闭环 + S9）
 reports/patent_definition/A_算法原型与可控真值场景台_V0.1.md          # V0.1 说明（历史，已被 V0.2/V0.3 取代为现状）
 reports/patent_pool/C_独立权架构反审_V1.md                        # C 机制冻结基线（内部版本 V2）

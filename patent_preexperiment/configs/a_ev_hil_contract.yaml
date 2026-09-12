@@ -1,0 +1,46 @@
+# A-EV HIL 数据合同与准入门（V0.1，pre-HIL 预注册）
+#
+# 定位：在 HIL adapter 写代码之前，把"现场数据拿不拿得到"变成可机器判定的准入检查。
+# 纪律（评审 2026-09-12）：**少任何一层，都必须在准入门明确标成"某类机制不可验证"，
+# 而不是事后猜。** 字段清单与判定规则属预注册内容，随 HIL 场景集冻结，不依结果变动。
+#
+# 检查工具：PYTHONPATH=src python -m patent_preexperiment.a_ev.hil_contract --config 本文件
+# （或 tests/test_hil_contract.py）。逐机制判定 = VERIFIABLE / DERIVED / NOT_VERIFIABLE。
+#
+# 本文件登记的是**现实口径**：accepted_setpoint 当前多数 PCS 不直接外露，
+# 按评审建议走推导口径（BMS 充放限值 + PCS 限功率寄存器 + 控制日志合成），
+# 因此准入结论为 CONDITIONAL——依赖 accepted 的机制"可验证但须标注推导口径"。
+
+hil_contract:
+  version: "0.1"
+
+  # ---- HIL 第一阶段强制记录字段（来源 = 责任域）----
+  fields:
+    command_id:          {available: true}    # EMS 指令唯一号
+    requested_setpoint:  {available: true}    # EMS 欲下发值
+    translated_setpoint: {available: true}    # 网关翻译值
+    accepted_setpoint:                       # 设备实际接受的有效指令
+      available: false
+      derivation: "bms_charge_discharge_limits + pcs_limit_registers + control_log"
+    write_ack:           {available: true}    # 适配器写点回执（≠ 生效，仅作留痕）
+    control_owner:       {available: true}    # 每控制时刻的控制权归属
+    override_source:     {available: true}    # 本地 override 来源（消防/削峰/保护/厂家云…）
+    override_reason:     {available: true}    # 本地 override 原因
+    applied_timestamp:   {available: true}    # 设备侧生效时刻
+    p_meas:              {available: true}    # 设备实测有功
+    pcc:                 {available: true}    # PCC 独立表计（与资源通信无关）
+    soc:                 {available: true}    # BMS SOC
+    temp_c:              {available: true}    # BMS/PCS 温度
+    local_limits:        {available: true}    # BMS/PCS 当前充放限值（Reported 包络）
+    p_min_p_max:         {available: true}    # 动态可行域 [p_min, p_max]（组合字段）
+
+  # ---- 时钟纪律：秒级偏差即可把暂态 / clamp / 能力受限搞混 ----
+  clock:
+    unified: true
+    max_skew_s: 0.5
+    actual_skew_s: 0.2        # HIL 前置核对实测值（占位，接入后以实测替换）
+
+  # ---- 控制权纪律：存在隐形上游 = 错误归因不可控 ----
+  control_authority:
+    single_owner: true
+    owners: [ems_a]           # 须逐一排查并登记：本地 EMS/消防策略/削峰策略/BMS/厂家云
