@@ -1,7 +1,7 @@
 {
   "note": "合成场景机制验证，非效果结论；阈值须按预注册规则冻结",
   "scenario_set": "robustness",
-  "config_hash": "b41e2b8e7767f66537e9b29b55f4adc2c929338a71828987def3a9ac558294f2",
+  "config_hash": "2b53a3f56084ee5a15cec0168b2fcc895aec7526ea70fee17d249762cae1c3ee",
   "thresholds": {
     "band_by_rid": {
       "R0": 2.0,
@@ -11,7 +11,8 @@
     "window_s": 12.0,
     "persistence_n": 5,
     "confirm_n": 4,
-    "rule_based": true
+    "rule_based": true,
+    "source": "rules"
   },
   "episodes": [
     {

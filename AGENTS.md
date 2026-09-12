@@ -155,13 +155,14 @@ A Claim 阶段        = CLOSED（2026-09-10）
                     主指标：①非能力原因导致的错误能力边界更新率 ②真实能力受限后的站级剩余未补偿功率/能量
                     ⚠️ 本计划**不是** R5 启动；Round 5 = NOT STARTED 不变；A-M3–M6 = UNVALIDATED 为待建立目标
                     ⚠️ **不再用 M5BAT / RD-2 承担 A 的效果证明**（RD-2 结果不进入专利证据链）
-                    → **A 算法参考实现 + 可控真值场景台 V0.1 ✅ 已出**（`reports/patent_definition/A_算法原型与可控真值场景台_V0.1.md`）
-                      · 代码：`src/patent_preexperiment/a_ev/`（模块 1 归因 / 2 能力状态 / 3 缺口映射 / 4 承接选择 / 5 回写与分级恢复）
-                      · 场景台：`a_ev/scenario.py`（3 资源 + PCC；**事件真值注入**；A-EV-1 同幅值四原因对照；ScenarioSpec 可 JSON 序列化→可直接驱动 HIL）
-                      · 基线：B0 无归因门 / B1 静态降额 / B2 误差滚动；配置 `configs/a_ev_v0.yaml`（阈值=**候选值**）；入口 `experiments/a_ev/run.py`
-                      · 质量门全过：ruff、**mypy strict（10 文件 0 错）**、16 项单测
-                      · 合成场景机制自检（**非效果结论**）：EMUR A=0.00 vs B0=1.00 ｜ RESID A=4.03 kW vs B1/B2=20.00 kW ｜ 恢复时延 15.0 s、恢复误触发 0
-                      · 下一步：阈值冻结 V1.0 → HIL 接入（用 ScenarioSpec 驱动真机）→ 公开数据接入
+                    → **A 算法参考实现 + 可控真值场景台 V0.1 ✅（`reports/patent_definition/A_算法原型与可控真值场景台_V0.1.md`，已被 V0.2 取代为现状权威）**
+                    → **A-EV V0.2 PRE-FREEZE = CLOSED（2026-09-12，软件侧）**（`reports/patent_definition/A_算法原型与可控真值场景台_V0.2.md`）
+                      · 外部评审 9 项 pre-freeze 要求全部落实并复核 PASS：signed deviation 全链统一（e=P_req−P_meas 贯穿归因→缺口→能力更新→回写）｜ LimitDir 拆 UNKNOWN/BOTH、未知不作正向证据 ｜ RESID_full+steady 双指标（含 PCC）｜ response_delay 真实生效 ｜ 阈值产生规则先冻结（per-resource 带 = max(分辨率,k·σ,α·P_rated)）｜ 三场景集分离 ｜ 主承接改确定性 contribution ｜ A-no-state / A-no-writeback 消融 ｜ 稳健性矩阵预注册（方向×幅值×资源×repeats=5×seed=101）
+                      · **锁闭环 blocker 已关闭**：`resolve_thresholds()` = 阈值唯一入口——formal 阶段只认锁内 resolved thresholds（缺锁/哈希不匹配/resolved 缺失/未加锁 → LockError 拒绝，无标量回落）；`config_hash` 剔除治理位（切 formal 不使锁失效）；`--freeze` 落 resolved+calibration_data_hash；formal 拒绝重新标定
+                      · **S9 跨事务复用已入正式评价集**：T1 限值收缩 R0（up_bound 100→30）→ 事务清空但限值未解除 → T2 新缺口下 A 不向 R0 重复派发（bad_cmd=0）vs A_no_state 二次不可执行命令（bad_cmd=0.239）——权 7 事务级排除 ≠ 权 1【c】/【e】持久状态取得可运行实验区分
+                      · 三场景集留档：evaluation（10 场景×6 策略）/ robustness（48 条件）/ commissioning（p95=12s→建议窗 15s，数值仍属候选）；合成机制自检（**非效果结论**）：EMUR A=0 vs B0=1.00 ｜ RESID_full B0<A（确认成本可见）但 B0 状态更新全错 ｜ S9 见上
+                      · 质量门：pytest 全过（a_ev 40 项）、a_ev 包 ruff 0 错、mypy strict 11 文件 0 错；结果 config_hash 与配置一致
+                      · 下一步：HIL adapter / commissioning（前置条件核对 → 标定 → `--freeze` 落 V1.0 数值并加锁）→ formal A-EV
 ```
 
 > **A 证据状态（须与上述双线区分）**：A-M3–M6 = **UNVALIDATED**。说明书全文只写**可实施机制**，不写效果；实验通过其自身门槛前，结果**不得**进入任何申请文本。
@@ -193,9 +194,10 @@ A Claim 阶段        = CLOSED（2026-09-10）
 - 骨架已落实三条义务（§6 五类判据 / §8 换算聚合 / §10.3 初始化），并含**骨架阶段强检验**：**删除 C 的全部内容（含 §15 组合实施方式）后，A 仍能单独完整实施**；§9 承接选择**不得**以"设备参与控制资格"为前提。背景技术按 10 号 §4 引用位。
 - **不再开第三轮 A 权项架构讨论** —— 16 号已放行 A Claim v2；14 / 15 / 16 号已覆盖全部 P1/P2 与 Open items 1–5。
 
-**线 2（有效性证据）**：按 `patent_definition/A_有效性验证实验设计_V0.1.md` 推进。
+**线 2（有效性证据）**：按 `patent_definition/A_有效性验证实验设计_V0.1.md` 推进；**A-EV V0.2 PRE-FREEZE = CLOSED（软件侧，2026-09-12）**，现状权威 = `patent_definition/A_算法原型与可控真值场景台_V0.2.md`。
 
-- 执行顺序：前置条件核对（HIL 可得性 / 人工 `Pmax` 接口 / 时钟同步 / 采集分辨率 / 真实站合作方）→ 候选数据**字段级准入审计** → 门槛冻结为 V1.0 → A-EV-1 负对照（低成本先行）→ HIL 跑 A-EV-1~5 → 真实站 shadow → 受控闭环。
+- 软件侧已完成：算法参考实现（含 signed deviation 全链 / 消融 / S9）、可控真值场景台（三场景集分离）、阈值两步冻结闭环（规则已冻结；数值待 HIL 标定经 `--freeze` 加锁，formal 强制验锁、无标量回落）。
+- 执行顺序（剩余）：HIL adapter 接入（前置条件核对：HIL 可得性 / 人工 `Pmax` 接口 / 时钟同步 / 采集分辨率 / 真实站合作方）→ HIL commissioning 标定 → V1.0 数值冻结（`--freeze` + hash）→ formal A-EV（A-EV-1 负对照 → A-EV-1~5）→ 真实站 shadow → 受控闭环。
 - **本计划不是 R5 启动**；Round 5 = NOT STARTED 不变。结果若达"真实部署问题 + 效果证据"标准，可提交 **R5 intake gate** 评估，7/7 判定权在治理轨。
 
 **不要把 B/F 提前拉进第一波全文起草** —— B 为第 2 波、F 为第 3 波条件触发（F 的触发条件 = 新公开专利 ≥3 篇触及 F4/F5/F6）。
@@ -208,7 +210,8 @@ reports/patent_definition/16_A权利要求语言v2定稿_反馈对象闭合.md  
 reports/patent_definition/17_A说明书骨架_V1.md                     # A 说明书骨架（已执行完毕；历史规划件，产物 = 18 号）
 reports/patent_definition/18_A说明书全文_V1.md                     # A 说明书全文 V1（§1–§16 + 附录 A 内部证据档）
 reports/patent_definition/A_有效性验证实验设计_V0.1.md               # A-EV 计划（线 2；含数据合同/三层证据/A-EV-1~5/门槛）
-reports/patent_definition/A_算法原型与可控真值场景台_V0.1.md          # A 算法参考实现 + 场景台说明（含 4 处口径留痕）
+reports/patent_definition/A_算法原型与可控真值场景台_V0.2.md          # A-EV 现状权威：V0.2 pre-freeze CLOSED（评审 9 项 + 锁闭环 + S9）
+reports/patent_definition/A_算法原型与可控真值场景台_V0.1.md          # V0.1 说明（历史，已被 V0.2 取代为现状）
 reports/patent_pool/C_独立权架构反审_V1.md                        # C 机制冻结基线（内部版本 V2）
 reports/patent_pool/C_控制资格状态机_Claim_Draft_v1.2.md          # C 权利要求权威稿
 reports/patent_pool/C_Claim_v1_lit45_逐限定项反打.md              # C 主引证压力测试

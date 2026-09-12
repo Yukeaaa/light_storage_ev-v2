@@ -6,6 +6,9 @@
 
 from __future__ import annotations
 
+import json
+import pathlib
+
 import pytest
 
 from patent_preexperiment.a_ev.algorithm import AEVPipeline
@@ -18,7 +21,13 @@ from patent_preexperiment.a_ev.capability import (
 )
 from patent_preexperiment.a_ev.gap_carrier import feasible_headroom, station_gap
 from patent_preexperiment.a_ev.metrics import evaluate
-from patent_preexperiment.a_ev.runner import config_hash, load_cfg  # noqa: F401
+from patent_preexperiment.a_ev.runner import (  # noqa: F401
+    LockError,
+    config_hash,
+    freeze,
+    load_cfg,
+    resolve_thresholds,
+)
 from patent_preexperiment.a_ev.scenario import (
     default_scenarios,
     default_site,
@@ -402,3 +411,132 @@ def test_config_hash_is_stable_and_ignores_lock_fields():
     cfg_b["lock"] = "whatever"
     cfg_b.setdefault("experiment", {})["config_hash"] = "x"
     assert config_hash(cfg_a) == config_hash(cfg_b)
+
+
+# ---------------------------------------------------------------- 锁闭环（formal 唯一阈值来源）
+
+CONFIG_PATH = pathlib.Path("configs/a_ev_v0.yaml")
+
+
+def test_config_hash_ignores_governance_flags():
+    """治理位（phase / 加锁标志 / 锁字段）不参与内容哈希：冻结后切 formal 不使锁失效。"""
+    cfg = load_cfg(CONFIG_PATH)
+    h0 = config_hash(cfg)
+    exp = cfg.setdefault("experiment", {})
+    exp["thresholds_locked"] = True
+    exp["phase"] = "formal"
+    exp["locked_at"] = "2026-09-12T00:00:00+00:00"
+    exp["config_hash"] = "x"
+    cfg["lock"] = {"anything": 1}
+    assert config_hash(cfg) == h0
+    cfg["scenario"]["t_event_end"] = 81.0     # 实质内容变化必须改变哈希
+    assert config_hash(cfg) != h0
+
+
+def test_freeze_writes_resolved_thresholds_from_calibration(tmp_path: pathlib.Path):
+    """锁 = resolved thresholds（逐资源 band / 窗 / 持久 / 确认）+ 配置与标定数据哈希。"""
+    cfg = load_cfg(CONFIG_PATH)
+    lock_path = tmp_path / "lock.json"
+    lock = freeze(cfg, lock_path)
+    rt = lock["resolved_thresholds"]
+    assert rt["band_by_rid"]["R2"] < rt["band_by_rid"]["R0"]   # per-resource 规则生效
+    assert rt["persistence_n"] == 5 and rt["confirm_n"] == 4   # 规则推导（ceil(min_s/dt)）
+    assert lock["calibration_data_hash"]
+    assert "p95_step_response_time_s" in lock["calibration"]
+
+
+def test_formal_uses_lock_resolved_thresholds(tmp_path: pathlib.Path):
+    """冻结后只切治理位 → formal 接受，且算法实际使用的阈值来自锁而非配置标量。"""
+    cfg = load_cfg(CONFIG_PATH)
+    lock_path = tmp_path / "lock.json"
+    lock = freeze(cfg, lock_path)
+    cfg["experiment"]["phase"] = "formal"
+    cfg["experiment"]["thresholds_locked"] = True
+    specs = default_site(cfg)
+    thr = resolve_thresholds(cfg, specs, lock_path)
+    rt = lock["resolved_thresholds"]
+    assert thr.band("R2") == pytest.approx(rt["band_by_rid"]["R2"])
+    assert thr.band("R2") != pytest.approx(2.0)   # ≠ 配置标量回落 → 证明用的是锁值
+    assert thr.window_s == pytest.approx(rt["response_window_s"])
+    assert thr.persistence_n == rt["persistence_n"]
+    assert thr.confirm_n == rt["confirm_n"]
+    assert thr.provenance["source"] == "lock"
+
+
+def test_formal_refuses_missing_stale_or_tampered_lock(tmp_path: pathlib.Path):
+    """formal 四类硬失败：缺锁 / 哈希不匹配 / resolved 缺失 / 未加锁 —— 无标量回落。"""
+    cfg = load_cfg(CONFIG_PATH)
+    cfg["experiment"]["phase"] = "formal"
+    cfg["experiment"]["thresholds_locked"] = True
+    specs = default_site(cfg)
+    lock_path = tmp_path / "lock.json"
+
+    with pytest.raises(LockError):                 # ① 缺锁
+        resolve_thresholds(cfg, specs, lock_path)
+
+    freeze(cfg, lock_path)
+    cfg["scenario"]["t_event_end"] = 81.0          # 冻结后改动配置内容
+    with pytest.raises(LockError):                 # ② 哈希不匹配
+        resolve_thresholds(cfg, specs, lock_path)
+    cfg["scenario"]["t_event_end"] = 80.0
+
+    lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    del lock["resolved_thresholds"]["confirm_n"]
+    lock_path.write_text(json.dumps(lock), encoding="utf-8")
+    with pytest.raises(LockError):                 # ③ resolved thresholds 缺失
+        resolve_thresholds(cfg, specs, lock_path)
+
+    cfg2 = load_cfg(CONFIG_PATH)
+    cfg2["experiment"]["phase"] = "formal"         # ④ thresholds_locked=false
+    with pytest.raises(LockError):
+        resolve_thresholds(cfg2, specs, lock_path)
+
+
+def test_formal_main_entry_refuses_unlocked_run(tmp_path: pathlib.Path):
+    """入口级守卫：手工把 thresholds_locked 置 true 但没有（有效）锁 → 拒绝运行。"""
+    import yaml
+
+    from patent_preexperiment.a_ev import runner as runner_mod
+
+    cfg = load_cfg(CONFIG_PATH)
+    cfg["experiment"]["phase"] = "formal"
+    cfg["experiment"]["thresholds_locked"] = True   # 无锁文件 → check_lock 必败
+    cfg_path = tmp_path / "formal.yaml"
+    cfg_path.write_text(
+        yaml.safe_dump(cfg, allow_unicode=True, sort_keys=False), encoding="utf-8"
+    )
+    out = str(tmp_path / "out")
+    assert runner_mod.main(["--config", str(cfg_path), "--set", "commissioning",
+                            "--out", out]) == 3
+    assert runner_mod.main(["--config", str(cfg_path), "--set", "evaluation",
+                            "--out", out]) == 3
+
+
+# ---------------------------------------------------------------- S9：跨事务复用持久能力知识
+
+
+def test_s9_persistent_state_survives_transaction_end():
+    """权 7 事务级状态随缺口消失清空，但权 1【c】/【e】持久能力知识跨事务保持。"""
+    _, pol, m = _run("S9_learned_carrier_reuse", AEVPipeline)
+    # T1：归因确认收缩 R0；R1 承接缺口
+    assert any(e.get("kind") == "shrink" and e.get("rid") == "R0"
+               for s in pol.history for e in s.cap_events)
+    assert any(d.carrier_rid == "R1"
+               for s in pol.history if s.t < 80.0 for d in s.dispatches)
+    # 事务中段（T1 已结束、T2 未开始）：修正与事务级排除清空
+    mid = [s for s in pol.history if 90.0 <= s.t <= 100.0]
+    assert mid and all(s.carriers == () and s.excluded == () for s in mid)
+    # T2：R0 持久边界仍为收缩值（无恢复试探 → 不回升）
+    t2 = [s for s in pol.history if s.t >= 115.0]
+    assert t2 and all(s.bounds["R0"][0] < 100.0 - 1e-6 for s in t2)
+    # A 不向 R0 下发超过其已知能力的修正 → 无二次不可执行命令
+    assert not any(d.carrier_rid == "R0" for s in t2 for d in s.dispatches)
+    assert m.bad_cmd_rate == pytest.approx(0.0)
+
+
+def test_s9_no_state_reissues_unexecutable_command():
+    """消融【c】：无持久能力知识 → T2 仍按额定能力向 R0 派发 → 二次不可执行命令。"""
+    _, pol, m = _run("S9_learned_carrier_reuse", ANoState)
+    t2 = [s for s in pol.history if s.t >= 115.0]
+    assert any(d.carrier_rid == "R0" for s in t2 for d in s.dispatches)
+    assert m.bad_cmd_rate > 0.0

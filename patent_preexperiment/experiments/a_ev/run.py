@@ -26,6 +26,7 @@ if str(ROOT / "src") not in sys.path:
     sys.path.insert(0, str(ROOT / "src"))
 
 from patent_preexperiment.a_ev.runner import (  # noqa: E402
+    LockError,
     check_lock,
     freeze,
     load_cfg,
@@ -49,12 +50,18 @@ def main(argv: list[str] | None = None) -> int:
     lock_path = pathlib.Path(args.config).with_suffix(".lock.json")
     out = pathlib.Path(args.out)
     phase = str(cfg.get("experiment", {}).get("phase", "synthetic_regression"))
-    locked = bool(cfg.get("experiment", {}).get("thresholds_locked"))
 
     if args.freeze:
-        lock = freeze(cfg, lock_path)
+        if phase == "formal":
+            print("[A-EV] 拒绝冻结：phase=formal 下不得重新标定（须按变更纪律回退 phase 重走流程）")
+            return 3
+        try:
+            lock = freeze(cfg, lock_path)
+        except LockError as e:
+            print(f"[A-EV] 拒绝冻结：{e}")
+            return 3
         print(f"[A-EV] 标定完成 → 锁文件 {lock_path}")
-        print(json.dumps(lock["suggested_thresholds"], ensure_ascii=False, indent=2))
+        print(json.dumps(lock["resolved_thresholds"], ensure_ascii=False, indent=2))
         return 0
 
     if args.check_lock:
@@ -62,9 +69,15 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[A-EV] {msg}")
         return 0 if ok else 2
 
-    if phase == "formal" and not locked:
-        print("[A-EV] 拒绝运行：phase=formal 而 thresholds_locked=false（须先 --freeze）")
+    if phase == "formal" and args.which == "commissioning":
+        print("[A-EV] 拒绝运行：formal 阶段不再运行标定集（commissioning 与正式评价严格分离）")
         return 3
+    if phase == "formal":
+        # formal 阶段每次运行都强制验锁：缺锁 / 哈希不匹配 / resolved 缺失 → 拒绝
+        ok, msg = check_lock(cfg, lock_path)
+        if not ok:
+            print(f"[A-EV] 拒绝运行：phase=formal 且锁校验失败 —— {msg}")
+            return 3
 
     if args.which == "commissioning":
         rep = run_commissioning(cfg)
@@ -78,14 +91,19 @@ def main(argv: list[str] | None = None) -> int:
         print(f"  按预注册规则建议阈值: {sug}")
         return 0
 
-    result = run_all(cfg, args.which)
+    try:
+        result = run_all(cfg, args.which, None, lock_path)
+    except LockError as e:
+        print(f"[A-EV] 拒绝运行：{e}")
+        return 3
     tag = "a_ev_v0_2" if args.which == "evaluation" else f"a_ev_v0_2_{args.which}"
     js, cs = write_outputs(result, out, tag)
     print(f"[A-EV] [{args.which}] config_hash={result['config_hash'][:12]}")
     print(f"[A-EV] summary  -> {js}")
     print(f"[A-EV] episodes -> {cs}")
     t = result["thresholds"]
-    print(f"      阈值来源={'规则' if t['rule_based'] else '标量回落'}  "
+    src = {"lock": "锁(resolved)", "rules": "规则"}.get(t["source"], "标量回落")
+    print(f"      阈值来源={src}  "
           f"band={ {k: round(v, 3) for k, v in t['band_by_rid'].items()} }  "
           f"window={t['window_s']}s  persistence={t['persistence_n']}  confirm={t['confirm_n']}")
     print(f"{'policy':16s} {'EMUR':>8s} {'RLD_full':>9s} {'RLD_stdy':>9s} {'BOUND_ERR':>10s} "

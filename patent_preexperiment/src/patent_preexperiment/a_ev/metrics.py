@@ -97,12 +97,14 @@ def _window_mean(
     return mean, mean * dt / 3600.0
 
 
-def evaluate(ep: Episode, policy: Any, cfg: dict[str, Any]) -> EpisodeMetrics:
+def evaluate(
+    ep: Episode, policy: Any, cfg: dict[str, Any], thr: Thresholds | None = None
+) -> EpisodeMetrics:
     m = EpisodeMetrics(name=ep.spec.name, policy=getattr(policy, "name", "?"),
                        phase=ep.spec.phase)
     truth = _truth_lookup(ep)
     spec_by = {s.rid: s for s in ep.specs}
-    thr: Thresholds = build_thresholds(cfg, ep.specs)
+    thr = thr if thr is not None else build_thresholds(cfg, ep.specs)
     dt = ep.spec.dt
     hist = {round(s.t, 3): s for s in getattr(policy, "history", [])}
 
@@ -135,7 +137,11 @@ def evaluate(ep: Episode, policy: Any, cfg: dict[str, Any]) -> EpisodeMetrics:
 
     # ---------------- 主指标 2 + 能力边界误差（仅真实能力受限、无探针的 episode）
     t0 = ep.spec.t_event_start
-    t1 = min(ep.spec.t_event_end, ep.spec.horizon)
+    # 含第二事件窗口（S9）：残差窗口覆盖到两个事件的较晚结束时刻
+    t_end_eff = ep.spec.t_event_end
+    if ep.spec.target2_rid:
+        t_end_eff = max(t_end_eff, ep.spec.t_event2_end)
+    t1 = min(t_end_eff, ep.spec.horizon)
     offset = float(cfg["metrics"]["residual_window_offset_s"])
     ts0 = t0 + offset
     if ep.spec.event is Truth.LOCAL_LIMIT and t1 > t0 and ep.spec.probe_at <= 0.0:

@@ -1,7 +1,7 @@
 {
   "note": "合成场景机制验证，非效果结论；阈值须按预注册规则冻结",
   "scenario_set": "evaluation",
-  "config_hash": "b41e2b8e7767f66537e9b29b55f4adc2c929338a71828987def3a9ac558294f2",
+  "config_hash": "2b53a3f56084ee5a15cec0168b2fcc895aec7526ea70fee17d249762cae1c3ee",
   "thresholds": {
     "band_by_rid": {
       "R0": 2.0,
@@ -11,7 +11,8 @@
     "window_s": 12.0,
     "persistence_n": 5,
     "confirm_n": 4,
-    "rule_based": true
+    "rule_based": true,
+    "source": "rules"
   },
   "episodes": [
     {
@@ -1417,11 +1418,155 @@
       "recovery_false_steps": 0,
       "pcc_resid_full_mean_kw": 29.917355371900825,
       "pcc_resid_steady_mean_kw": 47.27272727272727
+    },
+    {
+      "name": "S9_learned_carrier_reuse",
+      "policy": "A",
+      "phase": "evaluation",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 363,
+      "noise_rate": 0.0,
+      "resid_full_mean_kw": 9.724142329129263,
+      "resid_full_energy_kwh": 0.0027011506469803506,
+      "resid_steady_mean_kw": 8.695992492709953,
+      "resid_steady_energy_kwh": 0.0024155534701972093,
+      "bound_err_mean_kw": 0.6625025454037726,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_full_mean_kw": 7.727795228447097,
+      "pcc_resid_steady_mean_kw": 8.60540923757756
+    },
+    {
+      "name": "S9_learned_carrier_reuse",
+      "policy": "A_no_state",
+      "phase": "evaluation",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 363,
+      "noise_rate": 0.0,
+      "resid_full_mean_kw": 9.724142329129263,
+      "resid_full_energy_kwh": 0.0027011506469803506,
+      "resid_steady_mean_kw": 8.695992492709953,
+      "resid_steady_energy_kwh": 0.0024155534701972093,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.2391304347826087,
+      "cascade_count": 1,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_full_mean_kw": 7.727795228447097,
+      "pcc_resid_steady_mean_kw": 8.60540923757756
+    },
+    {
+      "name": "S9_learned_carrier_reuse",
+      "policy": "A_no_writeback",
+      "phase": "evaluation",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 363,
+      "noise_rate": 0.0,
+      "resid_full_mean_kw": 9.724142329129263,
+      "resid_full_energy_kwh": 0.0027011506469803506,
+      "resid_steady_mean_kw": 8.695992492709953,
+      "resid_steady_energy_kwh": 0.0024155534701972093,
+      "bound_err_mean_kw": 0.6625025454037726,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_full_mean_kw": 7.727795228447097,
+      "pcc_resid_steady_mean_kw": 8.60540923757756
+    },
+    {
+      "name": "S9_learned_carrier_reuse",
+      "policy": "B0_no_gate",
+      "phase": "evaluation",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 363,
+      "noise_rate": 0.0,
+      "resid_full_mean_kw": 7.081324989563281,
+      "resid_full_energy_kwh": 0.0019670347193231335,
+      "resid_steady_mean_kw": 8.695992492709953,
+      "resid_steady_energy_kwh": 0.0024155534701972093,
+      "bound_err_mean_kw": 0.6669760551416546,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_full_mean_kw": 5.627543038063534,
+      "pcc_resid_steady_mean_kw": 8.60540923757756
+    },
+    {
+      "name": "S9_learned_carrier_reuse",
+      "policy": "B1_static_derate",
+      "phase": "evaluation",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 363,
+      "noise_rate": 0.0,
+      "resid_full_mean_kw": 15.0,
+      "resid_full_energy_kwh": 0.004166666666666667,
+      "resid_steady_mean_kw": 13.68421052631579,
+      "resid_steady_energy_kwh": 0.003801169590643275,
+      "bound_err_mean_kw": 70.0,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_full_mean_kw": 11.920529801324504,
+      "pcc_resid_steady_mean_kw": 13.541666666666666
+    },
+    {
+      "name": "S9_learned_carrier_reuse",
+      "policy": "B2_error_rolling",
+      "phase": "evaluation",
+      "emur_numer": 0,
+      "emur_denom": 0,
+      "emur_rate": null,
+      "emur_by_class": {},
+      "noise_numer": 0,
+      "noise_denom": 363,
+      "noise_rate": 0.0,
+      "resid_full_mean_kw": 15.0,
+      "resid_full_energy_kwh": 0.004166666666666667,
+      "resid_steady_mean_kw": 13.68421052631579,
+      "resid_steady_energy_kwh": 0.003801169590643275,
+      "bound_err_mean_kw": null,
+      "bad_cmd_rate": 0.0,
+      "cascade_count": 0,
+      "recovery_delay_s": null,
+      "recovery_steps": 0,
+      "recovery_false_steps": 0,
+      "pcc_resid_full_mean_kw": 11.920529801324504,
+      "pcc_resid_steady_mean_kw": 13.541666666666666
     }
   ],
   "summary": {
     "A": {
-      "n_episodes": 9,
+      "n_episodes": 10,
       "emur": {
         "numer": 0,
         "denom": 150,
@@ -1429,7 +1574,7 @@
       },
       "noise": {
         "numer": 0,
-        "denom": 2806,
+        "denom": 3169,
         "rate": 0.0
       },
       "emur_by_class": {
@@ -1449,12 +1594,12 @@
           "rate": 0.0
         }
       },
-      "resid_full_mean_kw": 8.738569028050561,
-      "resid_full_energy_kwh": 0.0024273802855696,
-      "resid_steady_mean_kw": 3.821794001808655,
-      "resid_steady_energy_kwh": 0.0010616094449468485,
-      "pcc_resid_full_mean_kw": 3.7215119244693255,
-      "bound_err_mean_kw": 0.6288571382550382,
+      "resid_full_mean_kw": 8.984962353320235,
+      "resid_full_energy_kwh": 0.002495822875922288,
+      "resid_steady_mean_kw": 5.040343624533979,
+      "resid_steady_energy_kwh": 0.0014000954512594387,
+      "pcc_resid_full_mean_kw": 4.723082750463768,
+      "bound_err_mean_kw": 0.6372684900422219,
       "bad_cmd_rate": 0.0,
       "cascade_count": 1,
       "recovery_delay_s": 15.0,
@@ -1463,7 +1608,7 @@
       "emur_is_vacuous": false
     },
     "A_no_state": {
-      "n_episodes": 9,
+      "n_episodes": 10,
       "emur": {
         "numer": 0,
         "denom": 150,
@@ -1471,7 +1616,7 @@
       },
       "noise": {
         "numer": 0,
-        "denom": 2806,
+        "denom": 3169,
         "rate": 0.0
       },
       "emur_by_class": {
@@ -1491,21 +1636,21 @@
           "rate": 0.0
         }
       },
-      "resid_full_mean_kw": 8.738569028050561,
-      "resid_full_energy_kwh": 0.0024273802855696,
-      "resid_steady_mean_kw": 3.821794001808655,
-      "resid_steady_energy_kwh": 0.0010616094449468485,
-      "pcc_resid_full_mean_kw": 3.7215119244693255,
+      "resid_full_mean_kw": 8.984962353320235,
+      "resid_full_energy_kwh": 0.002495822875922288,
+      "resid_steady_mean_kw": 5.040343624533979,
+      "resid_steady_energy_kwh": 0.0014000954512594387,
+      "pcc_resid_full_mean_kw": 4.723082750463768,
       "bound_err_mean_kw": null,
-      "bad_cmd_rate": 0.0,
-      "cascade_count": 1,
+      "bad_cmd_rate": 0.02391304347826087,
+      "cascade_count": 2,
       "recovery_delay_s": null,
       "recovery_steps": 0,
       "recovery_false_steps": 0,
       "emur_is_vacuous": true
     },
     "A_no_writeback": {
-      "n_episodes": 9,
+      "n_episodes": 10,
       "emur": {
         "numer": 0,
         "denom": 150,
@@ -1513,7 +1658,7 @@
       },
       "noise": {
         "numer": 0,
-        "denom": 2806,
+        "denom": 3169,
         "rate": 0.0
       },
       "emur_by_class": {
@@ -1533,13 +1678,13 @@
           "rate": 0.0
         }
       },
-      "resid_full_mean_kw": 8.738569028050561,
-      "resid_full_energy_kwh": 0.0024273802855696,
-      "resid_steady_mean_kw": 3.821794001808655,
-      "resid_steady_energy_kwh": 0.0010616094449468485,
-      "pcc_resid_full_mean_kw": 3.7759068468352956,
-      "bound_err_mean_kw": 0.6288571382550382,
-      "bad_cmd_rate": 0.06209150326797386,
+      "resid_full_mean_kw": 8.984962353320235,
+      "resid_full_energy_kwh": 0.002495822875922288,
+      "resid_steady_mean_kw": 5.040343624533979,
+      "resid_steady_energy_kwh": 0.0014000954512594387,
+      "pcc_resid_full_mean_kw": 4.763878942238246,
+      "bound_err_mean_kw": 0.6372684900422219,
+      "bad_cmd_rate": 0.05588235294117647,
       "cascade_count": 0,
       "recovery_delay_s": 15.0,
       "recovery_steps": 3,
@@ -1547,7 +1692,7 @@
       "emur_is_vacuous": false
     },
     "B0_no_gate": {
-      "n_episodes": 9,
+      "n_episodes": 10,
       "emur": {
         "numer": 150,
         "denom": 150,
@@ -1555,7 +1700,7 @@
       },
       "noise": {
         "numer": 0,
-        "denom": 2806,
+        "denom": 3169,
         "rate": 0.0
       },
       "emur_by_class": {
@@ -1575,13 +1720,13 @@
           "rate": 1.0
         }
       },
-      "resid_full_mean_kw": 2.396488909386482,
-      "resid_full_energy_kwh": 0.0006656913637184672,
-      "resid_steady_mean_kw": 3.821794001808655,
-      "resid_steady_energy_kwh": 0.0010616094449468485,
-      "pcc_resid_full_mean_kw": 1.1553650960648554,
-      "bound_err_mean_kw": 0.640190029591006,
-      "bad_cmd_rate": 0.042222222222222223,
+      "resid_full_mean_kw": 3.5676979294306816,
+      "resid_full_energy_kwh": 0.0009910272026196338,
+      "resid_steady_mean_kw": 5.040343624533979,
+      "resid_steady_energy_kwh": 0.0014000954512594387,
+      "pcc_resid_full_mean_kw": 2.273409581564525,
+      "bound_err_mean_kw": 0.6468865359786682,
+      "bad_cmd_rate": 0.038,
       "cascade_count": 0,
       "recovery_delay_s": 15.0,
       "recovery_steps": 3,
@@ -1589,7 +1734,7 @@
       "emur_is_vacuous": false
     },
     "B1_static_derate": {
-      "n_episodes": 9,
+      "n_episodes": 10,
       "emur": {
         "numer": 0,
         "denom": 150,
@@ -1597,7 +1742,7 @@
       },
       "noise": {
         "numer": 0,
-        "denom": 2806,
+        "denom": 3169,
         "rate": 0.0
       },
       "emur_by_class": {
@@ -1617,12 +1762,12 @@
           "rate": 0.0
         }
       },
-      "resid_full_mean_kw": 20.0,
-      "resid_full_energy_kwh": 0.005555555555555556,
-      "resid_steady_mean_kw": 20.0,
-      "resid_steady_energy_kwh": 0.005555555555555556,
-      "pcc_resid_full_mean_kw": 8.264462809917354,
-      "bound_err_mean_kw": 58.333333333333336,
+      "resid_full_mean_kw": 18.75,
+      "resid_full_energy_kwh": 0.005208333333333334,
+      "resid_steady_mean_kw": 18.42105263157895,
+      "resid_steady_energy_kwh": 0.005116959064327485,
+      "pcc_resid_full_mean_kw": 9.178479557769142,
+      "bound_err_mean_kw": 61.25,
       "bad_cmd_rate": 0.0,
       "cascade_count": 0,
       "recovery_delay_s": null,
@@ -1631,7 +1776,7 @@
       "emur_is_vacuous": false
     },
     "B2_error_rolling": {
-      "n_episodes": 9,
+      "n_episodes": 10,
       "emur": {
         "numer": 0,
         "denom": 150,
@@ -1639,7 +1784,7 @@
       },
       "noise": {
         "numer": 0,
-        "denom": 2806,
+        "denom": 3169,
         "rate": 0.0
       },
       "emur_by_class": {
@@ -1659,11 +1804,11 @@
           "rate": 0.0
         }
       },
-      "resid_full_mean_kw": 20.0,
-      "resid_full_energy_kwh": 0.005555555555555556,
-      "resid_steady_mean_kw": 20.0,
-      "resid_steady_energy_kwh": 0.005555555555555556,
-      "pcc_resid_full_mean_kw": 8.264462809917354,
+      "resid_full_mean_kw": 18.75,
+      "resid_full_energy_kwh": 0.005208333333333334,
+      "resid_steady_mean_kw": 18.42105263157895,
+      "resid_steady_energy_kwh": 0.005116959064327485,
+      "pcc_resid_full_mean_kw": 9.178479557769142,
       "bound_err_mean_kw": null,
       "bad_cmd_rate": 0.0,
       "cascade_count": 0,

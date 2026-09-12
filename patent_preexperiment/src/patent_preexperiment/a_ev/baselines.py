@@ -88,9 +88,11 @@ class _StaticPolicy:
         specs: list[ResourceSpec],
         cfg: dict[str, Any],
         strategy: str | None = None,
+        thr: Any = None,
     ) -> None:
         self.specs = {s.rid: s for s in specs}
         self.cfg = cfg
+        self.thr = thr  # B1/B2 不使用阈值；仅为与 AEVPipeline 构造签名一致
         self.history: list[Any] = []
         self._corrections: dict[str, float] = {}
         self.states: dict[str, CapabilityState] = {}
@@ -122,8 +124,9 @@ class BaselineB1(_StaticPolicy):
         specs: list[ResourceSpec],
         cfg: dict[str, Any],
         strategy: str | None = None,
+        thr: Any = None,
     ) -> None:
-        super().__init__(specs, cfg, strategy)
+        super().__init__(specs, cfg, strategy, thr)
         self.states = {
             s.rid: CapabilityState(
                 rid=s.rid,
@@ -163,8 +166,9 @@ class BaselineB2(_StaticPolicy):
         specs: list[ResourceSpec],
         cfg: dict[str, Any],
         strategy: str | None = None,
+        thr: Any = None,
     ) -> None:
-        super().__init__(specs, cfg, strategy)
+        super().__init__(specs, cfg, strategy, thr)
         self.states = {
             s.rid: CapabilityState(
                 rid=s.rid,

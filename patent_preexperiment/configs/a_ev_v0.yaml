@@ -12,7 +12,7 @@
 experiment:
   version: "0.2"
   phase: "synthetic_regression"   # synthetic_regression | commissioning | formal
-  thresholds_locked: false        # formal 阶段必须为 true（runner 会守卫）
+  thresholds_locked: false        # formal 阶段必须为 true；且每次运行强制验锁（哈希+resolved）
   locked_at: null                 # 加锁时间（由 --freeze 写入）
   config_hash: null               # 配置内容哈希（由 --freeze 写入）
 

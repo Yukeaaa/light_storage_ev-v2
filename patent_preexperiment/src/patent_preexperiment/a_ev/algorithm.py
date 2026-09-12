@@ -72,11 +72,13 @@ class AEVPipeline:
         specs: list[ResourceSpec],
         cfg: dict[str, Any],
         strategy: str | None = None,
+        thr: Thresholds | None = None,
     ) -> None:
         self.specs = {s.rid: s for s in specs}
         self.cfg = cfg
         self.strategy = strategy
-        self.thr: Thresholds = build_thresholds(cfg, specs)
+        # formal 阶段由 runner 注入锁内 resolved thresholds；缺省路径仅供合成回归/单测
+        self.thr: Thresholds = thr if thr is not None else build_thresholds(cfg, specs)
         self.attr = Attriber(self.thr)
         self.states: dict[str, CapabilityState] = {s.rid: init_capability(s, cfg) for s in specs}
         # 承接规模所用状态：默认 = 持久能力状态（活的引用）；消融可改为冻结的额定快照

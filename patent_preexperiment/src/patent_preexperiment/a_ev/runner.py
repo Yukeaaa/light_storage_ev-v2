@@ -34,8 +34,8 @@ from .scenario import (
     robustness_scenarios,
     run_episode,
 )
-from .thresholds import build_thresholds
-from .types import DIR_UP, Truth
+from .thresholds import Thresholds, build_thresholds
+from .types import DIR_UP, ResourceSpec, Truth
 
 POLICIES: dict[str, Any] = {
     "A": AEVPipeline,
@@ -49,7 +49,22 @@ POLICIES: dict[str, Any] = {
 #: 不维护持久能力状态 ⇒ EMUR 恒为 0（**空真**），报告中必须标注
 MEMORYLESS = frozenset({"A_no_state", "B2_error_rolling"})
 
-LOCK_KEYS = ("experiment.config_hash", "experiment.locked_at", "lock")
+#: config_hash 剔除的**治理位**（不参与内容哈希）：加锁动作本身与阶段切换不得使锁失效，
+#: 锁的完整性由锁文件自身的 config_hash + resolved_thresholds 校验保证。
+LOCK_KEYS = (
+    "experiment.config_hash",
+    "experiment.locked_at",
+    "experiment.thresholds_locked",
+    "experiment.phase",
+    "lock",
+)
+
+#: 锁文件中 resolved_thresholds 必须齐备的字段（formal 阶段唯一阈值来源）
+RESOLVED_KEYS = ("band_by_rid", "response_window_s", "persistence_n", "confirm_n")
+
+
+class LockError(RuntimeError):
+    """锁缺失 / 哈希不匹配 / resolved thresholds 缺失 —— formal 阶段一律拒绝运行。"""
 
 
 def load_cfg(path: str | pathlib.Path) -> dict[str, Any]:
@@ -60,11 +75,12 @@ def load_cfg(path: str | pathlib.Path) -> dict[str, Any]:
 
 
 def config_hash(cfg: dict[str, Any]) -> str:
-    """配置内容哈希（剔除加锁字段自身，保证可复算）。"""
+    """配置**内容**哈希（剔除治理位字段，保证"冻结后切 formal"不使锁失效）。"""
     d = json.loads(json.dumps(cfg, sort_keys=True, default=str))
-    exp = d.get("experiment", {})
-    exp.pop("config_hash", None)
-    exp.pop("locked_at", None)
+    exp = d.get("experiment")
+    if isinstance(exp, dict):
+        for k in ("config_hash", "locked_at", "thresholds_locked", "phase"):
+            exp.pop(k, None)
     d.pop("lock", None)
     blob = json.dumps(d, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     return hashlib.sha256(blob.encode("utf-8")).hexdigest()
@@ -97,7 +113,7 @@ def summarize(rows: list[EpisodeMetrics]) -> dict[str, Any]:
     per_policy: dict[str, Any] = {}
     for pname in POLICIES:
         rs = [r for r in rows if r.policy == pname]
-        lim = [r for r in rs if r.name.startswith(("S3", "S5", "S6"))]
+        lim = [r for r in rs if r.name.startswith(("S3", "S5", "S6", "S9"))]
         per_policy[pname] = {
             "n_episodes": len(rs),
             "emur": _rate(rs, "emur_numer", "emur_denom"),
@@ -149,13 +165,16 @@ def run_all(
     cfg: dict[str, Any],
     which: str = "evaluation",
     policies: list[str] | None = None,
+    lock_path: str | pathlib.Path | None = None,
 ) -> dict[str, Any]:
     if which == "commissioning":
         raise ValueError(
             "commissioning 集只做标定，不跑 A-vs-baseline 评价（见 run_commissioning）"
         )
     specs = default_site(cfg)
-    thr = build_thresholds(cfg, specs)
+    # 阈值唯一入口：formal 阶段必须来自已校验的锁（resolved thresholds）；
+    # 非正式阶段按预注册规则构造，允许标量回落（仅服务合成回归 / 单测）。
+    thr = resolve_thresholds(cfg, specs, lock_path)
     scenarios = scenarios_for(cfg, which)
     names = policies or list(POLICIES)
     if which == "robustness":
@@ -164,9 +183,10 @@ def run_all(
     rows: list[EpisodeMetrics] = []
     for scenario in scenarios:
         for pname in names:
-            policy = POLICIES[pname](specs, cfg)
+            policy = POLICIES[pname](specs, cfg, None, thr)
             ep = run_episode(scenario, specs, cfg, policy)
-            rows.append(evaluate(ep, policy, cfg))
+            rows.append(evaluate(ep, policy, cfg, thr))
+    source = _threshold_source(thr)
     return {
         "note": "合成场景机制验证，非效果结论；阈值须按预注册规则冻结",
         "scenario_set": which,
@@ -177,10 +197,18 @@ def run_all(
             "persistence_n": thr.persistence_n,
             "confirm_n": thr.confirm_n,
             "rule_based": thr.is_rule_based,
+            "source": source,
         },
         "episodes": [asdict(r) for r in rows],
         "summary": summarize(rows),
     }
+
+
+def _threshold_source(thr: Thresholds) -> str:
+    prov = thr.provenance or {}
+    if prov.get("source") == "lock":
+        return "lock"
+    return "rules" if thr.is_rule_based else "scalar_fallback"
 
 
 def run_commissioning(cfg: dict[str, Any]) -> dict[str, Any]:
@@ -284,17 +312,41 @@ def run_commissioning(cfg: dict[str, Any]) -> dict[str, Any]:
 
 
 def freeze(cfg: dict[str, Any], lock_path: pathlib.Path) -> dict[str, Any]:
-    """运行标定 → 按预注册规则算出设备相关阈值 → 写入锁文件（不改配置本身）。"""
+    """标定 → 按预注册规则算出 **resolved thresholds** → 写锁文件（不改配置本身）。
+
+    锁是 formal 阶段唯一的阈值来源（见 `resolve_thresholds`）：包含逐资源 band、
+    响应窗、持久/确认周期数，以及配置哈希与标定数据哈希。缺预注册规则或标定
+    未得到 p95 时**拒绝冻结**——formal 阶段不允许标量回落。
+    """
     import datetime as _dt
 
+    if not cfg.get("thresholds_provenance"):
+        raise LockError("配置缺少 thresholds_provenance（预注册规则）——拒绝冻结："
+                        "formal 阶段不允许标量回落")
     rep = run_commissioning(cfg)
+    specs = default_site(cfg)
+    rule_thr = build_thresholds(cfg, specs)   # 规则推导的 persistence_n / confirm_n
+    window = rep["suggested_thresholds"]["response_window_s"]
+    if window is None:
+        raise LockError("标定未得到 p95 阶跃响应时间——response_window 无法按规则落定，拒绝冻结")
+    band_by_rid = {k: float(v) for k, v in rep["suggested_thresholds"]["band_by_rid"].items()}
+    calib_blob = json.dumps(rep, sort_keys=True, ensure_ascii=False, separators=(",", ":"))
     lock = {
         "locked_at": _dt.datetime.now(_dt.UTC).isoformat(timespec="seconds"),
         "config_hash": config_hash(cfg),
+        "calibration_data_hash": hashlib.sha256(calib_blob.encode("utf-8")).hexdigest(),
         "phase_at_lock": cfg.get("experiment", {}).get("phase"),
-        "suggested_thresholds": rep["suggested_thresholds"],
-        "p95_step_response_time_s": rep["p95_step_response_time_s"],
-        "noise_sigma_kw": rep["noise_sigma_kw"],
+        "rules": cfg["thresholds_provenance"],
+        "resolved_thresholds": {
+            "band_by_rid": band_by_rid,
+            "response_window_s": float(window),
+            "persistence_n": int(rule_thr.persistence_n),
+            "confirm_n": int(rule_thr.confirm_n),
+        },
+        "calibration": {
+            "p95_step_response_time_s": rep["p95_step_response_time_s"],
+            "noise_sigma_kw": rep["noise_sigma_kw"],
+        },
         "note": "冻结后不得依正式结果调整；如需变更须记录变更理由并重新计算哈希",
     }
     lock_path.write_text(json.dumps(lock, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -302,13 +354,69 @@ def freeze(cfg: dict[str, Any], lock_path: pathlib.Path) -> dict[str, Any]:
 
 
 def check_lock(cfg: dict[str, Any], lock_path: pathlib.Path) -> tuple[bool, str]:
+    """锁完整性校验：存在、哈希匹配、resolved_thresholds 齐备且覆盖全部资源。"""
     if not lock_path.exists():
         return False, f"未找到锁文件 {lock_path}"
-    lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    try:
+        lock = json.loads(lock_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as e:
+        return False, f"锁文件不是合法 JSON：{e}"
     cur = config_hash(cfg)
     if lock.get("config_hash") != cur:
-        return False, f"配置哈希不匹配：锁={lock.get('config_hash')[:12]} 当前={cur[:12]}"
-    return True, f"锁校验通过（{lock.get('locked_at')}）"
+        return False, f"配置哈希不匹配：锁={str(lock.get('config_hash'))[:12]} 当前={cur[:12]}"
+    rt = lock.get("resolved_thresholds")
+    if not isinstance(rt, dict):
+        return False, "锁缺少 resolved_thresholds（请用当前版本 --freeze 重新生成）"
+    missing = [k for k in RESOLVED_KEYS if rt.get(k) is None]
+    if missing:
+        return False, f"锁 resolved_thresholds 缺失字段：{missing}"
+    band = rt.get("band_by_rid")
+    if not isinstance(band, dict) or not band:
+        return False, "锁 resolved_thresholds.band_by_rid 为空"
+    return True, f"锁校验通过（{lock.get('locked_at')}，resolved thresholds 齐备）"
+
+
+def resolve_thresholds(
+    cfg: dict[str, Any],
+    specs: list[ResourceSpec],
+    lock_path: str | pathlib.Path | None,
+) -> Thresholds:
+    """**阈值唯一入口**：formal 阶段只认锁内 resolved thresholds，任何缺口硬失败。
+
+    - phase != formal：按预注册规则构造（未落定项回落标量），仅供合成回归 / 单测；
+    - phase == formal：①thresholds_locked ②锁存在 ③哈希匹配 ④resolved 齐备且
+      覆盖全部资源——任一不满足即 `LockError`，**不存在标量回落**。
+    """
+    phase = str(cfg.get("experiment", {}).get("phase", "synthetic_regression"))
+    if phase != "formal":
+        return build_thresholds(cfg, specs)
+    if not bool(cfg.get("experiment", {}).get("thresholds_locked")):
+        raise LockError("phase=formal 但 experiment.thresholds_locked=false"
+                        "（须先 commissioning + --freeze 并加锁）")
+    if lock_path is None:
+        raise LockError("phase=formal 但未提供锁文件路径（无法校验锁）")
+    lp = pathlib.Path(lock_path)
+    ok, msg = check_lock(cfg, lp)
+    if not ok:
+        raise LockError(msg)
+    lock = json.loads(lp.read_text(encoding="utf-8"))
+    rt = lock["resolved_thresholds"]
+    band_by_rid = {k: float(v) for k, v in rt["band_by_rid"].items()}
+    missing_rids = [s.rid for s in specs if s.rid not in band_by_rid]
+    if missing_rids:
+        raise LockError(f"锁 resolved band_by_rid 未覆盖资源：{missing_rids}")
+    return Thresholds(
+        band_by_rid=band_by_rid,
+        default_band=max(band_by_rid.values()),
+        window_s=float(rt["response_window_s"]),
+        persistence_n=int(rt["persistence_n"]),
+        confirm_n=int(rt["confirm_n"]),
+        provenance={
+            "source": "lock",
+            "locked_at": lock.get("locked_at"),
+            "calibration_data_hash": lock.get("calibration_data_hash"),
+        },
+    )
 
 
 def write_outputs(
@@ -352,12 +460,18 @@ def main(argv: list[str] | None = None) -> int:
     cfg = load_cfg(args.config)
     lock_path = pathlib.Path(args.config).with_suffix(".lock.json")
     phase = str(cfg.get("experiment", {}).get("phase", "synthetic_regression"))
-    locked = bool(cfg.get("experiment", {}).get("thresholds_locked"))
 
     if args.freeze:
-        lock = freeze(cfg, lock_path)
+        if phase == "formal":
+            print("[A-EV] 拒绝冻结：phase=formal 下不得重新标定（须按变更纪律回退 phase 重走流程）")
+            return 3
+        try:
+            lock = freeze(cfg, lock_path)
+        except LockError as e:
+            print(f"[A-EV] 拒绝冻结：{e}")
+            return 3
         print(f"[A-EV] 标定完成 → 锁文件 {lock_path}")
-        print(json.dumps(lock["suggested_thresholds"], ensure_ascii=False, indent=2))
+        print(json.dumps(lock["resolved_thresholds"], ensure_ascii=False, indent=2))
         return 0
 
     if args.check_lock:
@@ -365,9 +479,16 @@ def main(argv: list[str] | None = None) -> int:
         print(f"[A-EV] {msg}")
         return 0 if ok else 2
 
-    if phase == "formal" and not locked:
-        print("[A-EV] 拒绝运行：phase=formal 但 thresholds_locked=false（须先 --freeze 并加锁）")
+    if phase == "formal" and args.which == "commissioning":
+        print("[A-EV] 拒绝运行：formal 阶段不再运行标定集（commissioning 与正式评价严格分离）")
         return 3
+    if phase == "formal":
+        # formal 阶段每次运行都强制验锁（不只是可选的 --check-lock）
+        ok, msg = check_lock(cfg, lock_path)
+        if not ok:
+            print(f"[A-EV] 拒绝运行：phase=formal 且锁校验失败 —— {msg}")
+            return 3
+
     if args.which == "commissioning":
         rep = run_commissioning(cfg)
         js = pathlib.Path(args.out) / "a_ev_commissioning.json"
@@ -377,7 +498,11 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(rep["suggested_thresholds"], ensure_ascii=False, indent=2))
         return 0
 
-    result = run_all(cfg, args.which, args.policy)
+    try:
+        result = run_all(cfg, args.which, args.policy, lock_path)
+    except LockError as e:
+        print(f"[A-EV] 拒绝运行：{e}")
+        return 3
     tag = "a_ev_v0_2" if args.which == "evaluation" else f"a_ev_v0_2_{args.which}"
     js, cs = write_outputs(result, args.out, tag)
     print(f"[A-EV] [{args.which}] config_hash={result['config_hash'][:12]} -> {js}")
@@ -403,8 +528,9 @@ def _fmt4(v: Any) -> str:
     return "n/a" if v is None else f"{v:.4f}"
 
 
-__all__ = ["POLICIES", "Truth", "check_lock", "config_hash", "freeze", "load_cfg",
-           "run_all", "run_commissioning", "summarize", "write_outputs"]
+__all__ = ["POLICIES", "LockError", "RESOLVED_KEYS", "Truth", "check_lock", "config_hash",
+           "freeze", "load_cfg", "resolve_thresholds", "run_all", "run_commissioning",
+           "summarize", "write_outputs"]
 
 
 if __name__ == "__main__":  # pragma: no cover

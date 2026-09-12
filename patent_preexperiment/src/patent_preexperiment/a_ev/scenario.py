@@ -60,6 +60,15 @@ class ScenarioSpec:
     probe_magnitude: float = 0.0
     #: 该 episode 是否**期望**发生恢复：用于区分"应恢复"与"不得误恢复"
     expect_recovery: bool = False
+    #: T1 限值在 t_event_end 之后是否继续生效（限值未解除，但站级要求已回基值）—— S9：
+    #: 事务因缺口消失而结束，设备的**物理限值**并不随之解除。
+    clamp_persist: bool = False
+    #: 第二事件窗口（独立目标资源）：跨事务复用持久能力知识场景（S9）。
+    #: 真值沿用 `event`（当前仅支持 LOCAL_LIMIT）。
+    target2_rid: str = ""
+    t_event2_start: float = 0.0
+    t_event2_end: float = 0.0
+    magnitude2: float = 0.0
     #: 额外覆盖（稳健性矩阵）："" | "ts_misalign" | "mode_switch" | "protection"
     #: —— 均制造**同样的执行偏差**，但原因属于必须被排除/暂缓的类别
     extra_coverage: str = ""
@@ -131,6 +140,17 @@ def default_scenarios(cfg: dict[str, Any]) -> list[ScenarioSpec]:
         # ---- A-EV-5：恢复试探失败（限值未解除）→ 不得误触发恢复 ----
         S("S8_recovery_fail", Truth.LOCAL_LIMIT, "R0", DIR_UP, t_event_end=999.0,
           probe_at=t_end + 5.0, probe_magnitude=50.0),
+        # ---- A-EV-6（S9）：跨事务复用持久能力知识（权 7 事务级排除 ≠ 权 1【c】/【e】持久状态）----
+        # T1：R0 被持续限值 → 归因确认 → up_bound 收缩到基值 30；事务随缺口消失而结束
+        #     （corrections / 事务级排除清空），但**物理限值未解除**（clamp_persist）、
+        #     无恢复试探 → 持久能力知识保持。
+        # T2：R1 出现新的独立限值制造上向缺口；R0 是唯一其他可上向承接资源——
+        #     正确 A 不向 R0 下发超过其已知能力的修正（headroom=0 → 不派）；
+        #     A-no-state 按额定能力估计 → 再次向 R0 派发 → 二次不可执行命令。
+        S("S9_learned_carrier_reuse", Truth.LOCAL_LIMIT, "R0", DIR_UP,
+          t_event_start=30.0, t_event_end=80.0, magnitude=20.0, clamp_persist=True,
+          target2_rid="R1", t_event2_start=110.0, t_event2_end=150.0, magnitude2=20.0,
+          horizon=150.0),
     ]
 
 
@@ -246,28 +266,42 @@ class Simulator:
         self.last_seen: dict[str, float] = dict(self.prev_true)
 
     # -- 内部：给定 t 与修正量，算出一行结果 -------------------------------
-    def _conditions(self, t: float) -> tuple[bool, bool, bool, Truth]:
+    def _conditions(self, t: float) -> tuple[bool, bool, bool, bool, bool, Truth]:
+        """返回 (w1_on, w1_clamp, w2_on, probe_on, sec_on, w1 真值)。
+
+        w1_on   = 第一窗口内（站级要求抬升 + 限值生效）；
+        w1_clamp = 第一窗口目标的限值是否生效 —— 含 `clamp_persist`（限值跨事务持续）；
+        w2_on   = 第二窗口内（独立目标，真值沿用 `event`）。
+        """
         spec = self.spec
-        event_on = (spec.t_event_start <= t < spec.t_event_end) and spec.event is not Truth.NORMAL
+        w1_on = (spec.t_event_start <= t < spec.t_event_end) and spec.event is not Truth.NORMAL
+        w1_clamp = (
+            spec.event in (Truth.LOCAL_LIMIT, Truth.EXTERNAL_CONSTRAINT)
+            and spec.t_event_start <= t
+            and (t < spec.t_event_end or spec.clamp_persist)
+        )
+        w2_on = bool(spec.target2_rid) and spec.t_event2_start <= t < spec.t_event2_end
         probe_on = spec.probe_at > 0.0 and t >= spec.probe_at
         sec_on = spec.secondary is not None and spec.secondary.at <= t < spec.t_event_end
-        truth_target = spec.event if event_on else Truth.NORMAL
-        return event_on, probe_on, sec_on, truth_target
+        truth_target = spec.event if w1_on else Truth.NORMAL
+        return w1_on, w1_clamp, w2_on, probe_on, sec_on, truth_target
 
     def advance(
         self, t: float, corrections: dict[str, float]
     ) -> tuple[list[Obs], list[TruthRow], list[PlantRow], float]:
         spec, cfg = self.spec, self.cfg
         base = self.base
-        event_on, probe_on, sec_on, truth_target = self._conditions(t)
+        w1_on, w1_clamp, w2_on, probe_on, sec_on, truth_target = self._conditions(t)
         cov = spec.extra_coverage
         cov_kind = _EXTRA_COVERAGE.get(cov, (None, truth_target))[0]
 
         req: dict[str, float] = {}
         for rid in self.specs:
             p = base[rid]
-            if rid == spec.target_rid and event_on:
+            if rid == spec.target_rid and w1_on:
                 p += spec.magnitude * (DIR_UP if spec.direction == DIR_UP else DIR_DOWN)
+            if rid == spec.target2_rid and w2_on:
+                p += spec.magnitude2 * (DIR_UP if spec.direction == DIR_UP else DIR_DOWN)
             if rid == spec.target_rid and probe_on:
                 p += spec.probe_magnitude * (DIR_UP if spec.direction == DIR_UP else DIR_DOWN)
             # 级联事件只**限制**承接资源（其有效要求已含上一步下发的功率修正量），
@@ -281,10 +315,12 @@ class Simulator:
         plant_rows: list[PlantRow] = []
         for rid, s in self.specs.items():
             up_lim, down_lim = s.up_limit(), s.down_limit()
-            clamp_on = rid == spec.target_rid and event_on and (
-                truth_target in (Truth.LOCAL_LIMIT, Truth.EXTERNAL_CONSTRAINT) or bool(cov)
+            clamp1_on = rid == spec.target_rid and w1_clamp
+            clamp2_on = rid == spec.target2_rid and w2_on and spec.event in (
+                Truth.LOCAL_LIMIT,
+                Truth.EXTERNAL_CONSTRAINT,
             )
-            if clamp_on:
+            if clamp1_on or clamp2_on:
                 lim = abs(base[rid])
                 if spec.direction == DIR_UP:
                     up_lim = min(up_lim, lim)
@@ -299,8 +335,10 @@ class Simulator:
 
             # --- 指令下发时刻
             cmd_sent_t = 0.0
-            if rid == spec.target_rid and event_on:
+            if rid == spec.target_rid and w1_on:
                 cmd_sent_t = spec.t_event_start
+            if rid == spec.target2_rid and w2_on:
+                cmd_sent_t = max(cmd_sent_t, spec.t_event2_start)
             if rid == spec.target_rid and probe_on:
                 cmd_sent_t = max(cmd_sent_t, spec.probe_at)
             if sec_on and spec.secondary is not None and rid == spec.secondary.rid:
@@ -311,6 +349,7 @@ class Simulator:
             win = float(cfg["attribution"]["response_window_s"])
             lagging = (
                 (rid == spec.target_rid and truth_target is Truth.TRANSIENT)
+                or (rid == spec.target2_rid and w2_on and spec.event is Truth.TRANSIENT)
                 or (rid == spec.target_rid and probe_on and (t - spec.probe_at) < win)
                 or (sec_on and spec.secondary is not None and rid == spec.secondary.rid
                     and (t - spec.secondary.at) < win)
@@ -325,7 +364,7 @@ class Simulator:
                 p_true = target
             self.prev_true[rid] = p_true
 
-            comm_bad = event_on and rid == spec.target_rid and truth_target is Truth.COMM_FREEZE
+            comm_bad = w1_on and rid == spec.target_rid and truth_target is Truth.COMM_FREEZE
             if comm_bad:
                 p_seen = self.frozen.setdefault(rid, self.last_seen[rid])
             else:
@@ -333,13 +372,15 @@ class Simulator:
                 self.last_seen[rid] = p_seen
 
             ll_active = (
-                event_on and rid == spec.target_rid and truth_target is Truth.LOCAL_LIMIT
+                w1_on and rid == spec.target_rid and truth_target is Truth.LOCAL_LIMIT
+            ) or (
+                w2_on and rid == spec.target2_rid and spec.event is Truth.LOCAL_LIMIT
             ) or (sec_on and spec.secondary is not None and rid == spec.secondary.rid)
             ll_dir = LimitDir.UNKNOWN
             if ll_active:
                 ll_dir = LimitDir.UP if spec.direction == DIR_UP else LimitDir.DOWN
 
-            target_cov = rid == spec.target_rid and event_on and bool(cov)
+            target_cov = rid == spec.target_rid and w1_on and bool(cov)
             obs_rows.append(
                 Obs(
                     t=t,
@@ -356,7 +397,7 @@ class Simulator:
                     mode_switch=bool(target_cov and cov_kind == "mode"),
                     protection_event=bool(target_cov and cov_kind == "prot"),
                     station_constraint_active=(
-                        event_on and rid == spec.target_rid
+                        w1_on and rid == spec.target_rid
                         and truth_target is Truth.EXTERNAL_CONSTRAINT and not cov
                     ),
                     soc=s.soc,
@@ -373,6 +414,8 @@ class Simulator:
                 )
             )
             label = truth_target if rid == spec.target_rid else Truth.NORMAL
+            if rid == spec.target2_rid and w2_on:
+                label = spec.event
             if sec_on and spec.secondary is not None and rid == spec.secondary.rid:
                 label = Truth.LOCAL_LIMIT
             if target_cov:
