@@ -13,10 +13,12 @@ from typing import Any
 
 from .thresholds import Thresholds
 from .types import (
+    DIR_DOWN,
     DIR_UP,
     AttributionResult,
     CapabilityState,
     Dispatch,
+    LimitDir,
     Obs,
     ResourceSpec,
     StationGap,
@@ -51,21 +53,40 @@ def feasible_headroom(
     direction: int,
     cfg: dict[str, Any],
 ) -> float:
-    """其他可控资源在当前方向上的可承接贡献（受能力边界 + 资源物理运行约束限制）。"""
+    """其他可控资源在当前方向上的可承接贡献（kW，**运行点上的可调增量**）。
+
+    V0.3 动态可行功率区间：`P ∈ [p_min_eff, p_max_eff]`，其中
+
+        p_max_eff = min(spec.p_max,  state.up_bound)     （执行学习边界 ∩ 物理上限）
+        p_min_eff = max(spec.p_min, -state.down_bound)   （执行学习边界 ∩ 物理下限）
+
+    headroom 取**当前运行点上的增量**：H_up = p_max_eff − P_meas、H_down = P_meas − p_min_eff。
+    因此单向充电负荷（p_max=0）通过减少吸收天然具备上向贡献、光伏（p_min=0）
+    通过限发具备下向贡献——不再以"单向/双向"布尔作为承接资格判据。
+    """
     ph = cfg["physical"]
     if obs.temp_c > float(ph["temp_max_c"]):
         return 0.0
+    p_max_eff = min(spec.p_max, state.up_bound)
+    p_min_eff = max(spec.p_min, -state.down_bound)
+    # 上报限值进入可行域（V0.3 命令链 / Reported 包络层）：
+    # 设备已接受的翻译后指令即其当前可信边界——防止把"已被本地裁剪"的资源
+    # 当作仍有虚假 headroom 的承接候选（该信息不经执行学习通道产生）。
+    if obs.reported_limit_active and obs.p_cmd_accepted is not None:
+        acc = obs.p_cmd_accepted
+        if obs.local_limit_dir in (LimitDir.UP, LimitDir.BOTH):
+            p_max_eff = min(p_max_eff, acc)
+        if obs.local_limit_dir in (LimitDir.DOWN, LimitDir.BOTH):
+            p_min_eff = max(p_min_eff, acc)
+    if spec.kind == "bess":
+        # 电池语义的资源才施加站级 SOC 工作区约束（充电负荷 / PV 不适用）
+        if direction == DIR_UP and obs.soc <= float(ph["soc_min_discharge"]):
+            return 0.0
+        if direction == DIR_DOWN and obs.soc >= float(ph["soc_max_charge"]):
+            return 0.0
     if direction == DIR_UP:
-        if not spec.bidirectional:
-            return 0.0
-        if obs.soc <= float(ph["soc_min_discharge"]):
-            return 0.0
-        head = max(0.0, state.up_bound - max(0.0, obs.p_meas))
-    else:
-        if obs.soc >= float(ph["soc_max_charge"]):
-            return 0.0
-        head = max(0.0, state.down_bound - max(0.0, -obs.p_meas))
-    return head
+        return max(0.0, p_max_eff - obs.p_meas)
+    return max(0.0, obs.p_meas - p_min_eff)
 
 
 def _score(

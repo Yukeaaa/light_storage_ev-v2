@@ -1,6 +1,6 @@
 {
   "note": "标定结果；标定集与正式评价集严格分离，标定数据不得用于评价",
-  "config_hash": "2b53a3f56084ee5a15cec0168b2fcc895aec7526ea70fee17d249762cae1c3ee",
+  "config_hash": "d44fe4138c4507ae4010ea590a39f12f8c21b4a9b3ce6a787e89ce40d5858dec",
   "steps": [
     {
       "scenario": "CM_step_up_R0",
@@ -49,9 +49,9 @@
     "R2": 12.0
   },
   "noise_sigma_kw": {
-    "R0": 0.19730420055125056,
-    "R1": 0.2296567682539955,
-    "R2": 0.19604644024599205
+    "R0": 0.23661511772955474,
+    "R1": 0.2377869635773219,
+    "R2": 0.20883412759383
   },
   "suggested_thresholds": {
     "response_window_s": 15.0,

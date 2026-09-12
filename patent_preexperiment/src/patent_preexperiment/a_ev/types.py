@@ -91,6 +91,7 @@ class Verdict(StrEnum):
     TRANSIENT = "TRANSIENT"                                # 暂态响应 → 暂缓更新
     COMM_INVALID = "COMM_INVALID"                          # 通信 / 数据无效 → 不作为能力证据
     EXTERNAL_CONSTRAINT = "EXTERNAL_CONSTRAINT"            # 外部约束引起 → 不作为能力证据
+    REPORTED_LIMIT = "REPORTED_LIMIT"      # 上报型本地限值（命令链已解释）→ 不作执行证据
     UNCERTAIN = "UNCERTAIN"                                # 证据不足 → 暂缓
 
 
@@ -144,32 +145,45 @@ def deviation_of(p_req: float, p_meas: float) -> Deviation:
 
 @dataclass(frozen=True)
 class ResourceSpec:
-    """可控资源的静态与运行参数。"""
+    """可控资源的静态与运行参数。
+
+    **V0.3 动态可行功率区间**（取代 V0.2 的 `bidirectional` 布尔语义）：
+    资源的调节能力统一表示为 `P ∈ [p_min, p_max]`（站级符号约定），在**当前运行点**
+    上算上/下调 headroom：
+
+        H_up   = p_max_eff - P_meas        （向上 / 减吸收）
+        H_down = P_meas - p_min_eff        （向下 / 减注入）
+
+    由此，单向充电负荷（p_max=0）通过**减少吸收**天然具备上向调节能力，
+    光伏（p_min=0、p_max=当前可用功率）通过**限发/解除限发**双向可调——
+    不再用"单向/双向"作为承接能力的核心判据（对应说明书"方向化可用能力状态"，
+    权项语言不变，仅工程内部表示升级）。
+    """
 
     rid: str
-    p_rated: float                  # 额定功率（kW，正数）
-    #: True = 双向可调；False = **仅下向（吸收）**，即说明书 §12 的"仅支持单向调节的资源"
-    bidirectional: bool = True
-    soc: float = 0.5                # 荷电状态 0–1
+    p_rated: float                  # 额定功率（kW，正数；用于阈值 α·P_rated 与恢复分级）
+    p_min: float                    # 可行功率区间下限（kW，站级符号，如充电桩 = -最大充电功率）
+    p_max: float                    # 可行功率区间上限（kW，如 PV = 当前可用光伏功率）
+    #: 资源类别：bess（SOC/温度约束适用）| pv | evse（单向充电受控负荷）
+    kind: str = "bess"
+    soc: float = 0.5                # 荷电状态 0–1（bess 语义）
     temp_c: float = 25.0
-    p_local_max_up: float | None = None    # 本机上向可用上限（kW）；None = 取额定
-    p_local_max_down: float | None = None  # 本机下向可用上限（kW，正数）；None = 取额定
     ramp_kw_per_s: float = 5.0      # 爬坡率
     mode: str = "normal"            # 控制模式
     protection: bool = False        # 保护状态
 
+    @property
+    def bidirectional(self) -> bool:
+        """兼容别名：区间是否横跨 0（双向资源）。不再是承接能力的核心判据。"""
+        return self.p_min < 0.0 < self.p_max
+
     def up_limit(self) -> float:
-        if not self.bidirectional:
-            return 0.0
-        lim = self.p_rated if self.p_local_max_up is None else self.p_local_max_up
-        base = min(self.p_rated, lim)
-        return max(0.0, base)
+        """上向（注入）可持续功率水平上限（≥0）——能力状态初始化用。"""
+        return max(0.0, self.p_max)
 
     def down_limit(self) -> float:
-        # 下向（吸收）能力：双向资源与"仅吸收"的单向资源都存在；方向限值只由额定/本机限值决定
-        lim = self.p_rated if self.p_local_max_down is None else self.p_local_max_down
-        base = min(self.p_rated, lim)
-        return max(0.0, base)
+        """下向（吸收）可持续功率水平上限（≥0）——能力状态初始化用。"""
+        return max(0.0, -self.p_min)
 
 
 @dataclass
@@ -192,6 +206,14 @@ class Obs:
     station_constraint_active: bool  # 站级约束是否生效（控制器自身可知）
     soc: float
     temp_c: float
+    # ---- V0.3 命令链四层留痕（P_plan → requested → accepted → measured）----
+    #: EMS 想下发的原始要求（缺省 = p_req）；与 p_req 的区分留给网关/聚合层场景
+    p_cmd_requested: float | None = None
+    #: 设备/网关**接受（翻译后）**的有效指令（缺省 = p_req）。
+    #: 本地 BMS/PCS 裁剪时 accepted < requested——设备执行 accepted 不构成执行偏差。
+    p_cmd_accepted: float | None = None
+    #: 本地限值是否已**上报**（accepted 翻译可观测）——已上报的限值不作为执行失败证据
+    reported_limit_active: bool = False
 
 
 @dataclass

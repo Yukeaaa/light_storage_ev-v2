@@ -13,7 +13,7 @@ import pytest
 
 from patent_preexperiment.a_ev.algorithm import AEVPipeline
 from patent_preexperiment.a_ev.attribution import Attriber
-from patent_preexperiment.a_ev.baselines import ANoState, ANoWriteback, BaselineB0
+from patent_preexperiment.a_ev.baselines import ANoState, ANoWriteback, ASupervisory, BaselineB0
 from patent_preexperiment.a_ev.capability import (
     _stage_targets,
     apply_capability_update,
@@ -231,14 +231,25 @@ def test_gap_aggregation_opposite_directions_net_off():
     assert g.direction == DIR_UP and g.magnitude == pytest.approx(12.0)
 
 
-def test_unidirectional_resource_cannot_serve_upward():
-    spec_up = ResourceSpec("R2", 60.0, bidirectional=False, soc=0.5)
-    spec_bi = ResourceSpec("R1", 100.0, bidirectional=True, soc=0.5)
-    st_up = init_capability(spec_up, CFG)
-    st_bi = init_capability(spec_bi, CFG)
-    o_up = _obs(rid="R2", p_req=-25.0, p_meas=-25.0)
-    assert feasible_headroom(spec_up, o_up, st_up, DIR_UP, CFG) == 0.0
-    assert feasible_headroom(spec_bi, _obs(rid="R1", p_meas=20.0), st_bi, DIR_UP, CFG) > 0.0
+def test_unidirectional_charger_upward_headroom_by_curtailment():
+    """V0.3 动态可行域：单向充电负荷通过"减少吸收"具备上向贡献——
+    承接能力由 [p_min, p_max] 区间 + 当前运行点决定，不再由单向/双向布尔决定。"""
+    spec_charger = ResourceSpec("R2", 60.0, -60.0, 0.0, kind="evse", soc=0.5)
+    spec_bess = ResourceSpec("R1", 100.0, -100.0, 100.0, soc=0.5)
+    st_charger = init_capability(spec_charger, CFG)
+    st_bess = init_capability(spec_bess, CFG)
+    o_charger = _obs(rid="R2", p_req=-25.0, p_meas=-25.0)
+    o_bess = _obs(rid="R1", p_req=20.0, p_meas=20.0)
+    # 上向：充电桩 -25 → 减吸收到 0 贡献 25；BESS +20 → 可增至 100 贡献 80
+    assert feasible_headroom(
+        spec_charger, o_charger, st_charger, DIR_UP, CFG
+    ) == pytest.approx(25.0)
+    assert feasible_headroom(spec_bess, o_bess, st_bess, DIR_UP, CFG) == pytest.approx(80.0)
+    # 下向：充电桩可增吸收 35；BESS +20 → 可减注入到 -100 贡献 120
+    assert feasible_headroom(
+        spec_charger, o_charger, st_charger, DIR_DOWN, CFG
+    ) == pytest.approx(35.0)
+    assert feasible_headroom(spec_bess, o_bess, st_bess, DIR_DOWN, CFG) == pytest.approx(120.0)
 
 
 def test_stage_targets_are_increasing():
@@ -250,7 +261,7 @@ def test_stage_targets_are_increasing():
 
 def test_capability_update_uses_evidence_level_of_requested_direction():
     """要求 +20、实际 −20 → 上向边界收缩到 0（该方向实际交付为 0）。"""
-    st = init_capability(ResourceSpec("R0", 100.0), CFG)
+    st = init_capability(ResourceSpec("R0", 100.0, -100.0, 100.0), CFG)
     r = _res(Verdict.VALID_CAPABILITY_LIMIT, 20.0, -20.0)
     ev = apply_capability_update(st, r, _obs(p_req=20.0, p_meas=-20.0), CFG)
     assert ev is not None and ev["side"] == "up" and st.up_bound == pytest.approx(0.0)
@@ -258,7 +269,7 @@ def test_capability_update_uses_evidence_level_of_requested_direction():
 
 def test_capability_update_down_direction():
     """要求 −25、实际 −5 → 下向边界收缩到 5。"""
-    st = init_capability(ResourceSpec("R2", 60.0, bidirectional=False), CFG)
+    st = init_capability(ResourceSpec("R2", 60.0, -60.0, 0.0), CFG)
     r = _res(Verdict.VALID_CAPABILITY_LIMIT, -25.0, -5.0)
     ev = apply_capability_update(st, r, _obs(rid="R2", p_req=-25.0, p_meas=-5.0), CFG)
     assert ev is not None and ev["side"] == "down" and st.down_bound == pytest.approx(5.0)
@@ -526,11 +537,12 @@ def test_s9_persistent_state_survives_transaction_end():
     # 事务中段（T1 已结束、T2 未开始）：修正与事务级排除清空
     mid = [s for s in pol.history if 90.0 <= s.t <= 100.0]
     assert mid and all(s.carriers == () and s.excluded == () for s in mid)
-    # T2：R0 持久边界仍为收缩值（无恢复试探 → 不回升）
+    # T2：R0 持久边界仍为收缩值（无恢复试探 → 不回升）；A 经 R2 减吸收承接新缺口
     t2 = [s for s in pol.history if s.t >= 115.0]
     assert t2 and all(s.bounds["R0"][0] < 100.0 - 1e-6 for s in t2)
-    # A 不向 R0 下发超过其已知能力的修正 → 无二次不可执行命令
+    # A 不向 R0 下发超过其已知能力的修正（缺口交由 R2 区间模型的上向贡献承接）
     assert not any(d.carrier_rid == "R0" for s in t2 for d in s.dispatches)
+    assert any(d.carrier_rid == "R2" for s in t2 for d in s.dispatches)
     assert m.bad_cmd_rate == pytest.approx(0.0)
 
 
@@ -540,3 +552,68 @@ def test_s9_no_state_reissues_unexecutable_command():
     t2 = [s for s in pol.history if s.t >= 115.0]
     assert any(d.carrier_rid == "R0" for s in t2 for d in s.dispatches)
     assert m.bad_cmd_rate > 0.0
+
+
+# ------------------------------------------------ V0.3：动态可行域 / 命令链 / PCC 解耦
+
+
+def test_reported_clamp_is_not_execution_evidence():
+    """S10：本地限值已上报（accepted < requested）→ 设备按接受指令正确执行，
+    不构成执行偏差证据（A 不收缩）；无门基线 B0 误当执行证据收缩边界。"""
+    _, pol_a, m_a = _run("S10_reported_clamp", AEVPipeline)
+    assert not any(
+        e.get("kind") == "shrink" and e.get("rid") == "R0"
+        for s in pol_a.history for e in s.cap_events
+    )
+    assert m_a.emur_rate in (None, 0.0)
+    _, pol_b0, _ = _run("S10_reported_clamp", BaselineB0)
+    assert any(
+        e.get("kind") == "shrink" and e.get("rid") == "R0"
+        for s in pol_b0.history for e in s.cap_events
+    )
+
+
+def test_command_chain_four_layers_recorded():
+    """命令链四层留痕：上报限值窗口 accepted=30 < requested=50；普通窗口二者一致。"""
+    ep10, _, _ = _run("S10_reported_clamp", AEVPipeline)
+    w10 = [o for o in ep10.obs if o.rid == "R0" and 40.0 <= o.t < 60.0]
+    assert w10 and all(
+        o.reported_limit_active
+        and o.p_cmd_accepted is not None
+        and abs(o.p_cmd_accepted - 30.0) < 1e-6
+        and o.p_cmd_requested is not None
+        and abs(o.p_cmd_requested - 50.0) < 1e-6
+        for o in w10
+    )
+    ep3, _, _ = _run("S3_local_limit_up", AEVPipeline)
+    w3 = [o for o in ep3.obs if o.rid == "R0" and 40.0 <= o.t < 60.0]
+    assert w3 and all(
+        not o.reported_limit_active
+        and o.p_cmd_accepted is not None
+        and o.p_cmd_requested is not None
+        and abs(o.p_cmd_accepted - o.p_cmd_requested) < 1e-6
+        for o in w3
+    )
+
+
+def test_pcc_residual_channel_decoupled_from_capability_evidence():
+    """S11：通信冻结 + 真实未执行并存——能力证据严格（A / A_sup 都不更新），
+    站级补偿由 PCC 独立表计残差驱动（A_sup 补上且只派给通信有效的资源）。"""
+    _, pol_a, m_a = _run("S11_comm_loss_real_failure", AEVPipeline)
+    _, pol_sup, m_sup = _run("S11_comm_loss_real_failure", ASupervisory)
+    for pol in (pol_a, pol_sup):
+        assert not any(
+            e.get("kind") == "shrink" for s in pol.history for e in s.cap_events
+        )
+    assert (m_a.emur_rate or 0.0) == pytest.approx(0.0)
+    assert (m_sup.emur_rate or 0.0) == pytest.approx(0.0)
+    # 后备承接落在通信有效的 R1，从不派给失联的 R0
+    assert any(d.carrier_rid == "R1" for s in pol_sup.history for d in s.fallback_dispatches)
+    assert not any(d.carrier_rid == "R0" for s in pol_sup.history for d in s.fallback_dispatches)
+    assert not any(
+        d.carrier_rid == "R0" for s in pol_sup.history for d in s.dispatches
+    )
+    # 站级残差被后备闭合；严格 A 保留缺口的诚实记录
+    assert m_a.pcc_resid_steady_mean_kw is not None
+    assert m_sup.pcc_resid_steady_mean_kw is not None
+    assert m_sup.pcc_resid_steady_mean_kw < m_a.pcc_resid_steady_mean_kw

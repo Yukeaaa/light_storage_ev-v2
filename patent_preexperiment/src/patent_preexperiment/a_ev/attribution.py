@@ -109,6 +109,17 @@ class Attriber:
             ev["criterion"] = "station_constraint"
             return res(Verdict.EXTERNAL_CONSTRAINT)
 
+        # ---- 判据 4b'：上报型本地限值（V0.3 命令链四层留痕）→ 排除
+        # 本地 BMS/PCS 已把指令翻译/裁剪为 accepted（可观测），设备按 accepted 正确执行：
+        # (requested − accepted) 属**上报的本地限值**，不构成执行失败证据——
+        # 既不更新能力状态（执行学习通道），也不作为站级缺口来源（站级补偿走 PCC 残差通道）。
+        if obs.reported_limit_active:
+            self._reset(obs.rid)
+            ev["criterion"] = "reported_local_limit"
+            ev["requested_kw"] = obs.p_cmd_requested
+            ev["accepted_kw"] = obs.p_cmd_accepted
+            return res(Verdict.REPORTED_LIMIT)
+
         # ---- 判据 4c：持续激活型局部限值的方向核验（V0.2 修正）
         ld = obs.local_limit_dir
         if obs.local_limit_active and ld is LimitDir.UNKNOWN:

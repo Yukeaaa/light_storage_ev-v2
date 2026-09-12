@@ -77,6 +77,19 @@ class ANoWriteback(AEVPipeline):
     writeback_enabled = False
 
 
+class ASupervisory(AEVPipeline):
+    """A + 站级 PCC 残差监督后备（V0.3 模块 6，工程层）。
+
+    与 A 的唯一差异 = `pcc_fallback_enabled`：能力证据通道**完全相同**（严格、
+    通信无效不更新）；站级补偿额外由 PCC 独立表计残差驱动——演示
+    "能力学习通道与站级控制残差通道解耦"的工程形态。该监督层属共享基础设施，
+    **不进入权项链路**，也不改变 A-EV 机制隔离实验的主结论。
+    """
+
+    name = "A_sup"
+    pcc_fallback_enabled = True
+
+
 class _StaticPolicy:
     """B1 / B2 的公共骨架：不维护持久能力状态、不做跨资源承接。"""
 

@@ -69,6 +69,12 @@ class ScenarioSpec:
     t_event2_start: float = 0.0
     t_event2_end: float = 0.0
     magnitude2: float = 0.0
+    #: 上报型本地限值（S10）：本地 BMS/PCS 裁剪**可观测**（accepted < requested），
+    #: 设备按接受到的指令正确执行 → 不构成执行偏差证据（命令链四层留痕演示）。
+    reported_clamp: bool = False
+    #: 通信冻结 + 真实未执行并存（S11）：观测陈旧**且** plant 真实受限——
+    #: 能力证据须严格（不更新），站级补偿走 PCC 残差独立通道。
+    real_failure_under_comm: bool = False
     #: 额外覆盖（稳健性矩阵）："" | "ts_misalign" | "mode_switch" | "protection"
     #: —— 均制造**同样的执行偏差**，但原因属于必须被排除/暂缓的类别
     extra_coverage: str = ""
@@ -108,14 +114,26 @@ class Policy(Protocol):
 
 
 def default_site(cfg: dict[str, Any]) -> list[ResourceSpec]:
+    """由配置构造资源（V0.3：动态可行功率区间 [p_min, p_max] + 类别）。"""
     s = cfg["site"]
+
+    def res(key: str, rid: str, **kw: Any) -> ResourceSpec:
+        e = s[key]
+        rated = float(e["p_rated"])
+        kind = str(e.get("kind", kw.get("kind", "bess")))
+        # p_min/p_max 缺省按类别推导（推荐配置中显式给出，便于预注册）
+        p_min = float(e["p_min"]) if "p_min" in e else kw.get("p_min", -rated)
+        p_max = float(e["p_max"]) if "p_max" in e else kw.get("p_max", rated)
+        return ResourceSpec(
+            rid, rated, p_min, p_max, kind=kind,
+            soc=float(e["soc"]), temp_c=float(e["temp_c"]),
+            ramp_kw_per_s=float(e["ramp"]),
+        )
+
     return [
-        ResourceSpec("R0", s["r0"]["p_rated"], True, s["r0"]["soc"], s["r0"]["temp_c"],
-                     ramp_kw_per_s=s["r0"]["ramp"]),
-        ResourceSpec("R1", s["r1"]["p_rated"], True, s["r1"]["soc"], s["r1"]["temp_c"],
-                     ramp_kw_per_s=s["r1"]["ramp"]),
-        ResourceSpec("R2", s["r2"]["p_rated"], False, s["r2"]["soc"], s["r2"]["temp_c"],
-                     ramp_kw_per_s=s["r2"]["ramp"]),   # 仅吸收（单向下向）
+        res("r0", "R0"),                                        # BESS，双向
+        res("r1", "R1"),                                        # BESS，双向（首选承接资源）
+        res("r2", "R2", kind="evse", p_min=-60.0, p_max=0.0),   # 充电设备：区间 [-60, 0]
     ]
 
 
@@ -140,6 +158,12 @@ def default_scenarios(cfg: dict[str, Any]) -> list[ScenarioSpec]:
         # ---- A-EV-5：恢复试探失败（限值未解除）→ 不得误触发恢复 ----
         S("S8_recovery_fail", Truth.LOCAL_LIMIT, "R0", DIR_UP, t_event_end=999.0,
           probe_at=t_end + 5.0, probe_magnitude=50.0),
+        # ---- A-EV-8（S11）：通信冻结 + 真实未执行并存 → 能力证据与站级补偿解耦 ----
+        S("S11_comm_loss_real_failure", Truth.COMM_FREEZE, "R0", DIR_UP,
+          real_failure_under_comm=True),
+        # ---- A-EV-7（S10）：上报型本地限值（命令链 accepted<requested）——
+        #      设备按"接受到的指令"正确执行 → 不构成执行偏差证据 ----
+        S("S10_reported_clamp", Truth.LOCAL_LIMIT, "R0", DIR_UP, reported_clamp=True),
         # ---- A-EV-6（S9）：跨事务复用持久能力知识（权 7 事务级排除 ≠ 权 1【c】/【e】持久状态）----
         # T1：R0 被持续限值 → 归因确认 → up_bound 收缩到基值 30；事务随缺口消失而结束
         #     （corrections / 事务级排除清空），但**物理限值未解除**（clamp_persist）、
@@ -275,8 +299,14 @@ class Simulator:
         """
         spec = self.spec
         w1_on = (spec.t_event_start <= t < spec.t_event_end) and spec.event is not Truth.NORMAL
-        w1_clamp = (
+        clamp_kind = (
             spec.event in (Truth.LOCAL_LIMIT, Truth.EXTERNAL_CONSTRAINT)
+            or bool(spec.extra_coverage)
+            or spec.reported_clamp
+            or spec.real_failure_under_comm
+        )
+        w1_clamp = (
+            clamp_kind
             and spec.t_event_start <= t
             and (t < spec.t_event_end or spec.clamp_persist)
         )
@@ -346,6 +376,10 @@ class Simulator:
 
             # --- plant 动态：纯响应延迟 → 一阶响应
             target = _clip(p_eff[rid], -down_lim, up_lim)
+            # 命令链四层留痕（V0.3）：accepted = 本地控制器接受（翻译/裁剪后）的指令。
+            # 仅"上报型本地限值"场景中 accepted < requested；其余场景二者相同。
+            reported = rid == spec.target_rid and w1_on and spec.reported_clamp
+            p_cmd_accepted = target if reported else p_eff[rid]
             win = float(cfg["attribution"]["response_window_s"])
             lagging = (
                 (rid == spec.target_rid and truth_target is Truth.TRANSIENT)
@@ -402,6 +436,9 @@ class Simulator:
                     ),
                     soc=s.soc,
                     temp_c=s.temp_c,
+                    p_cmd_requested=p_eff[rid],
+                    p_cmd_accepted=p_cmd_accepted,
+                    reported_limit_active=reported,
                 )
             )
             plant_rows.append(
@@ -429,6 +466,33 @@ class Simulator:
                     observed_deviation=p_eff[rid] - p_seen,
                 )
             )
+
+        # ---- PCC 独立表计观测（V0.3，站级残差通道的数据来源）----
+        # 与资源级观测**相互独立**：即使某资源通信冻结 / 观测陈旧，站级残差仍可测。
+        station_actual = sum(r.p_meas_true for r in plant_rows)
+        obs_rows.append(
+            Obs(
+                t=t,
+                rid="PCC",
+                p_req=plan,
+                p_meas=station_actual + self.rng.gauss(0.0, self.noise),
+                cmd_sent_t=0.0,
+                resp_start_t=None,
+                comm_ok=True,
+                data_fresh=True,
+                ts_aligned=True,
+                local_limit_active=False,
+                local_limit_dir=LimitDir.UNKNOWN,
+                mode_switch=False,
+                protection_event=False,
+                station_constraint_active=False,
+                soc=0.5,
+                temp_c=25.0,
+                p_cmd_requested=plan,
+                p_cmd_accepted=plan,
+                reported_limit_active=False,
+            )
+        )
         return obs_rows, truth_rows, plant_rows, plan
 
 

@@ -21,9 +21,11 @@ scenario:
   t_event_end: 80.0       # s，事件解除时点（S8 恢复失败场景会覆盖为不解除）
 
 site:
-  r0: {p_rated: 100.0, soc: 0.55, temp_c: 26.0, ramp: 20.0}   # BESS，双向
-  r1: {p_rated: 100.0, soc: 0.40, temp_c: 25.0, ramp: 20.0}   # BESS，双向（首选承接资源）
-  r2: {p_rated: 60.0,  soc: 0.45, temp_c: 24.0, ramp: 10.0}   # 充电设备，仅吸收（单向下向）
+  # V0.3 动态可行功率区间：资源调节能力 = P ∈ [p_min, p_max]（站级符号），
+  # 承接 headroom 在当前运行点上计算（减吸收=上向、减注入=下向）。
+  r0: {p_rated: 100.0, kind: bess, p_min: -100.0, p_max: 100.0, soc: 0.55, temp_c: 26.0, ramp: 20.0}   # BESS，双向
+  r1: {p_rated: 100.0, kind: bess, p_min: -100.0, p_max: 100.0, soc: 0.40, temp_c: 25.0, ramp: 20.0}   # BESS，双向（首选承接资源）
+  r2: {p_rated: 60.0, kind: evse, p_min: -60.0, p_max: 0.0, soc: 0.45, temp_c: 24.0, ramp: 10.0}       # 充电设备：区间 [-60, 0]，减吸收可上向
 
 schedule:
   # 站点基值：R0 放电 30，R1 放电 20，R2 吸收 25 → 站点净 +25 kW

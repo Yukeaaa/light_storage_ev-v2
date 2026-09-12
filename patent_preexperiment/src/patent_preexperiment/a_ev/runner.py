@@ -24,7 +24,7 @@ from dataclasses import asdict
 from typing import Any
 
 from .algorithm import AEVPipeline
-from .baselines import ANoState, ANoWriteback, BaselineB0, BaselineB1, BaselineB2
+from .baselines import ANoState, ANoWriteback, ASupervisory, BaselineB0, BaselineB1, BaselineB2
 from .metrics import EpisodeMetrics, evaluate
 from .scenario import (
     ScenarioSpec,
@@ -39,6 +39,7 @@ from .types import DIR_UP, ResourceSpec, Truth
 
 POLICIES: dict[str, Any] = {
     "A": AEVPipeline,
+    "A_sup": ASupervisory,
     "A_no_state": ANoState,
     "A_no_writeback": ANoWriteback,
     "B0_no_gate": BaselineB0,
