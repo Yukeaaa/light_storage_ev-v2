@@ -5,10 +5,17 @@
        —— 在**注入的非能力原因**窗口内，策略错误收缩能力边界的**样本比例**。
           分子：该窗口内"该资源的能力边界被压到初始值以下"的样本数；
           分母：该窗口内的样本数。打在【b】归因门。
-    ② 真实能力受限后的剩余未补偿功率 / 能量 RESID（打在【c】→【d】→【e】控制效果）
+    ② 真实能力受限后的剩余未补偿功率 / 能量 RESID，**拆两个窗口**（V0.2）：
+          RESID_full    事件开始 → 事件结束（含归因确认与调度延迟的全部成本）
+          RESID_steady  预注册的稳定窗口起点之后（看最终承接效果）
+       二者必须同时汇报——只报稳态会隐藏"归因门带来的确认延迟成本"。
 
 **次指标**：噪声误更新率、能力边界估计误差、二次不可执行命令率、级联承接次数、
-            恢复时延、恢复误触发数、PCC 剩余偏差。
+            恢复时延、恢复误恢复级数、PCC 剩余偏差（同样拆 full / steady）。
+
+**口径纪律**：`INJECTED_NON_CAPABILITY` 仅含三类非能力原因
+（通信冻结 / 暂态响应 / 站级外部约束）；`LOCAL_LIMIT` 是**真实能力受限**，不计入 EMUR。
+A-EV-1 因此是"**四种原因，其中三种为非能力原因**"。
 """
 
 from __future__ import annotations
@@ -17,9 +24,11 @@ from dataclasses import dataclass
 from typing import Any
 
 from .scenario import Episode, station_actual_at
+from .thresholds import Thresholds, build_thresholds
 from .types import DIR_UP, Obs, ResourceSpec, Truth
 
 #: 注入的**非能力原因**（在这些样本上出现能力边界收缩即为错误更新）
+#: 注意：LOCAL_LIMIT 是真实能力受限，**不在**此集合内
 INJECTED_NON_CAPABILITY = frozenset(
     {Truth.COMM_FREEZE, Truth.TRANSIENT, Truth.EXTERNAL_CONSTRAINT}
 )
@@ -29,6 +38,7 @@ INJECTED_NON_CAPABILITY = frozenset(
 class EpisodeMetrics:
     name: str
     policy: str
+    phase: str = "evaluation"
     emur_numer: int = 0
     emur_denom: int = 0
     emur_rate: float | None = None
@@ -36,15 +46,18 @@ class EpisodeMetrics:
     noise_numer: int = 0
     noise_denom: int = 0
     noise_rate: float | None = None
-    resid_mean_kw: float | None = None
-    resid_energy_kwh: float | None = None
+    resid_full_mean_kw: float | None = None
+    resid_full_energy_kwh: float | None = None
+    resid_steady_mean_kw: float | None = None
+    resid_steady_energy_kwh: float | None = None
     bound_err_mean_kw: float | None = None
     bad_cmd_rate: float | None = None
     cascade_count: int = 0
     recovery_delay_s: float | None = None
     recovery_steps: int = 0
     recovery_false_steps: int = 0
-    pcc_resid_mean_kw: float | None = None
+    pcc_resid_full_mean_kw: float | None = None
+    pcc_resid_steady_mean_kw: float | None = None
 
 
 def _truth_lookup(ep: Episode) -> dict[tuple[float, str], Truth]:
@@ -70,11 +83,26 @@ def _is_reduced(
     return bool(b[0] < up0 - eps or b[1] < down0 - eps)
 
 
+def _window_mean(
+    ep: Episode, t_from: float, t_to: float, dt: float
+) -> tuple[float | None, float | None]:
+    """[t_from, t_to) 上 |站级实际 − 站级计划| 的均值与能量。"""
+    if t_to <= t_from:
+        return None, None
+    ts = [round(t_from + k * dt, 3) for k in range(int((t_to - t_from) / dt))]
+    vals = [abs(station_actual_at(ep, t) - ep.station_plan_at(t)) for t in ts]
+    if not vals:
+        return None, None
+    mean = sum(vals) / len(vals)
+    return mean, mean * dt / 3600.0
+
+
 def evaluate(ep: Episode, policy: Any, cfg: dict[str, Any]) -> EpisodeMetrics:
-    m = EpisodeMetrics(name=ep.spec.name, policy=getattr(policy, "name", "?"))
+    m = EpisodeMetrics(name=ep.spec.name, policy=getattr(policy, "name", "?"),
+                       phase=ep.spec.phase)
     truth = _truth_lookup(ep)
     spec_by = {s.rid: s for s in ep.specs}
-    band = float(cfg["attribution"]["deviation_band_kw"])
+    thr: Thresholds = build_thresholds(cfg, ep.specs)
     dt = ep.spec.dt
     hist = {round(s.t, 3): s for s in getattr(policy, "history", [])}
 
@@ -105,22 +133,22 @@ def evaluate(ep: Episode, policy: Any, cfg: dict[str, Any]) -> EpisodeMetrics:
         for k, v in by_class.items()
     }
 
-    # ---------------- 主指标 2 + 能力边界误差（仅真实能力受限的 episode）
+    # ---------------- 主指标 2 + 能力边界误差（仅真实能力受限、无探针的 episode）
     t0 = ep.spec.t_event_start
     t1 = min(ep.spec.t_event_end, ep.spec.horizon)
     offset = float(cfg["metrics"]["residual_window_offset_s"])
-    ws = t0 + offset
-    if ep.spec.event is Truth.LOCAL_LIMIT and ws < t1 and ep.spec.probe_at <= 0.0:
-        ts = [round(ws + k * dt, 3) for k in range(int((t1 - ws) / dt))]
-        vals = [abs(station_actual_at(ep, t) - ep.station_plan_at(t)) for t in ts]
-        if vals:
-            m.resid_mean_kw = sum(vals) / len(vals)
-            m.resid_energy_kwh = sum(vals) * dt / 3600.0
+    ts0 = t0 + offset
+    if ep.spec.event is Truth.LOCAL_LIMIT and t1 > t0 and ep.spec.probe_at <= 0.0:
+        m.resid_full_mean_kw, m.resid_full_energy_kwh = _window_mean(ep, t0, t1, dt)
+        m.resid_steady_mean_kw, m.resid_steady_energy_kwh = _window_mean(ep, ts0, t1, dt)
         rid = ep.spec.target_rid
         side = 0 if ep.spec.direction == DIR_UP else 1
         base = abs(float(cfg["schedule"]["base_setpoint_kw"][rid]))
         errs = []
-        for t in ts:
+        span = (
+            [round(ts0 + k * dt, 3) for k in range(int((t1 - ts0) / dt))] if t1 > ts0 else []
+        )
+        for t in span:
             s = hist.get(t)
             if s is None or rid not in getattr(s, "bounds", {}):
                 continue
@@ -143,7 +171,7 @@ def evaluate(ep: Episode, policy: Any, cfg: dict[str, Any]) -> EpisodeMetrics:
         row = obs_by_t.get(round(step.t, 3), {})
         for rid in carriers:
             ob_c = row.get(rid)
-            if ob_c is not None and abs(ob_c.p_meas - ob_c.p_req) >= band:
+            if ob_c is not None and abs(ob_c.p_req - ob_c.p_meas) >= thr.band(rid):
                 bad += 1
                 break
     m.bad_cmd_rate = (bad / carrier_steps) if carrier_steps else 0.0
@@ -174,5 +202,8 @@ def evaluate(ep: Episode, policy: Any, cfg: dict[str, Any]) -> EpisodeMetrics:
 
     all_t = sorted({round(r.t, 3) for r in ep.plant})
     pcc = [abs(station_actual_at(ep, t) - ep.station_plan_at(t)) for t in all_t]
-    m.pcc_resid_mean_kw = sum(pcc) / len(pcc) if pcc else None
+    m.pcc_resid_full_mean_kw = sum(pcc) / len(pcc) if pcc else None
+    pcc_s = [abs(station_actual_at(ep, t) - ep.station_plan_at(t))
+             for t in all_t if t >= ep.spec.t_event_start + offset]
+    m.pcc_resid_steady_mean_kw = sum(pcc_s) / len(pcc_s) if pcc_s else None
     return m

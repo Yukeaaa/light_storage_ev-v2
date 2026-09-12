@@ -3,6 +3,7 @@
 
 关键纪律（说明书 §8.2 / §8.3）：
 - 缺口**由经归因确认的执行偏差**确定，**不由能力状态反推**；
+- 缺口的**方向与大小取统一符号约定**（`e = P_req - P_meas`）；
 - 站级 / 资源物理运行约束的作用点在**承接层**，不得反过来改变已观测出的缺口。
 """
 
@@ -10,8 +11,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .thresholds import Thresholds
 from .types import (
-    DIR_DOWN,
     DIR_UP,
     AttributionResult,
     CapabilityState,
@@ -25,15 +26,19 @@ from .types import (
 
 
 def station_gap(confirmed: list[tuple[str, AttributionResult]]) -> StationGap:
-    """由经确认的执行偏差做等效换算与方向聚合（同向累加 / 异向相抵取净）。"""
-    up = sum(r.magnitude for _, r in confirmed if r.direction == DIR_UP)
-    down = sum(r.magnitude for _, r in confirmed if r.direction == DIR_DOWN)
+    """由经确认的执行偏差做等效换算与方向聚合（同向累加 / 异向相抵取净）。
+
+    `confirmed` 应为**经有效性判定确认成立**的执行偏差（含 VALID_CAPABILITY_LIMIT
+    与 VALID_EXECUTION_DEVIATION）；方向与大小取自统一符号约定。
+    """
+    up = sum(r.gap_magnitude for _, r in confirmed if r.gap_direction == DIR_UP)
+    down = sum(r.gap_magnitude for _, r in confirmed if r.gap_direction == -DIR_UP)
     rids = [rid for rid, _ in confirmed]
     if abs(up - down) < 1e-9:
         return StationGap(t=float("nan"), direction=0, magnitude=0.0, contributors=rids)
     if up > down:
         return StationGap(t=float("nan"), direction=DIR_UP, magnitude=up - down, contributors=rids)
-    return StationGap(t=float("nan"), direction=DIR_DOWN, magnitude=down - up, contributors=rids)
+    return StationGap(t=float("nan"), direction=-DIR_UP, magnitude=down - up, contributors=rids)
 
 
 # ---------------------------------------------------------------- 模块 4
@@ -100,6 +105,7 @@ def select_carriers(
     sources: set[str],
     excluded: set[str],
     switch_counts: dict[str, int],
+    thr: Thresholds,
     cfg: dict[str, Any],
     strategy: str | None = None,
 ) -> list[Dispatch]:
@@ -111,7 +117,7 @@ def select_carriers(
     if gap.direction == 0 or gap.magnitude <= 0.0:
         return []
     strat = strategy or str(cfg["carrier"]["strategy"])
-    band = float(cfg["attribution"]["deviation_band_kw"])
+    min_share = thr.default_band
 
     cands: list[tuple[float, str, float]] = []
     for rid, spec in specs.items():
@@ -121,7 +127,7 @@ def select_carriers(
         if obs is None:
             continue
         head = feasible_headroom(spec, obs, states[rid], gap.direction, cfg)
-        if head < band:
+        if head < thr.band(rid):
             continue
         sc = _score(
             strat, head, states[rid], gap.direction, obs, spec,
@@ -134,7 +140,7 @@ def select_carriers(
     dispatches: list[Dispatch] = []
     remaining = gap.magnitude
     for _, rid, head in cands:
-        if remaining < band:
+        if remaining < min_share:
             break
         take = min(head, remaining)
         corr = take if gap.direction == DIR_UP else -take

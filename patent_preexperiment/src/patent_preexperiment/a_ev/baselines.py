@@ -1,12 +1,18 @@
-"""对照基线（A-EV 计划 §6 固定三条 + A 本体）。
+"""对照基线与消融策略（A-EV 计划 §6）。
+
+**整链基线**（比较 A 相对"常规做法"的价值）：
 
     B0  看到执行偏差就直接收缩能力边界（**无归因门**）
     B1  仅依据 SOC / 温度 / Pmax 等**内部状态**静态降额（不看执行证据）
     B2  只把执行误差**滚入下一周期计划**（不维护持久能力状态）
-    A   归因 → 能力状态 → 跨资源承接 → 执行反馈回写
 
-B0 由 `AEVPipeline` 覆写归因门得到，因此与 A 的差异**只**来自归因环节；
-B1 / B2 不产生能力更新，也不做跨资源承接——二者的代价体现在第二主指标上。
+**模块消融**（把 A 各环节的贡献分别隔离，V0.2 新增）：
+
+    A-no-state      保留归因 + 缺口 + 承接，但承接只用**额定固定能力**，不维护持久状态 → 隔离【c】
+    A-no-writeback  保留归因 + 能力更新 + 承接，但承接失败**不回写**、不产生事务级排除 → 隔离【e】
+
+B0 由 `AEVPipeline` 覆写归因门得到，因此与 A 的差异**只**来自归因环节（⇒ 直接对应【b】）。
+B1 / B2 不维护能力状态、不做跨资源承接，其代价体现在第二主指标上。
 """
 
 from __future__ import annotations
@@ -21,25 +27,54 @@ from .types import (
     Obs,
     ResourceSpec,
     Verdict,
+    deviation_of,
 )
 
 
 class BaselineB0(AEVPipeline):
-    """无归因门：任何超带欠交付都直接当作"能力受限"并收缩边界。"""
+    """无归因门：任何超带执行偏差都直接当作"能力受限"并收缩边界。
+
+    注意其**错误更新并不限于欠交付**：过执行 / 反向执行同样被误判（这正是无门之害）。
+    """
 
     name = "B0_no_gate"
     use_attribution_gate = False
 
     def _attribute(self, obs: Obs) -> AttributionResult | None:
-        band = float(self.cfg["attribution"]["deviation_band_kw"])
-        req_dir = DIR_UP if obs.p_req > 0 else -DIR_UP
-        under = abs(obs.p_req) - abs(obs.p_meas)
-        if under < band:
+        band = self.thr.band(obs.rid)
+        dev = deviation_of(obs.p_req, obs.p_meas)
+        if dev.gap_magnitude < band:
             self.attr._reset(obs.rid)
             return None
         return AttributionResult(
-            Verdict.VALID_CAPABILITY_LIMIT, req_dir, under, {"criterion": "no_gate"}
+            verdict=Verdict.VALID_CAPABILITY_LIMIT,
+            deviation=dev,
+            evidence_direction=dev.req_dir,
+            evidence_level=dev.delivered_in_req_dir,
+            evidence={"criterion": "no_gate"},
         )
+
+
+class ANoState(AEVPipeline):
+    """消融【c】：有归因门与承接，但承接规模取自**额定固定能力**，不维护持久能力状态。
+
+    其"错误更新率 = 0"属**空真**（从不更新），故其价值体现在控制类指标
+    （剩余缺口 / 二次不可执行命令 / 级联能力）而非 EMUR。
+    """
+
+    name = "A_no_state"
+    maintain_state = False
+    size_from_persistent_state = False
+
+
+class ANoWriteback(AEVPipeline):
+    """消融【e】：有归因与能力更新，但承接失败**不回写**其能力状态、也不做事务级排除。
+
+    因此缺口会持续派给同一承接资源，级联不会发生——用于隔离执行反馈闭环的价值。
+    """
+
+    name = "A_no_writeback"
+    writeback_enabled = False
 
 
 class _StaticPolicy:

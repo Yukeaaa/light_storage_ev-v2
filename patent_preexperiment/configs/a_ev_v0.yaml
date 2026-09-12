@@ -1,9 +1,20 @@
-# A-EV 场景台配置 V0
-#
-# ⚠️ 本文件中的全部阈值与参数均为**候选值**，须在正式有效性实验开始前冻结为 V1.0；
-#    冻结后不得依结果调整（A-EV 计划 §7、项目预注册纪律）。
+# A-EV 场景台配置（V0.2 pre-freeze）
 #
 # 定位：A 案算法参考实现与可控真值场景台的运行参数。合成场景，非效果证据。
+#
+# ⚠️ 冻结纪律（两步冻结，A-EV 计划 §7）：
+#    第一步（**现在**）：冻结「阈值的产生规则」+ 数据频率 + 场景集 + 指标 + 判据 —— 见
+#                        `thresholds_provenance`。
+#    第二步（HIL 接上后）：在**标定集**上按上述规则算出设备相关数值 → 填入 → 加锁
+#                        （`experiment.thresholds_locked: true` + 配置哈希），此后不得再改。
+#    正式实验开始后**不得依结果调整任何阈值**。
+
+experiment:
+  version: "0.2"
+  phase: "synthetic_regression"   # synthetic_regression | commissioning | formal
+  thresholds_locked: false        # formal 阶段必须为 true（runner 会守卫）
+  locked_at: null                 # 加锁时间（由 --freeze 写入）
+  config_hash: null               # 配置内容哈希（由 --freeze 写入）
 
 scenario:
   t_event_start: 30.0     # s，事件注入起点
@@ -20,13 +31,36 @@ schedule:
 
 plant:
   response_tau_s: 8.0        # 一阶响应时间常数（暂态场景）
-  response_delay_s: 1.0      # 指令下发到响应开始
-  meas_noise_kw: 0.25        # 测量噪声标准差
+  response_delay_s: 1.0      # 指令下发到响应开始的**纯延迟**（V0.2 起真实作用于 plant）
+  meas_noise_kw: 0.25        # 测量噪声标准差（σ）
+
+# ---- 阈值**产生规则**（现在冻结；数值待 commissioning 落定）----
+thresholds_provenance:
+  data_dt_s: 1.0
+  deviation_band:
+    # 偏差判定带 = max(计量分辨率, k·噪声标准差, α·该资源额定功率)
+    # 注意是 **per-resource**：对 100 kW 与 60 kW 的资源，同一 k/α 才有同一门槛含义
+    rule: "max(meter_resolution_kw, k_sigma * noise_sigma_kw, alpha * p_rated)"
+    meter_resolution_kw: 0.1
+    k_sigma: 3.0
+    noise_sigma_kw: 0.25
+    alpha: 0.02
+  response_window:
+    # 控制响应观察窗 = 正常无故障阶跃响应的预注册分位响应时间 + 固定裕量
+    rule: "p95_step_response_time_s + margin_s"
+    p95_step_response_time_s: null     # ← commissioning 标定后填入；未落定前回落到标量
+    margin_s: 3.0
+  persistence:
+    rule: "ceil(persistence_min_s / data_dt_s)"
+    persistence_min_s: 5.0
+  recovery_confirm:
+    rule: "ceil(confirm_min_s / data_dt_s)"
+    confirm_min_s: 4.0
 
 attribution:
-  deviation_band_kw: 2.0     # 偏差判定带（判据 1 之外的"是否构成偏差"）
-  response_window_s: 12.0    # 控制响应观察窗（判据 3）
-  persistence_n: 5           # 持续/重复性判据（判据 5）：连续周期数
+  deviation_band_kw: 2.0     # 标量回落值（仅当上方规则未提供或某项待定）
+  response_window_s: 12.0    # 标量回落值（p95 未落定前使用）
+  persistence_n: 5           # 标量回落值
 
 capability:
   init_confidence: 0.5       # 初始可信度（说明书 §10.3）
@@ -34,7 +68,7 @@ capability:
 
 recovery:
   stage_fractions: [0.5, 0.75, 1.0]   # 分级恢复的各级目标（× 额定）
-  confirm_n: 4                        # 每级恢复所需连续确认周期数（恢复迟滞）
+  confirm_n: 4                        # 标量回落值（规则见 thresholds_provenance）
   post_recover_confidence: 0.4        # 恢复后的可信度
 
 physical:
@@ -43,8 +77,27 @@ physical:
   temp_max_c: 45.0           # 超过此温度不允许承接
 
 carrier:
-  strategy: weighted                      # contribution | confidence | min_switch | soc_margin | weighted
-  weights: {contribution: 1.0, confidence: 0.3, soc_margin: 0.2}
+  # 主策略 = **最简单确定性规则**（最大可承接贡献优先 + rid 字典序 tie-break）：
+  # 第一轮验证要证明的是"机制"，不是"权重调得好"。
+  # weighted 仅作敏感性分析，不进主实验结论。
+  strategy: contribution                  # contribution | confidence | min_switch | soc_margin | weighted
+  weights: {contribution: 1.0, confidence: 0.3, soc_margin: 0.2}   # 仅 weighted 敏感性用
 
 metrics:
-  residual_window_offset_s: 25.0   # 剩余缺口统计窗口起点（相对事件注入时刻）
+  residual_window_offset_s: 25.0   # RESID_steady / PCC_steady 的稳定窗口起点（相对事件注入）
+
+# ---- 稳健性矩阵（**预注册**：方向 × 幅值 × 资源 × 重复 × 随机顺序 + 额外覆盖）----
+robustness:
+  enabled: true
+  directions: [up, down]
+  magnitudes_pct: [0.10, 0.20, 0.30]      # 相对该资源额定功率；具体安全值以 HIL 为准
+  resources:
+    up: [R0, R1]        # 上向（注入）承接要求资源可双向
+    down: [R2]          # 下向（吸收）偏差需该资源基值为吸收，当前仅 R2
+  repeats: 5            # 每条件重复次数
+  seed: 101             # 随机化种子（顺序随机、可复现）
+  extra_coverage: [ts_misalign, mode_switch, protection]
+  extra_coverage_target: R0
+
+# 阈值锁定校验（--freeze 写入）：
+lock: null

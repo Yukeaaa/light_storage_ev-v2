@@ -4,12 +4,18 @@
 1. **事件真值由注入端给定**（`Truth`），控制策略不可见——这正是 A 最缺的 ground truth。
 2. 现场为 3 资源 + PCC：R0（BESS，双向）、R1（BESS，双向）、R2（充电设备，单向下向）。
    单边资源覆盖说明书 §12「仅支持单向调节的资源仅设置对应方向的能力边界」。
-3. A-EV-1 核心对照：对**同一个约 20 kW 的偏差**注入四种不同原因；
+3. A-EV-1 核心对照：对**同一个约 20 kW 的偏差**注入四种不同原因
+   （其中**三种为非能力原因**：通信冻结 / 暂态响应 / 站级外部约束；
+   一种是真实能力受限：本机持续限功率）；
    限值统一由该资源基值推出，保证各原因下偏差幅值一致。
 4. 观测中的 `p_req` 为**含承接修正的有效要求**，因此"承接资源未按要求执行"可被观测到
    （权 7 回写与级联的前提）。
-5. `Simulator` 步进式：观测 → 策略 → 修正量回流 → 下一步。生成结果 `Episode` 同时保留
-   观测、事件真值与 plant 真值。`ScenarioSpec` 可 JSON 序列化，将来直接驱动真实 HIL。
+5. `Simulator` 步进式：观测 → 策略 → 修正量回流 → 下一步；
+   plant 含**纯响应延迟 + 一阶响应**（`response_delay_s` 真实作用于 plant，V0.2）。
+6. 三类场景集**严格分离**：
+   `default_scenarios`（正式评价）/ `commissioning_scenarios`（标定，不评价）
+   / `robustness_scenarios`（稳健性矩阵，预注册于配置）。
+7. `ScenarioSpec` 可 JSON 序列化，将来直接驱动真实 HIL。
 
 **本模块产出的是合成数据，仅用于机制与管线验证，不构成效果证据。**
 """
@@ -21,7 +27,7 @@ import random
 from dataclasses import asdict, dataclass, field
 from typing import Any, Protocol
 
-from .types import DIR_DOWN, DIR_UP, Obs, PlantRow, ResourceSpec, Truth, TruthRow
+from .types import DIR_DOWN, DIR_UP, LimitDir, Obs, PlantRow, ResourceSpec, Truth, TruthRow
 
 # ---------------------------------------------------------------- 场景定义
 
@@ -52,8 +58,13 @@ class ScenarioSpec:
     secondary: SecondaryEvent | None = None
     probe_at: float = 0.0            # 恢复试探（A-EV-5）的请求时刻
     probe_magnitude: float = 0.0
-    # 该 episode 是否**期望**发生恢复：用于区分"应恢复"与"不得误恢复"
+    #: 该 episode 是否**期望**发生恢复：用于区分"应恢复"与"不得误恢复"
     expect_recovery: bool = False
+    #: 额外覆盖（稳健性矩阵）："" | "ts_misalign" | "mode_switch" | "protection"
+    #: —— 均制造**同样的执行偏差**，但原因属于必须被排除/暂缓的类别
+    extra_coverage: str = ""
+    #: 场景集标注：正式评价 / 标定 / 稳健性（防止标定数据混入正式评价）
+    phase: str = "evaluation"
 
     def to_json(self) -> str:
         d = asdict(self)
@@ -100,11 +111,12 @@ def default_site(cfg: dict[str, Any]) -> list[ResourceSpec]:
 
 
 def default_scenarios(cfg: dict[str, Any]) -> list[ScenarioSpec]:
+    """正式评价场景集（**不含**标定场景）。"""
     S = ScenarioSpec
     t_end = float(cfg["scenario"]["t_event_end"])
     return [
         S("S0_normal", Truth.NORMAL, "R0", DIR_UP, magnitude=0.0),
-        # ---- A-EV-1：同幅值偏差、四种不同原因 ----
+        # ---- A-EV-1：同幅值偏差、四种原因（三种非能力 + 一种真实能力受限）----
         S("S1_comm_freeze", Truth.COMM_FREEZE, "R0", DIR_UP),
         S("S2_transient", Truth.TRANSIENT, "R0", DIR_UP),
         S("S3_local_limit_up", Truth.LOCAL_LIMIT, "R0", DIR_UP),
@@ -122,6 +134,86 @@ def default_scenarios(cfg: dict[str, Any]) -> list[ScenarioSpec]:
     ]
 
 
+def commissioning_scenarios(cfg: dict[str, Any]) -> list[ScenarioSpec]:
+    """**标定专用**场景：只用于测设备阶跃响应时间与噪声水平，**不参与 A-EV 评价**。
+
+    这些场景与正式评价场景**没有任何交集**，用于落实"commissioning 数据不进入
+    正式评价"的预注册纪律（A-EV 计划 §7）。
+    """
+    S = ScenarioSpec
+
+    def cm(
+        name: str, rid: str, direction: int, probe: float, horizon: float = 80.0
+    ) -> ScenarioSpec:
+        return S(
+            name, Truth.NORMAL, rid, direction, magnitude=0.0,
+            t_event_start=0.0, t_event_end=0.0, horizon=horizon,
+            probe_at=20.0, probe_magnitude=probe, phase="commissioning",
+        )
+
+    return [
+        cm("CM_step_up_R0", "R0", DIR_UP, 20.0),
+        cm("CM_step_down_R0", "R0", DIR_DOWN, 20.0),
+        cm("CM_step_up_R1", "R1", DIR_UP, 20.0),
+        cm("CM_step_down_R2", "R2", DIR_DOWN, 15.0),
+        S("CM_rest_R0", Truth.NORMAL, "R0", DIR_UP, magnitude=0.0,
+          t_event_start=0.0, t_event_end=0.0, horizon=60.0, phase="commissioning"),
+    ]
+
+
+def robustness_scenarios(cfg: dict[str, Any]) -> list[ScenarioSpec]:
+    """稳健性矩阵（**预注册于配置**：方向 × 幅值 × 资源 × 重复 × 随机顺序 + 额外覆盖）。"""
+    rb = cfg.get("robustness") or {}
+    if not rb.get("enabled"):
+        return []
+    site = cfg["site"]
+    rated = {
+        "R0": float(site["r0"]["p_rated"]),
+        "R1": float(site["r1"]["p_rated"]),
+        "R2": float(site["r2"]["p_rated"]),
+    }
+    sc = cfg["scenario"]
+    reps = int(rb.get("repeats", 1))
+    seed0 = int(rb.get("seed", 101))
+    out: list[ScenarioSpec] = []
+    for dkey, dval in (("up", DIR_UP), ("down", DIR_DOWN)):
+        for rid in rb.get("resources", {}).get(dkey, []):
+            for pct in rb.get("magnitudes_pct", []):
+                mag = round(rated[rid] * float(pct), 3)
+                for k in range(reps):
+                    out.append(
+                        ScenarioSpec(
+                            name=f"RB_{dkey}_{rid}_{int(round(float(pct) * 100))}pct_r{k}",
+                            event=Truth.LOCAL_LIMIT,
+                            target_rid=rid,
+                            direction=dval,
+                            magnitude=mag,
+                            seed=seed0 + 13 * k + (3 if dval == DIR_UP else 7),
+                            t_event_start=float(sc["t_event_start"]),
+                            t_event_end=float(sc["t_event_end"]),
+                            phase="robustness",
+                        )
+                    )
+    for kind in rb.get("extra_coverage", []):
+        # 额外覆盖：同样制造执行偏差，但原因**属于必须排除/暂缓的类别**
+        out.append(
+            ScenarioSpec(
+                name=f"RB_extra_{kind}",
+                event=Truth.LOCAL_LIMIT,
+                target_rid=str(rb.get("extra_coverage_target", "R0")),
+                direction=DIR_UP,
+                magnitude=20.0,
+                extra_coverage=str(kind),
+                seed=seed0 + 999,
+                t_event_start=float(sc["t_event_start"]),
+                t_event_end=float(sc["t_event_end"]),
+                phase="robustness",
+            )
+        )
+    random.Random(seed0).shuffle(out)   # 顺序随机化（固定种子 → 可复现）
+    return out
+
+
 # ---------------------------------------------------------------- 步进式仿真器
 
 
@@ -129,8 +221,16 @@ def _clip(v: float, lo: float, hi: float) -> float:
     return max(lo, min(hi, v))
 
 
+#: 额外覆盖类别 → (观测标志, 事件真值标签)
+_EXTRA_COVERAGE: dict[str, tuple[str, Truth]] = {
+    "ts_misalign": ("ts", Truth.COMM_FREEZE),
+    "mode_switch": ("mode", Truth.EXTERNAL_CONSTRAINT),
+    "protection": ("prot", Truth.EXTERNAL_CONSTRAINT),
+}
+
+
 class Simulator:
-    """站点 plant（限值裁剪 + 一阶响应滞后 + 通信冻结导致的观测陈旧）。"""
+    """站点 plant（限值裁剪 + 纯响应延迟 + 一阶响应 + 通信冻结导致的观测陈旧）。"""
 
     def __init__(self, spec: ScenarioSpec, specs: list[ResourceSpec], cfg: dict[str, Any]) -> None:
         self.spec = spec
@@ -139,6 +239,7 @@ class Simulator:
         self.base = {k: float(v) for k, v in cfg["schedule"]["base_setpoint_kw"].items()}
         self.rng = random.Random(spec.seed)
         self.tau = float(cfg["plant"]["response_tau_s"])
+        self.delay = float(cfg["plant"]["response_delay_s"])
         self.noise = float(cfg["plant"]["meas_noise_kw"])
         self.prev_true: dict[str, float] = {s.rid: self.base[s.rid] for s in specs}
         self.frozen: dict[str, float] = {}
@@ -159,6 +260,8 @@ class Simulator:
         spec, cfg = self.spec, self.cfg
         base = self.base
         event_on, probe_on, sec_on, truth_target = self._conditions(t)
+        cov = spec.extra_coverage
+        cov_kind = _EXTRA_COVERAGE.get(cov, (None, truth_target))[0]
 
         req: dict[str, float] = {}
         for rid in self.specs:
@@ -178,10 +281,10 @@ class Simulator:
         plant_rows: list[PlantRow] = []
         for rid, s in self.specs.items():
             up_lim, down_lim = s.up_limit(), s.down_limit()
-            if rid == spec.target_rid and event_on and truth_target in (
-                Truth.LOCAL_LIMIT,
-                Truth.EXTERNAL_CONSTRAINT,
-            ):
+            clamp_on = rid == spec.target_rid and event_on and (
+                truth_target in (Truth.LOCAL_LIMIT, Truth.EXTERNAL_CONSTRAINT) or bool(cov)
+            )
+            if clamp_on:
                 lim = abs(base[rid])
                 if spec.direction == DIR_UP:
                     up_lim = min(up_lim, lim)
@@ -194,6 +297,16 @@ class Simulator:
                 else:
                     down_lim = min(down_lim, lim)
 
+            # --- 指令下发时刻
+            cmd_sent_t = 0.0
+            if rid == spec.target_rid and event_on:
+                cmd_sent_t = spec.t_event_start
+            if rid == spec.target_rid and probe_on:
+                cmd_sent_t = max(cmd_sent_t, spec.probe_at)
+            if sec_on and spec.secondary is not None and rid == spec.secondary.rid:
+                cmd_sent_t = max(cmd_sent_t, spec.secondary.at)
+
+            # --- plant 动态：纯响应延迟 → 一阶响应
             target = _clip(p_eff[rid], -down_lim, up_lim)
             win = float(cfg["attribution"]["response_window_s"])
             lagging = (
@@ -203,8 +316,11 @@ class Simulator:
                     and (t - spec.secondary.at) < win)
             )
             if lagging:
-                alpha = min(1.0, spec.dt / self.tau)
-                p_true = self.prev_true[rid] + (target - self.prev_true[rid]) * alpha
+                if cmd_sent_t > 0.0 and (t - cmd_sent_t) < self.delay:
+                    p_true = self.prev_true[rid]          # 纯延迟：输出保持原值
+                else:
+                    alpha = min(1.0, spec.dt / self.tau)
+                    p_true = self.prev_true[rid] + (target - self.prev_true[rid]) * alpha
             else:
                 p_true = target
             self.prev_true[rid] = p_true
@@ -216,18 +332,14 @@ class Simulator:
                 p_seen = p_true + self.rng.gauss(0.0, self.noise)
                 self.last_seen[rid] = p_seen
 
-            cmd_sent_t = 0.0
-            if rid == spec.target_rid and event_on:
-                cmd_sent_t = spec.t_event_start
-            if rid == spec.target_rid and probe_on:
-                cmd_sent_t = max(cmd_sent_t, spec.probe_at)
-            if sec_on and spec.secondary is not None and rid == spec.secondary.rid:
-                cmd_sent_t = max(cmd_sent_t, spec.secondary.at)
-
             ll_active = (
                 event_on and rid == spec.target_rid and truth_target is Truth.LOCAL_LIMIT
             ) or (sec_on and spec.secondary is not None and rid == spec.secondary.rid)
+            ll_dir = LimitDir.UNKNOWN
+            if ll_active:
+                ll_dir = LimitDir.UP if spec.direction == DIR_UP else LimitDir.DOWN
 
+            target_cov = rid == spec.target_rid and event_on and bool(cov)
             obs_rows.append(
                 Obs(
                     t=t,
@@ -235,19 +347,17 @@ class Simulator:
                     p_req=p_eff[rid],
                     p_meas=p_seen,
                     cmd_sent_t=cmd_sent_t,
-                    resp_start_t=(cmd_sent_t + float(cfg["plant"]["response_delay_s"]))
-                    if cmd_sent_t
-                    else None,
+                    resp_start_t=(cmd_sent_t + self.delay) if cmd_sent_t else None,
                     comm_ok=not comm_bad,
                     data_fresh=not comm_bad,
-                    ts_aligned=True,
+                    ts_aligned=not (target_cov and cov_kind == "ts"),
                     local_limit_active=ll_active,
-                    local_limit_dir=spec.direction if ll_active else 0,
-                    mode_switch=False,
-                    protection_event=False,
+                    local_limit_dir=ll_dir,
+                    mode_switch=bool(target_cov and cov_kind == "mode"),
+                    protection_event=bool(target_cov and cov_kind == "prot"),
                     station_constraint_active=(
                         event_on and rid == spec.target_rid
-                        and truth_target is Truth.EXTERNAL_CONSTRAINT
+                        and truth_target is Truth.EXTERNAL_CONSTRAINT and not cov
                     ),
                     soc=s.soc,
                     temp_c=s.temp_c,
@@ -265,13 +375,15 @@ class Simulator:
             label = truth_target if rid == spec.target_rid else Truth.NORMAL
             if sec_on and spec.secondary is not None and rid == spec.secondary.rid:
                 label = Truth.LOCAL_LIMIT
+            if target_cov:
+                label = _EXTRA_COVERAGE[cov][1]
             truth_rows.append(
                 TruthRow(
                     t=t,
                     rid=rid,
                     truth=label,
-                    true_deviation=p_true - p_eff[rid],
-                    observed_deviation=p_seen - p_eff[rid],
+                    true_deviation=p_eff[rid] - p_true,
+                    observed_deviation=p_eff[rid] - p_seen,
                 )
             )
         return obs_rows, truth_rows, plant_rows, plan
