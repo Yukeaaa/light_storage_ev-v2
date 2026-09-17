@@ -44,6 +44,8 @@
 - 治理三轨（同见 04 文件 §7 + 06/13 号治理修订）：**A 轨** = 核心专利证据轨，R5 7/7 唯一准入，Round 5 NOT STARTED（不变）；**B 轨** = 机制发现轨，独立编号 RD-*（不挂 R5），允许真实公开数据/benchmark/标注仿真，只产出机制发现与方向淘汰，禁闭环收益结论；**PD 轨** = 发明设计轨（06 号增设、13 号方法论转变修订），多候选并行 A–H、允许 cheap-knockout 量化推演与小原型、保留 v1 自证收益红线（详见 13 号）。**A 轨 R5 7/7、core-patent = NO-GO、Round 5 NOT STARTED 均不变**。**RD-1 = STOP AT A1（2026-09-06 终判）**：站级一致性硬门 FAIL——站级测量含稳定辅电/损耗与瞬态项、schedule 站级列是净交换量，原 station↔unit 归因链不成立（A0 语义冻结 `configs/research_discovery/rd1_a0.yaml` 继续有效；终判见 `reports/research_discovery/RD-1_A0A1_…§8`）。继任 **RD-2**（单元级执行偏差与状态相关性）已预注册并执行完毕：**硬门 FAIL → STOP（2026-09-06）**——C vs B3 改善 +0.214 kW 但 block-bootstrap 95%CI [-0.374,+0.455] 含 0，且 B3 劣于 B0（SOC 条件化无结构）；单元执行偏差存在（MAE 12.8–22.8 kW ≈ 额定 2–3.6%，对称散布）但不可由 SOC/recent-response 解释。**RD-1+RD-2 双 STOP，M5BAT 线对 E4 素材贡献穷尽**；B 轨当前无存活任务，新 RD 任务须绑定新数据源重新预注册。PO-SEARCH-1 = SURVIVE WITH CONDITIONS（`patent_definition/05_…`）：A 层单要素全 crowded、C 层未见整体闭环披露，空白点收窄至 E4 连接（执行确认的能力边界）；E4 证据只能来自具备"站级触发+设备边界+执行反馈"的新真实数据源；深查清单（CN 专利空间、US20160336765A1 claims、Applied Energy 执行偏差论文、OFO 约束学习支线 + 用户指定 5 新焦点）已在 `patent_definition/08_PO-SEARCH-1_强制深查结果.md` 执行完毕：判定 **PASS WITH CONDITIONS**（2026-09-06 纠错后口径）——强威胁分别触及能力边界/反馈/降额恢复/约束学习等邻域（部分对象触及多个 M 环），但公开时间线未观察到单篇完整连接"M2 偏差成因分类→M3 方向化可信边界状态机→M5 异构等效余量映射→M6 执行确认式维持/恢复"区别链（最强威胁 CN122203352A 仅片段级）；条件 1 **已解除（2026-09-07）**：用户提供 CNIPA 公布文本 PDF（SHA256 `bc07a75e…43a5cfe`），CN122203352A 权利要求 10 条全文复核 = **非 knockout**——其全链为单台 BESS+PCS 构网控制、P_cap=P_rated·k_SOC·k_SOH·k_T 标量状态因子降额，无计划-执行偏差、无成因分类、无跨设备转移；定位为**第一最近现有技术**进入背景技术引用（复核见 `patent_definition/10_CN122203352A权利要求级复核_条件1解除.md`，三重区别：触发源/边界语义/闭环范围）；条件 2 = 独立权项必须锚定组合链，不得以"动态能力边界"单点为主体。prior-art 检索面收口，不再扩大。**Claim Draft v1 已开（2026-09-07，`patent_definition/11_权利要求语言草案v1_…`）**：方法独立权 = 权 1 六段式（E1–E7；末段 E7→E4 回环"维持、继续修正或恢复可信能力边界"为必要句，防退化为 corrective dispatch）；从属顺序 D1→D2→D3→D7→D6→D4→D5→D8 = 权 2–9（先核心状态机后工程实现）；系统独立权 = 权 10 六单元镜像；10 号报告口径已修订（说明书=定向抽查非全文审计；反向比对仅用于现有技术区分、非侵权/FTO 结论）。**工程现实性反审（2026-09-07，`patent_definition/12_工程现实性反审_…`）：v1 独立权判定过窄（7 项，风险中等），不推倒重来、抽象一级**——发明本体收敛为五步链"偏差证据→能力归因→方向化可用能力状态→跨资源承接→执行反馈回写"（核心 A–D）；三分类标签/双迟滞/双向独立置信度/确定性排序/PCC 二级确认/分级恢复/设备类别表/至少两种类型/站级计划降级全部降为从属（v1 细节转为答审退守位）；"异构"改功能异构定义；已对 08 冻结证据集做解析性重比对（五对象均不覆盖五步链，总判定不变），未新开检索、不触发重开条款。v2 全量语言待 12 §4 评审后展开，说明书骨架顺延 13 号。core-patent status = NO-GO 不变。
 - **相关文献台账（2026-09-07，`reports/literature/01_相关文献台账_108篇处理留痕与五步链威胁初判.md`）**：用户提供文献库（顶层光储充 42 / 可信 8 / 大模型 58，共 108 篇 PDF）已按"文本层三诊 → MarkItDown 全文转换（42 篇）→ 扉页 OCR（65 篇 CNIPA 专利）/1 篇损坏待人工"完成整理与结构化初判，SHA256 全量留痕于 `literature/manifests/`（台账主表 `literature_ledger.csv`，产物在 `literature/converted|converted_ocr/`，工具脚本 `literature/tools/`）。结论（证据等级已钉牢，2026-09-07 修订）：**在"41 篇唯一全文 + 65 篇专利扉页/摘要初判"的证据层级下，未观察到已确认披露五步链连续两环（S1+S3 或 S3+S4）的文献；65 篇图像件仅完成扉页级低置信度筛查，不能据此排除其全文存在更深层组合机制——"未观察到"不升级为"108 篇全文均不存在"**。与 PO-SEARCH-1 收口一致；10 篇片段级；4 篇待全文核实。本次整理的价值定位是三件可靠结论：S3 动态能力/可用容量单点拥挤、S4 缺口驱动跨资源补偿常见、区别必须压在"执行偏差→能力归因→方向化能力状态更新→跨资源承接→执行反馈回写"五步链（与 12 号一致）。台账 CSV 有"证据层级"列（全文级/扉页级/损坏），扉页级"无覆盖"不得解读为全文排除。该整理不构成新检索行为、不改变既有判定；"可信"一词多义（TEE/数据空间/容量置信度/智能体权限），说明书须将"可信能力边界"限定于设备功率语境。**CN122371331A 已完成权利要求级全文复核（2026-09-07，`reports/literature/04_…`，全文 OCR 底稿 `literature/converted_ocr/顶层/…fulltext.md`）：非 knockout，定级片段级(偏强)、108 篇最近邻，列第二最近现有技术（与 CN122203352A 双锚互补）**——其 S1 偏差证据覆盖（未执行电量/储能偏差量）、储能偏差修正下时段储能电量（S3 弱触及）、缺口由储能按 SOC 边界承接（S4 部分同构）、执行结果回写下一时段计划输入（S5 计划滚动形态），但无成因分类、无方向化可信边界状态机、无异构等效余量映射、无边界维持/恢复，五步链条不闭合；四条区别性撰写指引见 04 号 §5（E1 偏差须成因可区分、E4/E5 须边界状态方向化更新、E5/E6 须等效余量映射、E7→E4 回环动作者须是边界确认/恢复而非任务量顺延）。
 
+- **线 3「公共问题探索」**（独立于上述 A/B/PD 三轨，也与 A/C 申请线、A-EV 证据线互相独立）：**2026-09-17 首次建立权威入口，见下文「公共问题探索（线 3）」节**。当前 Family A 与 Family B **均 DOWNGRADED**（no current residual technical gap），无新专利候选注册。
+
 ## PD 轨状态同步（2026-09-08 → 09-10）｜权威状态索引
 
 > **本节定位**：只做**状态索引与文件索引**，不重复研究报告内容（原文仍在各产物文件中）。本次仅同步 Sep 8–10 的 PD 状态，**不改变任何实验门、不改变任何权利要求、不改变 A 轨任何判定**。
@@ -245,6 +247,85 @@ reports/patent_pool/第一波提交源文件验收_V1.md                    # �
 - **编号冲突处置**：体系内编号互撞时**牺牲编号、保住从属退守位**（退守位是答审弹药，编号只是标签）；顺着重排后把冻结的编号体系写进文档，并同步所有交叉引用。
 - **红线**：禁收益量化；数据集名/字段名/统计值只进实施例不进权利要求；权项不写死枚举名（用"至少 N 个等级"上位表述）；内部文献台账编号（lit_id）与内部策略语言不得进入正式申请文本；证据只作 enablement。
 - **回写要求**：PD 轨每完成一个阶段，**同步回写本节**，避免下次会话上下文断层。
+
+## 公共问题探索（线 3）｜权威状态索引（2026-09-17）
+
+> **本节定位**：只做**状态索引与文件索引**，不重复研究报告内容（原文仍在各产物文件中）。
+> 本次为「公共问题探索」入口**首次建立**；此前探索轨产物暂落 `reports/exploration/`，未建入口。
+
+### 当前状态（唯一权威口径）
+
+```text
+公共问题探索
+──────────────────────────────────────────────────────────────
+3-b Dataset Admission Audit  = CLOSED
+3-a P0 Problem Reality Audit = CLOSED
+                               （V1 的历史 Problem Reality Audit 不删除；
+                                 其「当前判断」部分由 V0.2 supersede）
+
+Family A（#1+#7+#8：非保证接入容量下的园区服务保障）
+    = DOWNGRADED
+    = no current residual technical gap
+    = reopen only on new structural / physical evidence
+
+Family B（#6：变流器 S_rated / I_rated 的跨服务容量竞争）
+    = DOWNGRADED
+    = no current residual technical gap
+    = reopen only on new capacity semantics / multi-converter gap / new mandatory standard
+
+No new patent candidate registered
+──────────────────────────────────────────────────────────────
+A/C filing line       = untouched
+A-EV / HIL line       = untouched
+core-patent           = NO-GO
+Round 5               = NOT STARTED
+A-M3–M6               = UNVALIDATED
+```
+
+### 判定来源（**不是"别人申请过"，而是"更强的简单基线"**）
+
+- **Family A** 的关键一击来自本项目自身的 strongest-baseline knockout：
+  H-A5 新增的 provenance 状态，被一个**无状态**的 `identity_order` 规则**逐点复现**
+  （最大偏差 0 kW、错误作废 0 kWh）→ 新增状态无独立技术必要性。
+  留痕：`reports/exploration/_raw_audit_familyA_2026-09-17/`、`results/raw/ha5_knockout/`。
+- **Family B** 由三重独立证据降级：① 标准强制（IEEE 1547-2018 / UL 1741 SB 的
+  `priority modes` 为认证项、`Q ≥ 44% kVA`）；② 商业量产（PCS 四功能一体）；
+  ③ **权项级**正对撞件（CN121507903A 权 1/9：容量约束分配 + 多属性效用动态权重）。
+
+> **方法论纪律（本轮沉淀，后续沿用）**：
+> **先找能否被更简单机制等价复现，再谈专利差异。**
+> 与 R3-A / R3-C 的失败属同一种高质量证伪方式。
+
+### reopen 条件（保留登记，**不投入资源**）
+
+- **Family A**：见 V0.2 §5.4 的四类新结构/物理证据（物理耦合/非可替代资源路径；
+  容量与拓扑·馈线·相别·变流器·时间连续性绑定；stateless baseline 无法复现的轨迹差异；
+  执行反馈改变后续**物理**可行域）。本轮 R1/R2/R3 已决定**不做**。
+- **Family B**：见 `P0_Family_B_Scout_V0.1.md` §6 的三类条件（新的容量语义 /
+  多台异构变流器间治理任务分配的结构缺口 / 新的强制标准或市场机制）。
+
+### 优先读取清单（线 3，按序）
+
+```text
+reports/exploration/P0_Family_B_Scout_V0.1.md                        # Family B scout 结论（最新）
+reports/exploration/P0_Family_A_Second-Level_Attack_V0.2.md          # Family A 二审结论（当前权威）
+reports/exploration/_raw_audit_familyA_2026-09-17/structure_matrix.md # 4 件权项级六维结构矩阵
+reports/exploration/_raw_audit_familyA_2026-09-17/*_claims.txt        # 4 件权项原文留痕
+reports/exploration/_raw_audit_2026-09-17/                           # V1 两件专利留痕
+reports/exploration/P0_配电容量受限与新增负荷_Problem_Reality_Audit_V1.md  # 3-a V1（历史）
+reports/exploration/数据源准入审计_V1.md                              # 3-b（CLOSED）
+experiments/ha5_knockout/run.py                                      # 机制必要性 knock-out 原型
+```
+
+### 隔离声明（勿违反）
+
+- 线 3 为**公共问题探索**，与 A/C 第一波申请文本、A-EV/HIL 证据线**相互独立**；
+  其产物**不得**作为 A/C 申请文本的支持或证据。
+- 线 3 的 knock-out 为**合成退化 LP**，仅用于**机制可行性判定**，
+  **不得**引用其数值作为收益/效果证据。
+- 线 3 **不扩张数据源**（3-b 已 CLOSED）：只有某个机制先通过 V0.2 §8 的 G1–G5 门槛，
+  才去问"哪个公开数据能验证它"。
+- 探索轨每完成一个阶段，**同步回写本节**。
 
 ## 环境与工具链
 
