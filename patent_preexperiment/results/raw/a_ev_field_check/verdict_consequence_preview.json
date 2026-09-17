@@ -1,0 +1,144 @@
+[
+  {
+    "scenario": "S0 现状（预登记口径，yaml 原样）",
+    "decision": "CONDITIONAL",
+    "n_not_verifiable": 0,
+    "not_verifiable": [],
+    "derived_field_count": 1,
+    "missing_fields": [],
+    "notes": [
+      "存在推导口径字段（accepted_setpoint ← bms_charge_discharge_limits + pcs_limit_registers + control_log）：commissioning 期间须实测验证推导链后方可升级 ADMITTED"
+    ]
+  },
+  {
+    "scenario": "S1 全部 DIRECT（含 accepted 实测外露）",
+    "decision": "ADMITTED",
+    "n_not_verifiable": 0,
+    "not_verifiable": [],
+    "derived_field_count": 0,
+    "missing_fields": [],
+    "notes": []
+  },
+  {
+    "scenario": "S2 accepted=DERIVED，材料齐全",
+    "decision": "CONDITIONAL",
+    "n_not_verifiable": 0,
+    "not_verifiable": [],
+    "derived_field_count": 1,
+    "missing_fields": [],
+    "notes": [
+      "存在推导口径字段（accepted_setpoint ← BMS 充放限值寄存器 + PCS 限功率寄存器 + 控制日志（三份缺一不可））：commissioning 期间须实测验证推导链后方可升级 ADMITTED"
+    ]
+  },
+  {
+    "scenario": "S3 accepted=MISSING（推导材料取不到）",
+    "decision": "CONDITIONAL",
+    "n_not_verifiable": 4,
+    "not_verifiable": [
+      "M1 上报限值区分",
+      "M6 写回",
+      "Reported 包络",
+      "commissioning 响应窗"
+    ],
+    "derived_field_count": 0,
+    "missing_fields": [
+      "accepted_setpoint"
+    ],
+    "notes": [
+      "缺层字段 accepted_setpoint → 对应机制已标记不可验证"
+    ]
+  },
+  {
+    "scenario": "S4 override_source/reason=MISSING",
+    "decision": "CONDITIONAL",
+    "n_not_verifiable": 1,
+    "not_verifiable": [
+      "M1 外部约束/保护/模式判据"
+    ],
+    "derived_field_count": 1,
+    "missing_fields": [
+      "override_source",
+      "override_reason"
+    ],
+    "notes": [
+      "缺层字段 override_source, override_reason → 对应机制已标记不可验证"
+    ]
+  },
+  {
+    "scenario": "S5 独立 PCC 表计 MISSING",
+    "decision": "CONDITIONAL",
+    "n_not_verifiable": 2,
+    "not_verifiable": [
+      "PCC 主指标",
+      "模块6 PCC 残差通道"
+    ],
+    "derived_field_count": 1,
+    "missing_fields": [
+      "pcc"
+    ],
+    "notes": [
+      "缺层字段 pcc → 对应机制已标记不可验证"
+    ]
+  },
+  {
+    "scenario": "S6 requested_setpoint MISSING（核心字段）",
+    "decision": "REJECTED",
+    "n_not_verifiable": 3,
+    "not_verifiable": [
+      "M1 执行偏差",
+      "M2 能力学习",
+      "M3 站级缺口"
+    ],
+    "derived_field_count": 0,
+    "missing_fields": [
+      "requested_setpoint"
+    ],
+    "notes": [
+      "缺层字段 requested_setpoint → 对应机制已标记不可验证"
+    ]
+  },
+  {
+    "scenario": "S7 p_meas MISSING（核心字段）",
+    "decision": "REJECTED",
+    "n_not_verifiable": 4,
+    "not_verifiable": [
+      "M1 执行偏差",
+      "M2 能力学习",
+      "M6 写回",
+      "commissioning 噪声标定"
+    ],
+    "derived_field_count": 0,
+    "missing_fields": [
+      "p_meas"
+    ],
+    "notes": [
+      "缺层字段 p_meas → 对应机制已标记不可验证"
+    ]
+  },
+  {
+    "scenario": "S8 时钟偏差 1.2s > 预算 0.5s",
+    "decision": "REJECTED",
+    "n_not_verifiable": 1,
+    "not_verifiable": [
+      "时序判据与 commissioning 标定（统一时钟前提）"
+    ],
+    "derived_field_count": 1,
+    "missing_fields": [],
+    "notes": [
+      "时钟未统一偏差 1.2s > 预算 0.5s：响应观察窗/标定/暂态-限值区分的时序判据系统性失效"
+    ]
+  },
+  {
+    "scenario": "S9 控制权非单一（存在隐形上游）",
+    "decision": "REJECTED",
+    "n_not_verifiable": 1,
+    "not_verifiable": [
+      "错误归因防线（控制权仲裁）"
+    ],
+    "derived_field_count": 1,
+    "missing_fields": [],
+    "notes": [
+      "控制权非单一（存在隐形上游写点）：错误归因风险不可控"
+    ]
+  }
+]
