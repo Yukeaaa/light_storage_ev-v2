@@ -1,0 +1,62 @@
+==========================================================================
+### BDG2 · HuggingFace datasets-server 真字段
+==========================================================================
+  dataset=buds-lab/building-data-genome-project-2 ERR HTTPError: HTTP Error 401: Unauthorized
+  dataset=LBNL/building-data-genome-project-2 ERR HTTPError: HTTP Error 401: Unauthorized
+
+==========================================================================
+### DOE EULP · OpenEI 记录元数据
+==========================================================================
+
+--- https://data.openei.org/submissions/4520  (109737 chars fetched) ---
+<!DOCTYPE html>
+  <html lang="en">
+    <head>
+      <title>OEDI: End-Use Load Profiles for the U.S. Building Stock</title>
+      <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1" />
+      <meta http-equiv="Content-Style-Type" content="text/css" />
+      <meta name="Keywords" content="energy, power, buildings, commercial, residential, electricity, natural gas, load profile, load shape, Building Stock, US Building Stock, building, building science, building efficiency, demand response, EULP, End Use Load Profiles, load, end use, grid flexibility, grid, ResStock, ComStock, models, load profiles, Open Energy Data Initiative, OEDI, DOE-OEDI, data lake, energy, data, energy data, tool, app, webapp" />
+      <meta name="Description" content="The United States is embarking on an ambitious transition to a 100 clean energy economy by 2050 which will require improving the flexibility of electric grids. One way to achieve grid flexibility is to shed or shift demand to align with changing grid needs. To facilitate this it is critical to understand how and when energy is used. High quality end-use load profiles EULPs provide this information and can help cities states and utilities understand the time-sensitive value of energy efficiency demand response and distributed energy resources. Publicly available EULPs have traditionally had limited application because of age and incomplete geographic representation. To help fill this gap the U.S. Department of Energy DOE funded a three-year project End-Use Load Profiles for the U.S. Building Stock that culminated in this publicly available dataset of calibrated and validated 15-minute resolution load profiles for all major residential and commercial building types and end uses across all climate regions in the United States. These EULPs were created by calibrating the ResStock and ComStock physics-based building stock models using many different measured datasets as described in the Technical Report Documenting Methodology linked in the submission." />
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+      <!-- Twitter Card data -->
+      <meta name="twitter:card" content="summary_large_image" />
+      <meta name="twitter:site" content="@ENERGY" />
+      <meta name="twitter:creator" content="@NLR" />
+      <meta name="twitter:title" content="Open Energy Data Initiative (OEDI)" />
+      <meta name="twitter:description" content="The United States is embarking on an ambitious transition to a 100 clean energy economy by 2050 which will require improving the flexibility of electric grids. One way to achieve grid flexibility is to shed or shift demand to align with changing grid needs. To facilitate this it is critical to understand how and when energy is used. High quality end-use load profiles EULPs provide this information and can help cities states and utilities understand the time-sensitive value of energy efficiency demand response and distributed energy resources. Publicly available EULPs have traditionally had limited application because of age and incomplete geographic representation. To help fill this gap the U.S. Department of Energy DOE funded a three-year project End-Use Load Profiles for the U.S. Building Stock that culminated in this publicly available dataset of calibrated and validated 15-minute resolution load profiles for all major residential and commercial building types and end uses across all climate regions in the United States. These EULPs were created by calibrating the ResStock and ComStock physics-based building stock models using many different measured datasets as described in the Technical Report Documenting Methodology linked in the submission.." />
+      <meta name="twitter:url" content="https://data.openei.org/" />
+      <meta name="twitter:image" content="http://data.openei.org/assets/img/OEDI-text-logo.png" />
+
+        <!-- Open Graph data -->
+      <meta property="og:title" content="Open Energy Data Initiative (OEDI)
+
+--- https://oedi-data-lake.s3.amazonaws.com/nrel-pds-building-stock/end-use-load-profiles-for-us-building-stock/README.md  (32534 chars fetched) ---
+# End Use Load Profiles for the U.S. Building Stock
+This collection of datasets describes the energy consumption of the U.S. residential and commercial building stock. The data are broken down first by building type (single family home, office, restaurant, etc.), then by end-use (heating, cooling, lighting, etc.) at a 15-minute time interval. For details on how the datasets were created and validated, please visit the [project website](https://www.nrel.gov/buildings/end-use-load-profiles.html).
+
+## Directory Structure
+```
+nrel-pds-building-stock                                                                     # top-level directory inside the NREL oedi-data-lake bucket
+├── end-use-load-profiles-for-us-building-stock                                             # directory for all End Use Load Profiles and End Use Savings Shapes
+│   ├── README.md                                                                           # the file you are reading right now
+│   └── 2022                                                                                # year the dataset was published
+│       ├── EUSS_ResRound1_Technical_Documentation                                          # technical documentation
+│       └── resstock_amy2018_release_1                                                      # name of the dataset
+│           ├── building_energy_models                                                      # models used to generate timeseries data
+│           │   ├── upgrade=<upgrade_id>                                                    # by upgrade_id - refer to upgrades_lookup.json for upgrade id descriptions
+│           │   │   ├── <building_id>-up<upgrade_id>.zip                                    # model files for specific building_id and upgrade_id - zip file includes in.xml and schedules.csv files
+│           ├── geographic_information                                                      # geographic shapefiles used for mapping this dataset
+│           │   ├── map_of_pumas_in_census_region_1_northeast.geojson                       # map of U.S. Census Public Use Microdata Area in Census Region 1 Northeast
+│           │   ├── map_of_pumas_in_census_region_2_midwest.geojson                         # map of U.S. Census Public Use Microdata Area in Census Region 2 Midwest
+│           │   ├── map_of_pumas_in_census_region_3_south.geojson                           # map of U.S. Census Public Use Microdata Area in Census Region 3 South
+│           │   ├── map_of_pumas_in_census_region_4_west.geojson                            # map of U.S. Census Public Use Microdata Area in Census Region 4 West
+│           │   ├── map_of_us_states.geojson                                                # map of U.S. States
+│           │   └── spatial_tract_lookup_table.csv                                          # mapping between census tract identifiers and other geographies
+│           ├── metadata                                                                    # building characteristic information and annual energy consumption for each building id, formatted for machine readability
+│           │   ├── upgrade<upgrade_id>.parquet                                             # annual energy consumption for each building id for each respective upgrade_id
+│           │   └── baseline.parquet                                                        # building characteristics and annual energy consumption for each building in the baseline (existing stock) scenario
+│           ├── metadata_and_annual_results                                                 # building characteristic information and annual energy consumption, formatted for human readability
+│           │   ├── by_state                                                                # by U.S. States
+│           │   ├── state=<state>                                                           # building_ids (dwelling units) separated by state
+│           │   │   ├── csv 

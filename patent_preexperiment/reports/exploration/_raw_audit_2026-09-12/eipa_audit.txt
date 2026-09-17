@@ -1,0 +1,308 @@
+=== EIPA record 21414976 ===
+title: EIPA charging-point occupancy dataset: a 14-day full-population reference series with source-cadence characterisation (Poland, June–July 2026)
+version: 1.0.0 | pub: 2026-08-05 | lic: cc-by-4.0
+doi: 10.5281/zenodo.21414976
+desc: A 14-day, full-population reference series of the occupancy state of all public electric-vehicle charging points reported by the Polish national register of alternative-fuels infrastructure (EIPA, Ewidencja Infrastruktury Paliw Alternatywnych, operated by the Office of Technical Inspection, UDT), together with the collector and analysis code. Collection window: 2026-06-23 14:43 UTC &ndash; 2026-07-07 14:43 UTC (13 d 23:59:59; nominally 14 days). Polling cadence: 60 s, the empirically determined native publication cadence of the source. Coverage: 20,156 scheduled polls, 1 failure; the successful polls cover 20,155 of the 20,161 minutes of the window (99.97%), longest gap 3 min. Acquisition used change-triggered delta logging: a row is stored only when a point's state code or source-side status timestamp changes. The deposit contains the delta log of point states (7,230,030 rows; 27,666 distinct point identifiers observed; state codes free/busy/unavailable with source-side status timestamps), a per-poll audit log enabling completeness verification, high-frequency calibration samples used to determine the native publication cadence, and a static snapshot of point metadata (13,928 records with power and connector interface codes). Intersecting the snapshot with the points reporting status within the window yields the analytical cohort of 13,168 points used throughout the associated article. The full acquisition code (two-phase collector with delta logging) and an end-to-end analysis script reproducing all tables of the associated article are included. Data: CC BY 4.0; code: MIT. An associated journal article is currently under review. A link to it will be added&nbsp;to this record once it has been published. &nbsp;
+
+--- files ---
+       0.008 MB  README.md
+      https://zenodo.org/api/records/21414976/files/README.md/content
+       0.016 MB  reproduce.py
+      https://zenodo.org/api/records/21414976/files/reproduce.py/content
+       0.006 MB  reproduce.log
+      https://zenodo.org/api/records/21414976/files/reproduce.log/content
+       0.013 MB  controller.py
+      https://zenodo.org/api/records/21414976/files/controller.py/content
+       0.004 MB  export_csv.py
+      https://zenodo.org/api/records/21414976/files/export_csv.py/content
+       0.070 MB  points_meta.csv.gz
+      https://zenodo.org/api/records/21414976/files/points_meta.csv.gz/content
+       0.023 MB  calib.csv.gz
+      https://zenodo.org/api/records/21414976/files/calib.csv.gz/content
+      36.413 MB  transitions.csv.gz
+      https://zenodo.org/api/records/21414976/files/transitions.csv.gz/content
+       0.296 MB  poll_log.csv.gz
+      https://zenodo.org/api/records/21414976/files/poll_log.csv.gz/content
+       0.003 MB  status.py
+      https://zenodo.org/api/records/21414976/files/status.py/content
+
+======================================================================
+### 文件 README.md（8025 chars）
+======================================================================
+# EIPA charging-point occupancy dataset (Poland, 23 June – 7 July 2026)
+
+A 14-day reference series of the occupancy state of the public electric-vehicle
+charging points reported by the Polish national register of alternative-fuels
+infrastructure (EIPA, Ewidencja Infrastruktury Paliw Alternatywnych, operated by
+the Office of Technical Inspection, UDT), together with the collector and
+analysis code.
+
+An associated journal article is currently under review. A link to it will be
+added to this record once it has been published.
+
+Collection window: 2026-06-23 14:43 UTC – 2026-07-07 14:43 UTC
+(13 d 23:59:59; nominally 14 days).
+Polling cadence: 60 s (the empirically determined native publication cadence of
+the source). Coverage: 20,156 scheduled polls, 1 failure; the successful polls
+cover 20,155 of the 20,161 minutes of the window (99.97%), longest gap 3 min.
+Acquisition used change-triggered delta logging: a row is stored only when a
+point's state code or source-side status timestamp changes.
+
+## Files
+
+### transitions.csv.gz (7,230,030 rows; 27,666 distinct point identifiers)
+
+Delta log of observed state records. One row per point per observed change
+(plus one baseline row per point at first observation). Of the 7,230,030 rows,
+905,427 are genuine state changes, the remainder being records in which only the
+source-side timestamp moved.
+
+The count of distinct identifiers exceeds the static snapshot because identifiers
+turn over during the window: 13,974 identifiers appeared in the dynamic stream
+that were absent from the snapshot, whilst the population size itself remained
+stable. Any longitudinal use of the register should account for this.
+
+| column | description |
+|---|---|
+| ts_utc | UTC wall-clock time at which the collector observed the record (ISO 8601) |
+| point_id | charging-point identifier as reported in the EIPA dynamic feed |
+| status | combined state code: 1 = free (availability=1, status=1), 2 = busy (availability=1, status=0), 0 = operationally unavailable (availability=0) |
+| status_ts | source-reported timestamp of the last status change of this point (ISO 8601, as published in the feed) |
+
+The `status_ts` field is populated for every observed state change, but its tail
+is long: within the analytical cohort, 1.50% of changes carry a timestamp older
+than one hour and the most extreme is retrospective by 113.2 days. The median
+lag between the source timestamp and the instant of observation is 86 s
+(interquartile range 69–105 s), with no negative values. Users intending to
+re-date transitions from `status_ts` should characterise that tail first.
+
+### poll_log.csv.gz (21,239 rows)
+
+Per-poll audit log enabling completeness verification. Phase 1 contributes
+1,083 rows, phase 2 contributes 20,156.
+
+| column | description |
+|---|---|
+| ts_utc | UTC time of the poll |
+| phase | 1 = calibration phase (18–20 s polling, 6 h), 2 = reference phase (60 s polling, 14 days) |
+| ok | 1 = poll succeeded, 0 = failed |
+| n_points | number of points present in the dynamic feed at this poll |
+| n_changes | number of rows written to the delta log at this poll |
+| free / busy / unavail | counts of points by combined state code |
+| src_ts | publication timestamp of the feed ("generated") |
+| error | error message for failed polls, empty otherwise |
+
+### calib.csv.gz (1,083 rows)
+
+High-frequency samples from the calibration phase, used to determine the native
+publication cadence of the source. The 361 observed changes of the publication
+timestamp give a median interval of 60 s (5th–95th percentile 59–61 s, extremes
+37–72 s). Querying more frequently than once per minute therefore returns
+snapshots that the source has not yet refreshed.
+
+| column | description |
+|---|---|
+| wall_utc | UTC time of the sample |
+| src_ts | publication timestamp of the feed at this sample |
+| payload_hash | hash of the dynamic-feed payload (detects unchanged snapshots) |
+| free / busy / unavailable / total | counts of points by state |
+
+### points_meta.csv.gz (13,928 rows)
+
+Static snapshot of point metadata taken at the start of the observation window.
+
+| column | description |
+|---|---|
+| point_id | charging-point identifier (joins to transitions.csv) |
+| station_id | identifier of the parent charging station |
+| max_power | maximum power over the point's connectors [kW]; missing for 699 records |
+| interfaces | pipe-joined connector interface codes as published by the register |
+| modes | pipe-joined charging-solution mode codes as published by the register |
+
+Power-class assignment used in the analysis: DC for max_power >= 50 kW, AC for
+max_power < 50 kW. Connector interface codes 11, 29 and 30 denote DC couplers;
+codes 10, 17 and 18 denote AC couplers. The band above 22 kW and below 50 kW
+contains 465 points, of which 268 carry DC connector codes; sessions at those
+points account for 3.6% of the total, so the choice of threshold within that
+band does not materially affect aggregate results.
+
+Population balance: of the 13,928 snapshot records, 13,229 carry a power
+specification and 236 never reported a status during the window. Of those 236,
+61 carry a power specification and 175 do not. Intersecting the snapshot with
+the points reporting status yields the analytical cohort of 13,168 points
+(7,499 AC and 5,669 DC) used throughout the analysis.
+
+## Code
+
+- `controller.py` — two-phase acquisition automaton (cron-driven, 1-min tick):
+  phase 1 source characterisation, phase 2 reference acquisition with delta
+  logging and audit log; SQLite storage. The feed endpoint is read from the
+  `EIPA_DYNAMIC_URL` environment variable and is not hard-coded.
+- `status.py` — collection health monitor.
+- `export_csv.py` — consistent snapshot export of the SQLite databases to the
+  CSV files above.
+- `reproduce.py` — end-to-end reproduction of all tables, figure series and
+  headline numbers of the analysis from the four CSV files (pandas + numpy;
+  approximately 1.5 GB RAM; approximately 60 min on one core).
+- `reproduce.log` — the outp
+
+======================================================================
+### CSV points_meta.csv.gz（13929 行）
+======================================================================
+  point_id,station_id,max_power,interfaces,modes
+  13477,1153,22,10,6
+  13478,1153,22,10,6
+  131448,1153,22,10,6
+  131449,1153,22,10,6
+  13480,1155,11,10,5
+  13481,1156,11,10,5
+  13482,1157,22,10,6
+  13483,1157,22,10,6
+  131450,1157,22,10,6
+  131451,1157,22,10,6
+  13493,1161,40,11|29,7
+  13494,1161,22,17,6
+  13501,1167,22,10,6
+  13502,1167,22,10,6
+  13503,1168,22,10,6
+  13504,1168,22,10,6
+  13505,1169,22,10,6
+  13506,1169,22,10,6
+  14665,1170,50,11|29,7
+  14666,1170,22,17,6
+  13514,1173,22,10,6
+  13515,1173,22,10,6
+  170628,1173,22,10,6
+  170629,1173,22,10,6
+  17172,1559,22,10,6
+  17173,1559,22,10,6
+  17174,1560,22,10,6
+  17175,1560,22,10,6
+  17176,1561,22,10,6
+  17177,1561,22,10,6
+  24984,1621,22,10,6
+  24985,1621,22,10,6
+  105524,35806,50,11|30,7
+  105525,35806,22,17,
+  36200,6994,50,11|29,7
+  36201,6994,22,17,6
+  86780,32503,22,10,6
+  86781,32503,22,10,6
+  86782,32504,22,10,6
+
+======================================================================
+### CSV calib.csv.gz（1084 行）
+======================================================================
+  wall_utc,src_ts,payload_hash,free,busy,unavailable,total
+  2026-06-23T08:41:30+00:00,2026-06-23T10:41:05+02:00,e16fa6a59df4129c74e36b7910ae32b73c1ab7f36429a75fd39f3a60e7973640,9968,815,2960,13743
+  2026-06-23T08:41:49+00:00,2026-06-23T10:41:05+02:00,e16fa6a59df4129c74e36b7910ae32b73c1ab7f36429a75fd39f3a60e7973640,9968,815,2960,13743
+  2026-06-23T08:42:07+00:00,2026-06-23T10:42:06+02:00,0b837a50600ae41d45b030eb6c523b600ec49b92769b2946a24080e43f7d58f0,9941,842,2960,13743
+  2026-06-23T08:43:01+00:00,2026-06-23T10:42:06+02:00,0b837a50600ae41d45b030eb6c523b600ec49b92769b2946a24080e43f7d58f0,9941,842,2960,13743
+  2026-06-23T08:43:19+00:00,2026-06-23T10:43:05+02:00,b471c772aeb7347387f576a4fc1fe7b28b024729f31929de4bbbb3f1f483e4c8,9941,839,2963,13743
+  2026-06-23T08:43:38+00:00,2026-06-23T10:43:05+02:00,b471c772aeb7347387f576a4fc1fe7b28b024729f31929de4bbbb3f1f483e4c8,9941,839,2963,13743
+  2026-06-23T08:44:01+00:00,2026-06-23T10:43:05+02:00,b471c772aeb7347387f576a4fc1fe7b28b024729f31929de4bbbb3f1f483e4c8,9941,839,2963,13743
+  2026-06-23T08:44:20+00:00,2026-06-23T10:44:05+02:00,45dc14c2d9cd3fcb18b06e6d6a7d7efd94609492b47a794a297f78b957e6db1f,9944,837,2962,13743
+  2026-06-23T08:44:38+00:00,2026-06-23T10:44:05+02:00,45dc14c2d9cd3fcb18b06e6d6a7d7efd94609492b47a794a297f78b957e6db1f,9944,837,2962,13743
+  2026-06-23T08:45:02+00:00,2026-06-23T10:44:05+02:00,45dc14c2d9cd3fcb18b06e6d6a7d7efd94609492b47a794a297f78b957e6db1f,9944,837,2962,13743
+  2026-06-23T08:45:20+00:00,2026-06-23T10:45:06+02:00,364d0be396e06b10b0928d3ca121342f8be8b5e23f63d95d12fa08d7bef96518,9941,839,2963,13743
+  2026-06-23T08:45:38+00:00,2026-06-23T10:45:06+02:00,364d0be396e06b10b0928d3ca121342f8be8b5e23f63d95d12fa08d7bef96518,9941,839,2963,13743
+  2026-06-23T08:46:01+00:00,2026-06-23T10:45:06+02:00,364d0be396e06b10b0928d3ca121342f8be8b5e23f63d95d12fa08d7bef96518,9941,839,2963,13743
+  2026-06-23T08:46:19+00:00,2026-06-23T10:46:05+02:00,c822679600c72d42a9c72d1fb5fedd38860f13e205e21f83489827f929b65056,9895,879,2969,13743
+  2026-06-23T08:46:38+00:00,2026-06-23T10:46:05+02:00,c822679600c72d42a9c72d1fb5fedd38860f13e205e21f83489827f929b65056,9895,879,2969,13743
+  2026-06-23T08:47:01+00:00,2026-06-23T10:46:05+02:00,c822679600c72d42a9c72d1fb5fedd38860f13e205e21f83489827f929b65056,9895,879,2969,13743
+  2026-06-23T08:47:19+00:00,2026-06-23T10:47:05+02:00,30a7c8c2c6d69b06557385e129c8035f0a25f60beb88b8599373c4f8329be732,9921,850,2972,13743
+  2026-06-23T08:47:38+00:00,2026-06-23T10:47:05+02:00,30a7c8c2c6d69b06557385e129c8035f0a25f60beb88b8599373c4f8329be732,9921,850,2972,13743
+  2026-06-23T08:48:01+00:00,2026-06-23T10:47:05+02:00,30a7c8c2c6d69b06557385e129c8035f0a25f60beb88b8599373c4f8329be732,9921,850,2972,13743
+  2026-06-23T08:48:20+00:00,2026-06-23T10:48:06+02:00,129845de5e0cb5ee832ea6b1564a837d6f0e92298e806098bc516d56c2d5118a,9907,865,2971,13743
+  2026-06-23T08:48:38+00:00,2026-06-23T10:48:06+02:00,129845de5e0cb5ee832ea6b1564a837d6f0e92298e806098bc516d56c2d5118a,9907,865,2971,13743
+  2026-06-23T08:49:02+00:00,2026-06-23T10:48:06+02:00,129845de5e0cb5ee832ea6b1564a837d6f0e92298e806098bc516d56c2d5118a,9907,865,2971,13743
+  2026-06-23T08:49:20+00:00,2026-06-23T10:49:05+02:00,2bbedcaff414a8613b8b0b4ab5c243a0a7b97eaf8a0fc0f9f68cf39634160bc1,9900,874,2969,13743
+  2026-06-23T08:49:38+00:00,2026-06-23T10:49:05+02:00,2bbedcaff414a8613b8b0b4ab5c243a0a7b97eaf8a0fc0f9f68cf39634160bc1,9900,874,2969,13743
+  2026-06-23T08:50:01+00:00,2026-06-23T10:49:05+02:00,2bbedcaff414a8613b8b0b4ab5c243a0a7b97eaf8a0fc0f9f68cf39634160bc1,9900,874,2969,13743
+  2026-06-23T08:50:20+00:00,2026-06-23T10:50:06+02:00,9c3690e6f40c1d15f6e08006dbb745aa023a051c100ffd1ba366b84c5bc9bc71,9900,876,2967,13743
+  2026-06-23T08:50:38+00:00,2026-06-23T10:50:06+02:00,9c3690e6f40c1d15f6e08006dbb745aa023a051c100ffd1ba366b84c5bc9bc71,9900,876,2967,13743
+  2026-06-23T08:51:01+00:00,2026-06-23T10:50:06+02:00,9c3690e6f40c1d15f6e08006dbb745aa023a051c100ffd1ba366b84c5bc9bc71,9900,876,2967,13743
+  2026-06-23T08:51:20+00:00,2026-06-23T10:51:06+02:00,de7ce31e1122d8dca3737ce0f7247c0dee6147f50ab6e090b02dce5e79a1facf,9886,891,2966,13743
+  2026-06-23T08:51:38+00:00,2026-06-23T10:51:06+02:00,de7ce31e1122d8dca3737ce0f7247c0dee6147f50ab6e090b02dce5e79a1facf,9886,891,2966,13743
+  2026-06-23T08:52:01+00:00,2026-06-23T10:51:06+02:00,de7ce31e1122d8dca3737ce0f7247c0dee6147f50ab6e090b02dce5e79a1facf,9886,891,2966,13743
+  2026-06-23T08:52:20+00:00,2026-06-23T10:52:05+02:00,742d387c7b6c2a76b1628c55ee23cde28d3bdd0625a8e65086803d0571f6b5f8,9889,889,2965,13743
+  2026-06-23T08:52:38+00:00,2026-06-23T10:52:05+02:00,742d387c7b6c2a76b1628c55ee23cde28d3bdd0625a8e65086803d0571f6b5f8,9889,889,2965,13743
+  2026-06-23T08:53:01+00:00,2026-06-23T10:52:05+02:00,742d387c7b6c2a76b1628c55ee23cde28d3bdd0625a8e65086803d0571f6b5f8,9889,889,2965,13743
+  2026-06-23T08:53:19+00:00,2026-06-23T10:53:05+02:00,e3154320d37ed6dc476631fcfd16166edbddeef4e4609c9f1c0c1cb2c0a89dac,9875,899,2969,13743
+  2026-06-23T08:53:38+00:00,2026-06-23T10:53:05+02:00,e3154320d37ed6dc476631fcfd16166edbddeef4e4609c9f1c0c1cb2c0a89dac,9875,899,2969,13743
+  2026-06-23T08:54:01+00:00,2026-06-23T10:53:05+02:00,e3154320d37ed6dc476631fcfd16166edbddeef4e4609c9f1c0c1cb2c0a89dac,9875,899,2969,13743
+  2026-06-23T08:54:19+00:00,2026-06-23T10:54:06+02:00,97bc0c875c8cc0466861e50e9526380f772a1e8c0512420e7c142cd98c9756ac,9878,888,2977,13743
+  2026-06-23T08:54:38+00:00,2026-06-23T10:54:06+02:00,97bc0c875c8cc0466861e50e9526380f772a1e8c0512420e7c142cd98c9756ac,9878,888,2977,13743
+
+======================================================================
+### CSV poll_log.csv.gz（21240 行）
+======================================================================
+  ts_utc,phase,ok,n_points,n_changes,free,busy,unavail,src_ts,error
+  2026-06-23T08:41:30+00:00,1,1,13743,,9968,815,2960,2026-06-23T10:41:05+02:00,
+  2026-06-23T08:41:49+00:00,1,1,13743,,9968,815,2960,2026-06-23T10:41:05+02:00,
+  2026-06-23T08:42:07+00:00,1,1,13743,,9941,842,2960,2026-06-23T10:42:06+02:00,
+  2026-06-23T08:43:01+00:00,1,1,13743,,9941,842,2960,2026-06-23T10:42:06+02:00,
+  2026-06-23T08:43:19+00:00,1,1,13743,,9941,839,2963,2026-06-23T10:43:05+02:00,
+  2026-06-23T08:43:38+00:00,1,1,13743,,9941,839,2963,2026-06-23T10:43:05+02:00,
+  2026-06-23T08:44:01+00:00,1,1,13743,,9941,839,2963,2026-06-23T10:43:05+02:00,
+  2026-06-23T08:44:20+00:00,1,1,13743,,9944,837,2962,2026-06-23T10:44:05+02:00,
+  2026-06-23T08:44:38+00:00,1,1,13743,,9944,837,2962,2026-06-23T10:44:05+02:00,
+  2026-06-23T08:45:02+00:00,1,1,13743,,9944,837,2962,2026-06-23T10:44:05+02:00,
+  2026-06-23T08:45:20+00:00,1,1,13743,,9941,839,2963,2026-06-23T10:45:06+02:00,
+  2026-06-23T08:45:38+00:00,1,1,13743,,9941,839,2963,2026-06-23T10:45:06+02:00,
+  2026-06-23T08:46:01+00:00,1,1,13743,,9941,839,2963,2026-06-23T10:45:06+02:00,
+  2026-06-23T08:46:19+00:00,1,1,13743,,9895,879,2969,2026-06-23T10:46:05+02:00,
+  2026-06-23T08:46:38+00:00,1,1,13743,,9895,879,2969,2026-06-23T10:46:05+02:00,
+  2026-06-23T08:47:01+00:00,1,1,13743,,9895,879,2969,2026-06-23T10:46:05+02:00,
+  2026-06-23T08:47:19+00:00,1,1,13743,,9921,850,2972,2026-06-23T10:47:05+02:00,
+  2026-06-23T08:47:38+00:00,1,1,13743,,9921,850,2972,2026-06-23T10:47:05+02:00,
+  2026-06-23T08:48:01+00:00,1,1,13743,,9921,850,2972,2026-06-23T10:47:05+02:00,
+  2026-06-23T08:48:20+00:00,1,1,13743,,9907,865,2971,2026-06-23T10:48:06+02:00,
+  2026-06-23T08:48:38+00:00,1,1,13743,,9907,865,2971,2026-06-23T10:48:06+02:00,
+  2026-06-23T08:49:02+00:00,1,1,13743,,9907,865,2971,2026-06-23T10:48:06+02:00,
+  2026-06-23T08:49:20+00:00,1,1,13743,,9900,874,2969,2026-06-23T10:49:05+02:00,
+  2026-06-23T08:49:38+00:00,1,1,13743,,9900,874,2969,2026-06-23T10:49:05+02:00,
+  2026-06-23T08:50:01+00:00,1,1,13743,,9900,874,2969,2026-06-23T10:49:05+02:00,
+  2026-06-23T08:50:20+00:00,1,1,13743,,9900,876,2967,2026-06-23T10:50:06+02:00,
+  2026-06-23T08:50:38+00:00,1,1,13743,,9900,876,2967,2026-06-23T10:50:06+02:00,
+  2026-06-23T08:51:01+00:00,1,1,13743,,9900,876,2967,2026-06-23T10:50:06+02:00,
+  2026-06-23T08:51:20+00:00,1,1,13743,,9886,891,2966,2026-06-23T10:51:06+02:00,
+  2026-06-23T08:51:38+00:00,1,1,13743,,9886,891,2966,2026-06-23T10:51:06+02:00,
+  2026-06-23T08:52:01+00:00,1,1,13743,,9886,891,2966,2026-06-23T10:51:06+02:00,
+  2026-06-23T08:52:20+00:00,1,1,13743,,9889,889,2965,2026-06-23T10:52:05+02:00,
+  2026-06-23T08:52:38+00:00,1,1,13743,,9889,889,2965,2026-06-23T10:52:05+02:00,
+  2026-06-23T08:53:01+00:00,1,1,13743,,9889,889,2965,2026-06-23T10:52:05+02:00,
+  2026-06-23T08:53:19+00:00,1,1,13743,,9875,899,2969,2026-06-23T10:53:05+02:00,
+  2026-06-23T08:53:38+00:00,1,1,13743,,9875,899,2969,2026-06-23T10:53:05+02:00,
+  2026-06-23T08:54:01+00:00,1,1,13743,,9875,899,2969,2026-06-23T10:53:05+02:00,
+  2026-06-23T08:54:19+00:00,1,1,13743,,9878,888,2977,2026-06-23T10:54:06+02:00,
+  2026-06-23T08:54:38+00:00,1,1,13743,,9878,888,2977,2026-06-23T10:54:06+02:00,
+
+======================================================================
+### CSV transitions.csv.gz（partial, 785122 行）
+======================================================================
+  ts_utc,point_id,status,status_ts
+  2026-06-23T14:43:02+00:00,13477,1,2021-01-02T00:47:27+01:00
+  2026-06-23T14:43:02+00:00,13478,1,2021-01-02T00:47:28+01:00
+  2026-06-23T14:43:02+00:00,131448,1,2023-06-07T16:11:41+02:00
+  2026-06-23T14:43:02+00:00,131449,0,2023-06-03T00:25:36+02:00
+  2026-06-23T14:43:02+00:00,13480,1,2020-11-18T14:19:26+01:00
+  2026-06-23T14:43:02+00:00,13481,1,2020-11-18T17:50:26+01:00
+  2026-06-23T14:43:02+00:00,13482,1,2021-01-02T16:15:30+01:00
+  2026-06-23T14:43:02+00:00,13483,1,2021-01-02T16:15:30+01:00
+  2026-06-23T14:43:02+00:00,131450,1,2023-06-05T11:27:33+02:00
+  2026-06-23T14:43:02+00:00,131451,1,2023-06-07T14:09:35+02:00
+  2026-06-23T14:43:02+00:00,13493,1,2023-06-09T17:38:36+02:00
+  2026-06-23T14:43:02+00:00,13494,2,2023-06-09T17:42:43+02:00
+  2026-06-23T14:43:02+00:00,13501,1,2023-06-08T11:38:35+02:00
+  2026-06-23T14:43:02+00:00,13502,1,2023-06-08T08:12:40+02:00
+  2026-06-23T14:43:02+00:00,13503,1,2023-06-06T20:07:39+02:00
+  2026-06-23T14:43:02+00:00,13504,0,2023-05-25T19:24:38+02:00
+  2026-06-23T14:43:02+00:00,13505,0,2023-06-09T19:42:39+02:00
+  2026-06-23T14:43:02+00:00,13506,2,2023-06-09T15:18:37+02:00
+  2026-06-23T14:43:02+00:00,14665,1,2023-06-06T03:47:32+02:00
+  2026-06-23T14:43:02+00:00,14666,1,2023-06-01T15:09:41+02:00
+  2026-06-23T14:43:02+00:00,13514,1,2023-06-07T10:28:37+02:00
+  2026-06-23T14:43:02+00:00,13515,1,2023-05-13T03:10:27+02:00
+  2026-06-23T14:43:02+00:00,170628,1,2023-06-08T16:21:38+02:00
+  2026-06-23T14:43:02+00:00,170629,1,2023-06-07T13:33:36+02:00

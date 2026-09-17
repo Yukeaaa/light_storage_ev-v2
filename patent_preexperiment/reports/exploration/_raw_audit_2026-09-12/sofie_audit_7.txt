@@ -1,0 +1,37 @@
+==============================================================================
+### 1) 类型陷阱确认：value/SCN_L/p_actual 的存储类型
+==============================================================================
+   connector_meter_value.value: text=1,907,665
+   scn_values.SCN_L1: real=537,271
+   scn_values.max_L1: integer=537,271
+   logging.p_actual: null=1,719,844, real=1,887,587
+
+### 2) 修正后逐桩 Power.Active.Import 真实域（CAST REAL, W）
+==============================================================================
+   桩      min(W)      max(W)       avg(W)         n
+   WB1         0.0      3689.3       1669.0      82,356
+   WB2         0.0      3811.3       1455.0     111,275
+   WB3         0.0      3843.9       1069.6      76,179
+   WB4         0.0      3857.1       1586.3      84,927
+   WB5         0.0      3882.9       1758.0      91,418
+   WB6         0.0      3829.5       1148.4      44,417
+   WB7         0.0      3857.6       1899.2     126,456
+   WB8         0.0      3751.6       1551.6     117,472
+
+### 3) connector_meter_value measurand 全清单
+==============================================================================
+   Power.Active.Import                          None   W           734,500
+   Energy.Active.Import.Register                None   kWh         589,509
+   Current.Import                               L1     A           144,991
+   Energy.Active.Import.Register                None   Wh          144,991
+   Frequency                                    None   None        144,991
+   Voltage                                      L1-N   V           144,991
+   None                                         None   kWh           3,692
+
+### 4) scn_values 粒度与 DDL
+==============================================================================
+!!! ERROR !!!
+Traceback (most recent call last):
+  File "<stdin>", line 35, in <module>
+  File "<stdin>", line 10, in q
+sqlite3.OperationalError: no such column: charge_box_id

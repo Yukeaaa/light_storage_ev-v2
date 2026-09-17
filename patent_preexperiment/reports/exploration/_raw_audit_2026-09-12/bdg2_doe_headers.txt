@@ -1,0 +1,78 @@
+==========================================================================
+### BDG2 data/metadata/metadata.csv   (20000 bytes fetched)
+==========================================================================
+  building_id,site_id,building_id_kaggle,site_id_kaggle,primaryspaceusage,sub_primaryspaceusage,sqm,sqft,lat,lng,timezone,electricity,hotwater,chilledwater,steam,water,irrigation,solar,gas,industry,subindustry,heatingtype,yearbuilt,date_opened,numberoffloors,occupants,energystarscore,eui,site_eui,source_eui,leed_level,rating
+  Panther_lodging_Dean,Panther,,0.0,Lodging/residential,Residence Hall,508.8,5477.0,28.5176885788321,-81.3790387999998,US/Eastern,,,,,,Yes,,Yes,,,,1989.0,,,,,271,,,None,
+  Panther_lodging_Shelia,Panther,,0.0,Lodging/residential,Residence Hall,929.0,10000.0,28.5176885788321,-81.3790387999998,US/Eastern,,,,,,Yes,,,,,,1992.0,,,,,62,,,None,
+  Panther_lodging_Ricky,Panther,,0.0,Lodging/residential,Residence Hall,483.1,5200.0,28.5176885788321,-81.3790387999998,US/Eastern,,,,,,Yes,,Yes,,,,2016.0,,,,,534,,,None,
+  Panther_education_Rosalie,Panther,0.0,0.0,Education,Research,690.5,7432.0,28.5176885788321,-81.3790387999998,US/Eastern,Yes,,,,Yes,,,,,,,2008.0,,,,,276,,,None,
+  [总取到 121 行片段]
+
+==========================================================================
+### BDG2 data/meters/cleaned/electricity_cleaned.csv   (3000 bytes fetched)
+==========================================================================
+  timestamp,Panther_parking_Lorriane,Panther_lodging_Cora,Panther_office_Hannah,Panther_lodging_Hattie,Panther_education_Teofila,Panther_education_Jerome,Panther_retail_Felix,Panther_parking_Asia,Panther_education_Misty,Panther_retail_Gilbert,Panther_office_Catherine,Panther_education_Tina,Panther_education_Janis,Panther_office_Patti,Panther_retail_Romeo,Panther_office_Lauretta,Panther_parking_Alaina,Panther_office_Val
+  [总取到 1 行片段]
+
+==========================================================================
+### BDG2 data/weather/weather.csv   (3000 bytes fetched)
+==========================================================================
+  timestamp,site_id,airTemperature,cloudCoverage,dewTemperature,precipDepth1HR,precipDepth6HR,seaLvlPressure,windDirection,windSpeed
+  2016-01-01 00:00:00,Panther,19.4,,19.4,0.0,,,0.0,0.0
+  2016-01-01 01:00:00,Panther,21.1,6.0,21.1,-1.0,,1019.4,0.0,0.0
+  2016-01-01 02:00:00,Panther,21.1,,21.1,0.0,,1018.8,210.0,1.5
+  2016-01-01 03:00:00,Panther,20.6,,20.0,0.0,,1018.1,0.0,0.0
+  [总取到 48 行片段]
+
+==========================================================================
+### BDG2 data/meters/cleaned/steam_cleaned.csv   (2000 bytes fetched)
+==========================================================================
+  timestamp,Peacock_lodging_Terrie,Peacock_lodging_Francesca,Peacock_lodging_Jamaal,Peacock_education_Patience,Peacock_public_Kelvin,Peacock_assembly_Mamie,Peacock_office_Major,Peacock_education_Pasquale,Peacock_office_Effie,Peacock_office_Annie,Peacock_lodging_Erica,Peacock_lodging_Sergio,Peacock_lodging_Mathew,Peacock_education_Lyle,Peacock_lodging_Matthew,Peacock_office_Dara,Peacock_education_Dustin,Peacock_assembly
+  [总取到 1 行片段]
+
+==========================================================================
+### BDG2 data/meters/cleaned/solar_cleaned.csv   (2000 bytes fetched)
+==========================================================================
+  timestamp,Bobcat_education_Dylan,Bobcat_education_Alissa,Bobcat_education_Coleman,Bobcat_other_Timothy,Bobcat_office_Justine
+  2016-01-01 00:00:00,0.0,196.6066,0.37,0.02,
+  2016-01-01 01:00:00,0.0,131.08,0.39,0.01,
+  2016-01-01 02:00:00,0.0,131.0733,0.39,0.02,
+  2016-01-01 03:00:00,0.0,196.6166,0.38,0.02,
+  [总取到 45 行片段]
+
+==========================================================================
+### BDG2 data/meters/cleaned/irrigation_cleaned.csv   (2000 bytes fetched)
+==========================================================================
+  timestamp,Panther_lodging_Dianna,Panther_lodging_Dean,Panther_lodging_Cora,Panther_parking_Lorriane,Panther_parking_Asia,Panther_lodging_Kara,Panther_lodging_Drew,Panther_lodging_Ricky,Panther_parking_Clarence,Panther_parking_Adela,Panther_lodging_Heather,Panther_office_Daina,Panther_lodging_Arlene,Panther_office_Catherine,Panther_other_Bethel,Panther_lodging_Paulette,Panther_other_Iva,Panther_education_Richard,Panth
+  2016-01-01 00:00:00,0.0,0.0,0.0,7.8737,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,0.0,,0.0,0.0,0.0,0.0,0.0,,0.0,0.0,0.0,0.0,,0.0,0.0,0.0,,,,,0.0,0.0,0.0,0.0,0.0
+  2016-01-01 01:00:00,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,0.0,1.1356,0.0,0.0,0.0,0.0,0.0,,0.0,0.0,0.0,0.0,,0.0,0.0,0.0,,,,,0.0,0.0,378.541,1.1356,0.0
+  2016-01-01 02:00:00,0.0,0.0,28.3906,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,0.0,,0.0,0.0,0.0,0.0,0.0,,0.0,0.0,1.1356,0.0,,0.0,0.0,0.0,,,,,0.0,0.0,0.0,0.0,0.0
+  2016-01-01 03:00:00,0.0,0.0,6.8137,1018.8052,0.0,0.0,6813.738,0.0,0.0,0.0,0.0,,0.0,0.0,0.0,0.0,,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,0.0,,,,,0.0,0.0,378.541,1.1356,0.0
+  [总取到 8 行片段]
+
+==========================================================================
+### DOE resstock_amy2018_release_1/metadata/baseline.parquet  (200000 bytes)
+==========================================================================
+  magic: b'PAR1'
+  -> PARQUET 格式，尝试取尾部 footer
+
+==========================================================================
+### DOE resstock_amy2018_release_1.1/metadata/baseline.parquet  (200000 bytes)
+==========================================================================
+  magic: b'PAR1'
+  -> PARQUET 格式，尝试取尾部 footer
+
+==========================================================================
+### DOE comstock_amy2018_release_1/metadata/baseline.parquet  ERR HTTPError: HTTP Error 404: Not Found
+==========================================================================
+
+==========================================================================
+### DOE timeseries resstock_amy2018_release_1/timeseries_individual_buildings/by_state/state=CA/upgrade=0/1-0.parquet  ERR HTTPError: HTTP Error 404: Not Found
+==========================================================================
+
+==========================================================================
+### DOE timeseries comstock_amy2018_release_1/timeseries_individual_buildings/by_state/state=CA/upgrade=0/1-0.parquet  ERR HTTPError: HTTP Error 404: Not Found
+==========================================================================
+
+### S3 LISTING '{pfx}' ERR {type(e).__name__}: {str(e)[:160]}
+### S3 LISTING '{pfx}' ERR {type(e).__name__}: {str(e)[:160]}

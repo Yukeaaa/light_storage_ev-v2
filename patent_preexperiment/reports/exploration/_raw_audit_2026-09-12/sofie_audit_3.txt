@@ -1,0 +1,172 @@
+==============================================================================
+### 完整 DDL（sqlite_master）
+==============================================================================
+
+----- charge_box -----
+CREATE TABLE charge_box (
+	charge_box_pk BIGINT, 
+	charge_box_id TEXT, 
+	endpoint_address TEXT, 
+	ocpp_protocol TEXT, 
+	registration_status TEXT, 
+	charge_point_vendor TEXT, 
+	charge_point_model TEXT, 
+	charge_point_serial_number TEXT, 
+	charge_box_serial_number TEXT, 
+	fw_version TEXT, 
+	fw_update_status TEXT, 
+	fw_update_timestamp DATETIME, 
+	iccid TEXT, 
+	imsi TEXT, 
+	meter_type TEXT, 
+	meter_serial_number TEXT, 
+	diagnostics_status TEXT, 
+	diagnostics_timestamp DATETIME, 
+	last_heartbeat_timestamp DATETIME, 
+	description TEXT, 
+	note TEXT, 
+	location_latitude TEXT, 
+	location_longitude TEXT, 
+	address_pk TEXT, 
+	admin_address TEXT, 
+	insert_connector_status_after_transaction_msg BIGINT
+)
+
+----- connector -----
+CREATE TABLE connector (
+	connector_pk BIGINT, 
+	charge_box_id TEXT, 
+	connector_id BIGINT
+)
+
+----- connector_meter_value -----
+CREATE TABLE connector_meter_value (
+	connector_pk BIGINT, 
+	transaction_pk FLOAT, 
+	value_timestamp DATETIME, 
+	value TEXT, 
+	reading_context TEXT, 
+	format TEXT, 
+	measurand TEXT, 
+	location TEXT, 
+	unit TEXT, 
+	phase TEXT
+)
+
+----- connector_status -----
+CREATE TABLE connector_status (
+	connector_pk BIGINT, 
+	status_timestamp DATETIME, 
+	status TEXT, 
+	error_code TEXT, 
+	error_info TEXT, 
+	vendor_id TEXT, 
+	vendor_error_code TEXT
+)
+
+----- logging -----
+CREATE TABLE logging (
+	id BIGINT, 
+	timestamp DATETIME, 
+	"U_1" BIGINT, 
+	"U_2" BIGINT, 
+	"U_3" BIGINT, 
+	"I_1" BIGINT, 
+	"I_2" BIGINT, 
+	"I_3" BIGINT, 
+	"I_n" BIGINT, 
+	"P_sum" BIGINT, 
+	"P_1" BIGINT, 
+	"P_2" BIGINT, 
+	"P_3" BIGINT, 
+	grid_freq FLOAT, 
+	bat_cur BIGINT, 
+	bat_soc BIGINT, 
+	bat_temp BIGINT, 
+	bat_vol BIGINT, 
+	"cur_L1" BIGINT, 
+	"cur_L2" BIGINT, 
+	"cur_L3" BIGINT, 
+	"E_sum" BIGINT, 
+	p_actual FLOAT, 
+	solar_ext FLOAT, 
+	p_actual_calc FLOAT, 
+	"SBHS_1_bat_P" FLOAT, 
+	"SBHS_1_bat_U" FLOAT, 
+	"SBHS_1_bat_I" FLOAT, 
+	"SBHS_1_bat_soc" FLOAT, 
+	"SBHS_1_bat_temp" FLOAT, 
+	"SBHS_1_AC_P" FLOAT, 
+	"SBHS_2_bat_P" FLOAT, 
+	"SBHS_2_bat_U" FLOAT, 
+	"SBHS_2_bat_I" FLOAT, 
+	"SBHS_2_bat_soc" FLOAT, 
+	"SBHS_2_bat_temp" FLOAT, 
+	"SBHS_2_AC_P" FLOAT
+)
+
+----- scn_values -----
+CREATE TABLE scn_values (
+	id BIGINT, 
+	timestamp DATETIME, 
+	"SCN_L1" FLOAT, 
+	"SCN_L2" FLOAT, 
+	"SCN_L3" FLOAT, 
+	"max_L1" BIGINT, 
+	"max_L2" BIGINT, 
+	"max_L3" BIGINT
+)
+
+----- transaction_start -----
+CREATE TABLE transaction_start (
+	transaction_pk BIGINT, 
+	event_timestamp DATETIME, 
+	connector_pk BIGINT, 
+	id_tag TEXT, 
+	start_timestamp DATETIME, 
+	start_value TEXT
+)
+
+----- transaction_stop -----
+CREATE TABLE transaction_stop (
+	transaction_pk BIGINT, 
+	event_timestamp DATETIME, 
+	event_actor TEXT, 
+	stop_timestamp DATETIME, 
+	stop_value TEXT, 
+	stop_reason TEXT
+)
+
+==============================================================================
+### charge_box 全表（8 行）
+==============================================================================
+cols: charge_box_pk | charge_box_id | endpoint_address | ocpp_protocol | registration_status | charge_point_vendor | charge_point_model | charge_point_serial_number | charge_box_serial_number | fw_version | fw_update_status | fw_update_timestamp | iccid | imsi | meter_type | meter_serial_number | diagnostics_status | diagnostics_timestamp | last_heartbeat_timestamp | description | note | location_latitude | location_longitude | address_pk | admin_address | insert_connector_status_after_transaction_msg
+  {'charge_box_pk': 13, 'charge_box_id': 'WB1', 'endpoint_address': None, 'ocpp_protocol': 'ocpp1.6J', 'registration_status': 'Accepted', 'charge_point_vendor': 'Alfen BV', 'charge_point_model': 'NG910-60583', 'charge_point_serial_number': 'ACE0314174', 'charge_box_serial_number': 'WB1', 'fw_version': '7.3.0-4377', 'fw_update_status': 'Installed', 'fw_update_timestamp': '2026-07-06 09:59:57.000000', 'iccid': None, 'imsi': None, 'meter_type': None, 'meter_serial_number': None, 'diagnostics_status': 'Idle', 'diagnostics_timestamp': '2026-06-30 11:04:59.000000', 'last_heartbeat_timestamp': '2026-07-29 15:01:37.000000', 'description': None, 'note': None, 'location_latitude': None, 'location_longitude': None, 'address_pk': None, 'admin_address': None, 'insert_connector_status_after_transaction_msg': 0}
+  {'charge_box_pk': 14, 'charge_box_id': 'WB5', 'endpoint_address': None, 'ocpp_protocol': 'ocpp1.6J', 'registration_status': 'Accepted', 'charge_point_vendor': 'Alfen BV', 'charge_point_model': 'NG910-60583', 'charge_point_serial_number': 'ACE0314185', 'charge_box_serial_number': 'WB5', 'fw_version': '7.3.0-4377', 'fw_update_status': 'Installed', 'fw_update_timestamp': '2026-07-06 09:46:26.000000', 'iccid': None, 'imsi': None, 'meter_type': None, 'meter_serial_number': None, 'diagnostics_status': 'Idle', 'diagnostics_timestamp': '2026-06-30 11:04:59.000000', 'last_heartbeat_timestamp': '2026-07-29 13:59:56.000000', 'description': None, 'note': None, 'location_latitude': None, 'location_longitude': None, 'address_pk': None, 'admin_address': None, 'insert_connector_status_after_transaction_msg': 0}
+  {'charge_box_pk': 15, 'charge_box_id': 'WB4', 'endpoint_address': None, 'ocpp_protocol': 'ocpp1.6J', 'registration_status': 'Accepted', 'charge_point_vendor': 'Alfen BV', 'charge_point_model': 'NG910-60583', 'charge_point_serial_number': 'ACE0314175', 'charge_box_serial_number': 'WB4', 'fw_version': '7.3.0-4377', 'fw_update_status': 'Installed', 'fw_update_timestamp': '2026-07-06 09:42:11.000000', 'iccid': None, 'imsi': None, 'meter_type': None, 'meter_serial_number': None, 'diagnostics_status': 'Idle', 'diagnostics_timestamp': '2026-06-30 11:04:59.000000', 'last_heartbeat_timestamp': '2026-07-29 13:59:52.000000', 'description': None, 'note': None, 'location_latitude': None, 'location_longitude': None, 'address_pk': None, 'admin_address': None, 'insert_connector_status_after_transaction_msg': 0}
+  {'charge_box_pk': 20, 'charge_box_id': 'WB3', 'endpoint_address': None, 'ocpp_protocol': 'ocpp1.6J', 'registration_status': 'Accepted', 'charge_point_vendor': 'Alfen BV', 'charge_point_model': 'NG910-60583', 'charge_point_serial_number': 'ACE0314187', 'charge_box_serial_number': 'WB3', 'fw_version': '7.3.0-4377', 'fw_update_status': 'Installed', 'fw_update_timestamp': '2026-07-06 09:32:29.000000', 'iccid': None, 'imsi': None, 'meter_type': None, 'meter_serial_number': None, 'diagnostics_status': 'Idle', 'diagnostics_timestamp': '2026-06-30 11:04:59.000000', 'last_heartbeat_timestamp': '2026-07-29 01:59:54.000000', 'description': None, 'note': None, 'location_latitude': None, 'location_longitude': None, 'address_pk': None, 'admin_address': None, 'insert_connector_status_after_transaction_msg': 0}
+  {'charge_box_pk': 21, 'charge_box_id': 'WB2', 'endpoint_address': None, 'ocpp_protocol': 'ocpp1.6J', 'registration_status': 'Accepted', 'charge_point_vendor': 'Alfen BV', 'charge_point_model': 'NG910-60583', 'charge_point_serial_number': 'ACE0314191', 'charge_box_serial_number': 'WB2', 'fw_version': '7.3.0-4377', 'fw_update_status': 'Installed', 'fw_update_timestamp': '2026-07-06 09:37:52.000000', 'iccid': None, 'imsi': None, 'meter_type': None, 'meter_serial_number': None, 'diagnostics_status': 'Idle', 'diagnostics_timestamp': '2026-06-30 11:05:02.000000', 'last_heartbeat_timestamp': '2026-07-29 15:03:13.000000', 'description': None, 'note': None, 'location_latitude': None, 'location_longitude': None, 'address_pk': None, 'admin_address': None, 'insert_connector_status_after_transaction_msg': 0}
+  {'charge_box_pk': 22, 'charge_box_id': 'WB6', 'endpoint_address': None, 'ocpp_protocol': 'ocpp1.6J', 'registration_status': 'Accepted', 'charge_point_vendor': 'Alfen BV', 'charge_point_model': 'NG910-60583', 'charge_point_serial_number': 'ACE0314198', 'charge_box_serial_number': 'WB6', 'fw_version': '7.3.0-4377', 'fw_update_status': 'Installed', 'fw_update_timestamp': '2026-07-06 10:08:16.000000', 'iccid': None, 'imsi': None, 'meter_type': None, 'meter_serial_number': None, 'diagnostics_status': 'Idle', 'diagnostics_timestamp': '2026-06-30 11:04:59.000000', 'last_heartbeat_timestamp': '2026-07-29 07:33:39.000000', 'description': None, 'note': None, 'location_latitude': None, 'location_longitude': None, 'address_pk': None, 'admin_address': None, 'insert_connector_status_after_transaction_msg': 0}
+  {'charge_box_pk': 23, 'charge_box_id': 'WB8', 'endpoint_address': None, 'ocpp_protocol': 'ocpp1.6J', 'registration_status': 'Accepted', 'charge_point_vendor': 'Alfen BV', 'charge_point_model': 'NG910-60583', 'charge_point_serial_number': 'ACE0314184', 'charge_box_serial_number': 'WB8', 'fw_version': '7.3.0-4377', 'fw_update_status': 'Installed', 'fw_update_timestamp': '2026-07-06 09:53:31.000000', 'iccid': None, 'imsi': None, 'meter_type': None, 'meter_serial_number': None, 'diagnostics_status': 'Idle', 'diagnostics_timestamp': '2026-06-30 11:04:59.000000', 'last_heartbeat_timestamp': '2026-07-29 13:59:40.000000', 'description': None, 'note': None, 'location_latitude': None, 'location_longitude': None, 'address_pk': None, 'admin_address': None, 'insert_connector_status_after_transaction_msg': 0}
+  {'charge_box_pk': 24, 'charge_box_id': 'WB7', 'endpoint_address': None, 'ocpp_protocol': 'ocpp1.6J', 'registration_status': 'Accepted', 'charge_point_vendor': 'Alfen BV', 'charge_point_model': 'NG910-60583', 'charge_point_serial_number': 'ace0314197', 'charge_box_serial_number': 'WB7', 'fw_version': '7.3.0-4377', 'fw_update_status': 'Installed', 'fw_update_timestamp': '2026-07-06 10:04:09.000000', 'iccid': None, 'imsi': None, 'meter_type': None, 'meter_serial_number': None, 'diagnostics_status': 'Idle', 'diagnostics_timestamp': '2026-06-30 11:05:01.000000', 'last_heartbeat_timestamp': '2026-07-29 01:59:26.000000', 'description': None, 'note': None, 'location_latitude': None, 'location_longitude': None, 'address_pk': None, 'admin_address': None, 'insert_connector_status_after_transaction_msg': 0}
+
+==============================================================================
+### connector 全表（16 行）
+==============================================================================
+cols: connector_pk | charge_box_id | connector_id
+  {'connector_pk': 33, 'charge_box_id': 'WB1', 'connector_id': 0}
+  {'connector_pk': 32, 'charge_box_id': 'WB1', 'connector_id': 1}
+  {'connector_pk': 1572, 'charge_box_id': 'WB2', 'connector_id': 0}
+  {'connector_pk': 1571, 'charge_box_id': 'WB2', 'connector_id': 1}
+  {'connector_pk': 1354, 'charge_box_id': 'WB3', 'connector_id': 0}
+  {'connector_pk': 1353, 'charge_box_id': 'WB3', 'connector_id': 1}
+  {'connector_pk': 1346, 'charge_box_id': 'WB4', 'connector_id': 0}
+  {'connector_pk': 1345, 'charge_box_id': 'WB4', 'connector_id': 1}
+  {'connector_pk': 1109, 'charge_box_id': 'WB5', 'connector_id': 0}
+  {'connector_pk': 1108, 'charge_box_id': 'WB5', 'connector_id': 1}
+  {'connector_pk': 1697, 'charge_box_id': 'WB6', 'connector_id': 0}
+  {'connector_pk': 1696, 'charge_box_id': 'WB6', 'connector_id': 1}
+  {'connector_pk': 3621, 'charge_box_id': 'WB7', 'connector_id': 0}
+  {'connector_pk': 3620, 'charge_box_id': 'WB7', 'connector_id': 1}
+  {'connector_pk': 1767, 'charge_box_id': 'WB8', 'connector_id': 0}
+  {'connector_pk': 1768, 'charge_box_id': 'WB8', 'connector_id': 1}

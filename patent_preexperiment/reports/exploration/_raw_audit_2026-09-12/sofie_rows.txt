@@ -1,0 +1,21 @@
+### SOFIE 全表行数
+  charge_box                             8
+  connector                             16
+  connector_meter_value          1,907,665
+  connector_status                  41,469
+  logging                        3,607,431
+  scn_values                       537,271
+  transaction_start                    944
+  transaction_stop                     963
+  TOTAL                          6,095,767
+
+### 各表 distinct 时间戳数（分辨率佐证）
+  logging.timestamp          distinct= 3,607,428
+  scn_values.timestamp          distinct=   537,271
+  connector_meter_value.value_timestamp    distinct=   595,789
+  connector_status.status_timestamp   distinct=    24,457
+
+### 事务与状态事件数
+  transaction_start             944
+  transaction_stop              963
+  connector_status           41,469
