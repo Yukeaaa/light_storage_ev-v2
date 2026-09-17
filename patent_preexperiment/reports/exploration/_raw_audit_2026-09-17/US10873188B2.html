@@ -1,0 +1,2786 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>US10873188B2 - Dynamic hosting capacity system and method for DER integration and management on distribution utility networks 
+        - Google Patents</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="referrer" content="origin-when-crossorigin">
+    <link rel="canonical" href="https://patents.google.com/patent/US10873188B2/en">
+    <meta name="description" content="
+     A distributed energy resource management system utilizes capacity on a distribution grid to host further distributed energy resource interconnections. In an embodiment, the system utilizes a data store including operational values associated with distributed electric resources on an electric power distribution network and a processor or processors coupled to the data store and in communication with the distributed electric resources. The computer processors are programmed, upon receiving one or more requests, to create 3-phase AC power flows for each location across the electric power distribution network. Optimizations of the 3-phase AC power flows to are used to calculate hosting capacity for each of the locations, for each of a plurality of time intervals, and each of a plurality of types of distributed energy resource, as a dynamic quantity that can change depending on time, day, season, and location. The hosting capacity is translated into calculated operational values which are used to determine and send a direction to actively manage distributed energy resources on the electric power distribution network. 
+   
+   ">
+    <meta name="DC.type" content="patent">
+    <meta name="DC.title" content="Dynamic hosting capacity system and method for DER integration and management on distribution utility networks 
+       ">
+    <meta name="DC.date" content="2018-11-05" scheme="dateSubmitted">
+    <meta name="DC.description" content="
+     A distributed energy resource management system utilizes capacity on a distribution grid to host further distributed energy resource interconnections. In an embodiment, the system utilizes a data store including operational values associated with distributed electric resources on an electric power distribution network and a processor or processors coupled to the data store and in communication with the distributed electric resources. The computer processors are programmed, upon receiving one or more requests, to create 3-phase AC power flows for each location across the electric power distribution network. Optimizations of the 3-phase AC power flows to are used to calculate hosting capacity for each of the locations, for each of a plurality of time intervals, and each of a plurality of types of distributed energy resource, as a dynamic quantity that can change depending on time, day, season, and location. The hosting capacity is translated into calculated operational values which are used to determine and send a direction to actively manage distributed energy resources on the electric power distribution network. 
+   
+   ">
+    <meta name="citation_patent_application_number" content="US:16/180,554">
+    <meta name="citation_pdf_url" content="https://patentimages.storage.googleapis.com/ad/16/31/b7423350ceeb5b/US10873188.pdf">
+    <meta name="citation_patent_number" content="US:10873188">
+    <meta name="DC.date" content="2020-12-22" scheme="issue">
+    <meta name="DC.contributor" content="Joshua Wong" scheme="inventor">
+    <meta name="DC.contributor" content="Gerhard Walker" scheme="inventor">
+    <meta name="DC.contributor" content="Opus One Solutions Energy Corp" scheme="assignee">
+    <meta name="DC.relation" content="US:20120323390:A1" scheme="references">
+    <meta name="DC.relation" content="US:20160048150:A1" scheme="references">
+    <meta name="DC.relation" content="US:20160363950:A1" scheme="references">
+    <meta name="DC.relation" content="US:20170005515:A1" scheme="references">
+    <meta name="DC.relation" content="US:20190129368:A1" scheme="references">
+    <meta name="DC.relation" content="US:20190163152:A1" scheme="references">
+    <meta name="DC.relation" content="US:20190181681:A1" scheme="references">
+    <meta name="DC.relation" content="US:20180365746:A1" scheme="references">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,400italic,500,500italic,700">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Product+Sans">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700">
+
+    <style>
+      
+      #gb { top: 15px; left: auto; right: 0; width: auto; min-width: 135px !important; }   
+      body { transition: none; }
+    </style>
+    <script></script>
+
+    <script>
+      window.version = 'patent-search.search_20260819_RC00';
+
+      function sendFeedback() {
+        userfeedback.api.startFeedback({
+          'productId': '713680',
+          'bucket': 'patent-search-web',
+          'productVersion': window.version,
+        });
+      }
+
+      window.experiments = {};
+      window.experiments.patentCountries = "ae,ag,al,am,ao,ap,ar,at,au,aw,az,ba,bb,bd,be,bf,bg,bh,bj,bn,bo,br,bw,bx,by,bz,ca,cf,cg,ch,ci,cl,cm,cn,co,cr,cs,cu,cy,cz,dd,de,dj,dk,dm,do,dz,ea,ec,ee,eg,em,ep,es,fi,fr,ga,gb,gc,gd,ge,gh,gm,gn,gq,gr,gt,gw,hk,hn,hr,hu,ib,id,ie,il,in,ir,is,it,jo,jp,ke,kg,kh,km,kn,kp,kr,kw,kz,la,lc,li,lk,lr,ls,lt,lu,lv,ly,ma,mc,md,me,mg,mk,ml,mn,mo,mr,mt,mw,mx,my,mz,na,ne,ng,ni,nl,no,nz,oa,om,pa,pe,pg,ph,pl,pt,py,qa,ro,rs,ru,rw,sa,sc,sd,se,sg,si,sk,sl,sm,sn,st,su,sv,sy,sz,td,tg,th,tj,tm,tn,tr,tt,tw,tz,ua,ug,us,uy,uz,vc,ve,vn,wo,yu,za,zm,zw";
+      
+      
+      window.experiments.keywordWizard = true;
+      
+      
+      
+      window.experiments.definitions = true;
+      window.experiments.plogs = true;
+
+      window.Polymer = {
+        dom: 'shady',
+        lazyRegister: true,
+      };
+    </script>
+
+    <script src="//www.gstatic.com/patent-search/frontend/patent-search.search_20260819_RC00/scs/compiled_dir/webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="//www.gstatic.com/patent-search/frontend/patent-search.search_20260819_RC00/scs/compiled_dir/search-app-vulcanized.html">
+  </head>
+  <body unresolved>
+    
+    
+    <script></script>
+    <script src="//www.gstatic.com/patent-search/frontend/patent-search.search_20260819_RC00/scs/compiled_dir/search-app-vulcanized.js"></script>
+    <search-app>
+      
+      
+
+      <article class="result" itemscope itemtype="http://schema.org/ScholarlyArticle">
+  <h1 itemprop="pageTitle">US10873188B2 - Dynamic hosting capacity system and method for DER integration and management on distribution utility networks 
+        - Google Patents</h1>
+  <span itemprop="title">Dynamic hosting capacity system and method for DER integration and management on distribution utility networks 
+       </span>
+
+  <meta itemprop="type" content="patent">
+  <a href="https://patentimages.storage.googleapis.com/ad/16/31/b7423350ceeb5b/US10873188.pdf" itemprop="pdfLink">Download PDF</a>
+  <h2>Info</h2>
+
+  <dl>
+    <dt>Publication number</dt>
+    <dd itemprop="publicationNumber">US10873188B2</dd>
+    <meta itemprop="numberWithoutCodes" content="10873188">
+    <meta itemprop="kindCode" content="B2">
+    <meta itemprop="publicationDescription" content="Patent ( having previously published pre-grant publication)">
+    <span>US10873188B2</span>
+    <span>US16/180,554</span>
+    <span>US201816180554A</span>
+    <span>US10873188B2</span>
+    <span>US 10873188 B2</span>
+    <span>US10873188 B2</span>
+    <span>US 10873188B2</span>
+    <span>  </span>
+    <span> </span>
+    <span> </span>
+    <span>US 201816180554 A</span>
+    <span>US201816180554 A</span>
+    <span>US 201816180554A</span>
+    <span>US 10873188 B2</span>
+    <span>US10873188 B2</span>
+    <span>US 10873188B2</span>
+
+    <dt>Authority</dt>
+    <dd itemprop="countryCode">US</dd>
+    <dd itemprop="countryName">United States</dd>
+
+    <dt>Prior art keywords</dt>
+    <dd itemprop="priorArtKeywords" repeat>distributed energy</dd>
+    <dd itemprop="priorArtKeywords" repeat>energy resource</dd>
+    <dd itemprop="priorArtKeywords" repeat>management system</dd>
+    <dd itemprop="priorArtKeywords" repeat>resource management</dd>
+    <dd itemprop="priorArtKeywords" repeat>hosting capacity</dd>
+
+    <dt>Prior art date</dt>
+    <dd><time itemprop="priorArtDate" datetime="2017-11-03">2017-11-03</time></dd>
+
+    <dt>Legal status (The legal status is an assumption and is not a legal conclusion. Google has not performed a legal analysis and makes no representation as to the accuracy of the status listed.)</dt>
+    <dd itemprop="legalStatusIfi" itemscope>
+      <span itemprop="status">Active</span>
+    </dd>
+  </dl>
+
+  <dt>Application number</dt>
+  <dd itemprop="applicationNumber">US16/180,554</dd>
+
+  
+
+  <dt>Other versions</dt>
+  <dd itemprop="directAssociations" itemscope repeat>
+    <a href="/patent/US20190140455A1/en">
+      <span itemprop="publicationNumber">US20190140455A1</span>
+      (<span itemprop="primaryLanguage">en</span>
+    </a>
+  </dd>
+
+  <dt>Inventor</dt>
+  <dd itemprop="inventor" repeat>Joshua Wong</dd>
+  <dd itemprop="inventor" repeat>Gerhard Walker</dd>
+
+  <dt>Current Assignee (The listed assignees may be inaccurate. Google has not performed a legal analysis and makes no representation or warranty as to the accuracy of the list.)</dt>
+  <dd itemprop="assigneeCurrent" repeat>
+    Opus One Solutions Energy Corp
+  </dd>
+
+  <dt>Original Assignee</dt>
+  <dd itemprop="assigneeOriginal" repeat>Opus One Solutions Energy Corp</dd>
+
+  <dt>Priority date (The priority date is an assumption and is not a legal conclusion. Google has not performed a legal analysis and makes no representation as to the accuracy of the date listed.)</dt>
+  <dd><time itemprop="priorityDate" datetime="2017-11-03">2017-11-03</time></dd>
+
+  <dt>Filing date</dt>
+  <dd><time itemprop="filingDate" datetime="2018-11-05">2018-11-05</time></dd>
+
+  <dt>Publication date</dt>
+  <dd><time itemprop="publicationDate" datetime="2020-12-22">2020-12-22</time></dd>
+
+  
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2018-11-05">2018-11-05</time>
+    <span itemprop="title">Application filed by Opus One Solutions Energy Corp</span>
+    <span itemprop="type">filed</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    
+    <span itemprop="assigneeSearch">Opus One Solutions Energy Corp</span>
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2018-11-05">2018-11-05</time>
+    <span itemprop="title">Priority to US16/180,554</span>
+    <span itemprop="type">priority</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    <span itemprop="documentId">patent/US10873188B2/en</span>
+    
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2019-05-09">2019-05-09</time>
+    <span itemprop="title">Publication of US20190140455A1</span>
+    <span itemprop="type">publication</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    <span itemprop="documentId">patent/US20190140455A1/en</span>
+    
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2020-03-31">2020-03-31</time>
+    <span itemprop="title">Assigned to SILICON VALLEY BANK</span>
+    <span itemprop="type">reassignment</span>
+    
+    
+    
+    
+    <span itemprop="assigneeSearch">SILICON VALLEY BANK</span>
+    <span itemprop="description" repeat>SECURITY INTEREST (SEE DOCUMENT FOR DETAILS).</span>
+    <span itemprop="description" repeat>Assignors: OPUS ONE SOLUTIONS (USA) CORPORATION, OPUS ONE SOLUTIONS ENERGY CORPORATION</span>
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2020-12-22">2020-12-22</time>
+    <span itemprop="title">Application granted</span>
+    <span itemprop="type">granted</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    
+    
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2020-12-22">2020-12-22</time>
+    <span itemprop="title">Publication of US10873188B2</span>
+    <span itemprop="type">publication</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    <span itemprop="documentId">patent/US10873188B2/en</span>
+    
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date">Status</time>
+    <span itemprop="title">Active</span>
+    <span itemprop="type">legal-status</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    <span itemprop="current" content="true" bool>Current</span>
+    
+    
+    
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2038-11-05">2038-11-05</time>
+    <span itemprop="title">Anticipated expiration</span>
+    <span itemprop="type">legal-status</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    
+    
+  </dd>
+
+  <h2>Links</h2>
+  <ul>
+    
+        <li itemprop="links" itemscope repeat>
+          <meta itemprop="id" content="usptoLink">
+          <a href="https://patft.uspto.gov/netacgi/nph-Parser?Sect1=PTO1&Sect2=HITOFF&p=1&u=/netahtml/PTO/srchnum.html&r=1&f=G&l=50&d=PALL&s1=10873188.PN." itemprop="url" target="_blank"><span itemprop="text">USPTO</span></a>
+        </li>
+        <li itemprop="links" itemscope repeat>
+          <meta itemprop="id" content="usptoPatentCenterLink">
+          <a href="https://patentcenter.uspto.gov/applications/16180554" itemprop="url" target="_blank"><span itemprop="text">USPTO PatentCenter</span></a>
+        </li>
+        <li itemprop="links" itemscope repeat>
+          <meta itemprop="id" content="usptoAssignmentLink">
+          <a href="https://assignment.uspto.gov/patent/index.html#/patent/search/resultFilter?searchInput=10873188" itemprop="url" target="_blank"><span itemprop="text">USPTO Assignment</span></a>
+        </li>
+
+    <li itemprop="links" itemscope repeat>
+        <meta itemprop="id" content="espacenetLink">
+        <a href="https://worldwide.espacenet.com/publicationDetails/biblio?CC=US&amp;NR=10873188B2&amp;KC=B2&amp;FT=D" itemprop="url" target="_blank"><span itemprop="text">Espacenet</span></a>
+      </li>
+      
+
+    
+
+    <li itemprop="links" itemscope repeat>
+      <meta itemprop="id" content="globalDossierLink">
+      <a href="https://globaldossier.uspto.gov/result/application/US/16180554/1" itemprop="url" target="_blank"><span itemprop="text">Global Dossier</span></a>
+    </li>
+
+    
+
+      
+
+      
+
+      <li itemprop="links" itemscope repeat>
+        <meta itemprop="id" content="stackexchangeLink">
+        <a href="https://patents.stackexchange.com/questions/tagged/US10873188" itemprop="url"><span itemprop="text">Discuss</span></a>
+      </li>
+      
+  </ul>
+
+  
+
+  <section>
+    <h2>Images</h2>
+    <ul>
+      <li itemprop="images" itemscope repeat>
+        <img itemprop="thumbnail" src="https://patentimages.storage.googleapis.com/ad/a9/b9/ed38cf63d54bea/US10873188-20201222-D00000.png">
+        <meta itemprop="full" content="https://patentimages.storage.googleapis.com/84/a8/5c/51a0438f6fcb8a/US10873188-20201222-D00000.png">
+        <ul>
+        </ul>
+      </li>
+      <li itemprop="images" itemscope repeat>
+        <img itemprop="thumbnail" src="https://patentimages.storage.googleapis.com/77/43/b0/f2dd53bf2cf12e/US10873188-20201222-D00001.png">
+        <meta itemprop="full" content="https://patentimages.storage.googleapis.com/aa/b2/4a/b42d455c98700e/US10873188-20201222-D00001.png">
+        <ul>
+        </ul>
+      </li>
+      <li itemprop="images" itemscope repeat>
+        <img itemprop="thumbnail" src="https://patentimages.storage.googleapis.com/a3/86/06/3a3a0fc4ea9580/US10873188-20201222-D00002.png">
+        <meta itemprop="full" content="https://patentimages.storage.googleapis.com/9f/a2/76/e68cec5cadce05/US10873188-20201222-D00002.png">
+        <ul>
+        </ul>
+      </li>
+      <li itemprop="images" itemscope repeat>
+        <img itemprop="thumbnail" src="https://patentimages.storage.googleapis.com/18/27/8c/af2853e46ad891/US10873188-20201222-D00003.png">
+        <meta itemprop="full" content="https://patentimages.storage.googleapis.com/cf/5d/d8/a414cb2ceb5a64/US10873188-20201222-D00003.png">
+        <ul>
+          <li itemprop="callouts" itemscope repeat>
+            <meta itemprop="figurePage" content="3">
+            <meta itemprop="id" content="2">
+            <meta itemprop="label" content="Use Case">
+            <span itemprop="bounds" itemscope>
+              <meta itemprop="left" content="610">
+              <meta itemprop="top" content="1300">
+              <meta itemprop="right" content="631">
+              <meta itemprop="bottom" content="1326">
+            </span>
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Classifications</h2>
+    <ul>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H</span>&mdash;<span itemprop="Description">ELECTRICITY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02</span>&mdash;<span itemprop="Description">GENERATION; CONVERSION OR DISTRIBUTION OF ELECTRIC POWER</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J</span>&mdash;<span itemprop="Description">ELECTRIC POWER NETWORKS; CIRCUIT ARRANGEMENTS OR SYSTEMS FOR SUPPLYING OR DISTRIBUTING ELECTRIC POWER; SYSTEMS FOR STORING ELECTRIC ENERGY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/00</span>&mdash;<span itemprop="Description">Circuit arrangements for AC mains or AC distribution networks</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/38</span>&mdash;<span itemprop="Description">Arrangements for feeding a single network from two or more generators or sources in parallel; Arrangements for feeding already energised networks from additional generators or sources in parallel</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/46</span>&mdash;<span itemprop="Description">Controlling the sharing of generated power between the generators, sources or networks</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="FirstCode" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H</span>&mdash;<span itemprop="Description">ELECTRICITY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02</span>&mdash;<span itemprop="Description">GENERATION; CONVERSION OR DISTRIBUTION OF ELECTRIC POWER</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J</span>&mdash;<span itemprop="Description">ELECTRIC POWER NETWORKS; CIRCUIT ARRANGEMENTS OR SYSTEMS FOR SUPPLYING OR DISTRIBUTING ELECTRIC POWER; SYSTEMS FOR STORING ELECTRIC ENERGY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/00</span>&mdash;<span itemprop="Description">Circuit arrangements for AC mains or AC distribution networks</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/38</span>&mdash;<span itemprop="Description">Arrangements for feeding a single network from two or more generators or sources in parallel; Arrangements for feeding already energised networks from additional generators or sources in parallel</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/381</span>&mdash;<span itemprop="Description">Dispersed generators</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="FirstCode" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N5/003</span>&mdash;<span itemprop="Description"></span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N</span>&mdash;<span itemprop="Description">COMPUTING ARRANGEMENTS BASED ON SPECIFIC COMPUTATIONAL MODELS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N5/00</span>&mdash;<span itemprop="Description">Computing arrangements using knowledge-based models</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N5/01</span>&mdash;<span itemprop="Description">Dynamic search techniques; Heuristics; Dynamic trees; Branch-and-bound</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N7/005</span>&mdash;<span itemprop="Description"></span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N</span>&mdash;<span itemprop="Description">COMPUTING ARRANGEMENTS BASED ON SPECIFIC COMPUTATIONAL MODELS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N7/00</span>&mdash;<span itemprop="Description">Computing arrangements based on specific mathematical models</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N7/01</span>&mdash;<span itemprop="Description">Probabilistic graphical models, e.g. probabilistic networks</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N</span>&mdash;<span itemprop="Description">COMPUTING ARRANGEMENTS BASED ON SPECIFIC COMPUTATIONAL MODELS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N7/00</span>&mdash;<span itemprop="Description">Computing arrangements based on specific mathematical models</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N7/08</span>&mdash;<span itemprop="Description">Computing arrangements based on specific mathematical models using chaos models or non-linear system models</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q</span>&mdash;<span itemprop="Description">INFORMATION AND COMMUNICATION TECHNOLOGY [ICT] SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES; SYSTEMS OR METHODS SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES, NOT OTHERWISE PROVIDED FOR</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q50/00</span>&mdash;<span itemprop="Description">Information and communication technology [ICT] specially adapted for implementation of business processes of specific business sectors, e.g. utilities or tourism</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q50/06</span>&mdash;<span itemprop="Description">Energy or water supply</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H</span>&mdash;<span itemprop="Description">ELECTRICITY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02</span>&mdash;<span itemprop="Description">GENERATION; CONVERSION OR DISTRIBUTION OF ELECTRIC POWER</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J</span>&mdash;<span itemprop="Description">ELECTRIC POWER NETWORKS; CIRCUIT ARRANGEMENTS OR SYSTEMS FOR SUPPLYING OR DISTRIBUTING ELECTRIC POWER; SYSTEMS FOR STORING ELECTRIC ENERGY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/00</span>&mdash;<span itemprop="Description">Circuit arrangements for AC mains or AC distribution networks</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/003</span>&mdash;<span itemprop="Description">Load forecast, e.g. methods or systems for forecasting future load demand</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H</span>&mdash;<span itemprop="Description">ELECTRICITY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02</span>&mdash;<span itemprop="Description">GENERATION; CONVERSION OR DISTRIBUTION OF ELECTRIC POWER</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J</span>&mdash;<span itemprop="Description">ELECTRIC POWER NETWORKS; CIRCUIT ARRANGEMENTS OR SYSTEMS FOR SUPPLYING OR DISTRIBUTING ELECTRIC POWER; SYSTEMS FOR STORING ELECTRIC ENERGY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/00</span>&mdash;<span itemprop="Description">Circuit arrangements for AC mains or AC distribution networks</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/38</span>&mdash;<span itemprop="Description">Arrangements for feeding a single network from two or more generators or sources in parallel; Arrangements for feeding already energised networks from additional generators or sources in parallel</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/46</span>&mdash;<span itemprop="Description">Controlling the sharing of generated power between the generators, sources or networks</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/466</span>&mdash;<span itemprop="Description">Scheduling or selectively controlling the operation of the generators or sources, e.g. connecting or disconnecting generators to meet a demand</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H</span>&mdash;<span itemprop="Description">ELECTRICITY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02</span>&mdash;<span itemprop="Description">GENERATION; CONVERSION OR DISTRIBUTION OF ELECTRIC POWER</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J</span>&mdash;<span itemprop="Description">ELECTRIC POWER NETWORKS; CIRCUIT ARRANGEMENTS OR SYSTEMS FOR SUPPLYING OR DISTRIBUTING ELECTRIC POWER; SYSTEMS FOR STORING ELECTRIC ENERGY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J2103/00</span>&mdash;<span itemprop="Description">Details of circuit arrangements for mains or AC distribution networks</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J2103/30</span>&mdash;<span itemprop="Description">Simulating, planning, modelling, reliability check or computer assisted design [CAD] of electric power networks</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="Additional" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H</span>&mdash;<span itemprop="Description">ELECTRICITY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02</span>&mdash;<span itemprop="Description">GENERATION; CONVERSION OR DISTRIBUTION OF ELECTRIC POWER</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J</span>&mdash;<span itemprop="Description">ELECTRIC POWER NETWORKS; CIRCUIT ARRANGEMENTS OR SYSTEMS FOR SUPPLYING OR DISTRIBUTING ELECTRIC POWER; SYSTEMS FOR STORING ELECTRIC ENERGY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J2105/00</span>&mdash;<span itemprop="Description">Networks for supplying or distributing electric power characterised by their spatial reach or by the load</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J2105/10</span>&mdash;<span itemprop="Description">Local stationary networks having a local or delimited stationary reach</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J2105/12</span>&mdash;<span itemprop="Description">Local stationary networks having a local or delimited stationary reach supplying households or buildings</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="Additional" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J2203/20</span>&mdash;<span itemprop="Description"></span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="Additional" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H</span>&mdash;<span itemprop="Description">ELECTRICITY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02</span>&mdash;<span itemprop="Description">GENERATION; CONVERSION OR DISTRIBUTION OF ELECTRIC POWER</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J</span>&mdash;<span itemprop="Description">ELECTRIC POWER NETWORKS; CIRCUIT ARRANGEMENTS OR SYSTEMS FOR SUPPLYING OR DISTRIBUTING ELECTRIC POWER; SYSTEMS FOR STORING ELECTRIC ENERGY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/00</span>&mdash;<span itemprop="Description">Circuit arrangements for AC mains or AC distribution networks</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/12</span>&mdash;<span itemprop="Description">Arrangements for adjusting voltage in AC networks by changing a characteristic of the network load</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J3/14</span>&mdash;<span itemprop="Description">Arrangements for adjusting voltage in AC networks by changing a characteristic of the network load by switching loads on to, or off from, the networks, e.g. progressively balanced loading</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="Additional" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H</span>&mdash;<span itemprop="Description">ELECTRICITY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02</span>&mdash;<span itemprop="Description">GENERATION; CONVERSION OR DISTRIBUTION OF ELECTRIC POWER</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J</span>&mdash;<span itemprop="Description">ELECTRIC POWER NETWORKS; CIRCUIT ARRANGEMENTS OR SYSTEMS FOR SUPPLYING OR DISTRIBUTING ELECTRIC POWER; SYSTEMS FOR STORING ELECTRIC ENERGY</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J7/00</span>&mdash;<span itemprop="Description">Circuit arrangements for charging or discharging batteries or for supplying loads from batteries</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">H02J7/32</span>&mdash;<span itemprop="Description">Circuit arrangements for charging or discharging batteries or for supplying loads from batteries for charging batteries from a charging set comprising a non-electric prime mover rotating at constant speed</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="Additional" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y</span>&mdash;<span itemprop="Description">GENERAL TAGGING OF NEW TECHNOLOGICAL DEVELOPMENTS; GENERAL TAGGING OF CROSS-SECTIONAL TECHNOLOGIES SPANNING OVER SEVERAL SECTIONS OF THE IPC; TECHNICAL SUBJECTS COVERED BY FORMER USPC CROSS-REFERENCE ART COLLECTIONS [XRACs] AND DIGESTS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y02</span>&mdash;<span itemprop="Description">TECHNOLOGIES OR APPLICATIONS FOR MITIGATION OR ADAPTATION AGAINST CLIMATE CHANGE</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y02B</span>&mdash;<span itemprop="Description">CLIMATE CHANGE MITIGATION TECHNOLOGIES RELATED TO BUILDINGS, e.g. HOUSING, HOUSE APPLIANCES OR RELATED END-USER APPLICATIONS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y02B70/00</span>&mdash;<span itemprop="Description">Technologies for an efficient end-user side electric power management and consumption</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y02B70/30</span>&mdash;<span itemprop="Description">Systems integrating technologies related to power network operation and communication or information technologies for improving the carbon footprint of the management of residential or tertiary loads, i.e. smart grids as climate change mitigation technology in the buildings sector, including also the last stages of power distribution and the control, monitoring or operating management systems at local level</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y02B70/3225</span>&mdash;<span itemprop="Description">Demand response systems, e.g. load shedding, peak shaving</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="Additional" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y</span>&mdash;<span itemprop="Description">GENERAL TAGGING OF NEW TECHNOLOGICAL DEVELOPMENTS; GENERAL TAGGING OF CROSS-SECTIONAL TECHNOLOGIES SPANNING OVER SEVERAL SECTIONS OF THE IPC; TECHNICAL SUBJECTS COVERED BY FORMER USPC CROSS-REFERENCE ART COLLECTIONS [XRACs] AND DIGESTS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y02</span>&mdash;<span itemprop="Description">TECHNOLOGIES OR APPLICATIONS FOR MITIGATION OR ADAPTATION AGAINST CLIMATE CHANGE</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y02E</span>&mdash;<span itemprop="Description">REDUCTION OF GREENHOUSE GAS [GHG] EMISSIONS, RELATED TO ENERGY GENERATION, TRANSMISSION OR DISTRIBUTION</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y02E60/00</span>&mdash;<span itemprop="Description">Enabling technologies; Technologies with a potential or indirect contribution to GHG emissions mitigation</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="Additional" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y</span>&mdash;<span itemprop="Description">GENERAL TAGGING OF NEW TECHNOLOGICAL DEVELOPMENTS; GENERAL TAGGING OF CROSS-SECTIONAL TECHNOLOGIES SPANNING OVER SEVERAL SECTIONS OF THE IPC; TECHNICAL SUBJECTS COVERED BY FORMER USPC CROSS-REFERENCE ART COLLECTIONS [XRACs] AND DIGESTS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y04</span>&mdash;<span itemprop="Description">INFORMATION OR COMMUNICATION TECHNOLOGIES HAVING AN IMPACT ON OTHER TECHNOLOGY AREAS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y04S</span>&mdash;<span itemprop="Description">SYSTEMS INTEGRATING TECHNOLOGIES RELATED TO POWER NETWORK OPERATION, COMMUNICATION OR INFORMATION TECHNOLOGIES FOR IMPROVING THE ELECTRICAL POWER GENERATION, TRANSMISSION, DISTRIBUTION, MANAGEMENT OR USAGE, i.e. SMART GRIDS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y04S20/00</span>&mdash;<span itemprop="Description">Management or operation of end-user stationary applications or the last stages of power distribution; Controlling, monitoring or operating thereof</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y04S20/20</span>&mdash;<span itemprop="Description">End-user application control systems</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y04S20/222</span>&mdash;<span itemprop="Description">Demand response systems, e.g. load shedding, peak shaving</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="Additional" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y</span>&mdash;<span itemprop="Description">GENERAL TAGGING OF NEW TECHNOLOGICAL DEVELOPMENTS; GENERAL TAGGING OF CROSS-SECTIONAL TECHNOLOGIES SPANNING OVER SEVERAL SECTIONS OF THE IPC; TECHNICAL SUBJECTS COVERED BY FORMER USPC CROSS-REFERENCE ART COLLECTIONS [XRACs] AND DIGESTS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y04</span>&mdash;<span itemprop="Description">INFORMATION OR COMMUNICATION TECHNOLOGIES HAVING AN IMPACT ON OTHER TECHNOLOGY AREAS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y04S</span>&mdash;<span itemprop="Description">SYSTEMS INTEGRATING TECHNOLOGIES RELATED TO POWER NETWORK OPERATION, COMMUNICATION OR INFORMATION TECHNOLOGIES FOR IMPROVING THE ELECTRICAL POWER GENERATION, TRANSMISSION, DISTRIBUTION, MANAGEMENT OR USAGE, i.e. SMART GRIDS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y04S40/00</span>&mdash;<span itemprop="Description">Systems for electrical power generation, transmission, distribution or end-user application management characterised by the use of communication or information technologies, or communication or information technology specific aspects supporting them</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">Y04S40/20</span>&mdash;<span itemprop="Description">Information technology specific aspects, e.g. CAD, simulation, modelling, system security</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="Additional" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  
+
+  
+
+  <section>
+    <h2>Definitions</h2>
+    <ul>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">hosting capacity</span>
+        <span itemprop="definition">indicates the available capacity on a distribution grid to host further DER interconnections.</span>
+        <meta itemprop="num_attr" content="0004">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">Hosting capacity</span>
+        <span itemprop="definition">plays a vital role within any interconnection process as it determines if the utility will have to upgrade hardware components, and as such, how expensive the interconnection will be for the customer.</span>
+        <meta itemprop="num_attr" content="0004">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">hosting capacity</span>
+        <span itemprop="definition">is calculated as a static, worst case value.</span>
+        <meta itemprop="num_attr" content="0004">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">utilities</span>
+        <span itemprop="definition">typically do not look at locational differences of hosting capacity on a feeder and do not account for flexible assets to mitigate the impact on hosting capacity.</span>
+        <meta itemprop="num_attr" content="0004">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">an essential component missing on current approaches</span>
+        <span itemprop="definition">is a view of hosting capacity as a dynamic quantity that can change depending on time, day, season, and location.</span>
+        <meta itemprop="num_attr" content="0006">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">Another essential component missing on current approaches</span>
+        <span itemprop="definition">is the ability to translate dynamic hosting capacity into an operational value that allows the integration of planning and operations.</span>
+        <meta itemprop="num_attr" content="0006">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">an operational value</span>
+        <span itemprop="definition">may be a real time operational value or an operational value associated with planning, scheduling, or market pricing.</span>
+        <meta itemprop="num_attr" content="0006">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">An objective of the invention</span>
+        <span itemprop="definition">is to enable utilities to determine a dynamic hosting capacity value for each location on the distribution grid, each time interval, and each type of DER asset, and to provide active management of these assets, when calculating interconnection requests, planning distribution grids, and/or when actively managing all DERs connected to the distribution grid.</span>
+        <meta itemprop="num_attr" content="0010">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">Such active management</span>
+        <span itemprop="definition">may be accomplished by determining and sending commands to distributed energy resources on the electric power distribution network.</span>
+        <meta itemprop="num_attr" content="0010">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">Such active management</span>
+        <span itemprop="definition">may comprise providing direction in connection with real time active management of the DERs or providing active management in connection with planning, scheduling, or market pricing in connection with the DERs.</span>
+        <meta itemprop="num_attr" content="0010">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the dynamic hosting capacity module</span>
+        <span itemprop="definition">can discern the impact of individual DERs on a power system.</span>
+        <meta itemprop="num_attr" content="0011">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the utility</span>
+        <span itemprop="definition">can now make a risk-based evaluation and decision to change interconnection and DER management.</span>
+        <meta itemprop="num_attr" content="0011">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the system</span>
+        <span itemprop="definition">can provide increased availability of hosting capacity allows for cheaper interconnection.</span>
+        <meta itemprop="num_attr" content="0011">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the system</span>
+        <span itemprop="definition">can also provide such stakeholders with location resolved hosting capacity that allows for ideal determination of project location. Operational use of dynamic hosting capacity allows such stakeholders to provide new business models to make the interconnection even more cost-effective for users.</span>
+        <meta itemprop="num_attr" content="0011">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the presently disclosed system</span>
+        <span itemprop="definition">can provide a better understanding of the impact of DERs on distribution grids, an attractive solution to convince customers to allow active management by the utility, and a market-based dynamic hosting capacity that favors such developers.</span>
+        <meta itemprop="num_attr" content="0012">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 1</span>
+        <span itemprop="definition">shows a schematic illustrating hosting capacity vs. dynamic hosting capacity in accordance with an embodiment of the invention.</span>
+        <meta itemprop="num_attr" content="0014">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 2</span>
+        <span itemprop="definition">shows a process diagram illustrating an overview of a dynamic hosting capacity process according to an embodiment of the invention.</span>
+        <meta itemprop="num_attr" content="0015">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 3</span>
+        <span itemprop="definition">shows a process diagram illustrating a first use case wherein a historic analysis is performed.</span>
+        <meta itemprop="num_attr" content="0016">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 4</span>
+        <span itemprop="definition">shows a process diagram illustrating a second use case wherein dynamic hosting capacity is calculated during real time operations at every given time interval and for all grid levels.</span>
+        <meta itemprop="num_attr" content="0017">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 5</span>
+        <span itemprop="definition">shows a process diagram illustrating a third use case wherein dynamic hosting capacity is forecasted data for weather and load values are used to calculate dynamic hosting capacity.</span>
+        <meta itemprop="num_attr" content="0018">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 6</span>
+        <span itemprop="definition">shows a process diagram illustrating a fourth use case wherein forecasted available hosting capacity is used as an input to a distribution market.</span>
+        <meta itemprop="num_attr" content="0019">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 7</span>
+        <span itemprop="definition">shows a process diagram illustrating a fifth use case wherein dynamic hosting capacity is used for integrated distribution planning.</span>
+        <meta itemprop="num_attr" content="0020">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 8</span>
+        <span itemprop="definition">shows a process diagram illustrating an overview of operation of a system that uses the above use cases.</span>
+        <meta itemprop="num_attr" content="0021">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DER hosting capacity</span>
+        <span itemprop="definition">is calculated as a static worst-case quantity so that utilities can manage interconnection requests and plan for future grid investments.</span>
+        <meta itemprop="num_attr" content="0023">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the problem with this approach</span>
+        <span itemprop="definition">is that it does not distinguish between different types of DERs—such as storage and solar—which can have profoundly different impacts on the grid.</span>
+        <meta itemprop="num_attr" content="0023">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the ability to manage DERs not in operation during specific hours, via a DERMS</span>
+        <span itemprop="definition">is not accounted for. As such, the worst-case approach leads utilities to making a limited amount of hosting capacity available.</span>
+        <meta itemprop="num_attr" content="0023">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 1</span>
+        <span itemprop="definition">shows a schematic of hosting capacity vs. dynamic hosting capacity and depicts a schematic view of the above issue. If utilities use the presently disclosed system and method to calculate the dynamic hosting capacity for each location in the grid and leverage it as an operational parameter as shown in FIG. 1 , a minimal active management of DERs can drastically increase the overall available capacity with minimal DER impact.</span>
+        <meta itemprop="num_attr" content="0033">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DSSE</span>
+        <span itemprop="definition">real-time distribution system state estimation</span>
+        <meta itemprop="num_attr" content="0034">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">This information</span>
+        <span itemprop="definition">is then used to calculate the hosting capacity at each node in the system</span>
+        <meta itemprop="num_attr" content="0035">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the residual load capacity of the feeder or grid segment in question</span>
+        <span itemprop="definition">is calculated using historical data, forecast data, and real-time situational awareness data generated from full 3-phase AC unbalanced state estimation and power-flow functions.</span>
+        <meta itemprop="num_attr" content="0039">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">This residual capacity calculation</span>
+        <span itemprop="definition">only includes the non-flexible (or not DHC contracted) DERs, loads, and generators.</span>
+        <meta itemprop="num_attr" content="0039">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the residual capacity for the feeder</span>
+        <span itemprop="definition">is made available as a probabilistic profile, showing for example the 5th and 95th percentile of expected residual capacity.</span>
+        <meta itemprop="num_attr" content="0039">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the DHC process</span>
+        <span itemprop="definition">determines the maximum load and generation that can be accepted on the feeder during any given time of day by size, type, location, phase, and contract (operational and business models). These calculations are done with both real-time telemetry and forecasted data (as far out as the utility provides forecasted data).</span>
+        <meta itemprop="num_attr" content="0039">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">Constraints for load and generation assets</span>
+        <span itemprop="definition">are then used to schedule (forecasted data) or manage (real-time data) DERs on the corresponding feeder or grid segment, so that they can influence each other&#39;s capacity availabilities. For example, a charging battery system during peak solar hours can increase the DHC for solar generation during that window.</span>
+        <meta itemprop="num_attr" content="0040">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the hosting capacity itself</span>
+        <span itemprop="definition">can be distributed between the different aggregators and DERs.</span>
+        <meta itemprop="num_attr" content="0040">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 2</span>
+        <span itemprop="definition">shows a process overview of DHC. This process described can be completed for times, be it with historic data, real-time data, or forecasted data, depending on the various use cases.</span>
+        <meta itemprop="num_attr" content="0050">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 3</span>
+        <span itemprop="definition">shows an overview of Use Case 1 .</span>
+        <meta itemprop="num_attr" content="0052">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DHC</span>
+        <span itemprop="definition">in the sense of a historic analysis can be used when a utility wants to understand their current (average) available hosting capacity over the extent of the last x-years.</span>
+        <meta itemprop="num_attr" content="0052">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">SCADA</span>
+        <span itemprop="definition">or other sensor</span>
+        <meta itemprop="num_attr" content="0052">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DHC</span>
+        <span itemprop="definition">can provide the hosting capacity of the observed time frame at the highest possible time resolution. This allows utilities to run an analysis on still available dynamic hosting capacity which can be utilized for interconnection requests.</span>
+        <meta itemprop="num_attr" content="0052">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 4</span>
+        <span itemprop="definition">shows an overview of Use Case 2 .</span>
+        <meta itemprop="num_attr" content="0054">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the presently disclosed methods</span>
+        <span itemprop="definition">can be used to calculate a DHC during real time operations at every given time interval and for all grid levels. This real time DHC calculation serves multiple purposes and provides the utility a full situational awareness of all its hosting capacity constraints. This can be used to add leveraging of Scenario Analysis, Security Constraint Optimal Power Flow, and/or Multi-Constraint Optimization.</span>
+        <meta itemprop="num_attr" content="0054">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 5</span>
+        <span itemprop="definition">shows an overview of Use Case 3 .</span>
+        <meta itemprop="num_attr" content="0057">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the DHC</span>
+        <span itemprop="definition">is calculated at the given time interval for the operational planning horizon (e.g. 1 day ahead). This provides a continuously updated vision of the hosting capacity in the immediate future for every grid level. This information is then used during operational planning.</span>
+        <meta itemprop="num_attr" content="0057">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DHC</span>
+        <span itemprop="definition">can determine a risk and value based DER schedule that ensures no constraints on the system with minimal impact on the DERs themselves.</span>
+        <meta itemprop="num_attr" content="0057">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">multi-objective/agent optimization</span>
+        <span itemprop="definition">is utilized to enable optimal DER dispatch within a given hosting capacity band to allow for minimal impact on DER operations, and optimal value of DERs to the grid.</span>
+        <meta itemprop="num_attr" content="0058">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">This approach</span>
+        <span itemprop="definition">takes into consideration technical and contractual limitations of DERs, such as state of charge or minimum required availability.</span>
+        <meta itemprop="num_attr" content="0058">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the option to control DERs</span>
+        <span itemprop="definition">allow utilities to move away from the worst-case planning scenario.</span>
+        <meta itemprop="num_attr" content="0058">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 6</span>
+        <span itemprop="definition">shows an overview of Use Case 4 .</span>
+        <meta itemprop="num_attr" content="0061">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">a market</span>
+        <span itemprop="definition">can be generated around hosting capacity to optimize grid components, especially DERs.</span>
+        <meta itemprop="num_attr" content="0062">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">hosting capacity</span>
+        <span itemprop="definition">for operational planning purposes e.g. day ahead, at this stage, the optimization isn&#39;t achieved by a single entity with unilateral control over everything, but rather, the hosting capacity is marketed to each flexible asset or aggregator of assets on the grid.</span>
+        <meta itemprop="num_attr" content="0062">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DERs and DR</span>
+        <span itemprop="definition">can then bid on the capacity to secure themselves their required portion considering weather and other forecasts.</span>
+        <meta itemprop="num_attr" content="0062">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">Aggregators</span>
+        <span itemprop="definition">can bid for their aggregation pool, optimizing within their assets.</span>
+        <meta itemprop="num_attr" content="0062">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 7</span>
+        <span itemprop="definition">shows an overview of Use Case 5 .</span>
+        <meta itemprop="num_attr" content="0064">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DHC</span>
+        <span itemprop="definition">can be calculated for each study interval along, enabling utilities to quantify and evaluate potential investment scenarios (investment scenarios, hosting capacity upgrades, expansion strategies, and non-wires alternatives) based asset benefits, by type, capacity, location, and time.</span>
+        <meta itemprop="num_attr" content="0064">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">FIG. 8</span>
+        <span itemprop="definition">shows an overview of DHC Use Cases, and highlights how the described use cases fit together in the overall application of DHC.</span>
+        <meta itemprop="num_attr" content="0065">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DHC</span>
+        <span itemprop="definition">provides utilities with significantly greater visibility into available hosting capacity pertaining to location and time. This insight can be applied to interconnect, manage, and optimize different types of DERs depending on their DHC requirement profiles.</span>
+        <meta itemprop="num_attr" content="0066">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DHC processes and systems as disclosed herein</span>
+        <span itemprop="definition">can provide several novel solutions and applications to address challenges facing utilities:</span>
+        <meta itemprop="num_attr" content="0068">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DHC</span>
+        <span itemprop="definition">can be used as an interconnection mechanism to reduce the interconnection cost for DER developers by allowing them to connect at e.g. 70% rated power and linking them to the DHC platform. The DHC platform would then ensure, that whenever constraints occur the DER is curtailed to 70% to mitigate those constraints.</span>
+        <meta itemprop="num_attr" content="0075">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">DERs</span>
+        <span itemprop="definition">must be given certain contractual guarantees by the utility (such as caps on optimization) to prevent selective discrimination against assets based on optimization outcomes. This can be achieved through providing the DER with:</span>
+        <meta itemprop="num_attr" content="0076">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the system and method described above</span>
+        <span itemprop="definition">can enable utilities to determine a dynamic hosting capacity value for each location on the distribution grid, each time interval, and each type of DER asset, and to provide active management of these assets, when responding to interconnection requests, planning distribution grids, and/or when actively managing all DERs connected to the distribution grid.</span>
+        <meta itemprop="num_attr" content="0081">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">Such active management</span>
+        <span itemprop="definition">may be accomplished by determining and sending commands to distributed energy resources on the electric power distribution network.</span>
+        <meta itemprop="num_attr" content="0081">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">At least some aspects disclosed</span>
+        <span itemprop="definition">can be embodied, at least in part, in software. That is, the techniques may be carried out in a special-purpose or general-purpose computer system or other data processing system in response to its processor, such as a microprocessor, executing sequences of instructions contained in a memory, such as ROM, volatile RAM, non-volatile memory, cache or a remote storage device. Functions expressed herein may be performed by a processor in combination with memory storing code and should not be interpreted as means-plus-function limitations.</span>
+        <meta itemprop="num_attr" content="0083">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">Routines executed to implement the embodiments</span>
+        <span itemprop="definition">may be implemented as part of an operating system, firmware, ROM, middleware, service delivery platform, SDK (Software Development Kit) component, web services, or other specific application, component, program, object, module or sequence of instructions referred to as “computer programs.” Invocation interfaces to these routines can be exposed to a software development community as an API (Application Programming Interface).</span>
+        <meta itemprop="num_attr" content="0084">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the computer programs</span>
+        <span itemprop="definition">typically comprise one or more instructions set at various times in various memory and storage devices in a computer, and that, when read and executed by one or more processors in a computer, cause the computer to perform operations necessary to execute elements involving the various aspects.</span>
+        <meta itemprop="num_attr" content="0084">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">a machine-readable medium</span>
+        <span itemprop="definition">can be used to store software and data which when executed by a data processing system causes the system to perform various methods.</span>
+        <meta itemprop="num_attr" content="0085">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the executable software and data</span>
+        <span itemprop="definition">may be stored in various places including for example ROM, volatile RAM, non-volatile memory and/or cache. Portions of this software and/or data may be stored in any one of these storage devices.</span>
+        <meta itemprop="num_attr" content="0085">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the data and instructions</span>
+        <span itemprop="definition">can be obtained from centralized servers or peer-to-peer networks. Different portions of the data and instructions can be obtained from different centralized servers and/or peer-to-peer networks at different times and in different communication sessions or in a same communication session.</span>
+        <meta itemprop="num_attr" content="0085">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the data and instructions</span>
+        <span itemprop="definition">can be obtained in entirety prior to the execution of the applications. Alternatively, portions of the data and instructions can be obtained dynamically, just in time, when needed for execution. Thus, it is not required that the data and instructions be on a machine-readable medium in entirety at a particular instance of time.</span>
+        <meta itemprop="num_attr" content="0085">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">Examples of computer-readable media</span>
+        <span itemprop="definition">include but are not limited to recordable and non-recordable type media such as volatile and non-volatile memory devices, read only memory (ROM), random access memory (RAM), flash memory devices, floppy and other removable disks, magnetic disk storage media, optical storage media (e.g., Compact Disk Read-Only Memory (CD ROMS), Digital Versatile Disks (DVDs), etc.), among others.</span>
+        <meta itemprop="num_attr" content="0086">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">recordable and non-recordable type media</span>
+        <span itemprop="definition">such as volatile and non-volatile memory devices, read only memory (ROM), random access memory (RAM), flash memory devices, floppy and other removable disks, magnetic disk storage media, optical storage media (e.g., Compact Disk Read-Only Memory (CD ROMS), Digital Versatile Disks (DVDs), etc.), among others.</span>
+        <meta itemprop="num_attr" content="0086">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">a machine-readable medium</span>
+        <span itemprop="definition">includes any mechanism that provides (e.g., stores) information in a form accessible by a machine (e.g., a computer, network device, personal digital assistant, manufacturing tool, any device with a set of one or more processors, etc.).</span>
+        <meta itemprop="num_attr" content="0087">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">a machine</span>
+        <span itemprop="definition">e.g., a computer, network device, personal digital assistant, manufacturing tool, any device with a set of one or more processors, etc.</span>
+        <meta itemprop="num_attr" content="0087">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">hardwired circuitry</span>
+        <span itemprop="definition">may be used in combination with software instructions to implement the techniques disclosed above.</span>
+        <meta itemprop="num_attr" content="0088">
+      </li>
+      <li itemprop="definitions" itemscope repeat>
+        <span itemprop="subject">the techniques</span>
+        <span itemprop="definition">are neither limited to any specific combination of hardware circuitry and software nor to any particular source for the instructions executed by the data processing system.</span>
+        <meta itemprop="num_attr" content="0088">
+      </li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Landscapes</h2>
+    <ul>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Engineering &amp; Computer Science</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Physics &amp; Mathematics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Theoretical Computer Science</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">General Physics &amp; Mathematics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Business, Economics &amp; Management</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Power Engineering</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Economics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Health &amp; Medical Sciences</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Computing Systems</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Mathematical Physics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Software Systems</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">General Engineering &amp; Computer Science</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Evolutionary Computation</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Data Mining &amp; Analysis</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Artificial Intelligence</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Mathematical Optimization</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Strategic Management</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Pure &amp; Applied Mathematics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Computational Mathematics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Algebra</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">General Business, Economics &amp; Management</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Tourism &amp; Hospitality</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Public Health</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Water Supply &amp; Treatment</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">General Health &amp; Medical Sciences</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Human Resources &amp; Organizations</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Marketing</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Primary Health Care</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Mathematical Analysis</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Computational Linguistics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Nonlinear Science</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Probability &amp; Statistics with Applications</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Supply And Distribution Of Alternating Current</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+    </ul>
+  </section>
+
+
+  <section itemprop="abstract" itemscope>
+    <h2>Abstract</h2>
+    
+    <div itemprop="content" html><abstract mxw-id="PA429577888" lang="EN" source="national office" load-source="docdb">
+    <div class="abstract">A distributed energy resource management system utilizes capacity on a distribution grid to host further distributed energy resource interconnections. In an embodiment, the system utilizes a data store including operational values associated with distributed electric resources on an electric power distribution network and a processor or processors coupled to the data store and in communication with the distributed electric resources. The computer processors are programmed, upon receiving one or more requests, to create 3-phase AC power flows for each location across the electric power distribution network. Optimizations of the 3-phase AC power flows to are used to calculate hosting capacity for each of the locations, for each of a plurality of time intervals, and each of a plurality of types of distributed energy resource, as a dynamic quantity that can change depending on time, day, season, and location. The hosting capacity is translated into calculated operational values which are used to determine and send a direction to actively manage distributed energy resources on the electric power distribution network.</div>
+  </abstract>
+  </div>
+  </section>
+
+  <section itemprop="description" itemscope>
+    <h2>Description</h2>
+    
+    <div itemprop="content" html><div mxw-id="PDES282458727" lang="EN" load-source="patent-office" class="description">
+    
+    <div id="p-0002" num="0001" class="description-paragraph">This application is a non-provisional of, and claims priority to, U.S. Provisional Patent Application No. 62/581,080 filed Nov. 3, 2017, the entire disclosure of which is incorporated herein by reference.</div>
+    
+    
+    <div id="p-0003" num="0002" class="description-paragraph">This application includes material which is subject to copyright protection. The copyright owner has no objection to the facsimile reproduction by anyone of the patent disclosure, as it appears in the Patent and Trademark Office files or records, but otherwise reserves all copyright rights whatsoever.</div>
+    <heading id="h-0001">BACKGROUND</heading>
+    <div id="p-0004" num="0003" class="description-paragraph">With state governments and Public Utility Commissions (PUCs) putting forward ambitious new plans for the integration of distributed energy resources (DERs) such as rooftop solar and behind-the-meter battery storage, electric distribution utilities are being called upon to present plans that will help them to integrate all DERs while maintaining reasonable system costs and incenting new DER investors or business models. In addition, declining costs and government incentives have caused the rate of DER development to accelerate in recent years.</div>
+    <div id="p-0005" num="0004" class="description-paragraph">One key metric in the interconnection process of DERs into distribution grids is the so-called hosting capacity which indicates the available capacity on a distribution grid to host further DER interconnections. Hosting capacity plays a vital role within any interconnection process as it determines if the utility will have to upgrade hardware components, and as such, how expensive the interconnection will be for the customer. However, to current date, hosting capacity is calculated as a static, worst case value. As a result, utilities typically do not look at locational differences of hosting capacity on a feeder and do not account for flexible assets to mitigate the impact on hosting capacity.</div>
+    <div id="p-0006" num="0005" class="description-paragraph">Utilities typically take a worst-case approach accounting for every scenario, no matter how unlikely.</div>
+    <div id="p-0007" num="0006" class="description-paragraph">While some solutions and publications have provided initial proposals for a more detailed and accurate view of hosting capacity by improving the level of granularity and differentiation between DERs, an essential component missing on current approaches is a view of hosting capacity as a dynamic quantity that can change depending on time, day, season, and location. Another essential component missing on current approaches is the ability to translate dynamic hosting capacity into an operational value that allows the integration of planning and operations. In this respect, an operational value may be a real time operational value or an operational value associated with planning, scheduling, or market pricing.</div>
+    <div id="p-0008" num="0007" class="description-paragraph">Problems associated with interconnecting DERs to the distribution grid are multi-fold and negatively affect several stakeholders. Utilities need to understand the impact of DERs on the distribution grid, want to be able to influence DER development, want to be able to control DERs on the grid in an optimal fashion, and need to reduce time and cost of interconnection requests (internally and for customer). The customer needs to reduce the risk of interconnection to his project, wants new business models that allow him to defer interconnection cost, needs insurance that a utility controlled DER still generates revenue, and wants to know where to interconnect best.</div>
+    <div id="p-0009" num="0008" class="description-paragraph">The high level, worst case, static approach to hosting capacity dramatically impacts strategic distribution system planning, resulting in static, one-time plans updated periodically which only represent a worst-case scenario.</div>
+    <div id="p-0010" num="0009" class="description-paragraph">Hosting capacity as it stands today severely limits a utility&#39;s ability to effectively interconnect, plan for, or make DER an attractive investment to both, rate payers and DER developers.</div>
+    <heading id="h-0002">SUMMARY</heading>
+    <div id="p-0011" num="0010" class="description-paragraph">Disclosed herein is a dynamic hosting capacity methodology and system for DER integration and management on distribution utility networks. An objective of the invention is to enable utilities to determine a dynamic hosting capacity value for each location on the distribution grid, each time interval, and each type of DER asset, and to provide active management of these assets, when calculating interconnection requests, planning distribution grids, and/or when actively managing all DERs connected to the distribution grid. Such active management may be accomplished by determining and sending commands to distributed energy resources on the electric power distribution network. Such active management may comprise providing direction in connection with real time active management of the DERs or providing active management in connection with planning, scheduling, or market pricing in connection with the DERs.</div>
+    <div id="p-0012" num="0011" class="description-paragraph">To achieve this objective, several key technologies can be provided based on a high-power grid analytics engine that includes real-time state estimation, scenario, and impact analysis (instead of pre-set limits, rules, and worst-case scenarios). Using only the utility network model, available sensor input, and information on the DERs under control, the dynamic hosting capacity module can discern the impact of individual DERs on a power system. With the benefit of topology processing, security-constrained AC optimal power flow, and stochastic and probabilistic analysis, the utility can now make a risk-based evaluation and decision to change interconnection and DER management. There are several benefits of the presently disclosed system for the various stakeholders. For DER developers and customers requesting DER Interconnection, the system can provide increased availability of hosting capacity allows for cheaper interconnection. The system can also provide such stakeholders with location resolved hosting capacity that allows for ideal determination of project location. Operational use of dynamic hosting capacity allows such stakeholders to provide new business models to make the interconnection even more cost-effective for users.</div>
+    <div id="p-0013" num="0012" class="description-paragraph">For distribution utilities, the presently disclosed system can provide a better understanding of the impact of DERs on distribution grids, an attractive solution to convince customers to allow active management by the utility, and a market-based dynamic hosting capacity that favors such developers.</div>
+    
+    
+    <description-of-drawings>
+      <heading id="h-0003">BRIEF DESCRIPTION OF THE DRAWINGS</heading>
+      <div id="p-0014" num="0013" class="description-paragraph">The foregoing and other objects, features, and advantages of the invention will be apparent from the following more particular description of preferred embodiments as illustrated in the accompanying drawings, in which reference characters refer to the same parts throughout the various views. The drawings are not necessarily to scale, emphasis instead being placed upon illustrating principles of the invention.</div>
+      <div id="p-0015" num="0014" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 1</figref> shows a schematic illustrating hosting capacity vs. dynamic hosting capacity in accordance with an embodiment of the invention.</div>
+      <div id="p-0016" num="0015" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 2</figref> shows a process diagram illustrating an overview of a dynamic hosting capacity process according to an embodiment of the invention.</div>
+      <div id="p-0017" num="0016" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 3</figref> shows a process diagram illustrating a first use case wherein a historic analysis is performed.</div>
+      <div id="p-0018" num="0017" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 4</figref> shows a process diagram illustrating a second use case wherein dynamic hosting capacity is calculated during real time operations at every given time interval and for all grid levels.</div>
+      <div id="p-0019" num="0018" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 5</figref> shows a process diagram illustrating a third use case wherein dynamic hosting capacity is forecasted data for weather and load values are used to calculate dynamic hosting capacity.</div>
+      <div id="p-0020" num="0019" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 6</figref> shows a process diagram illustrating a fourth use case wherein forecasted available hosting capacity is used as an input to a distribution market.</div>
+      <div id="p-0021" num="0020" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 7</figref> shows a process diagram illustrating a fifth use case wherein dynamic hosting capacity is used for integrated distribution planning.</div>
+      <div id="p-0022" num="0021" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 8</figref> shows a process diagram illustrating an overview of operation of a system that uses the above use cases.</div>
+    </description-of-drawings>
+    
+    
+    <heading id="h-0004">DETAILED DESCRIPTION</heading>
+    <div id="p-0023" num="0022" class="description-paragraph">Reference will now be made in detail to the preferred embodiments of the present invention, examples of which are illustrated in the accompanying drawings. The following description and drawings are illustrative and are not to be construed as limiting. Numerous specific details are described to provide a thorough understanding. However, in certain instances, well-known or conventional details are not described in order to avoid obscuring the description. References to one or an embodiment in the present disclosure are not necessarily references to the same embodiment; and, such references mean at least one.</div>
+    <div id="p-0024" num="0023" class="description-paragraph">There are several limitations associated with previous hosting capacity calculations and their application. Typically, DER hosting capacity is calculated as a static worst-case quantity so that utilities can manage interconnection requests and plan for future grid investments. The problem with this approach is that it does not distinguish between different types of DERs—such as storage and solar—which can have profoundly different impacts on the grid. Furthermore, the ability to manage DERs not in operation during specific hours, via a DERMS, is not accounted for. As such, the worst-case approach leads utilities to making a limited amount of hosting capacity available. It is also limited to a static view of the grid, and does not consider the utility&#39;s ability to shift loads through demand response, topology switching, and current real-time variations, nor does it consider the impact of DERs by type, size, location, and contractual obligation. The worst-case approach makes interconnection processes more expensive for DERs than they need to be, as these assets must bear the cost of unnecessary grid upgrades. In summary:
+</div> <ul> <li id="ul0001-0001" num="0000"> <ul> <li id="ul0002-0001" num="0024">a. Hosting capacity is calculated as a one-time fix value:
+        <ul> <li id="ul0003-0001" num="0025">i. This reduces the available capacity, as the grid section is judged by one-time slot rather than a time series of data which could show more capacity available during the rest of the day.</li> </ul>
+        </li> <li id="ul0002-0002" num="0026">b. Hosting capacity is calculated under worst case assumptions:
+        <ul> <li id="ul0004-0001" num="0027">i. A worst-case assumption might show a grid condition that occurs once every year for 15 min. Limiting the capacity to this value results in a significant reduction of grid utilization and over-investment into traditional physical assets.</li> </ul>
+        </li> <li id="ul0002-0003" num="0028">c. Hosting capacity is calculated assuming “dumb” or none smart DERs:
+        <ul> <li id="ul0005-0001" num="0029">i. As a result, any possible mitigating effects optimization of the DERs in terms of scheduling, dispatch, or curtailment might have is not considered.</li> </ul>
+        </li> </ul> </li> </ul>
+
+    <div id="p-0025" num="0030" class="description-paragraph">Furthermore, besides the problems in the approach to calculating hosting capacity, utilities currently lag the technology to bridge the gap between planning (where it originates) to operations or markets.
+</div> <ul> <li id="ul0006-0001" num="0000"> <ul> <li id="ul0007-0001" num="0031">a. Hosting capacity is not used as an operational parameter for DER scheduling</li> <li id="ul0007-0002" num="0032">b. Hosting capacity is not used as a market indicator to where DER investments are beneficial</li> </ul> </li> </ul>
+
+    <div id="p-0026" num="0033" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 1</figref> shows a schematic of hosting capacity vs. dynamic hosting capacity and depicts a schematic view of the above issue. If utilities use the presently disclosed system and method to calculate the dynamic hosting capacity for each location in the grid and leverage it as an operational parameter as shown in <figref idrefs="DRAWINGS">FIG. 1</figref>, a minimal active management of DERs can drastically increase the overall available capacity with minimal DER impact.</div>
+    <div id="p-0027" num="0034" class="description-paragraph">To be able to calculate DHC a very detailed understanding of the distribution grid at a physical level is required. To achieve this, the system and method disclosed herein uses a real-time distribution system state estimation (DSSE) engine that enables DHC calculations to attain a full situational awareness across the distribution network, including values included in the creation of 3-phase AC optimal power flows. Such values include, per phase: voltages, currents, real power, reactive power, real loss, reactive losses, power factors, asset utilization, load duration curves, and potentially others.</div>
+    <div id="p-0028" num="0035" class="description-paragraph">This information is then used to calculate the hosting capacity at each node in the system
+</div> <ul> <li id="ul0008-0001" num="0000"> <ul> <li id="ul0009-0001" num="0036">a. Establishes specific node, feeder, and substation hosting capacity and capacity constraints</li> <li id="ul0009-0002" num="0037">b. Determine the impact of various DERs on that hosting capacity</li> </ul> </li> </ul>
+
+    <div id="p-0029" num="0038" class="description-paragraph">Process</div>
+    <div id="p-0030" num="0039" class="description-paragraph">In an embodiment, the residual load capacity of the feeder or grid segment in question is calculated using historical data, forecast data, and real-time situational awareness data generated from full 3-phase AC unbalanced state estimation and power-flow functions. This residual capacity calculation only includes the non-flexible (or not DHC contracted) DERs, loads, and generators. The residual capacity for the feeder is made available as a probabilistic profile, showing for example the 5th and 95th percentile of expected residual capacity. However, the results are not limited to hosting capacity values as current constraints as they also reflect voltage levels, phase angles, and other limiting factors of grid operations. The DHC process then determines the maximum load and generation that can be accepted on the feeder during any given time of day by size, type, location, phase, and contract (operational and business models). These calculations are done with both real-time telemetry and forecasted data (as far out as the utility provides forecasted data).</div>
+    <div id="p-0031" num="0040" class="description-paragraph">Constraints for load and generation assets are then used to schedule (forecasted data) or manage (real-time data) DERs on the corresponding feeder or grid segment, so that they can influence each other&#39;s capacity availabilities. For example, a charging battery system during peak solar hours can increase the DHC for solar generation during that window. The hosting capacity itself can be distributed between the different aggregators and DERs.</div>
+    <div id="p-0032" num="0041" class="description-paragraph">Scheduling of DERs and optimization of hosting capacity is supported through a variety of physics-based analytics services that allow a DHC-enhanced DERMS to optimize DERs in a holistic manner:
+</div> <ul> <li id="ul0010-0001" num="0000"> <ul> <li id="ul0011-0001" num="0042">a. Topology processing: Utilizing the underlying model of the distribution grid, impacts on hosting capacity through grid reconfiguration can be evaluated in real-time or forecasted</li> <li id="ul0011-0002" num="0043">b. Network model manager: Manages the network models and ensures data points are assigned correctly and that models are power flow ready</li> <li id="ul0011-0003" num="0044">c. Scenario analysis: By understanding the impacts of DERs by evaluating the grid model itself, a DHC-enhanced DERMS can predict impacts and changes to grid conditions prior to managing DERs, resulting in ideal setpoints</li> <li id="ul0011-0004" num="0045">d. Distribution System State Estimation: Rather than making decisions based on single sensor data sets, full situational awareness is generated based on a 3-phase AC unbalanced power flow and becomes the foundation for optimization approaches</li> <li id="ul0011-0005" num="0046">e. Multi-constraint and multi-agent optimization: Instead of relying on purely system-centric optimization approaches, optimization includes contractual constraints, DER needs and limitations (e.g., state of battery charge), and other customer-related aspects, resulting in a holistic, techno-economic optimum</li> <li id="ul0011-0006" num="0047">f. Security-Constrained AC Optimal Power Flow: System optimization is handled based on a global optimum rather than pre-set rules. As such, a voltage constraint can be handled through a wide variety of approaches, all with different impacts on other grid parameters. Understanding these impacts and being able to optimize (e.g., for system losses, voltage levels, or current constraints) allows the most effective leveraging of hosting capacity</li> <li id="ul0011-0007" num="0048">g. Stochastic and Probabilistic Engine: Allows the accountancy of variable resources by modelling uncertainties into the computations. As a result, users get confidence intervals which allow them to make risk-based decisions.</li> <li id="ul0011-0008" num="0049">h. Quasi Static Time Series: Enables step-by-step time series computation to show progression of events and grid behavior.</li> </ul> </li> </ul>
+
+    <div id="p-0033" num="0050" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 2</figref> shows a process overview of DHC. This process described can be completed for times, be it with historic data, real-time data, or forecasted data, depending on the various use cases.</div>
+    <div id="p-0034" num="0051" class="description-paragraph">Use Case <b>1</b>: Historic DHC</div>
+    <div id="p-0035" num="0052" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 3</figref> shows an overview of Use Case <b>1</b>. DHC, in the sense of a historic analysis can be used when a utility wants to understand their current (average) available hosting capacity over the extent of the last x-years. By utilizing historic SCADA (or other sensor) data in addition to network models (including topology changes) DHC can provide the hosting capacity of the observed time frame at the highest possible time resolution. This allows utilities to run an analysis on still available dynamic hosting capacity which can be utilized for interconnection requests.</div>
+    <div id="p-0036" num="0053" class="description-paragraph">Use Case <b>2</b>: Real Time DHC and Constraint Management</div>
+    <div id="p-0037" num="0054" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 4</figref> shows an overview of <figure-callout id="2" label="Use Case" filenames="US10873188-20201222-D00003.png" state="{{state}}">Use Case</figure-callout> <b>2</b>. The presently disclosed methods can be used to calculate a DHC during real time operations at every given time interval and for all grid levels. This real time DHC calculation serves multiple purposes and provides the utility a full situational awareness of all its hosting capacity constraints. This can be used to add leveraging of Scenario Analysis, Security Constraint Optimal Power Flow, and/or Multi-Constraint Optimization.</div>
+    <div id="p-0038" num="0055" class="description-paragraph">Within DHC, an optimal real-time DER dispatch can be achieved.</div>
+    <div id="p-0039" num="0056" class="description-paragraph">Use Case <b>3</b>: Forecasted DHC</div>
+    <div id="p-0040" num="0057" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 5</figref> shows an overview of Use Case <b>3</b>. Using forecasted data for weather and load values, the DHC is calculated at the given time interval for the operational planning horizon (e.g. 1 day ahead). This provides a continuously updated vision of the hosting capacity in the immediate future for every grid level. This information is then used during operational planning. By adding the stochastic and probabilistic module, DHC can determine a risk and value based DER schedule that ensures no constraints on the system with minimal impact on the DERs themselves.</div>
+    <div id="p-0041" num="0058" class="description-paragraph">Here, multi-objective/agent optimization is utilized to enable optimal DER dispatch within a given hosting capacity band to allow for minimal impact on DER operations, and optimal value of DERs to the grid. This approach takes into consideration technical and contractual limitations of DERs, such as state of charge or minimum required availability. By leveraging this ability, the option to control DERs allow utilities to move away from the worst-case planning scenario.</div>
+    <div id="p-0042" num="0059" class="description-paragraph">Through scenario analysis applications, a full “what if” understanding of DER impacts on hosting capacity can be achieved, allowing the DHC to optimize DER scheduling and unit commitment based on sensitivity-, scenario-, and physics-based analytics. This results in minimal impact on the DERs while retaining peak capacity reserves as defined by the utility. This also includes distribution automation (DA) functions, which the DHC incorporates in its CIM-native network topology manager, allowing for a clear and predictive understanding of grid reconfiguration actions on hosting capacity.</div>
+    <div id="p-0043" num="0060" class="description-paragraph">Use Case <b>4</b>: DHC Markets</div>
+    <div id="p-0044" num="0061" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 6</figref> shows an overview of Use Case <b>4</b>.</div>
+    <div id="p-0045" num="0062" class="description-paragraph">Using the forecasted DHC, a market can be generated around hosting capacity to optimize grid components, especially DERs. When calculating hosting capacity for operational planning purposes e.g. day ahead, at this stage, the optimization isn&#39;t achieved by a single entity with unilateral control over everything, but rather, the hosting capacity is marketed to each flexible asset or aggregator of assets on the grid. DERs and DR can then bid on the capacity to secure themselves their required portion considering weather and other forecasts. Aggregators can bid for their aggregation pool, optimizing within their assets.</div>
+    <div id="p-0046" num="0063" class="description-paragraph">Use Case <b>5</b>: Integrated Distribution Planning</div>
+    <div id="p-0047" num="0064" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 7</figref> shows an overview of Use Case <b>5</b>. Using forecasts with time horizons up to 30 years out, DHC can be calculated for each study interval along, enabling utilities to quantify and evaluate potential investment scenarios (investment scenarios, hosting capacity upgrades, expansion strategies, and non-wires alternatives) based asset benefits, by type, capacity, location, and time.</div>
+    <div id="p-0048" num="0065" class="description-paragraph"> <figref idrefs="DRAWINGS">FIG. 8</figref> shows an overview of DHC Use Cases, and highlights how the described use cases fit together in the overall application of DHC.</div>
+    <div id="p-0049" num="0066" class="description-paragraph">In summary, DHC provides utilities with significantly greater visibility into available hosting capacity pertaining to location and time. This insight can be applied to interconnect, manage, and optimize different types of DERs depending on their DHC requirement profiles.</div>
+    <div id="p-0050" num="0067" class="description-paragraph">Examples of Novel Aspects of the Disclosed System and Method</div>
+    <div id="p-0051" num="0068" class="description-paragraph">DHC processes and systems as disclosed herein can provide several novel solutions and applications to address challenges facing utilities:
+</div> <ul> <li id="ul0012-0001" num="0000"> <ul> <li id="ul0013-0001" num="0069">a. Brings hosting capacity from a one time fixed and worst case assumption based value to a dynamic, location and time dependent, value that is different for each DER asset</li> <li id="ul0013-0002" num="0070">b. Utilizes a 3-phase AC unbalanced model that accounts for the unbalanced nature of the grid and quantifies the real and reactive components of grid behavior to calculate DHC for every node of the system.</li> <li id="ul0013-0003" num="0071">c. Creates accurate 3-phase security constraint AC optimal power flows for situational awareness across the distribution network including per phase at every asset level and every node on the bus across the distribution network</li> <li id="ul0013-0004" num="0072">d. Leverages scenario analysis to determine impact of DERs on hosting capacity levels at every level of the distribution grid</li> <li id="ul0013-0005" num="0073">e. Uses multi constraint optimization to ensure that DER scheduling takes all constraints into consideration, such as contractual limitations, state of charge, or other, asset specific limits.</li> <li id="ul0013-0006" num="0074">f. Leverage probabilistic and stochastic capabilities to enable sophisticated analyses around uncertainties and portfolio risk management.</li> </ul> </li> </ul>
+
+    <div id="p-0052" num="0075" class="description-paragraph">DHC can be used as an interconnection mechanism to reduce the interconnection cost for DER developers by allowing them to connect at e.g. 70% rated power and linking them to the DHC platform. The DHC platform would then ensure, that whenever constraints occur the DER is curtailed to 70% to mitigate those constraints.</div>
+    <div id="p-0053" num="0076" class="description-paragraph">Of course, DERs must be given certain contractual guarantees by the utility (such as caps on optimization) to prevent selective discrimination against assets based on optimization outcomes. This can be achieved through providing the DER with:
+</div> <ul> <li id="ul0014-0001" num="0000"> <ul> <li id="ul0015-0001" num="0077">a. Minimum average up time</li> <li id="ul0015-0002" num="0078">b. Maximum curtailment</li> <li id="ul0015-0003" num="0079">c. Maximum impact on yearly revenue</li> <li id="ul0015-0004" num="0080">d. Compensation mechanisms for control over DERs</li> </ul> </li> </ul>
+
+    <div id="p-0054" num="0081" class="description-paragraph">The system and method described above can enable utilities to determine a dynamic hosting capacity value for each location on the distribution grid, each time interval, and each type of DER asset, and to provide active management of these assets, when responding to interconnection requests, planning distribution grids, and/or when actively managing all DERs connected to the distribution grid. Such active management may be accomplished by determining and sending commands to distributed energy resources on the electric power distribution network.</div>
+    <div id="p-0055" num="0082" class="description-paragraph">The present invention is described above with reference to block diagrams and operational illustrations of methods and devices. It is understood that each block of the block diagrams or operational illustrations, and combinations of blocks in the block diagrams or operational illustrations, may be implemented by means of analog or digital hardware and computer program instructions. These computer program instructions may be stored on computer-readable media and provided to a processor of a special-purpose computer, general-purpose computer, ASIC, or other programmable data processing apparatus, such that the instructions, which execute via the processor of the computer or other programmable data processing apparatus, implements the functions/acts specified in the block diagrams or operational block or blocks. In some alternate implementations, the functions/acts noted in the blocks may occur out of the order noted in the operational illustrations. For example, two blocks shown in succession may in fact be executed substantially concurrently or the blocks may sometimes be executed in the reverse order, depending upon the functionality/acts involved.</div>
+    <div id="p-0056" num="0083" class="description-paragraph">At least some aspects disclosed can be embodied, at least in part, in software. That is, the techniques may be carried out in a special-purpose or general-purpose computer system or other data processing system in response to its processor, such as a microprocessor, executing sequences of instructions contained in a memory, such as ROM, volatile RAM, non-volatile memory, cache or a remote storage device. Functions expressed herein may be performed by a processor in combination with memory storing code and should not be interpreted as means-plus-function limitations.</div>
+    <div id="p-0057" num="0084" class="description-paragraph">Routines executed to implement the embodiments may be implemented as part of an operating system, firmware, ROM, middleware, service delivery platform, SDK (Software Development Kit) component, web services, or other specific application, component, program, object, module or sequence of instructions referred to as “computer programs.” Invocation interfaces to these routines can be exposed to a software development community as an API (Application Programming Interface). The computer programs typically comprise one or more instructions set at various times in various memory and storage devices in a computer, and that, when read and executed by one or more processors in a computer, cause the computer to perform operations necessary to execute elements involving the various aspects.</div>
+    <div id="p-0058" num="0085" class="description-paragraph">A machine-readable medium can be used to store software and data which when executed by a data processing system causes the system to perform various methods. The executable software and data may be stored in various places including for example ROM, volatile RAM, non-volatile memory and/or cache. Portions of this software and/or data may be stored in any one of these storage devices. Further, the data and instructions can be obtained from centralized servers or peer-to-peer networks. Different portions of the data and instructions can be obtained from different centralized servers and/or peer-to-peer networks at different times and in different communication sessions or in a same communication session. The data and instructions can be obtained in entirety prior to the execution of the applications. Alternatively, portions of the data and instructions can be obtained dynamically, just in time, when needed for execution. Thus, it is not required that the data and instructions be on a machine-readable medium in entirety at a particular instance of time.</div>
+    <div id="p-0059" num="0086" class="description-paragraph">Examples of computer-readable media include but are not limited to recordable and non-recordable type media such as volatile and non-volatile memory devices, read only memory (ROM), random access memory (RAM), flash memory devices, floppy and other removable disks, magnetic disk storage media, optical storage media (e.g., Compact Disk Read-Only Memory (CD ROMS), Digital Versatile Disks (DVDs), etc.), among others.</div>
+    <div id="p-0060" num="0087" class="description-paragraph">In general, a machine-readable medium includes any mechanism that provides (e.g., stores) information in a form accessible by a machine (e.g., a computer, network device, personal digital assistant, manufacturing tool, any device with a set of one or more processors, etc.).</div>
+    <div id="p-0061" num="0088" class="description-paragraph">In various embodiments, hardwired circuitry may be used in combination with software instructions to implement the techniques disclosed above. Thus, the techniques are neither limited to any specific combination of hardware circuitry and software nor to any particular source for the instructions executed by the data processing system.</div>
+    <div id="p-0062" num="0089" class="description-paragraph">The above embodiments and preferences are illustrative of the present invention. It is neither necessary, nor intended for this patent to outline or define every possible combination or embodiment. The inventor has disclosed sufficient information to permit one skilled in the art to practice at least one embodiment of the invention. The above description and drawings are merely illustrative of the present invention and that changes in components, structure and procedure are possible without departing from the scope of the present invention. For example, elements and/or steps described herein in a particular order may be practiced in a different order without departing from the invention. Thus, while the invention has been particularly shown and described with reference to embodiments thereof, it will be understood by those skilled in the art that various changes in form and details may be made therein without departing from the spirit and scope of the invention.</div>
+    <div id="p-0063" num="0090" class="description-paragraph">Reference in this specification to “an embodiment” or “the embodiment” means that a particular feature, structure, or characteristic described in connection with the embodiment is included in at least an embodiment of the disclosure. The appearances of the phrase “in an embodiment” in various places in the specification are not necessarily all referring to the same embodiment, nor are separate or alternative embodiments mutually exclusive of other embodiments. Moreover, various features are described which may be exhibited by some embodiments and not by others. Similarly, various requirements are described which may be requirements for some embodiments but not other embodiments.</div>
+    
+  </div>
+  </div>
+  </section>
+
+  <section itemprop="claims" itemscope>
+    <h2>Claims (<span itemprop="count">27</span>)</h2>
+    
+    <div itemprop="content" html><div mxw-id="PCLM277963795" lang="EN" load-source="patent-office" class="claims">
+    <claim-statement>What is claimed is:</claim-statement>
+    <div class="claim"> <div id="CLM-00001" num="00001" class="claim">
+      <div class="claim-text">1. A distributed energy resource management system that utilizes capacity on a distribution grid to host further distributed energy resource interconnections, comprising:
+<div class="claim-text">a) a data store including a plurality of operational values associated with a plurality of distributed electric resources on an electric power distribution network; and</div>
+<div class="claim-text">b) one or more computer processors coupled to the data store and in communication with the plurality of distributed electric resources on said electric power distribution network, the one or more computer processors being programmed, upon receiving one or more requests, to:
+<div class="claim-text">i) create 3-phase AC power flows for each of a plurality of locations across said electric power distribution network, wherein said step of creating 3-phase AC power flows utilizes per phase: voltages, currents, real power, reactive power, and, power factor; and,</div>
+<div class="claim-text">ii) use optimizations of the 3-phase AC power flows to calculate hosting capacity for each of the plurality of locations across said electric power distribution network, for each of a plurality of time intervals, and each of a plurality of types of distributed energy resource, as a dynamic quantity that can change depending on time, day, season, and location;</div>
+<div class="claim-text">iii) translate the calculated dynamic hosting capacity into at least one calculated operational value;</div>
+<div class="claim-text">iv) store said at least one calculated operational value in the data store; and</div>
+<div class="claim-text">v) read said calculated operational value from the data store and use the calculated operational value to determine and send a direction to actively manage a plurality of distributed energy resources on said electric power distribution network.</div>
+</div>
+</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00002" num="00002" class="claim">
+      <div class="claim-text">2. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said step of creating 3-phase AC power flows utilizes per phase: real loss, reactive losses, asset utilization, and load duration curves.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00003" num="00003" class="claim">
+      <div class="claim-text">3. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said hosting capacity comprises hosting capacity of a feeder on the electric power distribution network.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00004" num="00004" class="claim">
+      <div class="claim-text">4. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said hosting capacity comprises hosting capacity of a substation on the electric power distribution network.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00005" num="00005" class="claim">
+      <div class="claim-text">5. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said data store receives and stores sensor telemetry, and wherein said processor configured to create 3-phase AC power flows comprises a processor configured to use sensor telemetry to create said 3-phase AC power flows.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00006" num="00006" class="claim">
+      <div class="claim-text">6. The distributed energy resource management system according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein said data store further receives and stores a utility network model, and wherein said processor configured to create 3-phase AC power flows comprises a processor configured to use said sensor telemetry and said utility network model to create said 3-phase AC power flows.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00007" num="00007" class="claim">
+      <div class="claim-text">7. The distributed energy resource management system according to <claim-ref idref="CLM-00005">claim 5</claim-ref>, wherein said sensor telemetry comprises SCADA telemetry.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00008" num="00008" class="claim">
+      <div class="claim-text">8. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said hosting capacity comprises hosting capacity of a node on the electric power distribution network.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00009" num="00009" class="claim">
+      <div class="claim-text">9. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said step of determining and sending direction comprises sending commands to said distributed energy resources in response to an interconnection request from a specific distributed electric resource.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00010" num="00010" class="claim">
+      <div class="claim-text">10. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said data store comprises a real-time relational database.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00011" num="00011" class="claim">
+      <div class="claim-text">11. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said processor configured to create 3-phase AC power flows comprises a processor configured to use a real-time distribution system state estimation engine.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00012" num="00012" class="claim">
+      <div class="claim-text">12. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said step of using the 3-phase AC power flow to calculate hosting capacity comprises performing a scenario analysis.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00013" num="00013" class="claim">
+      <div class="claim-text">13. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said step of using the 3-phase AC power flow to calculate hosting capacity comprises calculating a security constraint AC Power Flow.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00014" num="00014" class="claim">
+      <div class="claim-text">14. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said step of using the 3-phase AC power flow to calculate hosting capacity comprises performing a multi-constraint optimization.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00015" num="00015" class="claim">
+      <div class="claim-text">15. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said step of using the 3-phase AC power flow to calculate hosting capacity comprises using the 3-phase AC power flow in a stochastic and probabilistic engine.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00016" num="00016" class="claim">
+      <div class="claim-text">16. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said step of using the 3-phase AC power flow to calculate hosting capacity comprises using the 3-phase AC power flow in a quasi-static time series.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00017" num="00017" class="claim">
+      <div class="claim-text">17. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said calculated dynamic hosting capacity comprises available hosting capacity per node.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00018" num="00018" class="claim">
+      <div class="claim-text">18. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said calculated dynamic hosting capacity comprises available hosting capacity per node and distributed electric resource type.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00019" num="00019" class="claim">
+      <div class="claim-text">19. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said calculated dynamic hosting capacity comprises available hosting capacity for each of a plurality of time intervals.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00020" num="00020" class="claim">
+      <div class="claim-text">20. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said calculated dynamic hosting capacity comprises available hosting capacity for each location on the distribution grid, each of a plurality of time intervals, and each of a plurality of types of distributed electric resource asset.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00021" num="00021" class="claim">
+      <div class="claim-text">21. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said calculated dynamic hosting capacity comprises a location resolved hosting capacity.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00022" num="00022" class="claim">
+      <div class="claim-text">22. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, further comprising a step of using the calculated dynamic hosting capacity to determine a schedule for dispatch of distributed energy resources on the electric power distribution network.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00023" num="00023" class="claim">
+      <div class="claim-text">23. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the step of calculating hosting capacity comprises calculating residual load capacity of a feeder or grid segment using historical data.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00024" num="00024" class="claim">
+      <div class="claim-text">24. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein the step of calculating hosting capacity comprises calculating residual load capacity of a feeder or grid segment using forecast data.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00025" num="00025" class="claim">
+      <div class="claim-text">25. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said step of calculating hosting capacity comprises calculating residual load capacity of a feeder or grid segment using real-time situational awareness data.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00026" num="00026" class="claim">
+      <div class="claim-text">26. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said calculated dynamic hosting capacity comprises available hosting capacity per phase and distributed electric resource type.</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="CLM-00027" num="00027" class="claim">
+      <div class="claim-text">27. The distributed energy resource management system according to <claim-ref idref="CLM-00001">claim 1</claim-ref>, wherein said 3-phase AC power flows comprise 3-phase AC optimal power flows.</div>
+    </div>
+  </div> </div>
+  </div>
+  </section>
+
+  <section itemprop="application" itemscope>
+
+    <section itemprop="metadata" itemscope>
+      <span itemprop="applicationNumber">US16/180,554</span>
+      <span itemprop="priorityDate">2017-11-03</span>
+      <span itemprop="filingDate">2018-11-05</span>
+      <span itemprop="title">Dynamic hosting capacity system and method for DER integration and management on distribution utility networks 
+       </span>
+      <span itemprop="ifiStatus">Active</span>
+      
+      <a href="/patent/US10873188B2/en">
+        <span itemprop="representativePublication">US10873188B2</span>
+        (<span itemprop="primaryLanguage">en</span>)
+      </a>
+    </section>
+
+    <h2>Priority Applications (1)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Application Number</th>
+          <th>Priority Date</th>
+          <th>Filing Date</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="priorityApps" itemscope repeat>
+          <td>
+            <span itemprop="applicationNumber">US16/180,554</span>
+            
+            <a href="/patent/US10873188B2/en">
+              <span itemprop="representativePublication">US10873188B2</span>
+                (<span itemprop="primaryLanguage">en</span>)
+            </a>
+          </td>
+          <td itemprop="priorityDate">2017-11-03</td>
+          <td itemprop="filingDate">2018-11-05</td>
+          <td itemprop="title">Dynamic hosting capacity system and method for DER integration and management on distribution utility networks 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Applications Claiming Priority (2)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Application Number</th>
+          <th>Priority Date</th>
+          <th>Filing Date</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="appsClaimingPriority" itemscope repeat>
+          <td>
+            <span itemprop="applicationNumber">US201762581080P</span>
+            
+          </td>
+          <td itemprop="priorityDate">2017-11-03</td>
+          <td itemprop="filingDate">2017-11-03</td>
+          <td itemprop="title"></td>
+        </tr>
+        <tr itemprop="appsClaimingPriority" itemscope repeat>
+          <td>
+            <span itemprop="applicationNumber">US16/180,554</span>
+            <a href="/patent/US10873188B2/en">
+              <span itemprop="representativePublication">US10873188B2</span>
+                (<span itemprop="primaryLanguage">en</span>)
+            </a>
+          </td>
+          <td itemprop="priorityDate">2017-11-03</td>
+          <td itemprop="filingDate">2018-11-05</td>
+          <td itemprop="title">Dynamic hosting capacity system and method for DER integration and management on distribution utility networks 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+
+    
+
+    
+
+    <h2>Publications (2)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Publication Number</th>
+          <th>Publication Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="pubs" itemscope repeat>
+          <td>
+            <span itemprop="publicationNumber">US20190140455A1</span>
+            
+            <a href="/patent/US20190140455A1/en">
+              US20190140455A1
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+          </td>
+          <td itemprop="publicationDate">2019-05-09</td>
+        </tr>
+        <tr itemprop="pubs" itemscope repeat>
+          <td>
+            <span itemprop="publicationNumber">US10873188B2</span>
+            
+            <span itemprop="thisPatent">true</span>
+            <a href="/patent/US10873188B2/en">
+              US10873188B2
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+          </td>
+          <td itemprop="publicationDate">2020-12-22</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+
+  <section itemprop="family" itemscope>
+    <h1>Family</h1>
+    <h2>ID=66327745</h2>
+
+    <h2>Family Applications (1)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Application Number</th>
+          <th>Title</th>
+          <th>Priority Date</th>
+          <th>Filing Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="applications" itemscope repeat>
+          <td>
+            <span itemprop="applicationNumber">US16/180,554</span>
+            <span itemprop="ifiStatus">Active</span>
+            
+            <a href="/patent/US10873188B2/en">
+              <span itemprop="representativePublication">US10873188B2</span>
+                (<span itemprop="primaryLanguage">en</span>)
+            </a>
+          </td>
+          <td itemprop="priorityDate">2017-11-03</td>
+          <td itemprop="filingDate">2018-11-05</td>
+          <td itemprop="title">Dynamic hosting capacity system and method for DER integration and management on distribution utility networks 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+
+    
+
+    
+
+    <h2>Country Status (1)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Country</th>
+          <th>Link</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="countryStatus" itemscope repeat>
+          <td>
+            <span itemprop="countryCode">US</span>
+            (<span itemprop="num">1</span>)
+            <meta itemprop="thisCountry" content="true">
+          </td>
+          <td>
+            <a href="/patent/US10873188B2/en">
+              <span itemprop="representativePublication">US10873188B2</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Cited By (1)</h2>
+    <table>
+      <caption>* Cited by examiner, † Cited by third party</caption>
+      <thead>
+        <tr>
+          <th>Publication number</th>
+          <th>Priority date</th>
+          <th>Publication date</th>
+          <th>Assignee</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="forwardReferencesOrig" itemscope repeat>
+          <td>
+            <a href="/patent/US20240223005A1/en">
+              <span itemprop="publicationNumber">US20240223005A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2022-12-28</td>
+          <td itemprop="publicationDate">2024-07-04</td>
+          <td><span itemprop="assigneeOriginal">X Development Llc</span></td>
+          <td itemprop="title">Determining optimal grid interconnections 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Families Citing this family (4)</h2>
+    <table>
+      <caption>* Cited by examiner, † Cited by third party</caption>
+      <thead>
+        <tr>
+          <th>Publication number</th>
+          <th>Priority date</th>
+          <th>Publication date</th>
+          <th>Assignee</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN110460036B/en">
+              <span itemprop="publicationNumber">CN110460036B</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2019-05-10</td>
+          <td itemprop="publicationDate">2021-08-24</td>
+          <td><span itemprop="assigneeOriginal">四川大学</span></td>
+          <td itemprop="title">
+        A distributed optimization method for AC and DC distribution network considering wind power uncertainty
+       
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/US11506693B2/en">
+              <span itemprop="publicationNumber">US11506693B2</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            
+            
+          </td>
+          <td itemprop="priorityDate">2019-10-11</td>
+          <td itemprop="publicationDate">2022-11-22</td>
+          <td><span itemprop="assigneeOriginal">Landis&#43;Gyr Innovations, Inc.</span></td>
+          <td itemprop="title">Meter and socket for use with a distributed energy resource device 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN112104639B/en">
+              <span itemprop="publicationNumber">CN112104639B</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2020-09-11</td>
+          <td itemprop="publicationDate">2021-06-15</td>
+          <td><span itemprop="assigneeOriginal">湖南大学</span></td>
+          <td itemprop="title">
+        A Parallel Prediction Method of Attack Paths for Power System Networks
+       
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/US20230238801A1/en">
+              <span itemprop="publicationNumber">US20230238801A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2022-01-24</td>
+          <td itemprop="publicationDate">2023-07-27</td>
+          <td><span itemprop="assigneeOriginal">Hitachi, Ltd.</span></td>
+          <td itemprop="title">Dynamic hosting capacity analysis framework for distribution system planning 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Citations (8)</h2>
+    <table>
+      <caption>* Cited by examiner, † Cited by third party</caption>
+      <thead>
+        <tr>
+          <th>Publication number</th>
+          <th>Priority date</th>
+          <th>Publication date</th>
+          <th>Assignee</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="backwardReferencesOrig" itemscope repeat>
+          <td>
+            <a href="/patent/US20120323390A1/en">
+              <span itemprop="publicationNumber">US20120323390A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2010-02-05</td>
+          <td itemprop="publicationDate">2012-12-20</td>
+          <td>
+            <span itemprop="assigneeOriginal">Panasonic Corporation</span>
+          </td>
+          <td itemprop="title">Energy supply/demand control system 
+       </td>
+        </tr>
+        <tr itemprop="backwardReferencesOrig" itemscope repeat>
+          <td>
+            <a href="/patent/US20160048150A1/en">
+              <span itemprop="publicationNumber">US20160048150A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2014-08-14</td>
+          <td itemprop="publicationDate">2016-02-18</td>
+          <td>
+            <span itemprop="assigneeOriginal">Bigwood Technology, Inc.</span>
+          </td>
+          <td itemprop="title">Method and apparatus for optimal power flow with voltage stability for large-scale electric power systems 
+       </td>
+        </tr>
+        <tr itemprop="backwardReferencesOrig" itemscope repeat>
+          <td>
+            <a href="/patent/US20160363950A1/en">
+              <span itemprop="publicationNumber">US20160363950A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2015-06-15</td>
+          <td itemprop="publicationDate">2016-12-15</td>
+          <td>
+            <span itemprop="assigneeOriginal">Innovari, Inc.</span>
+          </td>
+          <td itemprop="title">Resource management for optimized grid operations 
+     </td>
+        </tr>
+        <tr itemprop="backwardReferencesOrig" itemscope repeat>
+          <td>
+            <a href="/patent/US20170005515A1/en">
+              <span itemprop="publicationNumber">US20170005515A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2015-07-04</td>
+          <td itemprop="publicationDate">2017-01-05</td>
+          <td>
+            <span itemprop="assigneeOriginal">Dean Sanders</span>
+          </td>
+          <td itemprop="title">Renewable energy integrated storage and generation systems, apparatus, and methods with cloud distributed energy management services 
+       </td>
+        </tr>
+        <tr itemprop="backwardReferencesOrig" itemscope repeat>
+          <td>
+            <a href="/patent/US20180365746A1/en">
+              <span itemprop="publicationNumber">US20180365746A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2017-02-15</td>
+          <td itemprop="publicationDate">2018-12-20</td>
+          <td>
+            <span itemprop="assigneeOriginal">Xendee Corporation</span>
+          </td>
+          <td itemprop="title">Cloud computing smart solar configurator 
+     </td>
+        </tr>
+        <tr itemprop="backwardReferencesOrig" itemscope repeat>
+          <td>
+            <a href="/patent/US20190129368A1/en">
+              <span itemprop="publicationNumber">US20190129368A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2016-04-29</td>
+          <td itemprop="publicationDate">2019-05-02</td>
+          <td>
+            <span itemprop="assigneeOriginal">Katholieke Universiteit Leuven</span>
+          </td>
+          <td itemprop="title">Cluster control of heterogeneous clusters of thermostatically controlled loads using tracker devices 
+     </td>
+        </tr>
+        <tr itemprop="backwardReferencesOrig" itemscope repeat>
+          <td>
+            <a href="/patent/US20190163152A1/en">
+              <span itemprop="publicationNumber">US20190163152A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2016-08-11</td>
+          <td itemprop="publicationDate">2019-05-30</td>
+          <td>
+            <span itemprop="assigneeOriginal">Iteros, Inc.</span>
+          </td>
+          <td itemprop="title">Power sharing in a mesh energy system 
+       </td>
+        </tr>
+        <tr itemprop="backwardReferencesOrig" itemscope repeat>
+          <td>
+            <a href="/patent/US20190181681A1/en">
+              <span itemprop="publicationNumber">US20190181681A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2016-08-24</td>
+          <td itemprop="publicationDate">2019-06-13</td>
+          <td>
+            <span itemprop="assigneeOriginal">Kyocera Corporation</span>
+          </td>
+          <td itemprop="title">Power management server, power management method, and power management system 
+     </td>
+        </tr>
+      </tbody>
+    </table>
+
+    
+
+    <ul>
+      <li itemprop="applicationsByYear" itemscope repeat>
+        <span itemprop="year">2018</span>
+        <ul>
+          <li itemprop="application" itemscope repeat>
+            <span itemprop="filingDate">2018-11-05</span>
+            <span itemprop="countryCode">US</span>
+            <span itemprop="applicationNumber">US16/180,554</span>
+            <a href="/patent/US10873188B2/en"><span itemprop="documentId">patent/US10873188B2/en</span></a>
+            <span itemprop="legalStatusCat">active</span>
+            <span itemprop="legalStatus">Active</span>
+            <span itemprop="thisApp" content="true" bool></span>
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+    </section>
+
+  <section>
+    <h2>Patent Citations (8)</h2>
+    <table>
+      <caption>* Cited by examiner, † Cited by third party</caption>
+      <thead>
+        <tr>
+          <th>Publication number</th>
+          <th>Priority date</th>
+          <th>Publication date</th>
+          <th>Assignee</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="backwardReferences" itemscope repeat>
+          <td>
+            <a href="/patent/US20120323390A1/en">
+              <span itemprop="publicationNumber">US20120323390A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2010-02-05</td>
+          <td itemprop="publicationDate">2012-12-20</td>
+          <td><span itemprop="assigneeOriginal">Panasonic Corporation</span></td>
+          <td itemprop="title">Energy supply/demand control system 
+       </td>
+        </tr>
+        <tr itemprop="backwardReferences" itemscope repeat>
+          <td>
+            <a href="/patent/US20160048150A1/en">
+              <span itemprop="publicationNumber">US20160048150A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2014-08-14</td>
+          <td itemprop="publicationDate">2016-02-18</td>
+          <td><span itemprop="assigneeOriginal">Bigwood Technology, Inc.</span></td>
+          <td itemprop="title">Method and apparatus for optimal power flow with voltage stability for large-scale electric power systems 
+       </td>
+        </tr>
+        <tr itemprop="backwardReferences" itemscope repeat>
+          <td>
+            <a href="/patent/US20160363950A1/en">
+              <span itemprop="publicationNumber">US20160363950A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2015-06-15</td>
+          <td itemprop="publicationDate">2016-12-15</td>
+          <td><span itemprop="assigneeOriginal">Innovari, Inc.</span></td>
+          <td itemprop="title">Resource management for optimized grid operations 
+     </td>
+        </tr>
+        <tr itemprop="backwardReferences" itemscope repeat>
+          <td>
+            <a href="/patent/US20170005515A1/en">
+              <span itemprop="publicationNumber">US20170005515A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2015-07-04</td>
+          <td itemprop="publicationDate">2017-01-05</td>
+          <td><span itemprop="assigneeOriginal">Dean Sanders</span></td>
+          <td itemprop="title">Renewable energy integrated storage and generation systems, apparatus, and methods with cloud distributed energy management services 
+       </td>
+        </tr>
+        <tr itemprop="backwardReferences" itemscope repeat>
+          <td>
+            <a href="/patent/US20190129368A1/en">
+              <span itemprop="publicationNumber">US20190129368A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2016-04-29</td>
+          <td itemprop="publicationDate">2019-05-02</td>
+          <td><span itemprop="assigneeOriginal">Katholieke Universiteit Leuven</span></td>
+          <td itemprop="title">Cluster control of heterogeneous clusters of thermostatically controlled loads using tracker devices 
+     </td>
+        </tr>
+        <tr itemprop="backwardReferences" itemscope repeat>
+          <td>
+            <a href="/patent/US20190163152A1/en">
+              <span itemprop="publicationNumber">US20190163152A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2016-08-11</td>
+          <td itemprop="publicationDate">2019-05-30</td>
+          <td><span itemprop="assigneeOriginal">Iteros, Inc.</span></td>
+          <td itemprop="title">Power sharing in a mesh energy system 
+       </td>
+        </tr>
+        <tr itemprop="backwardReferences" itemscope repeat>
+          <td>
+            <a href="/patent/US20190181681A1/en">
+              <span itemprop="publicationNumber">US20190181681A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2016-08-24</td>
+          <td itemprop="publicationDate">2019-06-13</td>
+          <td><span itemprop="assigneeOriginal">Kyocera Corporation</span></td>
+          <td itemprop="title">Power management server, power management method, and power management system 
+     </td>
+        </tr>
+        <tr itemprop="backwardReferences" itemscope repeat>
+          <td>
+            <a href="/patent/US20180365746A1/en">
+              <span itemprop="publicationNumber">US20180365746A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2017-02-15</td>
+          <td itemprop="publicationDate">2018-12-20</td>
+          <td><span itemprop="assigneeOriginal">Xendee Corporation</span></td>
+          <td itemprop="title">Cloud computing smart solar configurator 
+     </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  
+
+  <h2>Cited By (1)</h2>
+  <table>
+    <caption>* Cited by examiner, † Cited by third party</caption>
+    <thead>
+      <tr>
+        <th>Publication number</th>
+        <th>Priority date</th>
+        <th>Publication date</th>
+        <th>Assignee</th>
+        <th>Title</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr itemprop="forwardReferences" itemscope repeat>
+        <td>
+          <a href="/patent/US20240223005A1/en">
+            <span itemprop="publicationNumber">US20240223005A1</span>
+            (<span itemprop="primaryLanguage">en</span>)
+          </a>
+          <span itemprop="examinerCited">*</span>
+          
+        </td>
+        <td itemprop="priorityDate">2022-12-28</td>
+        <td itemprop="publicationDate">2024-07-04</td>
+        <td><span itemprop="assigneeOriginal">X Development Llc</span></td>
+        <td itemprop="title">Determining optimal grid interconnections 
+       </td>
+      </tr>
+    </tbody>
+  </table>
+
+  <section>
+    <h2>Also Published As</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Publication number</th>
+          <th>Publication date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="docdbFamily" itemscope repeat>
+          <td>
+            <a href="/patent/US20190140455A1/en">
+              <span itemprop="publicationNumber">US20190140455A1</span>
+              (<span itemprop="primaryLanguage">en</span>)
+            </a>
+          </td>
+          <td itemprop="publicationDate">2019-05-09</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Similar Documents</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Publication</th>
+          <th>Publication Date</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/JP7797102B2/en">
+                <span itemprop="publicationNumber">JP7797102B2</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2026-01-13">2026-01-13</time>
+            
+            
+          </td>
+          <td itemprop="title">
+        A system for machine learning, optimization, and management of local multi-asset flexibility of distributed energy storage resources
+       
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/AU2025201815A1/en">
+                <span itemprop="publicationNumber">AU2025201815A1</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2025-04-03">2025-04-03</time>
+            
+            
+          </td>
+          <td itemprop="title">Integrated distribution planning systems and methods for electric power systems 
+     </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN111492559B/en">
+                <span itemprop="publicationNumber">CN111492559B</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2022-08-02">2022-08-02</time>
+            
+            
+          </td>
+          <td itemprop="title">System and method for optimal control of an energy storage system 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/KR101544482B1/en">
+                <span itemprop="publicationNumber">KR101544482B1</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2015-08-21">2015-08-21</time>
+            
+            
+          </td>
+          <td itemprop="title">Cloud center controlling apparatus and cloud center selecting method of the same 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/US20190140455A1/en">
+                <span itemprop="publicationNumber">US20190140455A1</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2019-05-09">2019-05-09</time>
+            
+            
+          </td>
+          <td itemprop="title">Dynamic hosting capacity system and method for der integration and management on distribution utility networks 
+     </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="16182433202703438374">
+              <a href="/scholar/16182433202703438374"><span itemprop="scholarAuthors">Schill et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2017">2017</time>
+            
+          </td>
+          <td itemprop="title">Prosumage of solar electricity: pros, cons, and the system perspective</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="2728005393764392553">
+              <a href="/scholar/2728005393764392553"><span itemprop="scholarAuthors">Zhou et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2013">2013</time>
+            
+          </td>
+          <td itemprop="title">Dynamic scheduling of operating reserves in co-optimized electricity markets with wind power</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/JP6254288B2/en">
+                <span itemprop="publicationNumber">JP6254288B2</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2017-12-27">2017-12-27</time>
+            
+            
+          </td>
+          <td itemprop="title">
+        Customer selectable power source options for network accessible service units
+       
+     </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/US20190288513A1/en">
+                <span itemprop="publicationNumber">US20190288513A1</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2019-09-19">2019-09-19</time>
+            
+            
+          </td>
+          <td itemprop="title">Decentralized energy management utilizing blockchain technology 
+     </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/US20110071882A1/en">
+                <span itemprop="publicationNumber">US20110071882A1</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2011-03-24">2011-03-24</time>
+            
+            
+          </td>
+          <td itemprop="title">Method and system for intermediate to long-term forecasting of electric prices and energy demand for integrated supply-side energy planning 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN110797872B/en">
+                <span itemprop="publicationNumber">CN110797872B</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2024-03-19">2024-03-19</time>
+            
+            
+          </td>
+          <td itemprop="title">
+        User-side energy storage capacity configuration method, device, equipment and storage medium
+       
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/US20180308184A1/en">
+                <span itemprop="publicationNumber">US20180308184A1</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2018-10-25">2018-10-25</time>
+            
+            
+          </td>
+          <td itemprop="title">Facilitating power transactions 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="14956647477583321018">
+              <a href="/scholar/14956647477583321018"><span itemprop="scholarAuthors">Tumuluru et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2014">2014</time>
+            
+          </td>
+          <td itemprop="title">Integrating price responsive demand into the unit commitment problem</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="12551536939323637551">
+              <a href="/scholar/12551536939323637551"><span itemprop="scholarAuthors">Mathieu et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2025">2025</time>
+            
+          </td>
+          <td itemprop="title">A new definition and research agenda for demand response in the distributed energy resource era</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/KR102592162B1/en">
+                <span itemprop="publicationNumber">KR102592162B1</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2023-10-19">2023-10-19</time>
+            
+            
+          </td>
+          <td itemprop="title">
+        Method for controlling the exchange of energy between energy sub-systems under coordinated and harmonized conditions; control center; energy system; computer program; and storage medium
+       
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="11147406118533063354">
+              <a href="/scholar/11147406118533063354"><span itemprop="scholarAuthors">Adnan et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2024">2024</time>
+            
+          </td>
+          <td itemprop="title">Global Renewable Energy Transition: A Multidisciplinary Analysis of Emerging Computing Technologies, Socio-Economic Impacts, and Policy Imperatives</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="7342013968799375000">
+              <a href="/scholar/7342013968799375000"><span itemprop="scholarAuthors">Goel et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2010">2010</time>
+            
+          </td>
+          <td itemprop="title">Fuzzy logic-based direct load control of air conditioning loads considering nodal reliability characteristics in restructured power systems</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="5656170146653804593">
+              <a href="/scholar/5656170146653804593"><span itemprop="scholarAuthors">Milligan et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2013">2013</time>
+            
+          </td>
+          <td itemprop="title">Wind integration cost and cost-causation</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="18394635195405315021">
+              <a href="/scholar/18394635195405315021"><span itemprop="scholarAuthors">Thomas et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2017">2017</time>
+            
+          </td>
+          <td itemprop="title">Virtual power plants leveraging energy flexibility in regional markets</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN117371768B/en">
+                <span itemprop="publicationNumber">CN117371768B</span>
+                (<span itemprop="primaryLanguage">en</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2024-05-03">2024-05-03</time>
+            
+            
+          </td>
+          <td itemprop="title">Power supply scheduling method, system and medium for urban power utilization 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="2841742620829675979">
+              <a href="/scholar/2841742620829675979"><span itemprop="scholarAuthors">Edmunds et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2020">2020</time>
+            
+          </td>
+          <td itemprop="title">Congestion management with aggregated delivery of flexibility using distributed energy resources</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="2250257373259404399">
+              <a href="/scholar/2250257373259404399"><span itemprop="scholarAuthors">Avordeh et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2025">2025</time>
+            
+          </td>
+          <td itemprop="title">Demand response as a catalyst: Ghana’s strategic pathway to 10% renewable energy by 2030</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="18150767914205756852">
+              <a href="/scholar/18150767914205756852"><span itemprop="scholarAuthors">Olsen et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2017">2017</time>
+            
+          </td>
+          <td itemprop="title">Taxonomy for modeling demand response resources</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="9929933274902132243">
+              <a href="/scholar/9929933274902132243"><span itemprop="scholarAuthors">Kristov et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2017">2017</time>
+            
+          </td>
+          <td itemprop="title">Modernizing Transmission–distribution Interface Coordination for a High-DER Future</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="11771887879705892815">
+              <a href="/scholar/11771887879705892815"><span itemprop="scholarAuthors">RUEDA et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2025">2025</time>
+            
+          </td>
+          <td itemprop="title">Assessing the United States’ Additional AI Power Capacity by 2030</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Legal Events</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Code</th>
+          <th>Title</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2018-11-05">2018-11-05</time></td>
+          <td itemprop="code">FEPP</td>
+          <td itemprop="title">Fee payment procedure</td>
+          <td>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Free format text</strong>:
+              <span itemprop="value">ENTITY STATUS SET TO UNDISCOUNTED (ORIGINAL EVENT CODE: BIG.); ENTITY STATUS OF PATENT OWNER: SMALL ENTITY</span>
+            </p>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2018-11-27">2018-11-27</time></td>
+          <td itemprop="code">FEPP</td>
+          <td itemprop="title">Fee payment procedure</td>
+          <td>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Free format text</strong>:
+              <span itemprop="value">ENTITY STATUS SET TO SMALL (ORIGINAL EVENT CODE: SMAL); ENTITY STATUS OF PATENT OWNER: SMALL ENTITY</span>
+            </p>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2019-05-30">2019-05-30</time></td>
+          <td itemprop="code">STPP</td>
+          <td itemprop="title">Information on status: patent application and granting procedure in general</td>
+          <td>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Free format text</strong>:
+              <span itemprop="value">DOCKETED NEW CASE - READY FOR EXAMINATION</span>
+            </p>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2020-02-03">2020-02-03</time></td>
+          <td itemprop="code">STPP</td>
+          <td itemprop="title">Information on status: patent application and granting procedure in general</td>
+          <td>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Free format text</strong>:
+              <span itemprop="value">NON FINAL ACTION MAILED</span>
+            </p>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2020-03-31">2020-03-31</time></td>
+          <td itemprop="code">AS</td>
+          <td itemprop="title">Assignment</td>
+          <td>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Owner name</strong>:
+              <span itemprop="value">SILICON VALLEY BANK, CALIFORNIA</span>
+            </p>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Free format text</strong>:
+              <span itemprop="value">SECURITY INTEREST;ASSIGNORS:OPUS ONE SOLUTIONS ENERGY CORPORATION;OPUS ONE SOLUTIONS (USA) CORPORATION;REEL/FRAME:052275/0978</span>
+            </p>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Effective date</strong>:
+              <span itemprop="value">20200313</span>
+            </p>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2020-08-17">2020-08-17</time></td>
+          <td itemprop="code">STPP</td>
+          <td itemprop="title">Information on status: patent application and granting procedure in general</td>
+          <td>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Free format text</strong>:
+              <span itemprop="value">NOTICE OF ALLOWANCE MAILED -- APPLICATION RECEIVED IN OFFICE OF PUBLICATIONS</span>
+            </p>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2020-11-20">2020-11-20</time></td>
+          <td itemprop="code">STPP</td>
+          <td itemprop="title">Information on status: patent application and granting procedure in general</td>
+          <td>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Free format text</strong>:
+              <span itemprop="value">PUBLICATIONS -- ISSUE FEE PAYMENT VERIFIED</span>
+            </p>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2020-12-02">2020-12-02</time></td>
+          <td itemprop="code">STCF</td>
+          <td itemprop="title">Information on status: patent grant</td>
+          <td>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Free format text</strong>:
+              <span itemprop="value">PATENTED CASE</span>
+            </p>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2024-05-22">2024-05-22</time></td>
+          <td itemprop="code">MAFP</td>
+          <td itemprop="title">Maintenance fee payment</td>
+          <td>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Free format text</strong>:
+              <span itemprop="value">PAYMENT OF MAINTENANCE FEE, 4TH YR, SMALL ENTITY (ORIGINAL EVENT CODE: M2551); ENTITY STATUS OF PATENT OWNER: SMALL ENTITY</span>
+            </p>
+            <p itemprop="attributes" itemscope repeat>
+              <strong itemprop="label">Year of fee payment</strong>:
+              <span itemprop="value">4</span>
+            </p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</article>
+
+    </search-app>
+    
+    <script></script>
+    <script type="text/javascript" src="//www.gstatic.com/feedback/api.js"></script>
+    <script type="text/javascript" src="//www.gstatic.com/feedback/js/help/prod/service/lazy.min.js"></script>
+    <script type="text/javascript">
+      if (window.help && window.help.service) {
+        helpApi = window.help.service.Lazy.create(0, {apiKey: 'AIzaSyDTEI_0tLX4varJ7bwK8aT-eOI5qr3BmyI', locale: 'en-US'});
+        window.requestedSurveys = new Set();
+        window.requestSurvey = function(triggerId) {
+          if (window.requestedSurveys.has(triggerId)) {
+            return;
+          }
+          window.requestedSurveys.add(triggerId);
+          helpApi.requestSurvey({
+            triggerId: triggerId,
+            enableTestingMode: false,
+            callback: (requestSurveyCallbackParam) => {
+              if (!requestSurveyCallbackParam.surveyData) {
+                return;
+              }
+              helpApi.presentSurvey({
+                productData: {
+                  productVersion: window.version,
+                  customData: {
+                    "experiments": "",
+                  },
+                },
+                surveyData: requestSurveyCallbackParam.surveyData,
+                colorScheme: 1,
+                customZIndex: 10000,
+              });
+            }
+          });
+        };
+
+        window.requestSurvey('YXTwAsvoW0kedxbuTdH0RArc9VhT');
+      }
+    </script>
+    <script src="/sw/null_loader.js"></script>
+  </body>
+</html>

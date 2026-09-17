@@ -1,0 +1,64 @@
+==============================================================================
+### US10873188B2
+==============================================================================
+  [OK] bytes=180787
+  saved -> C:\Users\Micko\AppData\Local\Temp\US10873188B2.html
+  title: Dynamic hosting capacity system and method for DER integration and management on distribution utility networks 
+       
+  date : 2018-11-05
+  assignee: Opus One Solutions Energy Corp
+  assignee: X Development Llc
+  assignee: 四川大学
+  assignee: Landis&#43;Gyr Innovations, Inc.
+  assignee: 湖南大学
+  assignee: Hitachi, Ltd.
+  assignee: Panasonic Corporation
+  assignee: Bigwood Technology, Inc.
+  assignee: Innovari, Inc.
+  assignee: Dean Sanders
+  assignee: Xendee Corporation
+  assignee: Katholieke Universiteit Leuven
+  assignee: Iteros, Inc.
+  assignee: Kyocera Corporation
+  assignee: Panasonic Corporation
+  assignee: Bigwood Technology, Inc.
+  assignee: Innovari, Inc.
+  assignee: Dean Sanders
+  assignee: Katholieke Universiteit Leuven
+  assignee: Iteros, Inc.
+  assignee: Kyocera Corporation
+  assignee: Xendee Corporation
+  assignee: X Development Llc
+  CLAIMS(7470 chars): Claims ( 27 ) What is claimed is: 1. A distributed energy resource management system that utilizes capacity on a distribution grid to host further distributed energy resource interconnections, comprising: a) a data store including a plurality of operational values associated with a plurality of distributed electric resources on an electric power distribution network; and b) one or more computer processors coupled to the data store and in communication with the plurality of distributed electric resources on said electric power distribution network, the one or more computer processors being programmed, upon receiving one or more requests, to: i) create 3-phase AC power flows for each of a plurality of locations across said electric power distribution network, wherein said step of creating 3-phase AC power flows utilizes per phase: voltages, currents, real power, reactive power, and, power factor; and, ii) use optimizations of the 3-phase AC power flows to calculate hosting capacity for each of the plurality of locations across said electric power distribution network, for each of a plurality of time intervals, and each of a plurality of types of distributed energy resource, as a dynamic quantity that can change depending on time, day, season, and location; iii) translate the calculated dynamic hosting capacity into at least one calculated operational value; iv) store said at least one calculated operational value in the data store; and v) read said calculated operational value from the data store and use the calculated operational value to determine and send a direction to actively manage a plurality of distributed energy resources on said electric power distribution network. 2. The distributed energy resource management system according to claim 1 , wherein said step of creating 3-phase AC power flows utilizes per phase: real loss, reactive losses, asset utilization, and load duration curves. 3. The distributed energy resource management system according to claim 1 , wherein said hosting capacity comprises hosting capacity of a feeder on the electric power distribution network. 4. The distributed energy resource management system according to claim 1 , wherein said hosting capacity comprises hosting capacity of a substation on the electric power distribution network. 5. The distributed energy resource management system according to claim 1 , wherein said data store receives and stores sensor telemetry, and wherein said processor configured to create 3-phase AC power flows comprises a processor configured to use sensor telemetry to create said 3-phase AC power flows. 6. The distributed energy resource management system according to claim 5 , wherein said data store further receives and stores a utility network model, and wherein said processor configured to create 3-phase AC power flows comprises a processor configured to use said sensor telemetry and said utility network model to create said 3-phase AC power flows. 7. The distributed energy resour
+
+==============================================================================
+### CN120197914B
+==============================================================================
+  [OK] bytes=148863
+  saved -> C:\Users\Micko\AppData\Local\Temp\CN120197914B.html
+  title: 一种基于汽车充电需求的充电站规划方法和系统 
+       
+  date : 2025-05-23
+  assignee: Ruinuo Technology Shenzhen Co ltd
+  assignee: 广州中天鑫电子科技有限公司
+  assignee: 四川华体照明科技股份有限公司
+  assignee: 国网浙江省电力有限公司杭州供电公司
+  assignee: 盐城师范学院
+  assignee: 普特氢能(广州)供应链有限公司
+  assignee: 宁波财经学院
+  assignee: 北京这房行信息技术有限公司
+  assignee: 华侨大学
+  assignee: 浙江安富新能源科技股份有限公司
+  assignee: 厦门科司特电子股份有限公司
+  assignee: 中建科工集团有限公司
+  assignee: 宁波海晟能源发展有限公司
+  assignee: 深圳市城市规划设计研究院股份有限公司
+  assignee: 福建扬天电能有限公司
+  assignee: 吉林大学
+  assignee: 交通运输部规划研究院
+  assignee: 中建科工集团有限公司
+  assignee: 陕西延长石油道奇物流科技有限公司
+  assignee: 山东理工大学
+  assignee: 北京首兴安成电力工程有限公司
+  assignee: 北京首兴安成电力工程有限公司
+  CLAIMS(4428 chars): Claims ( 8 ) 1.一种基于汽车充电需求的充电站规划方法，其特征在于，包括： 步骤1、对区域内车辆行驶轨迹和充电行为进行多源数据采集与融合处理，得到时空充电需求分布图谱；包括： 从车联网平台获取车辆GPS轨迹数据，得到车辆移动轨迹集，并对所述车辆移动轨迹集进行数据清洗和异常值检测，得到有效轨迹数据； 从充电桩运营商管理系统获取历史充电记录，得到充电行为数据集，并对所述充电行为数据集进行时间特征和空间特征提取，得到充电模式特征库； 从交通管理部门获取道路流量监测数据，得到交通流分布信息，并将所述交通流分布信息与城市功能区划分图层叠加，得到区域活动热点图； 对所述有效轨迹数据、所述充电模式特征库和所述区域活动热点图进行时空关联性分析，得到充电需求关联规则，并基于所述充电需求关联规则构建层次聚类模型，得到充电需求聚类结果； 将所述充电需求聚类结果在地理信息系统上进行可视化映射，得到时空充电需求分布图谱； 步骤2、基于所述时空充电需求分布图谱进行季节性变化分析和未来需求预测，得到动态充电需求预测模型，包括： 对所述时空充电需求分布图谱按照时间维度进行切片，得到不同时间粒度的需求序列，包括日内、周内、月度和季节性序列； 对所述不同时间粒度的需求序列进行时间序列分解，得到趋势项、季节项和随机项，并对所述趋势项进行增长模式识别，得到长期发展趋势函数； 对所述季节项进行周期性特征提取，得到季节性变化模式库，并结合气象数据进行相关性分析，得到气候因素影响模型； 收集电动汽车市场渗透率和政策变化数据，得到市场增长驱动因素集，并将所述市场增长驱动因素集与所述长期发展趋势函数结合，得到市场发展预测曲线； 基于所述长期发展趋势函数、所述季节性变化模式库、所述气候因素影响模型和所述市场发展预测曲线，构建多层次时间神经网络模型，得到动态充电需求预测模型； 步骤3、基于所述动态充电需求预测模型结合城市路网结构和交通流量数据，进行多约束条件下的站点布局优化，得到充电站初步布局方案； 步骤4、基于所述充电站初步布局方案进行电网负荷能力评估和可再生能源接入分析，得到能源协同供给保障体系； 步骤5、基于所述能源协同供给保障体系进行峰谷时段充电价格动态调整和预约排队机制设计，得到智能调度控制策略； 步骤6、基于所述智能调度控制策略进行不同充电功率需求和车型适配性评估，得到多样化充电设施配置方案。 2.根据权利要求1所述的基于汽车充电需求的充电站规划方法，其特征在于，所述基于所述动态充电需求预测模型结合城市路网结构和交通流量数据，进行多约束条件下的站点布局优化，得到充电站初步布局方案，包括： 获取区域内道路网络拓扑结构和交通流量数据，得到加权路网图，并在所述加权路网图上划分交通分析区，得到候选区域集； 对所述候选区域集结合土地利用规划和电网分布情况进行初步筛选，得到可行站址集，并对所述可行站址集进行可达性分析，得到服务覆盖范围图； 基于所述动态充电需求预测模型计算各候选站点的潜在服务需求量，得到需求权重矩阵，并构建多目标优化函数，包括需求满足度、覆盖均衡性和建设成本最小化目标； 应用改进的粒子群优化算法求解所述多目标优化函数，得到帕累托最优解集，并通过模糊层次分析法对所述帕累托最优解集进行综合评价，得到最优站点配置方案； 对所述最优站点配置方案进行服务质量验证和敏感性分析，得到充电站初步布局方案。 3.根据权利要求2所述的基于汽车充电需求的充电站规划方法，其特征在于，所述基于所述充电站初步布局方案进行电网负荷能力评估和可再生能源接入分析，得到能源协同供给保障体系，包括： 获取区域配电网拓扑结构和变电站容量数据，得到电网基础信息库，并根据所述充电站初步布局方案模拟充电负荷接入情况，得到电网潮流分布模型； 对所述电网潮流分布模型进行N-1安全校验和电压稳定性分析，得到电网承载能力评估报告，并基于所述电网承载能力评估报告识别电网薄弱环节和潜在风险点，得到电网增强需求清单； 根据所述电网增强需求清单调研区域内可再生能源分布情况和发电特性，得到可再生能源资源图谱，并基于所述可再生能源资源图谱评估各充电站点适合接入的可再生能源类型和规模，得到绿色能源配置方案； 基于所述绿色能源配置方案和所述电网潮流分布模型设计储能系统配置参数和能量管理策略，得到削峰填谷解决方案，并将所述削峰填谷解决方案与所述绿色能源配置方案集成，得到混合能源系统架构； 基于所述混合能源系统架构构建含充电站群的配电网协同优化调度模型，得到多时间尺度能源调度策略，并通过数字孪生仿真验证所述多时间尺度能源调度策略的系统可靠性，得到能源协同供给保障体系。 4.根据权利要求3所述的基于汽车充电需求的充电站规划方法，其特征在于，所述基于所述能源协同供给保障体系进行峰谷时段充电价格动态调整和预约排队机制设计，得到智能调度控制策略，包括： 分析区域电网负荷曲线和电价政策，得到基础电价结构，并结合所述基础电价结构与充电需求时间分布特征，确定峰平谷时段划分标准，得到分时电价初始方案； 基于所述分时电价初始方案建立充电行为对价格敏感性的量化模型，得到需求价格弹性系数，并利用所述需求价格弹性系数设计动态价格调整算法，得到实时定价机制； 基于所述实时定价机制和所述能源协同供给保障体系构建充电站资源预分配模型，得到服务容量预测值，并根据所述服务容量预测值设计基于优先级的预约规则体系，得到预约管理框架； 结合所述预约管理框架开发基于车辆特征和用户偏好的个性化充电方案推荐系统，得到智能推荐引擎，并基于所述智能推荐引擎设计拥堵状态下的动态排队调度算法，得到队列优化模型； 根据所述能源协同供给保障体系的多时间尺度能源调度策略，将所述实时定价机制、所述预约管理框架、所述智能推荐引擎和所述队列优化模型进行系统集成，得到智能调度控制策略。 5.根据权利要求4所述的基于汽车充电需求的充电站规划方法，其特征在于，所述基于所述智能调度控制策略进行不同充电功率需求和车型适配性评估，得到多样化充电设施配置方案，包括： 收集市场流通的主要电动汽车车型参数，得到车型数据库，并根据所述智能调度控制策略对所述车型数据库进行充电接口标准和充电功率需求分类，得到车型分群结果； 基于所述车型分群结果分析各充电站点的目标用户群体特征，得到用户画像，并根据所述用户画像预测不同充电功率需求的比例分布，得到功率需求结构； 将所述功率需求结构与充电站物理空间约束和电力容量限制相结合，得到站点资源约束条件，并基于所述站点资源约束条件构建设施配置优化模型，得到初步配置方案； 根据所述初步配置方案和所述智能调度控制策略的排队模型分析，考虑快充与慢充的合理比例和未来技术升级预留空间，得到设施结构优化策略，并基于所述设施结构优化策略调整所述初步配置方案，得到灵活扩展方案； 利用所述智能调度控制策略中的服务质量评估指标，对所述初步配置方案和所述灵活扩展方案进行综合评估，平衡投资效益和用户体验，得到多样化充电设施配置方案。 6.根据权利要求2所述的基于汽车充电需求的充电站规划方法，其特征在于，所述通过模糊层次分析法对所述帕累托最优解集进行综合评价，得到最优站点配置方案，包括： 建立充电站评价指标体系，包括需求覆盖率、服务半径均衡性、交通可达性、电网接入

@@ -1,0 +1,2078 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>CN120197914B - 一种基于汽车充电需求的充电站规划方法和系统 
+        - Google Patents</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta charset="UTF-8">
+    <meta name="referrer" content="origin-when-crossorigin">
+    <link rel="canonical" href="https://patents.google.com/patent/CN120197914B/zh">
+    <meta name="description" content="
+     本发明属于充电站规划技术领域，本发明公开了一种基于汽车充电需求的充电站规划方法和系统，通过多源数据采集与融合处理构建时空充电需求分布图谱，进行季节性变化分析和未来需求预测得到动态充电需求预测模型，结合城市路网结构和交通流量数据进行多约束条件下的站点布局优化形成充电站初步布局方案，实施电网负荷能力评估和可再生能源接入分析建立能源协同供给保障体系，设计峰谷时段充电价格动态调整和预约排队机制形成智能调度控制策略，最终通过不同充电功率需求和车型适配性评估得到多样化充电设施配置方案。本发明克服了传统规划中需求预测不准、布局不合理、资源配置不均等问题，实现了充电资源与用户需求的精准匹配。 
+     
+   
+   ">
+    <meta name="DC.type" content="patent">
+    <meta name="DC.title" content="一种基于汽车充电需求的充电站规划方法和系统 
+       ">
+    <meta name="DC.date" content="2025-05-23" scheme="dateSubmitted">
+    <meta name="DC.description" content="
+     本发明属于充电站规划技术领域，本发明公开了一种基于汽车充电需求的充电站规划方法和系统，通过多源数据采集与融合处理构建时空充电需求分布图谱，进行季节性变化分析和未来需求预测得到动态充电需求预测模型，结合城市路网结构和交通流量数据进行多约束条件下的站点布局优化形成充电站初步布局方案，实施电网负荷能力评估和可再生能源接入分析建立能源协同供给保障体系，设计峰谷时段充电价格动态调整和预约排队机制形成智能调度控制策略，最终通过不同充电功率需求和车型适配性评估得到多样化充电设施配置方案。本发明克服了传统规划中需求预测不准、布局不合理、资源配置不均等问题，实现了充电资源与用户需求的精准匹配。 
+     
+   
+   ">
+    <meta name="citation_patent_application_number" content="CN:202510668468.6A">
+    <meta name="citation_patent_number" content="CN:120197914:B">
+    <meta name="DC.date" content="2025-07-18" scheme="issue">
+    <meta name="DC.contributor" content="曹金伟" scheme="inventor">
+    <meta name="DC.contributor" content="黄刚" scheme="inventor">
+    <meta name="DC.contributor" content="李伟" scheme="inventor">
+    <meta name="DC.contributor" content="Ruinuo Technology Shenzhen Co ltd" scheme="assignee">
+    <meta name="DC.relation" content="CN:119398397:A" scheme="references">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:400,400italic,500,500italic,700">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Product+Sans">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700">
+
+    <style>
+      
+      #gb { top: 15px; left: auto; right: 0; width: auto; min-width: 135px !important; }   
+      body { transition: none; }
+    </style>
+    <script></script>
+
+    <script>
+      window.version = 'patent-search.search_20260819_RC00';
+
+      function sendFeedback() {
+        userfeedback.api.startFeedback({
+          'productId': '713680',
+          'bucket': 'patent-search-web',
+          'productVersion': window.version,
+        });
+      }
+
+      window.experiments = {};
+      window.experiments.patentCountries = "ae,ag,al,am,ao,ap,ar,at,au,aw,az,ba,bb,bd,be,bf,bg,bh,bj,bn,bo,br,bw,bx,by,bz,ca,cf,cg,ch,ci,cl,cm,cn,co,cr,cs,cu,cy,cz,dd,de,dj,dk,dm,do,dz,ea,ec,ee,eg,em,ep,es,fi,fr,ga,gb,gc,gd,ge,gh,gm,gn,gq,gr,gt,gw,hk,hn,hr,hu,ib,id,ie,il,in,ir,is,it,jo,jp,ke,kg,kh,km,kn,kp,kr,kw,kz,la,lc,li,lk,lr,ls,lt,lu,lv,ly,ma,mc,md,me,mg,mk,ml,mn,mo,mr,mt,mw,mx,my,mz,na,ne,ng,ni,nl,no,nz,oa,om,pa,pe,pg,ph,pl,pt,py,qa,ro,rs,ru,rw,sa,sc,sd,se,sg,si,sk,sl,sm,sn,st,su,sv,sy,sz,td,tg,th,tj,tm,tn,tr,tt,tw,tz,ua,ug,us,uy,uz,vc,ve,vn,wo,yu,za,zm,zw";
+      
+      
+      window.experiments.keywordWizard = true;
+      
+      
+      
+      window.experiments.definitions = true;
+      window.experiments.plogs = true;
+
+      window.Polymer = {
+        dom: 'shady',
+        lazyRegister: true,
+      };
+    </script>
+
+    <script src="//www.gstatic.com/patent-search/frontend/patent-search.search_20260819_RC00/scs/compiled_dir/webcomponentsjs/webcomponents-lite.min.js"></script>
+    <link rel="import" href="//www.gstatic.com/patent-search/frontend/patent-search.search_20260819_RC00/scs/compiled_dir/search-app-vulcanized.html">
+  </head>
+  <body unresolved>
+    
+    
+    <script></script>
+    <script src="//www.gstatic.com/patent-search/frontend/patent-search.search_20260819_RC00/scs/compiled_dir/search-app-vulcanized.js"></script>
+    <search-app>
+      
+      
+
+      <article class="result" itemscope itemtype="http://schema.org/ScholarlyArticle">
+  <h1 itemprop="pageTitle">CN120197914B - 一种基于汽车充电需求的充电站规划方法和系统 
+        - Google Patents</h1>
+  <span itemprop="title">一种基于汽车充电需求的充电站规划方法和系统 
+       </span>
+
+  <meta itemprop="type" content="patent">
+  
+  <h2>Info</h2>
+
+  <dl>
+    <dt>Publication number</dt>
+    <dd itemprop="publicationNumber">CN120197914B</dd>
+    <meta itemprop="numberWithoutCodes" content="120197914">
+    <meta itemprop="kindCode" content="B">
+    <meta itemprop="publicationDescription" content="Granted patent for invention">
+    <span>CN120197914B</span>
+    <span>CN202510668468.6A</span>
+    <span>CN202510668468A</span>
+    <span>CN120197914B</span>
+    <span>CN 120197914 B</span>
+    <span>CN120197914 B</span>
+    <span>CN 120197914B</span>
+    <span>  </span>
+    <span> </span>
+    <span> </span>
+    <span>CN 202510668468 A</span>
+    <span>CN202510668468 A</span>
+    <span>CN 202510668468A</span>
+    <span>CN 120197914 B</span>
+    <span>CN120197914 B</span>
+    <span>CN 120197914B</span>
+
+    <dt>Authority</dt>
+    <dd itemprop="countryCode">CN</dd>
+    <dd itemprop="countryName">China</dd>
+
+    <dt>Prior art keywords</dt>
+    <dd itemprop="priorArtKeywords" repeat>charging</dd>
+    <dd itemprop="priorArtKeywords" repeat>demand</dd>
+    <dd itemprop="priorArtKeywords" repeat>energy</dd>
+    <dd itemprop="priorArtKeywords" repeat>model</dd>
+    <dd itemprop="priorArtKeywords" repeat>optimization</dd>
+
+    <dt>Prior art date</dt>
+    <dd><time itemprop="priorArtDate" datetime="2025-05-23">2025-05-23</time></dd>
+
+    <dt>Legal status (The legal status is an assumption and is not a legal conclusion. Google has not performed a legal analysis and makes no representation as to the accuracy of the status listed.)</dt>
+    <dd itemprop="legalStatusIfi" itemscope>
+      <span itemprop="status">Active</span>
+    </dd>
+  </dl>
+
+  <dt>Application number</dt>
+  <dd itemprop="applicationNumber">CN202510668468.6A</dd>
+
+  <dt>Other languages</dt>
+  <dd itemprop="otherLanguages" itemscope repeat>
+    <a href="/patent/CN120197914B/en">
+      <span itemprop="name">English</span> (<span itemprop="code">en</span>)
+    </a>
+  </dd>
+
+  <dt>Other versions</dt>
+  <dd itemprop="directAssociations" itemscope repeat>
+    <a href="/patent/CN120197914A/zh">
+      <span itemprop="publicationNumber">CN120197914A</span>
+      (<span itemprop="primaryLanguage">zh</span>
+    </a>
+  </dd>
+
+  <dt>Inventor</dt>
+  <dd itemprop="inventor" repeat>曹金伟</dd>
+  <dd itemprop="inventor" repeat>黄刚</dd>
+  <dd itemprop="inventor" repeat>李伟</dd>
+
+  <dt>Current Assignee (The listed assignees may be inaccurate. Google has not performed a legal analysis and makes no representation or warranty as to the accuracy of the list.)</dt>
+  <dd itemprop="assigneeCurrent" repeat>
+    Ruinuo Technology Shenzhen Co ltd
+  </dd>
+
+  <dt>Original Assignee</dt>
+  <dd itemprop="assigneeOriginal" repeat>Ruinuo Technology Shenzhen Co ltd</dd>
+
+  <dt>Priority date (The priority date is an assumption and is not a legal conclusion. Google has not performed a legal analysis and makes no representation as to the accuracy of the date listed.)</dt>
+  <dd><time itemprop="priorityDate" datetime="2025-05-23">2025-05-23</time></dd>
+
+  <dt>Filing date</dt>
+  <dd><time itemprop="filingDate" datetime="2025-05-23">2025-05-23</time></dd>
+
+  <dt>Publication date</dt>
+  <dd><time itemprop="publicationDate" datetime="2025-07-18">2025-07-18</time></dd>
+
+  
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2025-05-23">2025-05-23</time>
+    <span itemprop="title">Application filed by Ruinuo Technology Shenzhen Co ltd</span>
+    <span itemprop="type">filed</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    
+    <span itemprop="assigneeSearch">Ruinuo Technology Shenzhen Co ltd</span>
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2025-05-23">2025-05-23</time>
+    <span itemprop="title">Priority to CN202510668468.6A</span>
+    <span itemprop="type">priority</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    <span itemprop="documentId">patent/CN120197914B/zh</span>
+    
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2025-06-24">2025-06-24</time>
+    <span itemprop="title">Publication of CN120197914A</span>
+    <span itemprop="type">publication</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    <span itemprop="documentId">patent/CN120197914A/zh</span>
+    
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2025-07-18">2025-07-18</time>
+    <span itemprop="title">Application granted</span>
+    <span itemprop="type">granted</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    
+    
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2025-07-18">2025-07-18</time>
+    <span itemprop="title">Publication of CN120197914B</span>
+    <span itemprop="type">publication</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    <span itemprop="documentId">patent/CN120197914B/zh</span>
+    
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date">Status</time>
+    <span itemprop="title">Active</span>
+    <span itemprop="type">legal-status</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    <span itemprop="current" content="true" bool>Current</span>
+    
+    
+    
+  </dd>
+  <dd itemprop="events" itemscope repeat>
+    <time itemprop="date" datetime="2045-05-23">2045-05-23</time>
+    <span itemprop="title">Anticipated expiration</span>
+    <span itemprop="type">legal-status</span>
+    <span itemprop="critical" content="true" bool>Critical</span>
+    
+    
+    
+    
+  </dd>
+
+  <h2>Links</h2>
+  <ul>
+    
+
+    <li itemprop="links" itemscope repeat>
+        <meta itemprop="id" content="espacenetLink">
+        <a href="https://worldwide.espacenet.com/publicationDetails/biblio?CC=CN&amp;NR=120197914B&amp;KC=B&amp;FT=D" itemprop="url" target="_blank"><span itemprop="text">Espacenet</span></a>
+      </li>
+      
+
+    
+
+    <li itemprop="links" itemscope repeat>
+      <meta itemprop="id" content="globalDossierLink">
+      <a href="https://globaldossier.uspto.gov/result/application/CN/202510668468/1" itemprop="url" target="_blank"><span itemprop="text">Global Dossier</span></a>
+    </li>
+
+    
+
+      
+
+      
+
+      
+      <li itemprop="links" itemscope repeat>
+        <meta itemprop="id" content="stackexchangeLink">
+        <a href="https://patents.stackexchange.com/questions/tagged/CN120197914B" itemprop="url"><span itemprop="text">Discuss</span></a>
+      </li>
+  </ul>
+
+  
+
+  
+
+  <section>
+    <h2>Classifications</h2>
+    <ul>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q</span>&mdash;<span itemprop="Description">INFORMATION AND COMMUNICATION TECHNOLOGY [ICT] SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES; SYSTEMS OR METHODS SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES, NOT OTHERWISE PROVIDED FOR</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/00</span>&mdash;<span itemprop="Description">Administration; Management</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/06</span>&mdash;<span itemprop="Description">Resources, workflows, human or project management; Enterprise or organisation planning; Enterprise or organisation modelling</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/063</span>&mdash;<span itemprop="Description">Operations research, analysis or management</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/0631</span>&mdash;<span itemprop="Description">Resource planning, allocation, distributing or scheduling for enterprises or organisations</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/06315</span>&mdash;<span itemprop="Description">Needs-based resource requirements planning or analysis</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="FirstCode" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06F</span>&mdash;<span itemprop="Description">ELECTRIC DIGITAL DATA PROCESSING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06F18/00</span>&mdash;<span itemprop="Description">Pattern recognition</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06F18/20</span>&mdash;<span itemprop="Description">Analysing</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06F18/23</span>&mdash;<span itemprop="Description">Clustering techniques</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N</span>&mdash;<span itemprop="Description">COMPUTING ARRANGEMENTS BASED ON SPECIFIC COMPUTATIONAL MODELS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N3/00</span>&mdash;<span itemprop="Description">Computing arrangements based on biological models</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N3/004</span>&mdash;<span itemprop="Description">Artificial life, i.e. computing arrangements simulating life</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N3/006</span>&mdash;<span itemprop="Description">Artificial life, i.e. computing arrangements simulating life based on simulated virtual individual or collective life forms, e.g. social simulations or particle swarm optimisation [PSO]</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N</span>&mdash;<span itemprop="Description">COMPUTING ARRANGEMENTS BASED ON SPECIFIC COMPUTATIONAL MODELS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N3/00</span>&mdash;<span itemprop="Description">Computing arrangements based on biological models</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N3/02</span>&mdash;<span itemprop="Description">Neural networks</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N3/04</span>&mdash;<span itemprop="Description">Architecture, e.g. interconnection topology</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N</span>&mdash;<span itemprop="Description">COMPUTING ARRANGEMENTS BASED ON SPECIFIC COMPUTATIONAL MODELS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N3/00</span>&mdash;<span itemprop="Description">Computing arrangements based on biological models</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N3/02</span>&mdash;<span itemprop="Description">Neural networks</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06N3/08</span>&mdash;<span itemprop="Description">Learning methods</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q</span>&mdash;<span itemprop="Description">INFORMATION AND COMMUNICATION TECHNOLOGY [ICT] SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES; SYSTEMS OR METHODS SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES, NOT OTHERWISE PROVIDED FOR</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/00</span>&mdash;<span itemprop="Description">Administration; Management</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/04</span>&mdash;<span itemprop="Description">Forecasting or optimisation specially adapted for administrative or management purposes, e.g. linear programming or &#34;cutting stock problem&#34;</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q</span>&mdash;<span itemprop="Description">INFORMATION AND COMMUNICATION TECHNOLOGY [ICT] SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES; SYSTEMS OR METHODS SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES, NOT OTHERWISE PROVIDED FOR</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/00</span>&mdash;<span itemprop="Description">Administration; Management</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/06</span>&mdash;<span itemprop="Description">Resources, workflows, human or project management; Enterprise or organisation planning; Enterprise or organisation modelling</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/063</span>&mdash;<span itemprop="Description">Operations research, analysis or management</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/0631</span>&mdash;<span itemprop="Description">Resource planning, allocation, distributing or scheduling for enterprises or organisations</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q10/06312</span>&mdash;<span itemprop="Description">Adjustment or analysis of established resource schedule, e.g. resource or task levelling, or dynamic rescheduling</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q</span>&mdash;<span itemprop="Description">INFORMATION AND COMMUNICATION TECHNOLOGY [ICT] SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES; SYSTEMS OR METHODS SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES, NOT OTHERWISE PROVIDED FOR</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q50/00</span>&mdash;<span itemprop="Description">Information and communication technology [ICT] specially adapted for implementation of business processes of specific business sectors, e.g. utilities or tourism</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q50/06</span>&mdash;<span itemprop="Description">Energy or water supply</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+      <li>
+        <ul itemprop="classifications" itemscope repeat>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G</span>&mdash;<span itemprop="Description">PHYSICS</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06</span>&mdash;<span itemprop="Description">COMPUTING OR CALCULATING; COUNTING</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q</span>&mdash;<span itemprop="Description">INFORMATION AND COMMUNICATION TECHNOLOGY [ICT] SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES; SYSTEMS OR METHODS SPECIALLY ADAPTED FOR ADMINISTRATIVE, COMMERCIAL, FINANCIAL, MANAGERIAL OR SUPERVISORY PURPOSES, NOT OTHERWISE PROVIDED FOR</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q50/00</span>&mdash;<span itemprop="Description">Information and communication technology [ICT] specially adapted for implementation of business processes of specific business sectors, e.g. utilities or tourism</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q50/10</span>&mdash;<span itemprop="Description">Services</span>
+            <meta itemprop="IsCPC" content="true">
+          </li>
+          <li itemprop="classifications" itemscope repeat>
+            <span itemprop="Code">G06Q50/26</span>&mdash;<span itemprop="Description">Government or public services</span>
+            <meta itemprop="Leaf" content="true"><meta itemprop="IsCPC" content="true">
+          </li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+
+  
+
+  
+
+  
+
+  <section>
+    <h2>Landscapes</h2>
+    <ul>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Engineering &amp; Computer Science</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Business, Economics &amp; Management</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Human Resources &amp; Organizations</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Theoretical Computer Science</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Physics &amp; Mathematics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Economics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">General Physics &amp; Mathematics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Strategic Management</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Data Mining &amp; Analysis</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Health &amp; Medical Sciences</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Tourism &amp; Hospitality</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Marketing</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Entrepreneurship &amp; Innovation</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">General Business, Economics &amp; Management</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">General Health &amp; Medical Sciences</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">General Engineering &amp; Computer Science</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Evolutionary Computation</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Life Sciences &amp; Earth Sciences</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Artificial Intelligence</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Development Economics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Computing Systems</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Software Systems</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Operations Research</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Biophysics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Game Theory and Decision Science</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Molecular Biology</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Quality &amp; Reliability</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Biomedical Technology</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Mathematical Physics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Computational Linguistics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Educational Administration</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Primary Health Care</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Bioinformatics &amp; Computational Biology</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Computer Vision &amp; Pattern Recognition</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Evolutionary Biology</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Bioinformatics &amp; Cheminformatics</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Public Health</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Water Supply &amp; Treatment</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+      <li itemprop="landscapes" itemscope repeat>
+        <span itemprop="name">Management, Administration, Business Operations System, And Electronic Commerce</span>
+        (<span itemprop="type">AREA</span>)
+      </li>
+    </ul>
+  </section>
+
+
+  <section itemprop="abstract" itemscope>
+    <h2>Abstract</h2>
+    
+    <div itemprop="content" html><abstract mxw-id="PA734002534" lang="ZH" load-source="patent-office">
+    <div num="0001" class="abstract">本发明属于充电站规划技术领域，本发明公开了一种基于汽车充电需求的充电站规划方法和系统，通过多源数据采集与融合处理构建时空充电需求分布图谱，进行季节性变化分析和未来需求预测得到动态充电需求预测模型，结合城市路网结构和交通流量数据进行多约束条件下的站点布局优化形成充电站初步布局方案，实施电网负荷能力评估和可再生能源接入分析建立能源协同供给保障体系，设计峰谷时段充电价格动态调整和预约排队机制形成智能调度控制策略，最终通过不同充电功率需求和车型适配性评估得到多样化充电设施配置方案。本发明克服了传统规划中需求预测不准、布局不合理、资源配置不均等问题，实现了充电资源与用户需求的精准匹配。</div>
+    </abstract>
+  </div>
+  </section>
+
+  <section itemprop="description" itemscope>
+    <h2>Description</h2>
+    
+    <div itemprop="content" html><div mxw-id="PDES499898168" lang="ZH" load-source="patent-office" class="description">
+    <invention-title lang="ZH" id="title1">一种基于汽车充电需求的充电站规划方法和系统</invention-title>
+    <technical-field>
+      <div id="p0001" class="description-paragraph">技术领域</div>
+      <div id="p0002" num="0001" class="description-paragraph">本发明涉及充电站规划技术领域，更具体地说，本发明涉及一种基于汽车充电需求的充电站规划方法和系统。</div>
+    </technical-field>
+    <background-art>
+      <div id="p0003" class="description-paragraph">背景技术</div>
+      <div id="p0004" num="0002" class="description-paragraph">随着全球环保意识的增强和各国碳中和战略的深入推进，电动汽车产业正经历前所未有的发展浪潮。作为电动汽车产业发展的关键支撑，充电基础设施的规划布局已成为交通电气化战略的核心环节。</div>
+      <div id="p0005" num="0003" class="description-paragraph">但是现有充电站规划方法存在诸多待解决的问题，严重制约着电动汽车产业的健康发展。传统规划普遍采用静态人口密度或车辆保有量进行简单线性预测，缺乏对用户实际出行轨迹和充电行为的精细化分析，导致需求评估严重偏离现实，许多地区充电站“一桩难求”而另一些地区却“门可罗雀”。季节性波动、天气影响和政策变化等因素常被忽视，使得规划缺乏前瞻性和适应性，难以应对电动汽车市场的快速变化。现有布局多以行政区划为单位，忽视了城市功能分区和交通流特性，造成商务区午间排队拥堵、居民区夜间资源闲置等不平衡现象。更严峻的是，充电基础设施建设与电网协调性不足，导致高峰期区域电网频繁过载，甚至引发停电风险。缺乏智能调度机制使得充电资源分配效率低下，用户常需在热门地段长时间等待，而价格机制单一无法有效引导需求分散。同时，现有设施配置标准化程度低，未能充分考虑不同车型的充电需求差异，导致超快充资源配置不足、慢充桩使用率低下等问题，用户充电体验普遍不佳。在实际运营中，数据孤岛现象严重，站点间缺乏协同，无法为用户提供连贯的服务体验。</div>
+      <div id="p0006" num="0004" class="description-paragraph">鉴于此，本发明提出一种基于汽车充电需求的充电站规划方法和系统以解决上述问题。</div>
+    </background-art>
+    <disclosure>
+      <div id="p0007" class="description-paragraph">发明内容</div>
+      <div id="p0008" num="0005" class="description-paragraph">为了克服现有技术的上述缺陷，为实现上述目的，本发明提供如下技术方案：第一方面，本申请提供一种基于汽车充电需求的充电站规划方法，包括：步骤1、对区域内车辆行驶轨迹和充电行为进行多源数据采集与融合处理，得到时空充电需求分布图谱；</div>
+      <div id="p0009" num="0006" class="description-paragraph">步骤2、基于所述时空充电需求分布图谱进行季节性变化分析和未来需求预测，得到动态充电需求预测模型；</div>
+      <div id="p0010" num="0007" class="description-paragraph">步骤3、基于所述动态充电需求预测模型结合城市路网结构和交通流量数据，进行多约束条件下的站点布局优化，得到充电站初步布局方案；</div>
+      <div id="p0011" num="0008" class="description-paragraph">步骤4、基于所述充电站初步布局方案进行电网负荷能力评估和可再生能源接入分析，得到能源协同供给保障体系；</div>
+      <div id="p0012" num="0009" class="description-paragraph">步骤5、基于所述能源协同供给保障体系进行峰谷时段充电价格动态调整和预约排队机制设计，得到智能调度控制策略；</div>
+      <div id="p0013" num="0010" class="description-paragraph">步骤6、基于所述智能调度控制策略进行不同充电功率需求和车型适配性评估，得到多样化充电设施配置方案。</div>
+      <div id="p0014" num="0011" class="description-paragraph">另一方面，本申请提供一种基于汽车充电需求的充电站规划系统，包括：</div>
+      <div id="p0015" num="0012" class="description-paragraph">采集与处理模块，用于对区域内车辆行驶轨迹和充电行为进行多源数据采集与融合处理，得到时空充电需求分布图谱；</div>
+      <div id="p0016" num="0013" class="description-paragraph">分析与需求预测模块，用于基于所述时空充电需求分布图谱进行季节性变化分析和未来需求预测，得到动态充电需求预测模型；</div>
+      <div id="p0017" num="0014" class="description-paragraph">站点布局优化模块，用于基于所述动态充电需求预测模型结合城市路网结构和交通流量数据，进行多约束条件下的站点布局优化，得到充电站初步布局方案；</div>
+      <div id="p0018" num="0015" class="description-paragraph">能源供给评估模块，用于基于所述充电站初步布局方案进行电网负荷能力评估和可再生能源接入分析，得到能源协同供给保障体系；</div>
+      <div id="p0019" num="0016" class="description-paragraph">智能调度控制模块，用于基于所述能源协同供给保障体系进行峰谷时段充电价格动态调整和预约排队机制设计，得到智能调度控制策略；</div>
+      <div id="p0020" num="0017" class="description-paragraph">设施配置规划模块，用于基于所述智能调度控制策略进行不同充电功率需求和车型适配性评估，得到多样化充电设施配置方案，各个模块之间通过有线和/或无线的方式进行连接。</div>
+      <div id="p0021" num="0018" class="description-paragraph">本发明一种基于汽车充电需求的充电站规划方法和系统的技术效果和优点：</div>
+      <div id="p0022" num="0019" class="description-paragraph">本发明通过整合多维数据和先进算法，提升了充电基础设施规划的科学性和前瞻性，有效解决了传统规划方法中需求预测不准、站点布局不合理、资源配置不均衡等痛点问题。实现了充电资源与用户需求的精准匹配，大幅降低了闲置率和拥堵率，提高了充电设施的使用效率和投资回报。通过动态价格机制和智能调度策略，不仅平衡了电网负荷、降低了峰值压力，还优化了能源分配，减少了电力浪费。特别注重电网安全和可再生能源接入，促进了能源结构绿色化转型，减少了碳排放。对用户而言，充电体验得到显著改善，等待时间减少，服务质量提升；对运营商而言，精细化的资源配置和需求预测降低了投资风险，提高了运营效益；对城市管理者而言，科学合理的充电网络布局促进了城市交通电气化进程，加速了智慧城市建设。此外，本发明的自适应性和可扩展性使其能够随着市场变化和技术进步持续优化。</div>
+    </disclosure>
+    <description-of-drawings>
+      <div id="p0023" class="description-paragraph">附图说明</div>
+      <div id="p0024" num="0020" class="description-paragraph">图1为本发明的一种基于汽车充电需求的充电站规划方法示意图；</div>
+      <div id="p0025" num="0021" class="description-paragraph">图2为本发明的一种基于汽车充电需求的充电站规划系统示意图。</div>
+    </description-of-drawings>
+    <mode-for-invention>
+      <div id="p0026" class="description-paragraph">具体实施方式</div>
+      <div id="p0027" num="0022" class="description-paragraph">下面将结合本发明实施例中的附图，对本发明实施例中的技术方案进行清楚、完整地描述，显然，所描述的实施例仅仅是本发明一部分实施例，而不是全部的实施例。基于本发明中的实施例，本领域普通技术人员在没有做出创造性劳动前提下所获得的所有其他实施例，都属于本发明保护的范围。</div>
+      <div id="p0028" num="0023" class="description-paragraph">本申请实例提供一种基于汽车充电需求的充电站规划方法和系统。所述基于汽车充电需求的充电站规划方法和系统的执行主体包括但不限于搭载该系统的：车联网平台、交通管理系统、电网管理系统、数据分析平台、规划决策支持系统等可看作本申请的通用计算节点，数据处理平台包括但不限于：车辆轨迹分析系统、充电需求预测系统、站点优化系统至少一种。</div>
+      <div id="p0029" num="0024" class="description-paragraph">请参阅图1，本发明提供了基于汽车充电需求的充电站规划方法，包括以下步骤：</div>
+      <div id="p0030" num="0025" class="description-paragraph">步骤1、对区域内车辆行驶轨迹和充电行为进行多源数据采集与融合处理，得到时空充电需求分布图谱；</div>
+      <div id="p0031" num="0026" class="description-paragraph">步骤2、基于时空充电需求分布图谱进行季节性变化分析和未来需求预测，得到动态充电需求预测模型；</div>
+      <div id="p0032" num="0027" class="description-paragraph">步骤3、基于动态充电需求预测模型结合城市路网结构和交通流量数据，进行多约束条件下的站点布局优化，得到充电站初步布局方案；</div>
+      <div id="p0033" num="0028" class="description-paragraph">步骤4、基于充电站初步布局方案进行电网负荷能力评估和可再生能源接入分析，得到能源协同供给保障体系；</div>
+      <div id="p0034" num="0029" class="description-paragraph">步骤5、基于能源协同供给保障体系进行峰谷时段充电价格动态调整和预约排队机制设计，得到智能调度控制策略；</div>
+      <div id="p0035" num="0030" class="description-paragraph">步骤6、基于智能调度控制策略进行不同充电功率需求和车型适配性评估，得到多样化充电设施配置方案。</div>
+      <div id="p0036" num="0031" class="description-paragraph">本发明通过多源数据采集和融合处理实现对区域充电需求的精确捕捉，构建时空充电需求分布图谱为后续分析提供数据基础，基于时空充电需求分布图谱进行季节性变化分析和未来需求预测使规划具有前瞻性，动态充电需求预测模型能够适应不同时间尺度下的需求变化，结合城市路网结构和交通流量数据进行多约束条件下的站点布局优化提高了选址的科学性，充电站初步布局方案考虑了多种实际因素确保可实施性，通过电网负荷能力评估和可再生能源接入分析解决了能源供给问题，能源协同供给保障体系增强了充电网络的可靠性和可持续性，峰谷时段充电价格动态调整和预约排队机制设计优化了资源利用效率，智能调度控制策略提高了用户体验和系统运行效率，不同充电功率需求和车型适配性评估确保了服务的普适性，多样化充电设施配置方案满足了不同用户的多样化需求。</div>
+      <div id="p0037" num="0032" class="description-paragraph">本发明实施例中，步骤1的详细实施步骤包括：</div>
+      <div id="p0038" num="0033" class="description-paragraph">从车联网平台获取车辆GPS轨迹数据，得到车辆移动轨迹集，并对车辆移动轨迹集进行数据清洗和异常值检测，得到有效轨迹数据；</div>
+      <div id="p0039" num="0034" class="description-paragraph">从充电桩运营商管理系统获取历史充电记录，得到充电行为数据集，并对充电行为数据集进行时间特征和空间特征提取，得到充电模式特征库；</div>
+      <div id="p0040" num="0035" class="description-paragraph">从交通管理部门获取道路流量监测数据，得到交通流分布信息，并将交通流分布信息与城市功能区划分图层叠加，得到区域活动热点图；</div>
+      <div id="p0041" num="0036" class="description-paragraph">对有效轨迹数据、充电模式特征库和区域活动热点图进行时空关联性分析，得到充电需求关联规则，并基于充电需求关联规则构建层次聚类模型，得到充电需求聚类结果；</div>
+      <div id="p0042" num="0037" class="description-paragraph">将充电需求聚类结果在地理信息系统上进行可视化映射，得到时空充电需求分布图谱。</div>
+      <div id="p0043" num="0038" class="description-paragraph">本实施例中，首先收集区域内电动汽车的行驶轨迹数据，通过与车联网平台建立数据接口，获取车辆的GPS位置、时间戳、速度、方向等信息，形成包含大量轨迹点的车辆移动轨迹集，对获取的车辆移动轨迹集进行数据清洗，包括去除空值、修正GPS漂移、修复数据断点、统一时间格式等处理，使用统计方法或机器学习算法(如隔离森林、LOF算法等)检测并处理异常值，如明显偏离常规路线的轨迹点，最终得到高质量的有效轨迹数据，接着从各充电桩运营商管理系统收集历史充电记录，包括充电开始/结束时间、充电地点、充电电量、充电时长、用户ID等信息，形成充电行为数据集，对充电行为数据集进行时间特征分析，如充电高峰期、平均充电时长、周期性规律等，使用时间序列分析方法提取时间模式，对充电行为数据集进行空间特征分析，如热点区域分布、区域偏好性、空间聚集性等，使用空间统计方法提取空间模式，综合时空特征形成充电模式特征库，同时从交通管理部门获取道路流量监测数据，包括道路车流量、拥堵情况、交通事件等信息，通过交通监控摄像头、车流量检测器、交通App用户数据等多源渠道收集，生成交通流分布信息，将交通流分布信息与城市功能区划分图层(如商业区、住宅区、工业区、办公区等)进行GIS叠加分析，识别出人员活动密集的区域和时段，形成区域活动热点图，然后采用时空数据挖掘技术，对有效轨迹数据、充电模式特征库和区域活动热点图进行关联性分析，发现车辆活动模式与充电行为之间的关联规则，如“工作日下午3-5点，商业区车辆密度增加30%时，周边充电需求上升50%”等规则，形成充电需求关联规则，基于充电需求关联规则，采用层次聚类算法(如DBSCAN、HDBSCAN等)对充电需求进行聚类分析，根据时间相似性和空间邻近性将相似的充电需求模式聚为一类，形成充电需求聚类结果，最后将充电需求聚类结果导入地理信息系统(GIS)，通过热力图、等值线图、3D地形图等可视化方法，展示不同区域、不同时段的充电需求分布情况，形成直观的时空充电需求分布图谱，该图谱清晰显示了“何时、何地、何种程度”的充电需求变化模式，为后续的充电站规划提供数据基础。</div>
+      <div id="p0044" num="0039" class="description-paragraph">本发明实施例中，步骤2的详细实施步骤包括：</div>
+      <div id="p0045" num="0040" class="description-paragraph">对时空充电需求分布图谱按照时间维度进行切片，得到不同时间粒度的需求序列，包括日内、周内、月度和季节性序列；</div>
+      <div id="p0046" num="0041" class="description-paragraph">对不同时间粒度的需求序列进行时间序列分解，得到趋势项、季节项和随机项，并对趋势项进行增长模式识别，得到长期发展趋势函数；</div>
+      <div id="p0047" num="0042" class="description-paragraph">对季节项进行周期性特征提取，得到季节性变化模式库，并结合气象数据进行相关性分析，得到气候因素影响模型；</div>
+      <div id="p0048" num="0043" class="description-paragraph">收集电动汽车市场渗透率和政策变化数据，得到市场增长驱动因素集，并将市场增长驱动因素集与所述长期发展趋势函数结合，得到市场发展预测曲线；</div>
+      <div id="p0049" num="0044" class="description-paragraph">基于长期发展趋势函数、季节性变化模式库、气候因素影响模型和市场发展预测曲线，构建多层次时间神经网络模型，得到动态充电需求预测模型。</div>
+      <div id="p0050" num="0045" class="description-paragraph">本实施例中，首先对时空充电需求分布图谱中的数据按照不同的时间粒度进行切片处理，提取日内变化序列(如每小时变化)，分析早晚高峰、工作时段等特征，提取周内变化序列(如工作日与周末差异)，分析工作日与休息日的需求模式差异，提取月度变化序列，分析月初、月中、月末的需求变化规律，提取季节性序列，分析春夏秋冬四季的需求变化模式，形成不同时间粒度的需求序列，然后采用时间序列分解技术(如STL分解、X-12-ARIMA等)，将不同时间粒度的需求序列分解为三个组成部分：长期趋势项、周期性季节项和随机波动项，通过分解使模式更清晰可见，对分解后的趋势项使用增长模式识别算法(如线性回归、指数平滑、多项式回归等)，识别充电需求的长期增长模式，如线性增长、指数增长或S型增长等，拟合得到数学函数表达式，形成长期发展趋势函数，对分解后的季节项使用周期性分析方法(如傅里叶分析、小波分析等)，提取固定周期的变化模式，如日循环模式、周循环模式、季节循环模式等，形成季节性变化模式库，从气象部门获取历史气温、降水、湿度、极端天气等气象数据，分析气象因素与充电需求之间的相关性，建立气候条件对充电需求的影响模型，如极端天气时充电需求增加或降低的幅度，形成气候因素影响模型，同时收集电动汽车市场数据，包括电动汽车销量、增长率、区域分布等，收集政策变化数据，包括补贴政策、限购政策、环保法规等，分析这些因素对充电需求的驱动作用，形成市场增长驱动因素集，将市场增长驱动因素集与长期发展趋势函数进行整合分析，使用情景分析或统计建模方法，预测未来电动汽车市场规模和增长轨迹，形成市场发展预测曲线，最后整合长期发展趋势函数、季节性变化模式库、气候因素影响模型和市场发展预测曲线，采用深度学习技术构建多层次时间神经网络模型，如LSTM(长短期记忆网络)、GRU(门控循环单元)、Transformer等，模型具有多个时间尺度的层次结构，能够同时捕捉短期波动和长期趋势，通过历史数据训练和验证，形成动态充电需求预测模型，该模型能够根据时间、地点、气候、市场等多因素动态预测未来的充电需求变化，为充电站规划提供科学依据。</div>
+      <div id="p0051" num="0046" class="description-paragraph">本发明实施例中，步骤3的详细实施步骤包括：</div>
+      <div id="p0052" num="0047" class="description-paragraph">获取区域内道路网络拓扑结构和交通流量数据，得到加权路网图，并在加权路网图上划分交通分析区，得到候选区域集；</div>
+      <div id="p0053" num="0048" class="description-paragraph">对候选区域集结合土地利用规划和电网分布情况进行初步筛选，得到可行站址集，并对可行站址集进行可达性分析，得到服务覆盖范围图；</div>
+      <div id="p0054" num="0049" class="description-paragraph">基于动态充电需求预测模型计算各候选站点的潜在服务需求量，得到需求权重矩阵，并构建多目标优化函数，包括需求满足度、覆盖均衡性和建设成本最小化目标；</div>
+      <div id="p0055" num="0050" class="description-paragraph">应用改进的粒子群优化算法求解所述多目标优化函数，得到帕累托最优解集，并通过模糊层次分析法对所述帕累托最优解集进行综合评价，得到最优站点配置方案；</div>
+      <div id="p0056" num="0051" class="description-paragraph">对最优站点配置方案进行服务质量验证和敏感性分析，得到充电站初步布局方案。</div>
+      <div id="p0057" num="0052" class="description-paragraph">本实施例中，首先从交通管理部门和城市规划部门获取区域内道路网络拓扑结构数据，包括道路等级、连接关系、长度、通行能力等信息，收集交通流量数据，包括不同时段的车流量、拥堵情况、平均行驶速度等，将道路网络拓扑结构与交通流量数据结合，构建加权路网图，其中道路连接表示拓扑结构，权重表示通行成本(如时间成本、距离成本)，在加权路网图上根据交通特征和行政区划进行区域划分，如按交通小区、功能区块或网格化方式划分，形成一组候选区域集作为可能的充电站选址区域，然后结合城市土地利用规划数据，筛选出符合用地性质要求的区域，如商业用地、公共设施用地、停车场用地等，收集电网分布数据，包括变电站位置、配电线路分布、电力容量等，筛选出电网接入条件较好的区域，对同时满足土地和电网条件的区域进行标记，形成可行站址集，采用网络分析方法(如最短路径算法、服务区分析等)对可行站址集进行可达性分析，计算从各潜在站点出发在特定时间(如5分钟、10分钟)内可覆盖的范围，形成服务覆盖范围图，展示每个站点的服务辐射范围和覆盖人口，利用动态充电需求预测模型，结合服务覆盖范围图，计算各候选站点位置的潜在充电需求量，考虑日均、峰值需求等多种指标，赋予不同位置不同的需求权重，形成需求权重矩阵，构建多目标优化函数，综合考虑三个关键目标：需求满足度(最大化充电需求覆盖率)、覆盖均衡性(均衡分布服务，避免服务盲区)、建设成本最小化(考虑土地成本、电网接入成本等)，通过目标函数权重设置反映不同目标的重要性，采用改进的粒子群优化(PSO)算法求解多目标优化问题，引入拥挤距离、精英策略等改进机制提高算法性能，通过多次迭代优化寻找最佳站点组合，得到一组非支配解构成的帕累托最优解集，每个解代表一种可能的站点布局方案，通过模糊层次分析法对帕累托最优解集中的各解进行综合评价，设置评价指标体系并确定指标权重，通过模糊综合评价计算各方案的综合得分，选择得分最高的方案作为最优站点配置方案，最后对最优站点配置方案进行服务质量验证，利用排队论模型或仿真方法评估不同时段的服务能力和等待时间，进行敏感性分析，评估关键参数(如电动汽车渗透率、充电需求量等)变化对布局方案的影响，根据验证和分析结果对方案进行必要调整，最终形成充电站初步布局方案，该方案既满足充电需求，又具有经济可行性和实施灵活性。</div>
+      <div id="p0058" num="0053" class="description-paragraph">本发明实施例中，步骤4的详细实施步骤包括：</div>
+      <div id="p0059" num="0054" class="description-paragraph">获取区域配电网拓扑结构和变电站容量数据，得到电网基础信息库，并根据充电站初步布局方案模拟充电负荷接入情况，得到电网潮流分布模型；</div>
+      <div id="p0060" num="0055" class="description-paragraph">对电网潮流分布模型进行N-1安全校验和电压稳定性分析，得到电网承载能力评估报告，并基于电网承载能力评估报告识别电网薄弱环节和潜在风险点，得到电网增强需求清单；</div>
+      <div id="p0061" num="0056" class="description-paragraph">根据电网增强需求清单调研区域内可再生能源分布情况和发电特性，得到可再生能源资源图谱，并基于可再生能源资源图谱评估各充电站点适合接入的可再生能源类型和规模，得到绿色能源配置方案；</div>
+      <div id="p0062" num="0057" class="description-paragraph">基于绿色能源配置方案和电网潮流分布模型设计储能系统配置参数和能量管理策略，得到削峰填谷解决方案，并将削峰填谷解决方案与绿色能源配置方案集成，得到混合能源系统架构；</div>
+      <div id="p0063" num="0058" class="description-paragraph">基于混合能源系统架构构建含充电站群的配电网协同优化调度模型，得到多时间尺度能源调度策略，并通过数字孪生仿真验证多时间尺度能源调度策略的系统可靠性，得到能源协同供给保障体系。</div>
+      <div id="p0064" num="0059" class="description-paragraph">本实施例中，首先从电力公司获取区域配电网的拓扑结构数据，包括变电站位置、线路走向、断路器位置等网络结构信息，收集变电站容量数据，包括主变容量、负载率、备用容量等，整合形成电网基础信息库，根据充电站初步布局方案，计算各充电站的预计负荷特性，包括峰值功率、负荷曲线、功率因数等，使用电力系统分析软件(如PSASP、PowerFactory等)将充电负荷接入电网进行仿真，模拟不同时段、不同负荷水平下的电网运行状态，生成电网潮流分布模型，对电网潮流分布模型进行N-1安全校验，即模拟任意一个关键元件(如变压器、线路)故障时系统的运行状态，评估系统的安全裕度，进行电压稳定性分析，计算各节点电压偏差、电压稳定裕度等指标，综合安全校验和稳定性分析结果，形成电网承载能力评估报告，该报告全面评估电网承载充电站负荷的能力，根据评估报告分析识别电网中的薄弱环节，如容量不足的变电站、过载的线路、电压偏低的区域等，评估潜在风险点，如峰值负荷冲击、谐波污染、冲击负荷等问题，形成电网增强需求清单，包括需要升级改造的设备、新增的电力设施等，调研区域内可再生能源的分布情况，如太阳能资源丰富区、风能资源丰富区、地热资源分布等，分析不同可再生能源的发电特性，如出力特性、季节变化、稳定性等，整合形成可再生能源资源图谱，基于可再生能源资源图谱，结合各充电站的地理位置和用地条件，评估适合接入的可再生能源类型(如光伏、风力、生物质能等)和规模，考虑技术可行性、经济性和环境影响，形成针对每个充电站的绿色能源配置方案，根据绿色能源配置方案和电网潮流分布模型，设计储能系统的配置参数，包括储能容量、功率特性、响应速度等，制定能量管理策略，如峰谷差价套利、需求侧响应、负荷转移等，形成削峰填谷解决方案，能够平抑充电负荷波动，提高电网运行效率，将削峰填谷解决方案与绿色能源配置方案进行系统集成，设计混合能源系统的总体架构，包括能源转换设备、控制系统、通信接口等，形成混合能源系统架构，将各充电站视为一个整体网络，构建含充电站群的配电网协同优化调度模型，考虑电网约束、可再生能源出力特性、充电需求动态变化等因素，设计多时间尺度的能源调度策略，包括日前调度、小时级调度和实时调度，实现跨时间尺度的能源优化配置，采用数字孪生技术构建虚拟仿真环境，对多时间尺度能源调度策略进行全面仿真验证，测试不同场景(如高峰期、低谷期、极端天气等)下系统的可靠性和稳定性，通过反复测试和优化，最终形成能源协同供给保障体系，该体系能够确保充电站网络的能源供应安全、经济和环保，为下一步的智能调度控制提供能源基础。</div>
+      <div id="p0065" num="0060" class="description-paragraph">本发明实施例中，步骤5的详细实施步骤包括：</div>
+      <div id="p0066" num="0061" class="description-paragraph">分析区域电网负荷曲线和电价政策，得到基础电价结构，并结合基础电价结构与充电需求时间分布特征，确定峰平谷时段划分标准，得到分时电价初始方案；</div>
+      <div id="p0067" num="0062" class="description-paragraph">基于分时电价初始方案建立充电行为对价格敏感性的量化模型，得到需求价格弹性系数，并利用需求价格弹性系数设计动态价格调整算法，得到实时定价机制；</div>
+      <div id="p0068" num="0063" class="description-paragraph">基于实时定价机制和能源协同供给保障体系构建充电站资源预分配模型，得到服务容量预测值，并根据服务容量预测值设计基于优先级的预约规则体系，得到预约管理框架；</div>
+      <div id="p0069" num="0064" class="description-paragraph">结合预约管理框架开发基于车辆特征和用户偏好的个性化充电方案推荐系统，得到智能推荐引擎，并基于智能推荐引擎设计拥堵状态下的动态排队调度算法，得到队列优化模型；</div>
+      <div id="p0070" num="0065" class="description-paragraph">根据能源协同供给保障体系的多时间尺度能源调度策略，将实时定价机制、预约管理框架、智能推荐引擎和队列优化模型进行系统集成，得到智能调度控制策略。</div>
+      <div id="p0071" num="0066" class="description-paragraph">本实施例中，首先收集区域电网历史负荷曲线数据，分析负荷变化规律和特征，如日内波动、季节变化等，了解当地电价政策，包括现有的分时电价、阶梯电价、需求响应政策等，整合形成基础电价结构，结合基础电价结构与步骤2中得到的充电需求时间分布特征，确定充电服务的峰平谷时段划分标准，如峰时段(10:00-15:00，18:00-21:00)、平时段(7:00-10:00，15:00-18:00，21:00-23:00)、谷时段(23:00-次日7:00)，根据各时段特点设置不同电价水平，形成分时电价初始方案，通过历史充电数据分析，建立充电行为对价格变化的敏感性量化模型，使用计量经济学方法(如回归分析、离散选择模型等)估算不同用户群体、不同时段的需求价格弹性系数，如峰时段弹性系数为-0.8(价格上涨10%，需求下降8%)，谷时段弹性系数为-1.2(价格下降10%，需求上升12%)，基于需求价格弹性系数，设计动态价格调整算法，能够根据实时电网负荷状况、可再生能源出力情况和充电需求预测自动调整价格，算法采用强化学习或模型预测控制方法，形成实时定价机制，利用实时定价机制和能源协同供给保障体系中的能源供给情况，构建充电站资源预分配模型，预测不同时段的最大服务能力，考虑充电桩数量、功率等硬件约束和电网容量、可再生能源出力等能源约束，形成服务容量预测值，根据服务容量预测值，设计基于优先级的预约规则体系，如远距离用户优先、低电量车辆优先、VIP会员优先等规则，设计预约时间窗口、取消政策、信用机制等细则，形成预约管理框架，分析不同电动汽车的特征(如电池容量、充电速率、续航里程等)和用户充电偏好(如充电时长、费用敏感度、时间灵活性等)，开发个性化充电方案推荐系统，能够为用户推荐最优的充电时间、地点和充电量，采用机器学习算法(如协同过滤、内容推荐等)实现个性化推荐，形成智能推荐引擎，针对充电站拥堵状态，设计动态排队调度算法，考虑车辆充电需求紧急程度、等待时间、充电时长等因素，优化充电顺序和资源分配，算法可采用启发式方法或动态规划方法，最大化系统吞吐量和用户满意度，形成队列优化模型，最后根据能源协同供给保障体系中的多时间尺度能源调度策略，将实时定价机制、预约管理框架、智能推荐引擎和队列优化模型进行系统集成，开发统一的控制接口和信息共享机制，确保各子系统协同工作，实现从能源供给到用户服务的全流程智能调度，形成智能调度控制策略，该策略能够实现充电资源的高效利用、用户体验的持续优化和电网负荷的有效管理，为充电站网络提供智能化运营支持。</div>
+      <div id="p0072" num="0067" class="description-paragraph">本发明实施例中，步骤6的详细实施步骤包括：</div>
+      <div id="p0073" num="0068" class="description-paragraph">收集市场流通的主要电动汽车车型参数，得到车型数据库，并根据智能调度控制策略对车型数据库进行充电接口标准和充电功率需求分类，得到车型分群结果；</div>
+      <div id="p0074" num="0069" class="description-paragraph">基于车型分群结果分析各充电站点的目标用户群体特征，得到用户画像，并根据用户画像预测不同充电功率需求的比例分布，得到功率需求结构；</div>
+      <div id="p0075" num="0070" class="description-paragraph">将功率需求结构与充电站物理空间约束和电力容量限制相结合，得到站点资源约束条件，并基于站点资源约束条件构建设施配置优化模型，得到初步配置方案；</div>
+      <div id="p0076" num="0071" class="description-paragraph">根据初步配置方案和智能调度控制策略的排队模型分析，考虑快充与慢充的合理比例和未来技术升级预留空间，得到设施结构优化策略，并基于设施结构优化策略调整所述初步配置方案，得到灵活扩展方案；</div>
+      <div id="p0077" num="0072" class="description-paragraph">利用智能调度控制策略中的服务质量评估指标，对初步配置方案和灵活扩展方案进行综合评估，平衡投资效益和用户体验，得到多样化充电设施配置方案。</div>
+      <div id="p0078" num="0073" class="description-paragraph">本实施例中，首先收集市场上主流电动汽车车型的技术参数，包括乘用车、商用车、公交车等不同类型，记录每种车型的电池容量、最大充电功率、充电接口类型、充电曲线特性等关键参数，形成结构化的车型数据库，根据智能调度控制策略中的用户数据和充电记录，对车型数据库进行分析，按充电接口标准(如国标、欧标、特斯拉等)和充电功率需求(如超快充、快充、慢充)进行分类，识别主要车型群体及其特征，形成车型分群结果，基于车型分群结果和充电站位置特征(如商业区、住宅区、高速公路等)，分析各充电站点可能服务的目标用户群体，考虑车辆类型、使用场景、充电习惯等因素，构建用户画像，如“商业区充电站主要服务于办公通勤车辆，工作日使用频繁，停留时间4-8小时”，根据用户画像分析不同充电站点对不同功率充电设施的需求比例，如“高速公路服务区需要80%超快充+20%快充”，“住宅区需要30%快充+70%慢充”等，形成功率需求结构，调查各充电站点的物理空间条件，包括可用面积、车位布局、电气设备室空间等，评估电力容量限制，包括变压器容量、线路承载能力、配电设备限制等，将功率需求结构与物理空间约束和电力容量限制结合分析，明确各站点的资源约束条件，基于站点资源约束条件，构建设施配置优化模型，综合考虑建设成本、运营效率、用户满意度等因素，使用线性规划或整数规划方法确定各类充电设备的最优数量配比，如7kW慢充桩数量、60kW快充桩数量、120kW超快充桩数量等，形成初步配置方案，结合智能调度控制策略中的排队模型分析充电站可能的拥堵情况和服务效率，基于分析结果调整快充与慢充的比例，确保高峰期服务能力，预留未来技术升级空间，如为350kW及以上的超高功率充电预留接口和电力容量，形成设施结构优化策略，根据设施结构优化策略对初步配置方案进行调整，增加模块化、可扩展设计，使系统能够根据需求变化灵活升级，设计分期建设方案，根据预测需求增长曲线制定多阶段建设计划，形成灵活扩展方案，使用智能调度控制策略中的服务质量评估指标，如平均等待时间、充电桩利用率、用户满意度等，对初步配置方案和灵活扩展方案进行综合评估，通过多场景仿真验证不同方案的性能，平衡投资效益(如建设成本、回收期)和用户体验(如便利性、可靠性)，选择最优方案，形成多样化充电设施配置方案，该方案能够满足不同车型、不同用户的多样化充电需求，同时确保投资的经济性和系统的可扩展性。</div>
+      <div id="p0079" num="0074" class="description-paragraph">本发明实施例中，通过模糊层次分析法对所述帕累托最优解集进行综合评价，得到最优站点配置方案，包括：</div>
+      <div id="p0080" num="0075" class="description-paragraph">建立充电站评价指标体系，包括需求覆盖率、服务半径均衡性、交通可达性、电网接入便利度和土地资源利用效率的多维评价指标，得到评价标准框架，并确定各评价指标的理想值和可接受阈值，得到指标参考区间；</div>
+      <div id="p0081" num="0076" class="description-paragraph">基于指标参考区间对各评价指标进行重要性比较，使用语言变量表述比较结果，得到模糊语义评价集，并将所述模糊语义评价集转换为三角模糊数，构建模糊判断矩阵，得到专家判断结构；</div>
+      <div id="p0082" num="0077" class="description-paragraph">采用几何平均法合成多个专家判断结构，得到综合判断矩阵，并使用模糊扩展分析法计算各评价指标的模糊权重向量，得到指标重要性量化结果；</div>
+      <div id="p0083" num="0078" class="description-paragraph">对综合判断矩阵进行一致性检验，计算一致性比率，得到判断可靠性评估结果，若不满足一致性要求，则返回重新调整专家判断结构，直至满足一致性要求，得到有效权重向量；</div>
+      <div id="p0084" num="0079" class="description-paragraph">对帕累托最优解集中的每个解方案在各评价指标上进行模糊评分，得到方案评分矩阵，并结合有效权重向量计算各方案的综合评价值，得到方案排序结果；</div>
+      <div id="p0085" num="0080" class="description-paragraph">选择综合评价值最高的方案作为基础方案，并进行实际实施可行性验证，包括现场勘查和利益相关者咨询，得到实施约束条件，根据实施约束条件对基础方案进行微调，最终形成最优站点配置方案。</div>
+      <div id="p0086" num="0081" class="description-paragraph">本实施例中，首先建立充电站评价的多维指标体系，包括需求覆盖率(充电站能够满足区域充电需求的程度)、服务半径均衡性(充电站服务范围的均衡分布程度)、交通可达性(充电站交通便利程度和道路连通性)、电网接入便利度(接入电网的难易程度和成本)、土地资源利用效率(单位面积土地服务能力)等多个维度，形成评价标准框架，通过专家研讨和案例分析，确定各评价指标的理想值(如需求覆盖率≥95%)和可接受阈值(如需求覆盖率≥80%)，形成指标参考区间，为后续评价提供标准依据，邀请充电站规划、电网建设、城市交通等领域的专家，基于指标参考区间对各评价指标进行两两重要性比较，使用语言变量(如“极其重要”、“很重要”、“稍微重要”、“同等重要”等)表述比较结果，形成模糊语义评价集，将模糊语义评价集转换为三角模糊数，如&#34;极其重要&#34;转换为(7,9,9)，&#34;很重要&#34;转换为(5,7,9)等，构建包含三角模糊数的判断矩阵，形成专家判断结构，当有多位专家参与评价时，使用几何平均法合成多个专家的判断结构，计算每个判断元素的几何平均值，形成综合判断矩阵，使用模糊扩展分析法(Fuzzy Extent Analysis)处理综合判断矩阵，计算各评价指标的模糊权重向量，通过模糊权重向量的去模糊化(如重心法)得到各指标的明确权重值，形成指标重要性量化结果，对综合判断矩阵进行一致性检验，计算一致性指标(CI)和一致性比率(CR)，判断专家评价的一致性程度，如果CR&lt;0.1，则认为判断具有可接受的一致性，否则需要返回请专家重新调整判断，直至满足一致性要求，形成有效权重向量，对帕累托最优解集中的每个站点布局方案在各评价指标上进行模糊评分，可采用三角模糊数表示评分结果，以反映评价的不确定性，形成方案评分矩阵，将方案评分矩阵与有效权重向量结合，计算每个方案的综合评价值，可使用模糊加权平均法或其他模糊多属性决策方法，根据综合评价值对所有方案进行排序，得到方案排序结果，选择综合评价值最高的方案作为基础方案，组织专业团队进行实地勘查，验证该方案在实际环境中的可行性，咨询当地政府、社区居民、电网公司等利益相关者，收集他们的意见和建议，识别实施过程中可能面临的约束条件，如土地获取难度、居民接受度、建设周期等，根据实施约束条件对基础方案进行必要的微调，如调整部分站点位置、调整建设时序、增加配套设施等，保留原方案的核心优势同时提高实施可行性，最终形成最优站点配置方案，该方案既满足多维评价指标的要求，又具有实际可操作性。</div>
+      <div id="p0087" num="0082" class="description-paragraph">本发明实施例中，基于所述实时定价机制和所述能源协同供给保障体系构建充电站资源预分配模型，得到服务容量预测值，包括：</div>
+      <div id="p0088" num="0083" class="description-paragraph">获取历史充电需求数据和价格敏感性指标，得到价格-需求响应关系矩阵，并结合实时定价机制的动态价格调整参数，建立需求转移预测模型，得到负荷分布预测图；</div>
+      <div id="p0089" num="0084" class="description-paragraph">从能源协同供给保障体系中提取电网容量约束和可再生能源供给波动特性，得到能源供给边界条件，并基于能源供给边界条件构建多时段供给能力评估模型，得到时变容量上限；</div>
+      <div id="p0090" num="0085" class="description-paragraph">将负荷分布预测图与时变容量上限进行匹配分析，得到供需平衡约束条件，并基于供需平衡约束条件开发动态资源分配算法，得到初步资源分配方案；</div>
+      <div id="p0091" num="0086" class="description-paragraph">基于初步资源分配方案建立考虑用户满意度和系统效率的双目标优化函数，得到资源分配优化目标，并采用滚动时域优化方法求解双目标优化函数，得到优化资源分配策略；</div>
+      <div id="p0092" num="0087" class="description-paragraph">结合优化资源分配策略设计基于随机过程的不确定性处理机制，对负荷分布预测图中的需求预测误差和能源供给边界条件中的可再生能源波动进行情景模拟，得到风险评估结果，并根据风险评估结果调整所述优化资源分配策略中的资源预留比例，形成具有韧性的服务容量预测值。</div>
+      <div id="p0093" num="0088" class="description-paragraph">本实施例中，首先收集并分析历史充电需求数据，包括不同价格水平下的充电需求量、充电时段分布等，计算价格敏感性指标，如价格弹性系数、交叉价格弹性等，构建价格与需求之间的响应关系矩阵，展示不同价格变动对不同时段充电需求的影响，结合实时定价机制中的动态价格调整参数(如基准价格、调整幅度、调整频率等)，建立需求转移预测模型，该模型能够预测价格变动导致的充电需求在时间和空间上的转移效应，如“峰时价格上调20%会导致30%的需求转移到平时段”，使用时间序列分析和机器学习方法(如回归模型、神经网络等)构建预测模型，形成负荷分布预测图，展示不同价格策略下充电需求的时空分布预测，从能源协同供给保障体系中提取电网相关约束，如变压器容量限制、线路传输限制、电压稳定边界等，提取可再生能源供给特性，如光伏发电日内曲线、风电波动特性、季节性变化等，整合形成能源供给边界条件，明确不同时段、不同地点的最大可用能源供给量，基于能源供给边界条件，构建多时段供给能力评估模型，考虑电网负荷水平、可再生能源出力预测、储能系统状态等因素，计算每个时段的最大供电能力，形成时变容量上限，显示24小时内每个时段的最大供电能力曲线，将负荷分布预测图与时变容量上限进行匹配分析，识别潜在的供需不平衡点，如需求超过供给能力的时段或区域，形成供需平衡约束条件，包括必须满足的硬约束(如不超过电网最大容量)和尽量满足的软约束(如优先满足高价值用户)，基于供需平衡约束条件，开发动态资源分配算法，该算法能够根据预测的需求和可用资源，计算每个时段应预分配的充电资源量，考虑时间连续性和资源有限性，采用线性规划或网络流算法进行资源分配优化，形成初步资源分配方案，基于初步资源分配方案，建立双目标优化函数，一方面最大化用户满意度(如减少等待时间、满足偏好时段)，另一方面最大化系统效率(如提高设备利用率、平衡电网负荷)，为两个目标设置权重系数，反映其相对重要性，形成资源分配优化目标，采用滚动时域优化方法求解双目标优化函数，将优化时段划分为多个滚动时域(如每3小时一个时域)，先优化近期时域，然后逐步向后推进，每次推进时更新预测数据和边界条件，这种方法能够平衡优化效果和计算复杂度，形成优化资源分配策略，考虑实际运行中的不确定性，设计基于随机过程的处理机制，使用蒙特卡罗模拟等方法，生成多种需求预测误差和可再生能源波动情景，评估在不确定条件下资源分配策略的稳健性，形成风险评估结果，根据风险评估结果，调整优化资源分配策略中的资源预留比例，如在高不确定性时段增加5-10%的备用资源，确保系统具有足够的应对能力，最终形成具有韧性的服务容量预测值，该预测值不仅考虑了预期需求，还包含了应对不确定性的缓冲空间，为充电站资源预约和调度提供可靠依据。</div>
+      <div id="p0094" num="0089" class="description-paragraph">上面对本申请实施例中基于汽车充电需求的充电站规划方法进行了描述，下面对本申请实施例中基于汽车充电需求的充电站规划系统进行描述，请参阅图2，本申请实施例中基于汽车充电需求的充电站规划系统一个实施例包括：</div>
+      <div id="p0095" num="0090" class="description-paragraph">采集与处理模块，用于对区域内车辆行驶轨迹和充电行为进行多源数据采集与融合处理，得到时空充电需求分布图谱；</div>
+      <div id="p0096" num="0091" class="description-paragraph">分析与需求预测模块，用于基于所述时空充电需求分布图谱进行季节性变化分析和未来需求预测，得到动态充电需求预测模型；</div>
+      <div id="p0097" num="0092" class="description-paragraph">站点布局优化模块，用于基于所述动态充电需求预测模型结合城市路网结构和交通流量数据，进行多约束条件下的站点布局优化，得到充电站初步布局方案；</div>
+      <div id="p0098" num="0093" class="description-paragraph">能源供给评估模块，用于基于所述充电站初步布局方案进行电网负荷能力评估和可再生能源接入分析，得到能源协同供给保障体系；</div>
+      <div id="p0099" num="0094" class="description-paragraph">智能调度控制模块，用于基于所述能源协同供给保障体系进行峰谷时段充电价格动态调整和预约排队机制设计，得到智能调度控制策略；</div>
+      <div id="p0100" num="0095" class="description-paragraph">设施配置规划模块，用于基于所述智能调度控制策略进行不同充电功率需求和车型适配性评估，得到多样化充电设施配置方案，各个模块之间通过有线和/或无线的方式进行连接，实现模块间的数据传输。</div>
+      <div id="p0101" num="0096" class="description-paragraph">以上所述仅为本发明的优选实施例而已，并不用于限制本发明，尽管参照前述实施例对本发明进行了详细的说明，对于本领域的技术人员来说，依然可以对前述各实施例所记载的技术方案进行修改，或者对其中部分技术特征进行等同替换。凡在本发明的精神和原则之内，所作的任何修改、等同替换、改进等，均应包含在本发明的保护范围之内。</div>
+      <div id="p0102" num="0097" class="description-paragraph">需要说明的是，在本文中，术语“包括”、“包含”或者其任何其他变体意在涵盖非排他性的包含，从而使得包括一系列要素的过程、方法、物品或者设备不仅包括那些要素，而且还包括没有明确列出的其他要素，或者是还包括为这种过程、方法、物品或者设备所固有的要素。在没有更多限制的情况下，由语句“包括一个……”限定的要素，并不排除在包括所述要素的过程、方法、物品或者设备中还存在另外的相同要素。</div>
+      <div id="p0103" num="0098" class="description-paragraph">在本发明的描述中，需要理解的是，术语“第一”、“第二”等仅用于区分描述，而不能理解为指示或暗示相对重要性。</div>
+      <div id="p0104" num="0099" class="description-paragraph">在本发明的描述中，除非另有说明，“多个”的含义是两个或两个以上。</div>
+      <div id="p0105" num="0100" class="description-paragraph">在本发明的描述中，“若干”的含义是一个或一个以上，“大量”的含义是两个或两个以上。</div>
+      <div id="p0106" num="0101" class="description-paragraph">在本说明书的描述中，参考术语“一个实施例”、“一些实施例”、“示例”、“具体示例”、或“一些示例”等的描述意指结合该实施例或示例描述的具体特征、结构、材料或者特点包含于本发明的至少一个实施例或示例中。在本说明书中，对上述术语的示意性表述不一定指的是相同的实施例或示例。而且，描述的具体特征、结构、材料或者特点可以在任何的一个或多个实施例或示例中以合适的方式结合。</div>
+      <div id="p0107" num="0102" class="description-paragraph">对于本说明书的公式均是去量纲取其数值计算，公式是由采集大量数据进行软件模拟得到最近真实情况的一个公式，公式中的预设参数以及阈值选取由本领域的技术人员根据实际情况进行设置。</div>
+      <div id="p0108" num="0103" class="description-paragraph">尽管已经示出和描述了本发明的实施例，本领域的普通技术人员可以理解：在不脱离本发明的原理和宗旨的情况下可以对这些实施例进行多种变化、修改、替换和变型，本发明的范围由权利要求及其等同物限定。</div>
+    </mode-for-invention>
+  </div>
+  </div>
+  </section>
+
+  <section itemprop="claims" itemscope>
+    <h2>Claims (<span itemprop="count">8</span>)</h2>
+    
+    <div itemprop="content" html><div mxw-id="PCLM495523521" lang="ZH" load-source="patent-office" class="claims">
+    <div class="claim"> <div id="zh-cl0001" num="0001" class="claim">
+      <div class="claim-text">1.一种基于汽车充电需求的充电站规划方法，其特征在于，包括：</div>
+      <div class="claim-text">步骤1、对区域内车辆行驶轨迹和充电行为进行多源数据采集与融合处理，得到时空充电需求分布图谱；包括：</div>
+      <div class="claim-text">从车联网平台获取车辆GPS轨迹数据，得到车辆移动轨迹集，并对所述车辆移动轨迹集进行数据清洗和异常值检测，得到有效轨迹数据；</div>
+      <div class="claim-text">从充电桩运营商管理系统获取历史充电记录，得到充电行为数据集，并对所述充电行为数据集进行时间特征和空间特征提取，得到充电模式特征库；</div>
+      <div class="claim-text">从交通管理部门获取道路流量监测数据，得到交通流分布信息，并将所述交通流分布信息与城市功能区划分图层叠加，得到区域活动热点图；</div>
+      <div class="claim-text">对所述有效轨迹数据、所述充电模式特征库和所述区域活动热点图进行时空关联性分析，得到充电需求关联规则，并基于所述充电需求关联规则构建层次聚类模型，得到充电需求聚类结果；</div>
+      <div class="claim-text">将所述充电需求聚类结果在地理信息系统上进行可视化映射，得到时空充电需求分布图谱；</div>
+      <div class="claim-text">步骤2、基于所述时空充电需求分布图谱进行季节性变化分析和未来需求预测，得到动态充电需求预测模型，包括：</div>
+      <div class="claim-text">对所述时空充电需求分布图谱按照时间维度进行切片，得到不同时间粒度的需求序列，包括日内、周内、月度和季节性序列；</div>
+      <div class="claim-text">对所述不同时间粒度的需求序列进行时间序列分解，得到趋势项、季节项和随机项，并对所述趋势项进行增长模式识别，得到长期发展趋势函数；</div>
+      <div class="claim-text">对所述季节项进行周期性特征提取，得到季节性变化模式库，并结合气象数据进行相关性分析，得到气候因素影响模型；</div>
+      <div class="claim-text">收集电动汽车市场渗透率和政策变化数据，得到市场增长驱动因素集，并将所述市场增长驱动因素集与所述长期发展趋势函数结合，得到市场发展预测曲线；</div>
+      <div class="claim-text">基于所述长期发展趋势函数、所述季节性变化模式库、所述气候因素影响模型和所述市场发展预测曲线，构建多层次时间神经网络模型，得到动态充电需求预测模型；</div>
+      <div class="claim-text">步骤3、基于所述动态充电需求预测模型结合城市路网结构和交通流量数据，进行多约束条件下的站点布局优化，得到充电站初步布局方案；</div>
+      <div class="claim-text">步骤4、基于所述充电站初步布局方案进行电网负荷能力评估和可再生能源接入分析，得到能源协同供给保障体系；</div>
+      <div class="claim-text">步骤5、基于所述能源协同供给保障体系进行峰谷时段充电价格动态调整和预约排队机制设计，得到智能调度控制策略；</div>
+      <div class="claim-text">步骤6、基于所述智能调度控制策略进行不同充电功率需求和车型适配性评估，得到多样化充电设施配置方案。</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="zh-cl0002" num="0002" class="claim">
+      <div class="claim-text">
+        <claim-ref idref="zh-cl0001"> </claim-ref>
+      </div>
+      <div class="claim-text">2.根据权利要求1所述的基于汽车充电需求的充电站规划方法，其特征在于，所述基于所述动态充电需求预测模型结合城市路网结构和交通流量数据，进行多约束条件下的站点布局优化，得到充电站初步布局方案，包括：</div>
+      <div class="claim-text">获取区域内道路网络拓扑结构和交通流量数据，得到加权路网图，并在所述加权路网图上划分交通分析区，得到候选区域集；</div>
+      <div class="claim-text">对所述候选区域集结合土地利用规划和电网分布情况进行初步筛选，得到可行站址集，并对所述可行站址集进行可达性分析，得到服务覆盖范围图；</div>
+      <div class="claim-text">基于所述动态充电需求预测模型计算各候选站点的潜在服务需求量，得到需求权重矩阵，并构建多目标优化函数，包括需求满足度、覆盖均衡性和建设成本最小化目标；</div>
+      <div class="claim-text">应用改进的粒子群优化算法求解所述多目标优化函数，得到帕累托最优解集，并通过模糊层次分析法对所述帕累托最优解集进行综合评价，得到最优站点配置方案；</div>
+      <div class="claim-text">对所述最优站点配置方案进行服务质量验证和敏感性分析，得到充电站初步布局方案。</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="zh-cl0003" num="0003" class="claim">
+      <div class="claim-text">
+        <claim-ref idref="zh-cl0002"> </claim-ref>
+      </div>
+      <div class="claim-text">3.根据权利要求2所述的基于汽车充电需求的充电站规划方法，其特征在于，所述基于所述充电站初步布局方案进行电网负荷能力评估和可再生能源接入分析，得到能源协同供给保障体系，包括：</div>
+      <div class="claim-text">获取区域配电网拓扑结构和变电站容量数据，得到电网基础信息库，并根据所述充电站初步布局方案模拟充电负荷接入情况，得到电网潮流分布模型；</div>
+      <div class="claim-text">对所述电网潮流分布模型进行N-1安全校验和电压稳定性分析，得到电网承载能力评估报告，并基于所述电网承载能力评估报告识别电网薄弱环节和潜在风险点，得到电网增强需求清单；</div>
+      <div class="claim-text">根据所述电网增强需求清单调研区域内可再生能源分布情况和发电特性，得到可再生能源资源图谱，并基于所述可再生能源资源图谱评估各充电站点适合接入的可再生能源类型和规模，得到绿色能源配置方案；</div>
+      <div class="claim-text">基于所述绿色能源配置方案和所述电网潮流分布模型设计储能系统配置参数和能量管理策略，得到削峰填谷解决方案，并将所述削峰填谷解决方案与所述绿色能源配置方案集成，得到混合能源系统架构；</div>
+      <div class="claim-text">基于所述混合能源系统架构构建含充电站群的配电网协同优化调度模型，得到多时间尺度能源调度策略，并通过数字孪生仿真验证所述多时间尺度能源调度策略的系统可靠性，得到能源协同供给保障体系。</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="zh-cl0004" num="0004" class="claim">
+      <div class="claim-text">
+        <claim-ref idref="zh-cl0003"> </claim-ref>
+      </div>
+      <div class="claim-text">4.根据权利要求3所述的基于汽车充电需求的充电站规划方法，其特征在于，所述基于所述能源协同供给保障体系进行峰谷时段充电价格动态调整和预约排队机制设计，得到智能调度控制策略，包括：</div>
+      <div class="claim-text">分析区域电网负荷曲线和电价政策，得到基础电价结构，并结合所述基础电价结构与充电需求时间分布特征，确定峰平谷时段划分标准，得到分时电价初始方案；</div>
+      <div class="claim-text">基于所述分时电价初始方案建立充电行为对价格敏感性的量化模型，得到需求价格弹性系数，并利用所述需求价格弹性系数设计动态价格调整算法，得到实时定价机制；</div>
+      <div class="claim-text">基于所述实时定价机制和所述能源协同供给保障体系构建充电站资源预分配模型，得到服务容量预测值，并根据所述服务容量预测值设计基于优先级的预约规则体系，得到预约管理框架；</div>
+      <div class="claim-text">结合所述预约管理框架开发基于车辆特征和用户偏好的个性化充电方案推荐系统，得到智能推荐引擎，并基于所述智能推荐引擎设计拥堵状态下的动态排队调度算法，得到队列优化模型；</div>
+      <div class="claim-text">根据所述能源协同供给保障体系的多时间尺度能源调度策略，将所述实时定价机制、所述预约管理框架、所述智能推荐引擎和所述队列优化模型进行系统集成，得到智能调度控制策略。</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="zh-cl0005" num="0005" class="claim">
+      <div class="claim-text">
+        <claim-ref idref="zh-cl0004"> </claim-ref>
+      </div>
+      <div class="claim-text">5.根据权利要求4所述的基于汽车充电需求的充电站规划方法，其特征在于，所述基于所述智能调度控制策略进行不同充电功率需求和车型适配性评估，得到多样化充电设施配置方案，包括：</div>
+      <div class="claim-text">收集市场流通的主要电动汽车车型参数，得到车型数据库，并根据所述智能调度控制策略对所述车型数据库进行充电接口标准和充电功率需求分类，得到车型分群结果；</div>
+      <div class="claim-text">基于所述车型分群结果分析各充电站点的目标用户群体特征，得到用户画像，并根据所述用户画像预测不同充电功率需求的比例分布，得到功率需求结构；</div>
+      <div class="claim-text">将所述功率需求结构与充电站物理空间约束和电力容量限制相结合，得到站点资源约束条件，并基于所述站点资源约束条件构建设施配置优化模型，得到初步配置方案；</div>
+      <div class="claim-text">根据所述初步配置方案和所述智能调度控制策略的排队模型分析，考虑快充与慢充的合理比例和未来技术升级预留空间，得到设施结构优化策略，并基于所述设施结构优化策略调整所述初步配置方案，得到灵活扩展方案；</div>
+      <div class="claim-text">利用所述智能调度控制策略中的服务质量评估指标，对所述初步配置方案和所述灵活扩展方案进行综合评估，平衡投资效益和用户体验，得到多样化充电设施配置方案。</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="zh-cl0006" num="0006" class="claim">
+      <div class="claim-text">
+        <claim-ref idref="zh-cl0002"> </claim-ref>
+      </div>
+      <div class="claim-text">6.根据权利要求2所述的基于汽车充电需求的充电站规划方法，其特征在于，所述通过模糊层次分析法对所述帕累托最优解集进行综合评价，得到最优站点配置方案，包括：</div>
+      <div class="claim-text">建立充电站评价指标体系，包括需求覆盖率、服务半径均衡性、交通可达性、电网接入便利度和土地资源利用效率的多维评价指标，得到评价标准框架，并确定各评价指标的理想值和可接受阈值，得到指标参考区间；</div>
+      <div class="claim-text">基于指标参考区间对各评价指标进行重要性比较，使用语言变量表述比较结果，得到模糊语义评价集，并将所述模糊语义评价集转换为三角模糊数，构建模糊判断矩阵，得到专家判断结构；</div>
+      <div class="claim-text">采用几何平均法合成多个专家判断结构，得到综合判断矩阵，并使用模糊扩展分析法计算各评价指标的模糊权重向量，得到指标重要性量化结果；</div>
+      <div class="claim-text">对所述综合判断矩阵进行一致性检验，计算一致性比率，得到判断可靠性评估结果，若不满足一致性要求，则返回重新调整专家判断结构，直至满足一致性要求，得到有效权重向量；</div>
+      <div class="claim-text">对所述帕累托最优解集中的每个解方案在各评价指标上进行模糊评分，得到方案评分矩阵，并结合所述有效权重向量计算各方案的综合评价值，得到方案排序结果；</div>
+      <div class="claim-text">选择综合评价值最高的方案作为基础方案，并进行实际实施可行性验证，包括现场勘查和利益相关者咨询，得到实施约束条件，根据所述实施约束条件对基础方案进行微调，最终形成最优站点配置方案。</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="zh-cl0007" num="0007" class="claim">
+      <div class="claim-text">
+        <claim-ref idref="zh-cl0004"> </claim-ref>
+      </div>
+      <div class="claim-text">7.根据权利要求4所述的基于汽车充电需求的充电站规划方法，其特征在于，所述基于所述实时定价机制和所述能源协同供给保障体系构建充电站资源预分配模型，得到服务容量预测值，包括：</div>
+      <div class="claim-text">获取历史充电需求数据和价格敏感性指标，得到价格-需求响应关系矩阵，并结合所述实时定价机制的动态价格调整参数，建立需求转移预测模型，得到负荷分布预测图；</div>
+      <div class="claim-text">从所述能源协同供给保障体系中提取电网容量约束和可再生能源供给波动特性，得到能源供给边界条件，并基于所述能源供给边界条件构建多时段供给能力评估模型，得到时变容量上限；</div>
+      <div class="claim-text">将所述负荷分布预测图与所述时变容量上限进行匹配分析，得到供需平衡约束条件，并基于所述供需平衡约束条件开发动态资源分配算法，得到初步资源分配方案；</div>
+      <div class="claim-text">基于所述初步资源分配方案建立考虑用户满意度和系统效率的双目标优化函数，得到资源分配优化目标，并采用滚动时域优化方法求解所述双目标优化函数，得到优化资源分配策略；</div>
+      <div class="claim-text">结合所述优化资源分配策略设计基于随机过程的不确定性处理机制，对所述负荷分布预测图中的需求预测误差和所述能源供给边界条件中的可再生能源波动进行情景模拟，得到风险评估结果，并根据所述风险评估结果调整所述优化资源分配策略中的资源预留比例，形成具有韧性的服务容量预测值。</div>
+    </div>
+    </div> <div class="claim-dependent"> <div id="zh-cl0008" num="0008" class="claim">
+      <div class="claim-text">8.一种基于汽车充电需求的充电站规划系统，其用于实现权利要求1至7任一项所述的基于汽车充电需求的充电站规划方法，其特征在于，包括：</div>
+      <div class="claim-text">采集与处理模块，用于对区域内车辆行驶轨迹和充电行为进行多源数据采集与融合处理，得到时空充电需求分布图谱；</div>
+      <div class="claim-text">分析与需求预测模块，用于基于所述时空充电需求分布图谱进行季节性变化分析和未来需求预测，得到动态充电需求预测模型；</div>
+      <div class="claim-text">站点布局优化模块，用于基于所述动态充电需求预测模型结合城市路网结构和交通流量数据，进行多约束条件下的站点布局优化，得到充电站初步布局方案；</div>
+      <div class="claim-text">能源供给评估模块，用于基于所述充电站初步布局方案进行电网负荷能力评估和可再生能源接入分析，得到能源协同供给保障体系；</div>
+      <div class="claim-text">智能调度控制模块，用于基于所述能源协同供给保障体系进行峰谷时段充电价格动态调整和预约排队机制设计，得到智能调度控制策略；</div>
+      <div class="claim-text">设施配置规划模块，用于基于所述智能调度控制策略进行不同充电功率需求和车型适配性评估，得到多样化充电设施配置方案，各个模块之间通过有线和/或无线的方式进行连接。</div>
+    </div>
+  </div> </div>
+  </div>
+  </section>
+
+  <section itemprop="application" itemscope>
+
+    <section itemprop="metadata" itemscope>
+      <span itemprop="applicationNumber">CN202510668468.6A</span>
+      <span itemprop="priorityDate">2025-05-23</span>
+      <span itemprop="filingDate">2025-05-23</span>
+      <span itemprop="title">一种基于汽车充电需求的充电站规划方法和系统 
+       </span>
+      <span itemprop="ifiStatus">Active</span>
+      
+      <a href="/patent/CN120197914B/zh">
+        <span itemprop="representativePublication">CN120197914B</span>
+        (<span itemprop="primaryLanguage">zh</span>)
+      </a>
+    </section>
+
+    <h2>Priority Applications (1)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Application Number</th>
+          <th>Priority Date</th>
+          <th>Filing Date</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="priorityApps" itemscope repeat>
+          <td>
+            <span itemprop="applicationNumber">CN202510668468.6A</span>
+            
+            <a href="/patent/CN120197914B/zh">
+              <span itemprop="representativePublication">CN120197914B</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+          </td>
+          <td itemprop="priorityDate">2025-05-23</td>
+          <td itemprop="filingDate">2025-05-23</td>
+          <td itemprop="title">一种基于汽车充电需求的充电站规划方法和系统 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Applications Claiming Priority (1)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Application Number</th>
+          <th>Priority Date</th>
+          <th>Filing Date</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="appsClaimingPriority" itemscope repeat>
+          <td>
+            <span itemprop="applicationNumber">CN202510668468.6A</span>
+            <a href="/patent/CN120197914B/zh">
+              <span itemprop="representativePublication">CN120197914B</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+          </td>
+          <td itemprop="priorityDate">2025-05-23</td>
+          <td itemprop="filingDate">2025-05-23</td>
+          <td itemprop="title">一种基于汽车充电需求的充电站规划方法和系统 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+
+    
+
+    
+
+    <h2>Publications (2)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Publication Number</th>
+          <th>Publication Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="pubs" itemscope repeat>
+          <td>
+            <span itemprop="publicationNumber">CN120197914A</span>
+            
+            <a href="/patent/CN120197914A/zh">
+              CN120197914A
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+          </td>
+          <td itemprop="publicationDate">2025-06-24</td>
+        </tr>
+        <tr itemprop="pubs" itemscope repeat>
+          <td>
+            <span itemprop="publicationNumber">CN120197914B</span>
+            
+            <span itemprop="thisPatent">true</span>
+            <a href="/patent/CN120197914B/zh">
+              CN120197914B
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+          </td>
+          <td itemprop="publicationDate">2025-07-18</td>
+        </tr>
+      </tbody>
+    </table>
+
+  </section>
+
+  <section itemprop="family" itemscope>
+    <h1>Family</h1>
+    <h2>ID=96068672</h2>
+
+    <h2>Family Applications (1)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Application Number</th>
+          <th>Title</th>
+          <th>Priority Date</th>
+          <th>Filing Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="applications" itemscope repeat>
+          <td>
+            <span itemprop="applicationNumber">CN202510668468.6A</span>
+            <span itemprop="ifiStatus">Active</span>
+            
+            <a href="/patent/CN120197914B/zh">
+              <span itemprop="representativePublication">CN120197914B</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+          </td>
+          <td itemprop="priorityDate">2025-05-23</td>
+          <td itemprop="filingDate">2025-05-23</td>
+          <td itemprop="title">一种基于汽车充电需求的充电站规划方法和系统 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+
+    
+
+    
+
+    <h2>Country Status (1)</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Country</th>
+          <th>Link</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="countryStatus" itemscope repeat>
+          <td>
+            <span itemprop="countryCode">CN</span>
+            (<span itemprop="num">1</span>)
+            <meta itemprop="thisCountry" content="true">
+          </td>
+          <td>
+            <a href="/patent/CN120197914B/zh">
+              <span itemprop="representativePublication">CN120197914B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    
+
+    <h2>Families Citing this family (19)</h2>
+    <table>
+      <caption>* Cited by examiner, † Cited by third party</caption>
+      <thead>
+        <tr>
+          <th>Publication number</th>
+          <th>Priority date</th>
+          <th>Publication date</th>
+          <th>Assignee</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120433391B/zh">
+              <span itemprop="publicationNumber">CN120433391B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-07-04</td>
+          <td itemprop="publicationDate">2025-09-12</td>
+          <td><span itemprop="assigneeOriginal">广州中天鑫电子科技有限公司</span></td>
+          <td itemprop="title">一种可兼容多种游戏手柄的充电装置 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120896201A/zh">
+              <span itemprop="publicationNumber">CN120896201A</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-07-21</td>
+          <td itemprop="publicationDate">2025-11-04</td>
+          <td><span itemprop="assigneeOriginal">四川华体照明科技股份有限公司</span></td>
+          <td itemprop="title">基于直流叠储的电能并网管理系统 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120509704B/zh">
+              <span itemprop="publicationNumber">CN120509704B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-07-22</td>
+          <td itemprop="publicationDate">2025-10-10</td>
+          <td><span itemprop="assigneeOriginal">国网浙江省电力有限公司杭州供电公司</span></td>
+          <td itemprop="title">基于可再生能源的充电站规划方法及系统 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120975445A/zh">
+              <span itemprop="publicationNumber">CN120975445A</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-07-23</td>
+          <td itemprop="publicationDate">2025-11-18</td>
+          <td><span itemprop="assigneeOriginal">盐城师范学院</span></td>
+          <td itemprop="title">一种基于数据分析的充电桩管理方法及系统 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120655058B/zh">
+              <span itemprop="publicationNumber">CN120655058B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-07-24</td>
+          <td itemprop="publicationDate">2026-01-23</td>
+          <td><span itemprop="assigneeOriginal">普特氢能(广州)供应链有限公司</span></td>
+          <td itemprop="title">一种基于大数据的氢能全链路调度系统及方法 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120525304B/zh">
+              <span itemprop="publicationNumber">CN120525304B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-07-24</td>
+          <td itemprop="publicationDate">2025-09-16</td>
+          <td><span itemprop="assigneeOriginal">宁波财经学院</span></td>
+          <td itemprop="title">一种新能源汽车充电设施需求动态测算方法 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120706832B/zh">
+              <span itemprop="publicationNumber">CN120706832B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-07-29</td>
+          <td itemprop="publicationDate">2026-04-03</td>
+          <td><span itemprop="assigneeOriginal">北京这房行信息技术有限公司</span></td>
+          <td itemprop="title">智慧选址基站管理系统及方法 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120611951B/zh">
+              <span itemprop="publicationNumber">CN120611951B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-08-08</td>
+          <td itemprop="publicationDate">2025-11-07</td>
+          <td><span itemprop="assigneeOriginal">华侨大学</span></td>
+          <td itemprop="title">基于STGAT-informer的电动汽车城际拼车任务中的充电调度方法及装置 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN121012084B/zh">
+              <span itemprop="publicationNumber">CN121012084B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-08-27</td>
+          <td itemprop="publicationDate">2026-04-28</td>
+          <td><span itemprop="assigneeOriginal">浙江安富新能源科技股份有限公司</span></td>
+          <td itemprop="title">一种用于充电站能源管理系统及方法 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120745442A/zh">
+              <span itemprop="publicationNumber">CN120745442A</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-08-28</td>
+          <td itemprop="publicationDate">2025-10-03</td>
+          <td><span itemprop="assigneeOriginal">厦门科司特电子股份有限公司</span></td>
+          <td itemprop="title">一种电动车充电优化管理系统 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120724564B/zh">
+              <span itemprop="publicationNumber">CN120724564B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-09-01</td>
+          <td itemprop="publicationDate">2025-11-21</td>
+          <td><span itemprop="assigneeOriginal">中建科工集团有限公司</span></td>
+          <td itemprop="title">新能源充电站的布局自动生成方法、装置及设备 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120806285B/zh">
+              <span itemprop="publicationNumber">CN120806285B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-09-05</td>
+          <td itemprop="publicationDate">2026-01-06</td>
+          <td><span itemprop="assigneeOriginal">宁波海晟能源发展有限公司</span></td>
+          <td itemprop="title">一种充电桩布局优化方法、系统及设备 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120764981B/zh">
+              <span itemprop="publicationNumber">CN120764981B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-09-09</td>
+          <td itemprop="publicationDate">2026-03-06</td>
+          <td><span itemprop="assigneeOriginal">深圳市城市规划设计研究院股份有限公司</span></td>
+          <td itemprop="title">一种基于时空数据平台的智慧选址方法及系统 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN121212678B/zh">
+              <span itemprop="publicationNumber">CN121212678B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-09-23</td>
+          <td itemprop="publicationDate">2026-05-05</td>
+          <td><span itemprop="assigneeOriginal">福建扬天电能有限公司</span></td>
+          <td itemprop="title">一种基于配电网的网格化规划分析系统及方法 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120875491B/zh">
+              <span itemprop="publicationNumber">CN120875491B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-09-29</td>
+          <td itemprop="publicationDate">2025-12-02</td>
+          <td><span itemprop="assigneeOriginal">吉林大学</span></td>
+          <td itemprop="title">充电设施分时共享模式下的电动公交车协同调度方法 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN121094241A/zh">
+              <span itemprop="publicationNumber">CN121094241A</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-11-05</td>
+          <td itemprop="publicationDate">2025-12-09</td>
+          <td><span itemprop="assigneeOriginal">交通运输部规划研究院</span></td>
+          <td itemprop="title">新能源汽车的城际公路网充电基础设施规划方法及系统 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN121119308B/zh">
+              <span itemprop="publicationNumber">CN121119308B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-11-13</td>
+          <td itemprop="publicationDate">2026-03-17</td>
+          <td><span itemprop="assigneeOriginal">中建科工集团有限公司</span></td>
+          <td itemprop="title">超充站智能规划方法、装置、计算机设备及存储介质 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN121146894B/zh">
+              <span itemprop="publicationNumber">CN121146894B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2025-11-19</td>
+          <td itemprop="publicationDate">2026-03-13</td>
+          <td><span itemprop="assigneeOriginal">陕西延长石油道奇物流科技有限公司</span></td>
+          <td itemprop="title">运力交易平台的多维度信用评价方法 
+       </td>
+        </tr>
+        <tr itemprop="forwardReferencesFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN121526250B/zh">
+              <span itemprop="publicationNumber">CN121526250B</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2026-01-14</td>
+          <td itemprop="publicationDate">2026-05-01</td>
+          <td><span itemprop="assigneeOriginal">山东理工大学</span></td>
+          <td itemprop="title">一种基于旅游景点的电动汽车充电需求预测方法 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <h2>Citations (1)</h2>
+    <table>
+      <caption>* Cited by examiner, † Cited by third party</caption>
+      <thead>
+        <tr>
+          <th>Publication number</th>
+          <th>Priority date</th>
+          <th>Publication date</th>
+          <th>Assignee</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="backwardReferencesOrig" itemscope repeat>
+          <td>
+            <a href="/patent/CN119398397A/zh">
+              <span itemprop="publicationNumber">CN119398397A</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2024-10-14</td>
+          <td itemprop="publicationDate">2025-02-07</td>
+          <td>
+            <span itemprop="assigneeOriginal">北京首兴安成电力工程有限公司</span>
+          </td>
+          <td itemprop="title">一种基于人工智能的充电桩建设规划方法及系统 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+
+    
+
+    <ul>
+      <li itemprop="applicationsByYear" itemscope repeat>
+        <span itemprop="year">2025</span>
+        <ul>
+          <li itemprop="application" itemscope repeat>
+            <span itemprop="filingDate">2025-05-23</span>
+            <span itemprop="countryCode">CN</span>
+            <span itemprop="applicationNumber">CN202510668468.6A</span>
+            <a href="/patent/CN120197914B/zh"><span itemprop="documentId">patent/CN120197914B/zh</span></a>
+            <span itemprop="legalStatusCat">active</span>
+            <span itemprop="legalStatus">Active</span>
+            <span itemprop="thisApp" content="true" bool></span>
+          </li>
+        </ul>
+      </li>
+    </ul>
+
+    </section>
+
+  <section>
+    <h2>Patent Citations (1)</h2>
+    <table>
+      <caption>* Cited by examiner, † Cited by third party</caption>
+      <thead>
+        <tr>
+          <th>Publication number</th>
+          <th>Priority date</th>
+          <th>Publication date</th>
+          <th>Assignee</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="backwardReferences" itemscope repeat>
+          <td>
+            <a href="/patent/CN119398397A/zh">
+              <span itemprop="publicationNumber">CN119398397A</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+            <span itemprop="examinerCited">*</span>
+            
+          </td>
+          <td itemprop="priorityDate">2024-10-14</td>
+          <td itemprop="publicationDate">2025-02-07</td>
+          <td><span itemprop="assigneeOriginal">北京首兴安成电力工程有限公司</span></td>
+          <td itemprop="title">一种基于人工智能的充电桩建设规划方法及系统 
+       </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  
+
+  
+
+  <section>
+    <h2>Also Published As</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Publication number</th>
+          <th>Publication date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="docdbFamily" itemscope repeat>
+          <td>
+            <a href="/patent/CN120197914A/zh">
+              <span itemprop="publicationNumber">CN120197914A</span>
+              (<span itemprop="primaryLanguage">zh</span>)
+            </a>
+          </td>
+          <td itemprop="publicationDate">2025-06-24</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Similar Documents</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Publication</th>
+          <th>Publication Date</th>
+          <th>Title</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN120197914A/zh">
+                <span itemprop="publicationNumber">CN120197914A</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2025-06-24">2025-06-24</time>
+            
+            
+          </td>
+          <td itemprop="title">一种基于汽车充电需求的充电站规划方法和系统 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="6888772959310089276">
+              <a href="/scholar/6888772959310089276"><span itemprop="scholarAuthors">Wang et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2023">2023</time>
+            
+          </td>
+          <td itemprop="title">Short-term electric vehicle charging demand prediction: A deep learning approach</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="1303420458181052482">
+              <a href="/scholar/1303420458181052482"><span itemprop="scholarAuthors">Schiera et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2019">2019</time>
+            
+          </td>
+          <td itemprop="title">Analysis of rooftop photovoltaics diffusion in energy community buildings by a novel GIS-and agent-based modeling co-simulation platform</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN108491969B/zh">
+                <span itemprop="publicationNumber">CN108491969B</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2021-12-24">2021-12-24</time>
+            
+            
+          </td>
+          <td itemprop="title">基于大数据的空间负荷预测模型构建方法 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="8814403811747664859">
+              <a href="/scholar/8814403811747664859"><span itemprop="scholarAuthors">Novosel et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2015">2015</time>
+            
+          </td>
+          <td itemprop="title">Agent based modelling and energy planning–Utilization of MATSim for transport energy demand modelling</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="9171094464005000476">
+              <a href="/scholar/9171094464005000476"><span itemprop="scholarAuthors">Rodrigues et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2019">2019</time>
+            
+          </td>
+          <td itemprop="title">Spatiotemporal model for estimating electric vehicles adopters</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN117934202B/zh">
+                <span itemprop="publicationNumber">CN117934202B</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2024-09-27">2024-09-27</time>
+            
+            
+          </td>
+          <td itemprop="title">一种虚拟电厂调度封装模型的构建方法 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN112541618A/zh">
+                <span itemprop="publicationNumber">CN112541618A</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2021-03-23">2021-03-23</time>
+            
+            
+          </td>
+          <td itemprop="title">基于网格化的主动配电网规划方法及存储介质 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN118313517B/zh">
+                <span itemprop="publicationNumber">CN118313517B</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2024-09-06">2024-09-06</time>
+            
+            
+          </td>
+          <td itemprop="title">基于5g通信的电动汽车车联网电力优化分配方法 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="6989743755448396641">
+              <a href="/scholar/6989743755448396641"><span itemprop="scholarAuthors">Liu et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2024">2024</time>
+            
+          </td>
+          <td itemprop="title">A joint model of infrastructure planning and smart charging strategies for shared electric vehicles</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN120146915B/zh">
+                <span itemprop="publicationNumber">CN120146915B</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2025-09-16">2025-09-16</time>
+            
+            
+          </td>
+          <td itemprop="title">一种用户充电行为画像的建模方法及系统 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN112541617A/zh">
+                <span itemprop="publicationNumber">CN112541617A</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2021-03-23">2021-03-23</time>
+            
+            
+          </td>
+          <td itemprop="title">变电站的定容及选址方法、存储介质 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN119398399A/zh">
+                <span itemprop="publicationNumber">CN119398399A</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2025-02-07">2025-02-07</time>
+            
+            
+          </td>
+          <td itemprop="title">一种动态分析的充电桩规划方法 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="5471448000505028371">
+              <a href="/scholar/5471448000505028371"><span itemprop="scholarAuthors">Aljohani et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2020">2020</time>
+            
+          </td>
+          <td itemprop="title">Dynamic real-time pricing structure for electric vehicle charging considering stochastic microgrids energy management system</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN109003128A/zh">
+                <span itemprop="publicationNumber">CN109003128A</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2018-12-14">2018-12-14</time>
+            
+            
+          </td>
+          <td itemprop="title">基于改进的随机森林公共自行车站点需求量预测方法 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN119398397A/zh">
+                <span itemprop="publicationNumber">CN119398397A</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2025-02-07">2025-02-07</time>
+            
+            
+          </td>
+          <td itemprop="title">一种基于人工智能的充电桩建设规划方法及系统 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN113609177A/zh">
+                <span itemprop="publicationNumber">CN113609177A</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2021-11-05">2021-11-05</time>
+            
+            
+          </td>
+          <td itemprop="title">一种园区级数据增值服务的场景构建及评价方法 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="11660636631752293862">
+              <a href="/scholar/11660636631752293862"><span itemprop="scholarAuthors">Fang et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2025">2025</time>
+            
+          </td>
+          <td itemprop="title">A day-ahead peak shaving strategy using data-driven prediction of EV charging behavior</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN111144628A/zh">
+                <span itemprop="publicationNumber">CN111144628A</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2020-05-12">2020-05-12</time>
+            
+            
+          </td>
+          <td itemprop="title">一种分布式供能的冷热电负荷预测模型系统及方法 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="3735324897173352007">
+              <a href="/scholar/3735324897173352007"><span itemprop="scholarAuthors">Iranpour et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2025">2025</time>
+            
+          </td>
+          <td itemprop="title">Assessing EV Charging Impacts on Power Distribution Systems: A Unified Co-Simulation Framework</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="11421823834589058576">
+              <a href="/scholar/11421823834589058576"><span itemprop="scholarAuthors">Shahrokhi et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2025">2025</time>
+            
+          </td>
+          <td itemprop="title">A Two-Stage Framework for Spatio-Temporal Clustering and Forecasting of Electric Vehicle Charging</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="15472958907627474616">
+              <a href="/scholar/15472958907627474616"><span itemprop="scholarAuthors">Sen et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2022">2022</time>
+            
+          </td>
+          <td itemprop="title">E-transit-bench: simulation platform for analyzing electric public transit bus fleet operations.</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            <meta itemprop="isPatent" content="true">
+              <a href="/patent/CN119129964A/zh">
+                <span itemprop="publicationNumber">CN119129964A</span>
+                (<span itemprop="primaryLanguage">zh</span>)
+              </a>
+            
+            
+          </td>
+          <td>
+            <time itemprop="publicationDate" datetime="2024-12-13">2024-12-13</time>
+            
+            
+          </td>
+          <td itemprop="title">电网的资源调配方法、装置、计算机设备和可读存储介质 
+       </td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="11863486191705630201">
+              <a href="/scholar/11863486191705630201"><span itemprop="scholarAuthors">Manandhar et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2024">2024</time>
+            
+          </td>
+          <td itemprop="title">Decision Support Tools for Developing Energy Strategies in Smart Cities</td>
+        </tr>
+        <tr itemprop="similarDocuments" itemscope repeat>
+          <td>
+            
+            <meta itemprop="isScholar" content="true">
+              <meta itemprop="scholarID" content="1057999002172718068">
+              <a href="/scholar/1057999002172718068"><span itemprop="scholarAuthors">Wu et al.</span></a>
+            
+          </td>
+          <td>
+            
+            <time itemprop="publicationDate" datetime="2025">2025</time>
+            
+          </td>
+          <td itemprop="title">STMO: A spatio-temporal multimodal optimization algorithm for optimizing electric vehicle charging scheduling and station layout</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Legal Events</h2>
+    <table>
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Code</th>
+          <th>Title</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2025-06-24">2025-06-24</time></td>
+          <td itemprop="code">PB01</td>
+          <td itemprop="title">Publication</td>
+          <td>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2025-06-24">2025-06-24</time></td>
+          <td itemprop="code">PB01</td>
+          <td itemprop="title">Publication</td>
+          <td>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2025-07-11">2025-07-11</time></td>
+          <td itemprop="code">SE01</td>
+          <td itemprop="title">Entry into force of request for substantive examination</td>
+          <td>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2025-07-11">2025-07-11</time></td>
+          <td itemprop="code">SE01</td>
+          <td itemprop="title">Entry into force of request for substantive examination</td>
+          <td>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2025-07-18">2025-07-18</time></td>
+          <td itemprop="code">GR01</td>
+          <td itemprop="title">Patent grant</td>
+          <td>
+          </td>
+        </tr>
+        <tr itemprop="legalEvents" itemscope repeat>
+          <td><time itemprop="date" datetime="2025-07-18">2025-07-18</time></td>
+          <td itemprop="code">GR01</td>
+          <td itemprop="title">Patent grant</td>
+          <td>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+
+</article>
+
+    </search-app>
+    
+    <script></script>
+    <script type="text/javascript" src="//www.gstatic.com/feedback/api.js"></script>
+    <script type="text/javascript" src="//www.gstatic.com/feedback/js/help/prod/service/lazy.min.js"></script>
+    <script type="text/javascript">
+      if (window.help && window.help.service) {
+        helpApi = window.help.service.Lazy.create(0, {apiKey: 'AIzaSyDTEI_0tLX4varJ7bwK8aT-eOI5qr3BmyI', locale: 'en-US'});
+        window.requestedSurveys = new Set();
+        window.requestSurvey = function(triggerId) {
+          if (window.requestedSurveys.has(triggerId)) {
+            return;
+          }
+          window.requestedSurveys.add(triggerId);
+          helpApi.requestSurvey({
+            triggerId: triggerId,
+            enableTestingMode: false,
+            callback: (requestSurveyCallbackParam) => {
+              if (!requestSurveyCallbackParam.surveyData) {
+                return;
+              }
+              helpApi.presentSurvey({
+                productData: {
+                  productVersion: window.version,
+                  customData: {
+                    "experiments": "",
+                  },
+                },
+                surveyData: requestSurveyCallbackParam.surveyData,
+                colorScheme: 1,
+                customZIndex: 10000,
+              });
+            }
+          });
+        };
+
+        window.requestSurvey('YXTwAsvoW0kedxbuTdH0RArc9VhT');
+      }
+    </script>
+    <script src="/sw/null_loader.js"></script>
+  </body>
+</html>
