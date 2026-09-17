@@ -1,0 +1,89 @@
+# US20250326322A1 — 权利要求原文（核验留痕）
+
+- **通道**：https://patents.google.com/patent/US20250326322A1/en
+- **标题**：Power and energy reservation system (PERS) and method for electric vehicle (EV) charging
+- **权利人**：Barrellcharge Solutions Inc
+- **优先权日**：2024-04-22（临时申请 US 63/637,146）　**公开日**：2025-10-23（A1）
+- **权项总数**：53（独立权 1 / 14 / 26 / 27 / 40 / 53）
+
+> 说明：权 14–26 与权 1–13 一一对应（方法→系统，`the processor executes additional instructions to ...`）；
+> 权 27–39 是另一组以 `expected arrival time` 为入口的方法族；权 40–52 与权 27–39 一一对应；
+> 权 26 / 53 为 `means for` 型独立权，与权 1 / 27 主体相同。下列 1–13 与 52 项中**触及"容量"的项**
+> 逐字保留；镜像项按对应关系登记。
+
+---
+
+1. A method for enabling a user to reserve time at electric vehicle supply equipment (EVSE) having electric vehicle (EV) charging couplers to enable charging of an EV with electricity, the method comprising the steps of:
+   enabling the user to reserve (a) a charging event at a specific site having a plurality of EVSEs during a specified time window and (b) a charging process that exceeds a predetermined minimum threshold;
+   determining availability of site couplers at the site based upon the predetermined minimum threshold; and
+   communicating a reserved site coupler identification to the user based upon the availability.
+
+2. The method of claim 1, further comprising the step of enabling the user to specify a length of the time window.
+
+3. The method of claim 1, wherein the reserved predetermined minimum threshold is one of the following: a minimum peak power (RMPP), a minimum reserved energy (RE), or a minimum driving range.
+
+4. The method of claim 3, further comprising the step of, in the case of the minimum driving range, determining an equivalent RE for the reserved charging event based upon a vehicle make, model, and year associated with the user, as well as an estimate of the vehicle state of charge (SOC) at the start of the reserved charging event.
+
+5. The method of claim 1, further comprising the steps of:
+   storing a site coupler power max (SCNPMax) for each EVSE at the site;
+   determining if any power remains during the reserved time window based upon the reserved predetermined minimum threshold and the SCNP;
+   making any remaining power available for use by one or more other site couplers at the site.
+
+6. The method of claim 1, further comprising the step of charging a higher fee for the charging event as compared to a charging event without the charging process.
+
+7. The method of claim 6, further comprising the step of: communicating the fee to the user; and requesting confirmation of the fee.
+
+8. The method of claim 1, further comprising the steps of:
+   storing a site power max capacity value (SPMC) for the site;
+   storing a site coupler power max (SCNPMax) for each EVSE at the site; and
+   determining the availability of each site coupler at the site based upon the reserved charging process, the SPMax, and the SCNP.
+
+9. The method of claim 1, further comprising the step of notifying other users that the reserved site coupler is unavailable during the reserved time window.
+
+10. The method of claim 1, further comprising the step of notifying other users that **a reduction in charging capacity will occur** during the reserved time window.
+
+11. The method of claim 1, further comprising the steps of: receiving and storing user account information ... and enabling the user to access an internet website to enable the user to make the reservation.
+
+12. The method of claim 11, further comprising the steps of: detecting a cancelation or a completion of the charging event; and debiting a monetary amount ...
+
+13. The method of claim 1, further comprising the step of, when the reservation occurs, preventing other users from reserving the site coupler associated with the reservation during a time window associated with the reservation.
+
+27. A method for reserving an electric charging station for a vehicle having a controller and a battery and a charging process at the electric charging station that meets or exceeds a charging threshold, the method comprising:
+    receiving, by a server, a desired destination from a client device and a desired charging process from the client device that meets or exceeds a charging threshold;
+    verifying the availability of a designated charging station at an expected arrival time of the vehicle at the desired destination;
+    reserving, via the server, the designated charging station when the designated charging station is available at the expected arrival time;
+    receiving information from the controller using the server, including a state of charge and a temperature of the battery;
+    generating an electronic token via the server, the token uniquely identifying the vehicle; and
+    transmitting the electronic token from the server to the client device, the token confirming the reservation and prevents unauthorized use of the designated charging station by another vehicle.
+
+28. The method of claim 27, ... reserving ... a length of the time window based upon the expected arrival time ...
+29. The method of claim 27, wherein the reserved predetermined minimum threshold is one of: RMPP, RE, or minimum driving range.
+30. The method of claim 29, ... in the case of the minimum driving range, determining an equivalent RE ...
+31. The method of claim 30, ... storing SCNPMax ...; determining if any power remains during a reserved time window ...; making any remaining power available for use by one or more other site couplers ...
+32. The method of claim 27, further comprising the step of charging an elevated monetary fee for the reservation ...
+33. The method of claim 32, ... communicating the elevated monetary fee ...; requesting confirmation ...
+34. The method of claim 27, ... storing a site power max capacity value (SPMax) ...; storing SCNPMax ...; determining the availability of each site coupler ... based upon the reserved charging process, the SPMax, and the SCNP.
+35. The method of claim 27, ... notifying other client devices that the reserved site coupler is unavailable during a reserved time window ...
+36. The method of claim 27, ... notifying other client devices that **a reduction in charging capacity will occur** during a reserved time window that includes the expected arrival time.
+37. The method of claim 27, ... user account information ...
+38. The method of claim 37, ... detecting a cancelation or a completion of the reservation; and debiting a monetary amount ...
+39. The method of claim 27, wherein the expected arrival time is an expected arrival time window, and further comprising: determining a requisite charging window based upon the SOC, the battery temperature, and the reserved charging process; and determining whether the charging window can occur within the expected arrival time window.
+
+---
+
+## 触及"容量"的权项清单（用于结构矩阵）
+
+- 站点容量准入：**权 1**（基于 minimum threshold 判可用性）、**权 8 / 20 / 34 / 47**（SPMax + SCNPMax + 已预约过程）
+- 余量释放给其他桩：**权 5 / 17 / 31 / 44**
+- 容量下降**通知**：**权 10 / 22 / 36 / 49**（"a reduction in charging capacity will occur"）
+- 排他占用：**权 9 / 13 / 21 / 25 / 35 / 48**
+
+## 未见于权项的要素（核验结论）
+
+- ❌ 无 `firm` / `conditional`（保证等级）**容量语义分层**
+- ❌ 无"已承诺服务对某等级容量的**来源归属**（provenance）"
+- ❌ 无"按来源归属**选择性作废**已承诺份额"
+- ❌ 无"执行结果**回写**并改变后续准入/承诺"
+- ⚠️ 权 10/22/36/49 的 "reduction in charging capacity" **未在权项中指向外部可撤回容量**；
+  其成因（站点侧还是电网侧）须看说明书段落 —— 本文件未做说明书逐段核验，
+  故标注 **权利项级已核 / 说明书级未核**。

@@ -1,0 +1,110 @@
+# WO2024105191A1 — 权利要求原文（核验留痕）
+
+- **通道**：https://www.freepatentsonline.com/WO2024105191A1.html
+  （Google Patents 版**未给出 claim 段**，只返回 Definitions；Espacenet 旧 URL 失效）
+- **标题**：System and method for mitigating delays and uncertainties in electric vehicle fleet charging
+  by optimally sizing an energy-time reserve to maintain a vehicle readiness service level
+- **权利人**：Hitachi Energy Ltd
+- **优先权日**：2022-11-18　**公开日**：2024-05-23（A1）　**权项总数**：34
+
+## 权利要求（逐字）
+
+1. A method comprising using at least one hardware processor to: generate an optimization model for at least one power infrastructure site, wherein the at least one power infrastructure site comprises one or more power infrastructure assets, wherein at least one of the one or more power infrastructure assets is associated with an energy-reserve profile that decreases energy available to that power infrastructure asset over time, and wherein the optimization model outputs a target value based on one or more variables, which represent an operating configuration of the at least one power infrastructure site, while constrained by the energy-reserve profile associated with the at least one power infrastructure asset; solve the optimization model to determine values for the one or more variables that optimize the target value; and initiate control of one or more physical components in the at least one power infrastructure site based on the determined values for the one or more variables.
+
+2. The method of Claim 1, wherein the optimization model is generated and solved periodically to determine the one or more variables that represent the operating configuration of the at least one power infrastructure site in a sliding time window that slides according to a time step.
+
+3. The method of Claim 2, wherein the energy-reserve profile associated with the at least one power infrastructure asset slides with the sliding time window according to the time step.
+
+4. The method of Claim 2, wherein the energy-reserve profile associated with the at least one power infrastructure asset is anchored to a scheduled event.
+
+5. The method of Claim 4, wherein the at least one power infrastructure site is a depot, wherein the at least one power infrastructure asset is an electric vehicle, and wherein the scheduled event is an arrival or departure of the electric vehicle at the depot.
+
+6. The method of Claim 2, further comprising using the at least one hardware processor to determine the energy-reserve profile associated with at least one of the one or more power infrastructure assets by combining: an energy-reserve profile that slides with the sliding time window according to the time step; and an energy-reserve profile that is anchored to a scheduled event.
+
+7. The method of Claim 6, wherein the at least one power infrastructure site is a depot, wherein the at least one power infrastructure asset is an electric vehicle, and wherein the scheduled event is an arrival or departure of the electric vehicle at the depot.
+
+8. The method of Claim 2, further comprising using the at least one hardware processor to **update the energy-reserve profile** associated with at least one of the one or more power infrastructure assets **in response to one or more completed events**.
+
+9. The method of Claim 1, wherein the one or more power infrastructure assets comprise one or more flexible loads that each comprises a battery.
+
+10. The method of Claim 9, wherein the energy-reserve profile associated with each of the one or more flexible loads decreases active charging power available to the battery of that flexible load over time.
+
+11. The method of Claim 9, wherein each of the one or more flexible loads is an electric vehicle.
+
+12. The method of Claim 1, wherein the at least one power infrastructure site comprises a depot, wherein the one or more power infrastructure assets comprise electric vehicles, and wherein the one or more physical components comprise one or more charging stations configured to electrically connect to the electric vehicles to charge the electric vehicles.
+
+13. The method of Claim 12, wherein the determined values for the one or more variables associate each of the electric vehicles with one or both of a time period or power flow rate for charging at one of the one or more charging stations in the at least one power infrastructure site.
+
+14. The method of Claim 1, wherein the target value includes at least an energy cost, and wherein optimizing the target value comprises minimizing the target value.
+
+15. The method of Claim 1, wherein initiating control of one or more physical components comprises controlling **setpoints** of the one or more physical components according to the determined values for the one or more variables.
+
+16. The method of Claim 15, wherein the one or more physical components comprise non-intermittent distributed energy resources.
+
+17. The method of Claim 1, wherein initiating control comprises communicating with a control system for the at least one power infrastructure site via at least one network.
+
+18. The method of Claim 1, wherein the energy-reserve profile **reserves energy for the power infrastructure asset to mitigate the uncertainty of the future**.
+
+19. The method of Claim 1, wherein the energy-reserve profile defines an energy reserve for each of a plurality of discrete time points or as a continuous function of time, starting from the current time or anchored to another point in time.
+
+20. A system comprising: at least one hardware processor; and software configured to, when executed by the at least one hardware processor, generate an optimization model ... [与权 1 同主体，系统型] ...
+
+21. The system of Claim 20, wherein the optimization model is generated and solved periodically ... in a sliding time window ..., and wherein the energy-reserve profile associated with the at least one power infrastructure asset: slides with the sliding time window according to the time step; is anchored to a scheduled event; or is generated by combining a first energy-reserve profile that slides ... and a second energy-reserve profile that is anchored to a scheduled event.
+
+22. The system of Claim 20, wherein the optimization model is generated and solved periodically ... in a sliding time window that slides according to a time step.
+
+23. The system of Claim 22, wherein the energy-reserve profile ... slides with the sliding time window according to the time step.
+
+24. The system of Claim 22, further comprising using the at least one hardware processor to **update the energy-reserve profile** ... **in response to one or more completed events**.
+
+25. The system of Claim 20, wherein the one or more power infrastructure assets comprise one or more flexible loads that each comprises a battery; and wherein the energy-reserve profile ... decreases active charging power ...
+
+26. The system of Claim 20, wherein the energy-reserve profile reserves energy for the power infrastructure asset to mitigate the uncertainty of the future.
+
+27. The system of Claim 20, wherein the energy-reserve profile defines an energy reserve for each of a plurality of discrete time points or as a continuous function of time ...
+
+28. A non-transitory computer-readable medium having instructions stored thereon ... [与权 1 同主体，CRM 型] ...
+
+29. The non-transitory computer-readable medium of Claim 28, wherein the optimization model is generated and solved periodically ... in a sliding time window ...
+
+30. The non-transitory computer-readable medium of Claim 29, wherein the energy-reserve profile ... slides with the sliding time window ...
+
+31. The non-transitory computer-readable medium of Claim 29, further comprising using the at least one hardware processor to **update the energy-reserve profile** ... **in response to one or more completed events**.
+
+32. The non-transitory computer-readable medium of Claim 28, ... flexible loads that each comprises a battery; ... decreases active charging power ...
+
+33. The non-transitory computer-readable medium of Claim 28, wherein the energy-reserve profile reserves energy ... to mitigate the uncertainty of the future.
+
+34. The non-transitory computer-readable medium of Claim 28, wherein the energy-reserve profile defines an energy reserve for each of a plurality of discrete time points or as a continuous function of time ...
+
+---
+
+## 说明书（Definitions 段）中与"电网限功率"相关的段落（**注意：不在权项内**）
+
+> "Such disturbances include, without limitation, electric vehicles returning and being plugged in late,
+> electric vehicles returning with a lower state of charge than planned, ..., **curtailment of power demand
+> limits by the operator of the power grid**, unexpected reductions in on-site power generation ..."
+
+> "Such disturbances can reduce the time and/or power available to charge the electric vehicles, which may
+> result in electric vehicles not being ready for departure at their scheduled departure times."
+
+> "To prepare electric vehicles by business-critical deadlines in a reliable manner, the control system
+> must be capable of anticipating such uncertainties."
+
+> "an energy-reserve profile decreases the energy available to the associated power infrastructure asset over time."
+> "such a constraint reserves energy for the power infrastructure asset to mitigate the uncertainty of the future.
+> The further into the future that charging ... is scheduled, the more energy that is reserved ..."
+
+## 核验结论（claim-level）
+
+- ✅ **"持久状态 + 被执行反馈修改"确已在权项内**：权 8 / 24 / 31（`update the energy-reserve profile in
+  response to one or more completed events`）。这是对 H-A5 论点「跨滚动周期持续、且被执行反馈修改的状态
+  必然是新机制」的**直接反证**。
+- ✅ **状态约束优化可行域**：权 1（`while constrained by the energy-reserve profile`）→ 权 15 控制 setpoint。
+- ✅ **滚动 + 锚定 + 组合**：权 2 / 3 / 4 / 6 / 21。
+- ❌ 全文**未见** `firm` / `non-firm` / `conditional` 容量语义分层。
+- ❌ 全文**未见**"已承诺服务对某等级容量的来源归属"。
+- ❌ 全文**未见**"容量撤回 → 选择性作废特定份额 → 恢复核销"。
+- ⚠️ **口径纠正**：`curtailment of power demand limits by the operator of the power grid`
+  **只出现在说明书扰动列表**，**未写入任何权利要求**。二审材料若据此称该专利"针对电网削减场景",
+  须降级为 **说明书级（非权项级）**。

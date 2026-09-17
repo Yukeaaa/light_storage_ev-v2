@@ -1,0 +1,66 @@
+# US12165224B2 — 权利要求原文（核验留痕）
+
+- **通道**：https://www.freepatentsonline.com/12165224.html
+  （Google Patents 版**未给出 claim 段**，仅返回 Abstract + Description）
+- **标题**：Electric vehicle charging reservation timeslot reallocation
+- **权利人**：Kyndryl Inc
+- **优先权日**：2021-12-10（US 17/643,671）　**授权日**：2024-12-10　**权项总数**：20
+
+## 权利要求（逐字）
+
+1. A computer-implemented method comprising: determining, in connection with an electric vehicle (EV) traveling to a destination, arrival parameters of the EV to arrive at the destination and a charging requirement of the EV to reach the destination within the arrival parameters; identifying one or more reserved charging reservation timeslots at one or more EV charging stations along a route to the destination that satisfy the arrival parameters and charging requirement of the EV; determining, at least in part using an AI model configured to determine reallocations of charging reservations at electric vehicle charging stations, a proposed reallocation of a reserved charging reservation timeslot of the one or more reserved charging reservation timeslots, the reserved charging reservation timeslot owned by an entity, and the proposed reallocation comprising a proposal for the entity to give up at least a portion of the reserved charging reservation timeslot to charge the EV; and electronically offering the proposed reallocation to the entity.
+
+2. The method of claim 1, wherein the EV is a first EV, wherein the reserved charging reservation timeslot is reserved for a second EV, the second EV controlled by the entity, wherein the method further comprises accessing a travel schedule of the second EV and determining that reallocating the reserved charging reservation timeslot to give up the at least a portion to charge the first EV is compatible with the travel schedule of the second EV and a charging requirement of the second EV.
+
+3. The method of claim 2, wherein the proposed reallocation comprises a relinquishment of the reserved charging reservation timeslot to the first EV, and wherein the method further comprises: accessing electronic charging reservation timeslot data indicating availability of charging reservation timeslots; determining from the electronic charging reservation timeslot data an alternative charging reservation timeslot that is available to the second EV ... and presenting the determined alternative charging reservation timeslot to the entity as an alternative to the reserved charging reservation timeslot.
+
+4. The method of claim 1, further comprising based on electronic acceptance of the proposed reallocation by the entity, electronically communicating an authorization of the EV to use the at least a portion of the charging reservation timeslot to charge the EV.
+
+5. The method of claim 1, wherein the identifying ... is performed as part of determining whether any charging reservation timeslots exist ... that satisfy the arrival parameters and charging requirement of the EV, and wherein the determining and electronically offering the proposed reallocation is performed **based on determining that only reserved charging reservation timeslots exist** ...
+
+6. The method of claim 1, further comprising based on **nonacceptance** of the proposed reallocation by the entity, providing an indication of the nonacceptance as **labeled training data** to train the AI model.
+
+7. The method of claim 1, further comprising repeating, for each other entity of one or more other entities owning a respective other reserved charging reservation timeslot, the determining a proposed reallocation and the electronically offering the proposed reallocation.
+
+8. The method of claim 1, wherein determining the proposed reallocation comprises determining a length of time of the at least a portion of the reserved charging reservation timeslot, and wherein using the AI model ... uses the AI model to determine an amount to compensate the entity as part of the proposed reallocation.
+
+9. The method of claim 8, further comprising determining to electronically offer the proposed reallocation to the entity **based on the determined amount to compensate ... being less than a cost associated with the EV failing to satisfy the arrival parameters** based on the charging requirement and a delay in charging the EV due to lack of availability of charging reservation timeslots ...
+
+10. The computer program product of claim 1, wherein determining the proposed reallocation comprises determining a length of time ... and ... an amount to compensate the entity ...
+
+11. A computer system comprising: a memory; and a processor in communication with the memory, wherein the computer system is configured to perform a method comprising: [与权 1 同主体，系统型] ...
+
+12. The computer system of claim 11, ... [= 权 2] ...
+13. The computer system of claim 12, ... [= 权 3] ...
+14. The computer system of claim 11, ... [= 权 4] ...
+15. The computer system of claim 11, ... nonacceptance ... labeled training data ... [= 权 6] ...
+16. The computer system of claim 11, ... [= 权 8] ...
+17. A computer program product comprising: a computer readable storage medium ... [与权 1 同主体，CRM 型] ...
+18. The computer program product of claim 17, ... [= 权 2] ...
+19. The computer program product of claim 18, ... [= 权 3] ...
+20. The computer program product of claim 17, ... nonacceptance ... labeled training data ... [= 权 6] ...
+
+## 说明书级：SLA / missed-SLA 成本（**不在权项内，除权 9 的成本比较**）
+
+> "For instance, delays with respect to EVs used in business applications can impact **service level
+> agreements (SLAs)** that a business has with its customers."
+
+> "... determine cost(s) associated with EVs **failing to satisfy their arrival parameters (late arrival,
+> missed SLA, etc.)** due to charging requirements, determine cost(s) associated with offsetting/reallocating
+> charging priorities for other EVs, and propose reallocations in which an entity **gives up some or all** of
+> a reserved charging reservation timeslot ... so that another entity's EV can use that relinquished timeslot
+> (or portion thereof) to charge. In some aspects, the entity relinquishing ... can be **compensated** ..."
+
+> "A single reservation timeslot could thereby be **shared by several (two or more) drivers/entities** to
+> provide each a partial charge."
+
+## 核验结论（claim-level）
+
+- ✅ **权 9 把"未满足到达参数的成本"作为决策判据写入权项** → 对 H-A5 "内部服务违约成本可入决策"构成
+  **HIGH PRESSURE**（且是通过 AI 模型 + 补偿额比较）。
+- ✅ **权 1 / 3 / 4：已承诺（reserved）资源被**部分**让渡、并转移授权** → 对"已承诺服务份额可被部分处置"
+  构成对照。
+- ✅ **权 6 / 15 / 20：拒绝/接受作为标注数据回训模型** —— 属**模型训练反馈**，**不是**执行结果对控制状态的回写。
+- ❌ 全文**未见**容量**保障等级**（firm / conditional）概念。
+- ❌ 触发源是**需求侧**（另一辆车需要充电），**不是供给侧容量撤回**。
+- ❌ 处置方式是**可补偿的所有权转移（市场机制）**，**不是**"容量失效导致的强制作废 + 恢复核销"。
